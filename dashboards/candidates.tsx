@@ -194,7 +194,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     if (selected) {
                       setData("loading", true);
                       setData("candidate_value", selected.value);
-                      push(routes.CANDIDATES + "/" + selected.value);
+                      push(routes.CANDIDATES + "/" + selected.value, undefined, { scroll: false });
                     } else setData("candidate_value", selected);
                   }}
                 />

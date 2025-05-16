@@ -227,7 +227,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                       setData("loading", true);
                       setData("seat_value", selected.value);
                       const [type, seat] = selected.value.split("_");
-                      push(`/${type}/${seat}`)
+                      push(`/${type}/${seat}`, undefined, { scroll: false })
                         .catch((e) => {
                           t("toast.request_failure"),
                             toast.error("toast.try_again");
