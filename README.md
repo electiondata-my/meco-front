@@ -60,4 +60,4 @@ yarn prepare
 
 ## Contributing
 
-Thank you for your willingness to contribute to this open source project dedicated to the public domain! When contributing, consider first discussing your desired change via GitHub issues or discussions. Happy coding!
+Thank you for supporting this open source project dedicated to the public domain! When contributing, consider first opening an issue - so that everyone is on the same page. Happy coding!

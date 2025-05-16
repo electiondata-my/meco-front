@@ -18,7 +18,7 @@ const defineConfig = (namespace, autoloadNs) => {
   return {
     i18n: {
       defaultLocale: "en-GB",
-      locales: ["en-GB", "ms-MY"],
+      locales: ["en-GB", "ms-MY"]
     },
     backend: {
       loadPath: `${process.env.NEXT_PUBLIC_I18N_URL}/${process.env.NEXT_PUBLIC_APP_ENV}/{{lng}}/{{ns}}.json`,
