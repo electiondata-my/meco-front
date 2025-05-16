@@ -61,6 +61,6 @@ const readNextI18nConfig = async (): Promise<I18nConfig | undefined> => {
   const path = resolve(DEFAULT_CONFIG_PATH);
 
   if (existsSync(path))
-    return import(/* webpackIgnore: true */ path).then(config => config.default);
+    return import(/* webpackIgnore: true */ path).then(config => config.default ?? config);
   return undefined;
 };
