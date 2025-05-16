@@ -19,12 +19,13 @@ const defineConfig = (namespace, autoloadNs) => {
     i18n: {
       defaultLocale: "en-GB",
       locales: ["en-GB", "ms-MY"],
-      backend: {
-        loadPath: `${process.env.NEXT_PUBLIC_I18N_URL}/${process.env.NEXT_PUBLIC_APP_ENV}/{{lng}}/{{ns}}.json`,
-        crossDomain: true,
-        allowMultiLoading: true,
-      },
     },
+    backend: {
+      loadPath: `${process.env.NEXT_PUBLIC_I18N_URL}/${process.env.NEXT_PUBLIC_APP_ENV}/{{lng}}/{{ns}}.json`,
+      crossDomain: true,
+      allowMultiLoading: true,
+    },
+    use: [I18NextHttpBackend],
     debug: false,
     ns: namespace,
     autoloadNs: autoloadNs,
@@ -32,7 +33,6 @@ const defineConfig = (namespace, autoloadNs) => {
     preload: ["en-GB", "ms-MY"],
     serializeConfig: false,
     reloadOnPrerender: true,
-    use: [I18NextHttpBackend],
   };
 };
 
