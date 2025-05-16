@@ -9,10 +9,10 @@
 
 ## Installation
 
-We recommend to use `yarn` to manage the project's dependencies.
+We recommend using `yarn` to manage the project's dependencies.
 
 ```sh
-git clone git@github.com:spr-malaysia/dataspr-front.git
+git clone git@github.com:electiondata-my/meco-front.git
 
 # Yarn
 yarn install
@@ -27,14 +27,12 @@ cp .env.example .env
 
 ### Environment Variables
 
-The following are the environment variables (.env) used for data.spr.gov.my. Please take note, there are only 2 variables required to get the app running, both of which are related to the [Backend](https://github.com/spr-malaysia/dataspr-back).
+The following are the environment variables (.env) used for electiondata.my.
 
 | Variables                       | Required | Default                             | Description                                     |
 | ------------------------------- | -------- | ----------------------------------- | ----------------------------------------------- |
 | APP_URL                         | ⬜️       | http://localhost:3000 (development) | App domain. Optional                             |
 | NEXT_PUBLIC_APP_URL             | ⬜️       | $APP_URL                            | App domain, made public. Optional                |
-| NEXT_PUBLIC_AUTHORIZATION_TOKEN | ✅       | _Create own_                        | Authorization token for data-spr BE communication |
-| NEXT_PUBLIC_API_URL             | ✅       | http://localhost:8000 (development) | data-spr BE base URL                              |
 
 ## Commands to Know
 
@@ -62,4 +60,4 @@ yarn prepare
 
 ## Contributing
 
-Thank you for your willingness to contribute to this free and open source project by the Malaysian public sector! When contributing, consider first discussing your desired change with the core team via GitHub issues or discussions!
+Thank you for your willingness to contribute to this open source project dedicated to the public domain! When contributing, consider first discussing your desired change via GitHub issues or discussions. Happy coding!
