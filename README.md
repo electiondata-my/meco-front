@@ -53,7 +53,7 @@ yarn prepare
 ## Development Workflow
 
 1. Branch out from `staging` & give the new branch a descriptive name eg: `feat/election-dashboard`, `fix/dropdown-bug` etc.
-2. After you're done developing, `git fetch && git merge origin/staging` to synchronize any new changes & resolve conflicts, if there is any.
+2. After you're done, `git fetch && git merge origin/staging` to synchronize any new changes & resolve conflicts, if there is any.
 3. Push the branch to remote and create a PR to `staging`. Briefly describe the changes introduced in the PR.
 4. Assign a core developer to review and wait for it to be approved.
 5. That's all. Happy developing!
