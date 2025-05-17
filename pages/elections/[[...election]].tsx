@@ -1,7 +1,7 @@
 import Metadata from "@components/Metadata";
 import ElectionExplorerDashboard from "@dashboards/elections";
 import { useTranslation } from "@hooks/useTranslation";
-import { get } from "@lib/api";
+import { getNew } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
 import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
@@ -58,20 +58,11 @@ export const getStaticProps: GetStaticProps = withi18n(
       const election_type = election_name?.startsWith("S") ? "dun" : "parlimen";
 
       const results = await Promise.allSettled([
-        get("/dates.json"),
-        get("/result_election.json", {
-          election_name,
-          state,
-          election_type,
-        }),
-        get("/result_election_summary.json", {
-          election_name,
-          state: state_code === "mys" ? undefined : state,
-          election_type,
-        }),
+        getNew("/dates.json"),
+        getNew(`/elections/${state}/${election_type}-${election_name}.json`),
       ]);
 
-      const [dropdown, table, seats] = results.map((e) => {
+      const [dropdown, electionData] = results.map((e) => {
         if (e.status === "rejected") return null;
         else return e.value.data;
       });
@@ -84,15 +75,14 @@ export const getStaticProps: GetStaticProps = withi18n(
 
       return {
         props: {
-          // last_updated: seats.data_last_updated,
           meta: {
             id: "elections",
             type: "dashboard",
           },
           params: { election: election_name, state: state_code },
-          seats: seats.data,
+          seats: electionData.stats,
           selection: groupBy(selection, "state"),
-          table: table.data,
+          table: electionData.ballot,
           choropleth: {},
         },
       };

@@ -1,7 +1,7 @@
 import { ElectionResource, Party, PartyResult, PartySummary } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
-import { get } from "@lib/api";
+import { getNew } from "@lib/api";
 import {
   ComboBox,
   Container,
@@ -132,63 +132,35 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
     const identifier = `${election}_${state}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
-      const queries = await Promise.allSettled([
-        get("/result_election.json", {
-          election_name: election ?? "GE-15",
-          state: state ?? "Malaysia",
-          election_type: data.tab_index ? "dun" : "parlimen",
-        }),
-        get("/result_election_summary.json", {
-          election_name: election ?? "GE-15",
-          state: state === "Malaysia" ? undefined : state,
-          election_type: data.tab_index ? "dun" : "parlimen",
-        }),
-      ]).catch((e) => {
+      const election_type = data.tab_index ? "dun" : "parlimen";
+      const election_name = election ?? "GE-15";
+      const url = `/elections/${state}/${election_type}-${election_name}.json`;
+      console.log(url);
+      try {
+        const { data: response } = await getNew(url);
+        const ballot = response.ballot;
+        const stats = response.summary[0];
+        const result: Result<PartyResult> = {
+          data: ballot,
+          votes: [
+            {
+              x: "voter_turnout",
+              abs: stats.voter_turnout,
+              perc: stats.voter_turnout_perc,
+            },
+            {
+              x: "rejected_votes",
+              abs: stats.votes_rejected,
+              perc: stats.votes_rejected_perc,
+            },
+          ],
+        };
+        cache.set(identifier, result);
+        resolve(result);
+      } catch (e) {
         toast.error(t("toast.request_failure"), t("toast.try_again"));
         throw new Error("Invalid party. Message: " + e);
-      });
-
-      const [{ data: ballot }, { data: ballot_summary }] = queries.map((e) => {
-        if (e.status === "rejected") return {};
-        else return e.value.data;
-      });
-
-      const summary = (ballot_summary as PartySummary[]).reduce(
-        (acc, curr) => ({
-          voter_turnout: acc.voter_turnout + curr.voter_turnout,
-          voter_turnout_perc:
-            acc.voter_turnout_perc +
-            Math.round(curr.voter_turnout / curr.voter_turnout_perc * 100),
-          votes_rejected: acc.votes_rejected + curr.votes_rejected,
-          votes_rejected_perc:
-            acc.votes_rejected_perc +
-            Math.round(curr.votes_rejected / curr.votes_rejected_perc * 100),
-        }),
-        {
-          voter_turnout: 0,
-          voter_turnout_perc: 0,
-          votes_rejected: 0,
-          votes_rejected_perc: 0,
-        }
-      );
-
-      const result: Result<PartyResult> = {
-        data: ballot,
-        votes: [
-          {
-            x: "voter_turnout",
-            abs: summary.voter_turnout,
-            perc: summary.voter_turnout / summary.voter_turnout_perc * 100,
-          },
-          {
-            x: "rejected_votes",
-            abs: summary.votes_rejected,
-            perc: summary.votes_rejected / summary.votes_rejected_perc * 100,
-          },
-        ],
-      };
-      cache.set(identifier, result);
-      resolve(result);
+      }
     });
   };
 
