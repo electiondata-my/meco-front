@@ -121,12 +121,12 @@ const ElectionAnalysis: FunctionComponent<ElectionAnalysisProps> = ({
         <div className="flex justify-end py-3 lg:py-6">
           <List
             options={[
-              t("table", { ns: "elections" }),
-              t("map", { ns: "elections" }),
+              t("table", { ns: "elections" })
+              // t("map", { ns: "elections" }),
             ]}
             icons={[
-              <TableCellsIcon key="table_cell_icon" className="mr-1 h-5 w-5" />,
-              <MapIcon key="map_icon" className="mr-1 h-5 w-5" />,
+              <TableCellsIcon key="table_cell_icon" className="mr-1 h-5 w-5" />
+              // <MapIcon key="map_icon" className="mr-1 h-5 w-5" />,
             ]}
             current={data.tab_index}
             onChange={(index) => setData("tab_index", index)}
@@ -157,33 +157,13 @@ const ElectionAnalysis: FunctionComponent<ElectionAnalysisProps> = ({
               }}
             />
           </Panel>
+          {/*
           <Panel
             name={t("map", { ns: "elections" })}
             icon={<MapIcon className="mr-1 h-5 w-5" />}
           >
             <LeftRightCard
-              left={
-                <div className="flex h-full w-full flex-col space-y-6 p-8">
-                  <div className="flex flex-col gap-2">
-                    <h4>
-                      {t("choro_header", {
-                        ns: "elections",
-                        // stat: t(""),
-                      })}
-                    </h4>
-                    <span className="text-zinc-500 text-sm">
-                      {/* {t("data_of", { date: choropleth.data_as_of })} */}
-                    </span>
-                  </div>
-                  <div className="flex grow flex-col justify-between space-y-6">
-                    <div className="space-y-3 pt-6">
-                      <p className="font-bold">
-                        {t("choro_rank", { ns: "elections" })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              }
+              left={...}
               right={
                 <Choropleth
                   className="h-[400px] w-auto lg:h-[500px]"
@@ -192,6 +172,7 @@ const ElectionAnalysis: FunctionComponent<ElectionAnalysisProps> = ({
               }
             />
           </Panel>
+          */}
         </Tabs>
       </div>
     </div>
