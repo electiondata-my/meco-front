@@ -78,47 +78,43 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
 
   const fetchFullResult = async (
     election: string,
-    seat: string
+    seat: string,
+    date: string
   ): Promise<Result<BaseResult[]>> => {
     const identifier = `${election}_${seat}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
-      const results = await Promise.allSettled([
-        getNew(`/results/${encodeURIComponent(seat)}/${election}.json`),
-        getNew(`/results/${encodeURIComponent(seat)}/${election}-summary.json`),
-      ]).catch((e) => {
+      try {
+        const response = await getNew(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const { ballot, summary } = response.data;
+        const summaryStats = summary[0];
+
+        const result: Result<BaseResult[]> = {
+          data: ballot,
+          votes: [
+            {
+              x: "majority",
+              abs: summaryStats.majority,
+              perc: summaryStats.majority_perc,
+            },
+            {
+              x: "voter_turnout",
+              abs: summaryStats.voter_turnout,
+              perc: summaryStats.voter_turnout_perc,
+            },
+            {
+              x: "rejected_votes",
+              abs: summaryStats.votes_rejected,
+              perc: summaryStats.votes_rejected_perc,
+            },
+          ],
+        };
+        cache.set(identifier, result);
+        resolve(result);
+      } catch (e) {
         toast.error(t("toast.request_failure"), t("toast.try_again"));
         throw new Error("Invalid party. Message: " + e);
-      });
-
-      const [{ data: ballot }, { data: ballot_summary }] = results.map((e) => {
-        if (e.status === "rejected") return {};
-        else return e.value.data;
-      });
-      const summary = ballot_summary[0];
-
-      const result: Result<BaseResult[]> = {
-        data: ballot,
-        votes: [
-          {
-            x: "majority",
-            abs: summary.majority,
-            perc: summary.majority_perc,
-          },
-          {
-            x: "voter_turnout",
-            abs: summary.voter_turnout,
-            perc: summary.voter_turnout_perc,
-          },
-          {
-            x: "rejected_votes",
-            abs: summary.votes_rejected,
-            perc: summary.votes_rejected_perc,
-          },
-        ],
-      };
-      cache.set(identifier, result);
-      resolve(result);
+      }
     });
   };
 
@@ -164,7 +160,7 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
             }
             currentIndex={row.index}
             onChange={(option: Seat) =>
-              fetchFullResult(option.election_name, option.seat)
+              fetchFullResult(option.election_name, option.seat, option.date)
             }
             columns={generateSchema<BaseResult>([
               { key: "name", id: "name", header: t("candidate_name") },

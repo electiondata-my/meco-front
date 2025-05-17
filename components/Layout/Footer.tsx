@@ -59,7 +59,12 @@ const Footer = () => {
             <At className="link-dim" scrollTop={false} href="#">
               {t("footer.download")}
             </At>
-            <At className="link-dim" scrollTop={false} href="#">
+            <At
+              className="link-dim"
+              scrollTop={false}
+              external
+              href="https://www.arxiv.org/abs/2505.06564"
+            >
               {t("footer.documentation")}
             </At>
           </div>
