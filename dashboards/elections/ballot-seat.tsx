@@ -79,49 +79,42 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
     },
   ]);
 
-  const fetchSeatResult = async (seat: string) => {
+  const fetchSeatResult = async (seat: string, date: string) => {
     if (!election) return;
     const identifier = `${state}-${election}-${seat}`;
     if (cache.has(identifier))
       return setData("seat_result", cache.get(identifier));
     else {
       setData("loading", true);
-      const responses = await Promise.allSettled([
-        getNew(`/results/${encodeURIComponent(seat)}/${election}.json`),
-        getNew(`/results/${encodeURIComponent(seat)}/${election}-summary.json`),
-      ]).catch((e) => {
+      try {
+        const response = await getNew(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const { ballot, summary } = response.data;
+        const summaryStats = summary[0];
+        const votes = [
+          {
+            x: "majority",
+            abs: summaryStats.majority,
+            perc: summaryStats.majority_perc,
+          },
+          {
+            x: "voter_turnout",
+            abs: summaryStats.voter_turnout,
+            perc: summaryStats.voter_turnout_perc,
+          },
+          {
+            x: "rejected_votes",
+            abs: summaryStats.votes_rejected,
+            perc: summaryStats.votes_rejected_perc,
+          },
+        ];
+        const results = { data: ballot, votes };
+        cache.set(identifier, results);
+        setData("results", results);
+        setData("loading", false);
+      } catch (e) {
         toast.error(t("toast.request_failure"), t("toast.try_again"));
         throw new Error("Invalid election or seat. Message: " + e);
-      });
-
-      const [{ data: ballot }, { data: ballot_summary }] = responses.map(
-        (e) => {
-          if (e.status === "rejected") return {};
-          else return e.value.data;
-        }
-      );
-      const summary = ballot_summary[0];
-      const votes = [
-        {
-          x: "majority",
-          abs: summary.majority,
-          perc: summary.majority_perc,
-        },
-        {
-          x: "voter_turnout",
-          abs: summary.voter_turnout,
-          perc: summary.voter_turnout_perc,
-        },
-        {
-          x: "rejected_votes",
-          abs: summary.votes_rejected,
-          perc: summary.votes_rejected_perc,
-        },
-      ];
-      const results = { data: ballot, votes };
-      cache.set(identifier, results);
-      setData("results", results);
-      setData("loading", false);
+      }
     }
   };
 
@@ -129,7 +122,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
     if (seats.length > 0) {
       const { seat } = seats[0];
       setData("seat", seat);
-      fetchSeatResult(seat);
+      fetchSeatResult(seat, seats[0].date);
     }
   }, [seats]);
 
@@ -160,7 +153,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                       }
                       onChange={(selected) => {
                         if (selected) {
-                          fetchSeatResult(selected.value);
+                          fetchSeatResult(selected.value, seats[0].date);
                           setData("seat", selected.value);
                           setData("search_seat", selected.value);
                           scrollRef.current[selected.value]?.scrollIntoView({
@@ -198,7 +191,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                                 onClick={() => {
                                   setData("seat", seat);
                                   setData("search_seat", seat);
-                                  fetchSeatResult(seat);
+                                  fetchSeatResult(seat, seats[0].date);
                                 }}
                               >
                                 <div className="flex w-full items-center justify-between">
