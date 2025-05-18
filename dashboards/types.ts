@@ -60,6 +60,7 @@ export type OverallSeat = Summary & {
   date: string;
   party: string;
   name: string;
+  party_lost?: string[];
 };
 
 export type BaseResult = {
