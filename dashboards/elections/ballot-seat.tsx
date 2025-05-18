@@ -14,6 +14,7 @@ import {
   LeftRightCard,
   Section,
   toast,
+  Dropdown,
 } from "@components/index";
 import { ArrowsPointingOutIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
@@ -48,18 +49,71 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
   const { cache } = useCache();
   const scrollRef = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const SEAT_OPTIONS = seats.map((seat) => ({
-    label: seat.seat,
-    value: seat.seat,
-  }));
-
-  const [open, setOpen] = useState<boolean>(false);
   const { data, setData } = useData({
     seat: seats[0].seat,
     search_seat: "",
     loading: false,
     results: {},
+    filter_result: t("contested_by", { ns: "elections" }),
+    filter_party: "",
   });
+
+  const [open, setOpen] = useState<boolean>(false);
+
+  const filteredSeats = seats.filter(seat => {
+    const partyLost = seat.party_lost || [];
+    const selectedParty = data.filter_party;
+    const selectedResult = data.filter_result;
+
+    if (selectedParty && selectedParty !== "" && selectedResult) {
+      if (selectedResult === t("won_by", { ns: "elections" })) {
+        return seat.party === selectedParty;
+      } else if (selectedResult === t("lost_by", { ns: "elections" })) {
+        return partyLost.includes(selectedParty);
+      } else if (selectedResult === t("contested_by", { ns: "elections" })) {
+        return seat.party === selectedParty || partyLost.includes(selectedParty);
+      }
+    } else if (selectedParty && selectedParty !== "") {
+      // If only party is selected, show all seats where the party won or lost
+      return seat.party === selectedParty || partyLost.includes(selectedParty);
+    } else if (selectedResult) {
+      // If only result is selected, show all seats that match the result for any party
+      return true;
+    }
+    return true;
+  });
+
+  // Dynamically generate party options based on filter_result
+  let partyOptions: { label: string; value: string | null }[] = [];
+  if (data.filter_result === t("won_by", { ns: "elections" })) {
+    partyOptions = Array.from(new Set(seats.map(seat => seat.party)))
+      .filter(party => !!party)
+      .map(party => ({ label: t(party, { ns: "parties" }), value: String(party) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  } else if (data.filter_result === t("lost_by", { ns: "elections" })) {
+    const lostParties = seats.flatMap(seat => seat.party_lost || []);
+    partyOptions = Array.from(new Set(lostParties))
+      .filter(party => !!party)
+      .map(party => ({ label: t(party, { ns: "parties" }), value: String(party) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  } else {
+    // Contested By: union of party and party_lost
+    const allParties = [
+      ...seats.map(seat => seat.party),
+      ...seats.flatMap(seat => seat.party_lost || [])
+    ];
+    partyOptions = Array.from(new Set(allParties))
+      .filter(party => !!party)
+      .map(party => ({ label: t(party, { ns: "parties" }), value: String(party) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }
+  // Add 'All Parties' option at the top
+  partyOptions.unshift({ label: t("all_parties", { ns: "elections" }), value: "" });
+
+  const SEAT_OPTIONS = filteredSeats.map((seat) => ({
+    label: seat.seat,
+    value: seat.seat,
+  }));
 
   const columns = generateSchema<BaseResult>([
     {
@@ -134,6 +188,46 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
             <h4 className="text-center">
               {t("header_2", { ns: "elections" })}
             </h4>
+            <div className="flex items-center gap-2 mx-auto w-fit">
+              <div className="max-w-fit rounded-full bg-white p-1">
+                <Dropdown
+                  width="w-fit"
+                  anchor="left"
+                  placeholder={t("filter_by_result", { ns: "elections" })}
+                  options={[
+                    { label: t("contested_by", { ns: "elections" }), value: t("contested_by", { ns: "elections" }) },
+                    { label: t("won_by", { ns: "elections" }), value: t("won_by", { ns: "elections" }) },
+                    { label: t("lost_by", { ns: "elections" }), value: t("lost_by", { ns: "elections" }) }
+                  ]}
+                  selected={data.filter_result ? { label: t(data.filter_result), value: data.filter_result } : undefined}
+                  onChange={(selected) => {
+                    setData("filter_result", selected?.value ?? null);
+                  }}
+                />
+              </div>
+              <div className="max-w-fit rounded-full bg-white p-1">
+                <Dropdown
+                  width="w-fit"
+                  anchor="left"
+                  placeholder={t("filter_by_party", { ns: "elections" })}
+                  options={partyOptions.map(opt => ({
+                    ...opt,
+                    value: opt.value || "" // Convert null to empty string
+                  }))}
+                  selected={
+                    data.filter_party
+                      ? partyOptions.find(opt => opt.value === data.filter_party)?.value 
+                        ? { label: partyOptions.find(opt => opt.value === data.filter_party)!.label,
+                            value: partyOptions.find(opt => opt.value === data.filter_party)!.value! }
+                        : { label: partyOptions[0].label, value: "" }
+                      : { label: partyOptions[0].label, value: "" }
+                  }
+                  onChange={(selected) => {
+                    setData("filter_party", selected?.value ?? "");
+                  }}
+                />
+              </div>
+            </div>
             <LeftRightCard
               left={
                 <div
@@ -168,7 +262,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                   <Drawer open={open} onOpenChange={setOpen}>
                     {election && (
                       <div className="grid lg:flex lg:flex-col grid-flow-col grid-rows-3 h-[394px] lg:h-full overflow-x-auto lg:overflow-y-auto">
-                        {seats.map((_seat) => {
+                        {filteredSeats.map((_seat) => {
                           const { seat, name, majority, majority_perc, party } =
                             _seat;
                           return (
