@@ -77,41 +77,20 @@ export const getStaticProps: GetStaticProps = withi18n(
     const state_code = params?.state ? params.state[0] : "mys";
     const state = CountryAndStates[state_code];
 
-    const results = await Promise.allSettled([
-      get("/trivia_slim_big.json", {
-        state,
-      }),
-      get("/trivia_veterans.json", {
-        state,
-        area_type: "parlimen",
-      }),
-      get("/trivia_veterans.json", {
-        state,
-        area_type: "dun",
-      }),
-    ]).catch((e) => {
-      throw new Error("Invalid party name. Message: " + e);
-    });
-
-    const [{ data: table }, { data: parlimen }, { data: dun }] = results.map(
-      (e) => {
-        if (e.status === "rejected") return {};
-        else return e.value.data;
-      }
-    );
+    const response = await get(`/trivia/${state}.json`);
+    const { slim_big, veterans_dun, veterans_parlimen } = response.data;
 
     return {
       notFound: false,
       props: {
-        // last_updated: data.data_last_updated,
         meta: {
           id: "trivia",
           type: "dashboard",
         },
-        bar_dun: dun ?? [],
+        bar_dun: veterans_dun ?? [],
         params: { state: state_code },
-        bar_parlimen: parlimen,
-        table: table,
+        bar_parlimen: veterans_parlimen ?? [],
+        table: slim_big ?? [],
       },
     };
   }

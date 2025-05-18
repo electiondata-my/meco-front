@@ -59,19 +59,10 @@ export const getStaticProps: GetStaticProps = withi18n(
 
       const results = await Promise.allSettled([
         get("/dates.json"),
-        get("/result_election.json", {
-          election_name,
-          state,
-          election_type,
-        }),
-        get("/result_election_summary.json", {
-          election_name,
-          state: state_code === "mys" ? undefined : state,
-          election_type,
-        }),
+        get(`/elections/${state}/${election_type}-${election_name}.json`),
       ]);
 
-      const [dropdown, table, seats] = results.map((e) => {
+      const [dropdown, electionData] = results.map((e) => {
         if (e.status === "rejected") return null;
         else return e.value.data;
       });
@@ -84,15 +75,14 @@ export const getStaticProps: GetStaticProps = withi18n(
 
       return {
         props: {
-          // last_updated: seats.data_last_updated,
           meta: {
             id: "elections",
             type: "dashboard",
           },
           params: { election: election_name, state: state_code },
-          seats: seats.data,
+          seats: electionData.stats,
           selection: groupBy(selection, "state"),
-          table: table.data,
+          table: electionData.ballot,
           choropleth: {},
         },
       };

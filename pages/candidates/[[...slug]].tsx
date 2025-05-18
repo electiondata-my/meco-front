@@ -1,7 +1,7 @@
 import Metadata from "@components/Metadata";
 import ElectionCandidatesDashboard from "@dashboards/candidates";
 import { useTranslation } from "@hooks/useTranslation";
-import { getNew } from "@lib/api";
+import { get } from "@lib/api";
 import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
@@ -48,8 +48,8 @@ export const getStaticProps: GetStaticProps = withi18n(
       const slug = params && params.slug ? params.slug.toString() : null;
 
       const results = await Promise.allSettled([
-        getNew("/candidates/dropdown.json"),
-        getNew(`/candidates/${slug ?? "00103"}.json`),
+        get("/candidates/dropdown.json"),
+        get(`/candidates/${slug ?? "00103"}.json`),
       ]);
 
       const [dropdown, candidate] = results.map((e) => {

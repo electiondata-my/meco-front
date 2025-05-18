@@ -20,7 +20,7 @@ import { XMarkIcon } from "@heroicons/react/24/solid";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
-import { getNew } from "@lib/api";
+import { get } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { generateSchema } from "@lib/schema/election-explorer";
@@ -87,7 +87,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
     else {
       setData("loading", true);
       try {
-        const response = await getNew(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const response = await get(`/results/${encodeURIComponent(seat)}/${date}.json`);
         const { ballot, summary } = response.data;
         const summaryStats = summary[0];
         const votes = [

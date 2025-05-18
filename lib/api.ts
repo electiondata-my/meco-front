@@ -1,34 +1,37 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { parseCookies } from "./helpers";
 
-type BaseURL = "api" | "app" | "api_new" | string;
+type BaseURL = "api_tb" | "api_s3" | "app" | string;
 
 /**
  * Base URL builder.
- * @param base "api" | "app" | "api_new"
+ * @param base "api_tb" | "app" | "api_s3"
  * @param {Record<string, string>} headers Additional headers
  * @returns Base of URL
  *
- * @example "api"   -> "https://[NEXT_PUBLIC_API_URL]/"
- * @example "app" -> "https://[NEXT_PUBLIC_APP_URL]/"
- * @example "api_new" -> "https://[NEXT_PUBLIC_API_URL_NEW]/"
+ * @example "api_tb"  -> "https://[NEXT_PUBLIC_API_URL_TB]/"
+ * @example "api_s3"  -> "https://[NEXT_PUBLIC_API_URL_S3]/"
+ * @example "app"     -> "https://[NEXT_PUBLIC_APP_URL]/"
  */
 const instance = (base: BaseURL, headers: Record<string, string> = {}) => {
   const urls: Record<BaseURL, string> = {
-    api: process.env.NEXT_PUBLIC_API_URL ?? "",
-    app: process.env.NEXT_PUBLIC_APP_URL ?? "",
-    api_new: process.env.NEXT_PUBLIC_API_URL_NEW ?? "",
+    api_tb: process.env.NEXT_PUBLIC_API_URL_TB ?? "",
+    api_s3: process.env.NEXT_PUBLIC_API_URL_S3 ?? "",
+    app: process.env.NEXT_PUBLIC_APP_URL ?? ""
   };
 
-  const authorization =
-    base === "api" || base === "api_new"
-      ? process.env.NEXT_PUBLIC_API_TOKEN
-      : process.env.NEXT_PUBLIC_AUTHORIZATION_TOKEN;
+  // Different authorization logic for each base
+  let authorization = "";
+  if (base === "api_tb") {
+    authorization = `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN_TB}`;
+  } else if (base === "app") {
+    authorization = `Bearer ${process.env.NEXT_PUBLIC_AUTHORIZATION_TOKEN}`;
+  }
 
   const config: AxiosRequestConfig = {
     baseURL: urls[base] || base,
     headers: {
-      Authorization: `Bearer ${authorization}`,
+      ...(authorization && { Authorization: authorization }),
       ...headers,
     },
   };
@@ -39,33 +42,13 @@ const instance = (base: BaseURL, headers: Record<string, string> = {}) => {
  * Universal GET helper function.
  * @param {string} route Endpoint URL
  * @param {Record<string, string>} params Queries
- * @param {"api" | "app"} base api | local
+ * @param {"api_tb" | "api_s3" | "app" } base api_tb | api_s3 | app
  * @returns {Promise<AxiosResponse>} Promised response
  */
 export const get = (
   route: string,
   params?: Record<string, any>,
-  base: BaseURL = "api"
-): Promise<AxiosResponse> => {
-  return new Promise((resolve, reject) => {
-    instance(base)
-      .get(route, { params })
-      .then((response: AxiosResponse) => resolve(response))
-      .catch((err) => reject(err));
-  });
-};
-
-/**
- * Universal GET helper function for the new API endpoint.
- * @param {string} route Endpoint URL
- * @param {Record<string, string>} params Queries
- * @param {"api_new" | "app"} base api_new | local
- * @returns {Promise<AxiosResponse>} Promised response
- */
-export const getNew = (
-  route: string,
-  params?: Record<string, any>,
-  base: BaseURL = "api_new"
+  base: BaseURL = "api_s3"
 ): Promise<AxiosResponse> => {
   return new Promise((resolve, reject) => {
     instance(base)
@@ -79,14 +62,14 @@ export const getNew = (
  * Universal POST helper function.
  * @param route Endpoint route
  * @param payload Body payload
- * @param {"api" | "app"} base api | local
+ * @param {"api_tb" | "app" | "api_s3"} base api_tb | app | api_s3
  * @param {Record<string, string>} headers Additional headers
  * @returns {Promise<AxiosResponse>} Promised response
  */
 export const post = (
   route: string,
   payload?: any,
-  base: BaseURL = "api",
+  base: BaseURL = "api_tb",
   headers: Record<string, string> = {}
 ): Promise<AxiosResponse> => {
   return new Promise((resolve, reject) => {
