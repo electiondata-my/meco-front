@@ -1,7 +1,7 @@
 import Metadata from "@components/Metadata";
 import ElectionPartiesDashboard from "@dashboards/parties";
 import { useTranslation } from "@hooks/useTranslation";
-import { getNew } from "@lib/api";
+import { get } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
 import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
@@ -49,11 +49,11 @@ export const getStaticProps: GetStaticProps = withi18n(
       const state = state_code ? CountryAndStates[state_code] : "Malaysia";
 
       const results = await Promise.allSettled([
-        getNew("/parties/dropdown.json"),
-        getNew(`/parties/${party ?? "PERIKATAN"}/parlimen/${state ?? "Malaysia"}.json`),
+        get("/parties/dropdown.json"),
+        get(`/parties/${party ?? "PERIKATAN"}/parlimen/${state ?? "Malaysia"}.json`),
         ...(state_code !== "mys"
           ? [
-              getNew(`/parties/${party ?? "PERIKATAN"}/dun/${state}.json`),
+              get(`/parties/${party ?? "PERIKATAN"}/dun/${state}.json`),
             ]
           : []),
       ]).catch((e) => {

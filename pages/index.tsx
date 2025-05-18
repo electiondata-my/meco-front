@@ -1,6 +1,6 @@
 import Metadata from "@components/Metadata";
 import ElectionSeatsDashboard from "@dashboards/seats";
-import { getNew } from "@lib/api";
+import { get } from "@lib/api";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
@@ -36,8 +36,8 @@ export const getStaticProps: GetStaticProps = withi18n(
       const slug = "kuala-selangor-selangor";
       const type = "parlimen";
       const results = await Promise.allSettled([
-        getNew("/seats/dropdown.json"),
-        getNew(`/seats/${type}-${slug}.json`),
+        get("/seats/dropdown.json"),
+        get(`/seats/${type}-${slug}.json`),
       ]).catch((e) => {
         throw new Error(e);
       });

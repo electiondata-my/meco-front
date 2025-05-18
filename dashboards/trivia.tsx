@@ -2,7 +2,7 @@ import { BaseResult, ElectionEnum, Seat } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
 import { FaceFrownIcon } from "@heroicons/react/24/outline";
 import { generateSchema } from "@lib/schema/election-explorer";
-import { getNew } from "@lib/api";
+import { get } from "@lib/api";
 import {
   Container,
   Dropdown,
@@ -85,7 +85,7 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
       try {
-        const response = await getNew(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const response = await get(`/results/${encodeURIComponent(seat)}/${date}.json`);
         const { ballot, summary } = response.data;
         const summaryStats = summary[0];
 

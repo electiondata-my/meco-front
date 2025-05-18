@@ -1,7 +1,7 @@
 import Metadata from "@components/Metadata";
 import ElectionExplorerDashboard from "@dashboards/elections";
 import { useTranslation } from "@hooks/useTranslation";
-import { getNew } from "@lib/api";
+import { get } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
 import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
@@ -58,8 +58,8 @@ export const getStaticProps: GetStaticProps = withi18n(
       const election_type = election_name?.startsWith("S") ? "dun" : "parlimen";
 
       const results = await Promise.allSettled([
-        getNew("/dates.json"),
-        getNew(`/elections/${state}/${election_type}-${election_name}.json`),
+        get("/dates.json"),
+        get(`/elections/${state}/${election_type}-${election_name}.json`),
       ]);
 
       const [dropdown, electionData] = results.map((e) => {

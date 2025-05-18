@@ -1,7 +1,7 @@
 import { ElectionResource, Party, PartyResult, PartySummary } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
-import { getNew } from "@lib/api";
+import { get } from "@lib/api";
 import {
   ComboBox,
   Container,
@@ -137,7 +137,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
       const url = `/elections/${state}/${election_type}-${election_name}.json`;
       console.log(url);
       try {
-        const { data: response } = await getNew(url);
+        const { data: response } = await get(url);
         const ballot = response.ballot;
         const stats = response.summary[0];
         const result: Result<PartyResult> = {
