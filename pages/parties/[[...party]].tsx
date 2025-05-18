@@ -51,7 +51,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       const results = await Promise.allSettled([
         get("/parties/dropdown.json"),
         get(`/parties/${party ?? "PERIKATAN"}/parlimen/${state ?? "Malaysia"}.json`),
-        ...(state_code !== "mys"
+        ...(!["mys", "kul", "pjy", "lbn"].includes(state_code)
           ? [
               get(`/parties/${party ?? "PERIKATAN"}/dun/${state}.json`),
             ]
@@ -61,7 +61,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       });
 
       const [dropdown, parlimen, dun] = results.map((e) => {
-        if (e.status === "rejected") return null;
+        if (e.status === "rejected") return { data: [] };
         else return e.value.data;
       });
       const selection: Array<{ party: string }> = dropdown.data;
@@ -83,7 +83,7 @@ export const getStaticProps: GetStaticProps = withi18n(
           selection,
           elections: {
             parlimen: parlimen.data ?? [],
-            dun: state_code !== "mys" ? dun.data : [],
+            dun: !["mys", "kul", "pjy", "lbn"].includes(state_code) ? dun.data : [],
           },
         },
       };
