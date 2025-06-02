@@ -311,6 +311,19 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
     else return false;
   };
 
+  // Add this component for explanation rows
+  const ExplanationRow: FunctionComponent<{ change_en: string; change_ms?: string }> = ({ change_en, change_ms }) => {
+    const { i18n } = useTranslation();
+    const isMalay = i18n.language && i18n.language.startsWith("ms");
+    return (
+      <tr>
+        <td colSpan={100} className="bg-red-50 dark:bg-[rgba(185,28,28,0.5)] text-center py-2 text-sm italic text-red-800 dark:text-red-200 border-b border-slate-200 dark:border-zinc-800">
+          {isMalay && change_ms ? change_ms : change_en}
+        </td>
+      </tr>
+    );
+  };
+
   return (
     <>
       <div>
@@ -346,17 +359,23 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             ))}
           </thead>
           <tbody>
-            {table.getRowModel().rows.map((row: any) => {
-              const highlight = isHighlighted(row);
+            {data.map((row: any, idx: number) => {
+              if (row.change_en) {
+                return <ExplanationRow key={"explanation-" + idx} change_en={row.change_en} change_ms={row.change_ms} />;
+              }
+              // Use react-table for normal rows
+              const tableRow = table.getRowModel().rows.find((r: any) => r.index === idx);
+              if (!tableRow) return null;
+              const highlight = isHighlighted(tableRow);
               return (
                 <tr
-                  key={row.id}
+                  key={tableRow.id}
                   className={clx(
                     highlight ? "bg-slate-50 dark:bg-zinc-950" : "bg-inherit",
                     "border-slate-200 dark:border-zinc-800 border-b"
                   )}
                 >
-                  {row.getVisibleCells().map((cell: any, colIndex: number) => (
+                  {tableRow.getVisibleCells().map((cell: any, colIndex: number) => (
                     <td
                       key={cell.id}
                       className={clx(
@@ -380,12 +399,23 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         </table>
 
         {/* Mobile */}
-        {table.getRowModel().rows.map((row: any, index: number) => {
+        {data.map((row: any, idx: number) => {
+          if (row.change_en) {
+            const isMalay = i18n.language && i18n.language.startsWith("ms");
+            return (
+              <div key={"explanation-mobile-" + idx} className="bg-red-50 dark:bg-[rgba(185,28,28,0.5)] text-center py-2 text-sm italic text-red-800 dark:text-red-200 border-b border-slate-200 dark:border-zinc-800 md:hidden">
+                {isMalay && row.change_ms ? row.change_ms : row.change_en}
+              </div>
+            );
+          }
+          // Use react-table for normal rows
+          const tableRow = table.getRowModel().rows.find((r: any) => r.index === idx);
+          if (!tableRow) return null;
           const ids = table.getAllColumns().map((col) => col.id);
-          const highlight = isHighlighted(row);
+          const highlight = isHighlighted(tableRow);
 
           let _row: Record<string, ReactNode> = {};
-          row.getVisibleCells().forEach((cell: any) => {
+          tableRow.getVisibleCells().forEach((cell: any) => {
             _row[cell.column.columnDef.id] = lookupMobile(
               cell.column.columnDef.id,
               cell,
@@ -395,7 +425,6 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           return isLoading ? (
             <div className="flex flex-col gap-2 p-3 md:hidden border-slate-200 dark:border-zinc-800 border-b first-of-type:border-t-2">
               <Skeleton className="w-full" />
-
               <div className="grid grid-cols-2 gap-3">
                 <Skeleton className="w-24" />
                 <Skeleton className="w-24" />
@@ -407,15 +436,16 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             <div
               className={clx(
                 "border-slate-200 dark:border-zinc-800 flex flex-col space-y-2 border-b p-3 text-sm first:border-t-2 md:hidden",
-                index === 0 && "border-t-2",
+                idx === 0 && "border-t-2",
                 highlight ? "bg-slate-50 dark:bg-[#121212]" : "bg-inherit"
               )}
-              key={index}
+              key={idx}
             >
               {/* Row 1 - Election Name / Date / Full result */}
-              {["election_name", "full_result"].some((id) =>
-                ids.includes(id)
-              ) && (
+              {[
+                "election_name",
+                "full_result"
+              ].some((id) => ids.includes(id)) && (
                 <div className="flex items-start justify-between gap-x-2">
                   <div className="flex gap-x-2">
                     {_row.index}
@@ -432,21 +462,20 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               )}
               {/* Row 3 - Party */}
               {_row.party && <div>{_row.party}</div>}
-
               {/* Row 4 - Result *Depends on page shown */}
-              {_row.name && ( // SEATS
+              {_row.name && (
                 <div className="flex gap-2">
                   {_row.majority}
                   {_row.votes}
                 </div>
               )}
-              {_row.result && ( // CANDIDATES
+              {_row.result && (
                 <div className="flex gap-4">
                   {_row.votes}
                   {_row.result}
                 </div>
               )}
-              {_row.seats && ( // PARTIES
+              {_row.seats && (
                 <div className="flex gap-3">
                   {_row.seats}
                   {_row.votes}

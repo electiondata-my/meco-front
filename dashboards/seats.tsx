@@ -69,7 +69,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const DEFAULT_SEAT =
     params.type && params.seat_name
       ? `${params.type}_${params.seat_name}`
-      : "parlimen_kuala-selangor-selangor";
+      : "p138-kota-melaka-melaka";
 
   const SEAT_OPTION = SEAT_OPTIONS.find((e) => e.value === DEFAULT_SEAT);
 
