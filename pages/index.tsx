@@ -36,7 +36,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       const slug = "p138-kota-melaka-melaka";
       const type = "parlimen";
       const results = await Promise.allSettled([
-        get("/seats/dropdown_new.json"),
+        get("/seats/dropdown.json"),
         get(`/seats/${slug}.json`),
       ]).catch((e) => {
         throw new Error(e);
