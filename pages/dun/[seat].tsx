@@ -46,7 +46,7 @@ export const getStaticProps: GetStaticProps = withi18n(
 
       const results = await Promise.allSettled([
         get("/seats/dropdown.json"),
-        get(`/seats/dun-${slug}.json`),
+        get(`/seats/${slug}.json`),
       ]);
 
       const [dropdown, seat] = results.map((e) => {

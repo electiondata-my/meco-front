@@ -33,11 +33,11 @@ export const getStaticProps: GetStaticProps = withi18n(
   ["home", "election"],
   async () => {
     try {
-      const slug = "kuala-selangor-selangor";
+      const slug = "p138-kota-melaka-melaka";
       const type = "parlimen";
       const results = await Promise.allSettled([
         get("/seats/dropdown.json"),
-        get(`/seats/${type}-${slug}.json`),
+        get(`/seats/${slug}.json`),
       ]).catch((e) => {
         throw new Error(e);
       });
@@ -55,7 +55,7 @@ export const getStaticProps: GetStaticProps = withi18n(
             id: "home",
             type: "misc",
           },
-          params: { seat_name: null, type: null },
+          params: { seat_name: slug, type: type },
           selection: dropdown.data,
           elections: seat.data ?? [],
         },

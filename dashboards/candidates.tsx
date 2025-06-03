@@ -34,7 +34,7 @@ const ElectionTable = dynamic(
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
 interface ElectionCandidatesProps extends ElectionResource<Candidate> {
-  selection: Record<"name" | "slug", string>[];
+  selection: Record<"name" | "slug" | "c" | "w" | "l", string>[];
 }
 
 const ElectionCandidatesDashboard: FunctionComponent<
@@ -43,7 +43,13 @@ const ElectionCandidatesDashboard: FunctionComponent<
   const { t } = useTranslation(["common", "candidates"]);
 
   const CANDIDATE_OPTIONS: Array<OptionType> = selection.map(
-    ({ name, slug }) => ({ label: name, value: slug })
+    ({ name, slug, c, w, l }) => ({ 
+      label: `${name} (W${w}, L${l})`, 
+      value: slug,
+      contests: Number(c),
+      wins: Number(w),
+      losses: Number(l)
+    })
   );
 
   const DEFAULT_CANDIDATE = "00103";
@@ -179,6 +185,15 @@ const ElectionCandidatesDashboard: FunctionComponent<
                 <ComboBox
                   placeholder={t("search_candidate", { ns: "candidates" })}
                   options={CANDIDATE_OPTIONS}
+                  config={{
+                    baseSort: (a, b) => {
+                      if ((a.item.contests ?? 0) === (b.item.contests ?? 0)) {
+                        return (b.item.wins ?? 0) - (a.item.wins ?? 0);
+                      }
+                      return (b.item.contests ?? 0) - (a.item.contests ?? 0);
+                    },
+                    keys: ["label", "name"],
+                  }}
                   selected={
                     data.candidate_value
                       ? CANDIDATE_OPTIONS.find(

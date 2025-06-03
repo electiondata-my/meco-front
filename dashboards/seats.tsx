@@ -69,7 +69,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const DEFAULT_SEAT =
     params.type && params.seat_name
       ? `${params.type}_${params.seat_name}`
-      : "parlimen_kuala-selangor-selangor";
+      : "p138-kota-melaka-melaka";
 
   const SEAT_OPTION = SEAT_OPTIONS.find((e) => e.value === DEFAULT_SEAT);
 
@@ -195,13 +195,10 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                   options={SEAT_OPTIONS}
                   config={{
                     baseSort: (a, b) => {
-                      if (a.item.seat === b.item.seat) {
-                        return a.item.type === "parlimen" ? -1 : 1;
-                      } else {
-                        return String(a.item.seat).localeCompare(
-                          String(b.item.seat)
-                        );
+                      if (a.item.type === b.item.type) {
+                        return String(a.item.seat).localeCompare(String(b.item.seat));
                       }
+                      return a.item.type === "parlimen" ? -1 : 1;
                     },
                     keys: ["label", "seat", "state", "type"],
                   }}
