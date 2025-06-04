@@ -1,4 +1,4 @@
-import { FunctionComponent, ReactNode, useContext, useMemo } from "react";
+import { FunctionComponent, ReactNode, useContext, useMemo, useEffect, useState } from "react";
 import Container from "@components/Container";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { useTranslation } from "next-i18next";
@@ -28,6 +28,7 @@ type HeroDefault = {
 type HeroProps = {
   background?: "gray" | "blue" | "red" | "purple" | "green" | "orange" | string;
   className?: string;
+  pageId?: string;
 } & ConditionalHeroProps;
 
 const Hero: FunctionComponent<HeroProps> = ({
@@ -39,9 +40,32 @@ const Hero: FunctionComponent<HeroProps> = ({
   description,
   action,
   last_updated,
+  pageId = "sitewide",
 }) => {
   const { t, i18n } = useTranslation();
   const { result } = useContext(AnalyticsContext);
+
+  // Tinybird view count for the given pageId
+  const [views, setViews] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchViews = async () => {
+      setLoading(true);
+      try {
+        const token = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN_READ;
+        const url = `https://api.us-west-2.aws.tinybird.co/v0/pipes/views_by_page.json?token=${token}&page_id=${pageId}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Network response was not ok");
+        const data = await res.json();
+        setViews(data?.data?.[0]?.hits ?? 0);
+      } catch (e) {
+        setViews(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchViews();
+  }, [pageId]);
 
   const background_style = useMemo<string>(() => {
     switch (background) {
@@ -103,14 +127,10 @@ const Hero: FunctionComponent<HeroProps> = ({
                 ) : (
                   description
                 )}
-                {result?.view_count && (
-                  <p className="text-zinc-500 flex gap-2 text-sm" data-testid="hero-views">
-                    <EyeIcon className="w-4.5 h-4.5 self-center" />
-                    {`${numFormat(result.view_count, "standard")} ${t("common:views", {
-                      count: result.view_count,
-                    })}`}
-                  </p>
-                )}
+                <p className="text-zinc-500 flex gap-2 text-sm" data-testid="hero-views">
+                  <EyeIcon className="w-4.5 h-4.5 self-center" />
+                  {loading ? "..." : views !== null ? `${numFormat(views, "standard")} ${t("common:views", { count: views })}` : "-"}
+                </p>
               </div>
             )}
 

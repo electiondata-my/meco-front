@@ -78,6 +78,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
         category={[t("category"), "text-primary dark:text-primary-dark"]}
         header={[t("header")]}
         description={[<Trans>{t("description")}</Trans>]}
+        pageId="/data-catalogue"
         // action={
         //   <div className="flex flex-wrap items-center gap-6">
         //     <At

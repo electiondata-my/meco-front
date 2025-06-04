@@ -182,6 +182,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         category={[t("hero.category", { ns: "home" }), "text-danger"]}
         header={[t("hero.header", { ns: "home" })]}
         description={[t("hero.description", { ns: "home" })]}
+        pageId="sitewide"
       />
 
       <Container>

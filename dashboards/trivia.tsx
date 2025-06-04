@@ -191,6 +191,7 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
         header={[t("hero.header", { ns: "trivia" })]}
         description={[t("hero.description", { ns: "trivia" })]}
         last_updated={last_updated}
+        pageId="/trivia"
       />
       <Container>
         <div className="py-8 lg:py-12 xl:grid xl:grid-cols-12">

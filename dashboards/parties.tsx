@@ -184,6 +184,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         header={[t("hero.header", { ns: "parties" })]}
         description={[t("hero.description", { ns: "parties" })]}
         last_updated={last_updated}
+        pageId="/parties"
       />
       <Container>
         <Section>

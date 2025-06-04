@@ -173,6 +173,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
         header={[t("hero.header", { ns: "candidates" })]}
         description={[t("hero.description", { ns: "candidates" })]}
         last_updated={last_updated}
+        pageId="/candidates"
       />
       <Container>
         <Section>
