@@ -74,7 +74,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const SEAT_OPTION = SEAT_OPTIONS.find((e) => e.value === DEFAULT_SEAT);
 
   const { data, setData } = useData({
-    seat_value: null,
+    seat_value: `${params.type}_${params.seat_name}`,
     loading: false,
     elections: elections,
   });
@@ -164,15 +164,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     },
   ]);
 
-  const { events, push } = useRouter();
-  useEffect(() => {
-    const finishLoading = () => {
-      setData("loading", false);
-      setData("seat_value", `${params.type}_${params.seat_name}`);
-    };
-    events.on("routeChangeComplete", finishLoading);
-    return () => events.off("routeChangeComplete", finishLoading);
-  }, [params]);
+  const { push } = useRouter();
 
   return (
     <>

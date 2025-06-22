@@ -20,6 +20,7 @@ const DUNSeat: Page = ({
     <>
       <Metadata keywords="dun" />
       <ElectionSeatsDashboard
+        key={`${params.type}-${params.seat_name}`}
         elections={elections}
         last_updated={last_updated}
         params={params}
