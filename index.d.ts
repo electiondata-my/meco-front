@@ -4,9 +4,7 @@ declare namespace NodeJS {
     APP_ENV: string;
     NEXT_PUBLIC_APP_URL: string;
     NEXT_PUBLIC_APP_ENV: string;
-    NEXT_PUBLIC_API_URL: string;
-    NEXT_PUBLIC_API_TOKEN: string;
-    NEXT_PUBLIC_AI_URL: string;
+    NEXT_PUBLIC_API_URL_S3: string;
     NEXT_PUBLIC_I18N_URL: string;
     NEXT_PUBLIC_AUTHORIZATION_TOKEN: string;
 
@@ -14,14 +12,10 @@ declare namespace NodeJS {
     AUTH_TOKEN: string;
     ANALYZE: boolean;
 
-    NEXT_PUBLIC_TILESERVER_URL: string;
-    NEXT_PUBLIC_GA_TAG: string;
-
-    MIXPANEL_TOKEN: string;
-    MIXPANEL_PROJECT_ID: string;
-    MIXPANEL_SA_USER: string;
-    MIXPANEL_SA_SECRET: string;
-    NEXT_PUBLIC_MIXPANEL_TOKEN: string;
+    NEXT_PUBLIC_API_URL_TB: string;
+    NEXT_PUBLIC_API_TOKEN_TB: string;
+    NEXT_PUBLIC_TINYBIRD_TOKEN: string;
+    NEXT_PUBLIC_TINYBIRD_TOKEN_READ: string;
   }
 }
 
@@ -41,5 +35,7 @@ declare module "canvas2svg" {
 }
 
 declare module "geojson-bbox" {
-  export default function (geojson: GeoJSONObject): [number, number, number, number] {}
+  export default function (
+    geojson: GeoJSONObject
+  ): [number, number, number, number] {}
 }

@@ -1,4 +1,11 @@
-import { FunctionComponent, ReactNode, useContext, useMemo, useEffect, useState } from "react";
+import {
+  FunctionComponent,
+  ReactNode,
+  useContext,
+  useMemo,
+  useEffect,
+  useState,
+} from "react";
 import Container from "@components/Container";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { useTranslation } from "next-i18next";
@@ -96,11 +103,14 @@ const Hero: FunctionComponent<HeroProps> = ({
       ) : (
         <div>
           <div className="space-y-6 py-12 xl:w-full">
-            {(category) && (
+            {category && (
               <div className="relative flex justify-between">
                 {category && (
                   <span
-                    className={clx("text-base font-semibold uppercase", category[1])}
+                    className={clx(
+                      "text-base font-semibold uppercase",
+                      category[1]
+                    )}
                     data-testid="hero-category"
                   >
                     {category[0]}
@@ -112,14 +122,20 @@ const Hero: FunctionComponent<HeroProps> = ({
             {(header || description || result?.view_count) && (
               <div className="space-y-3">
                 {header && (
-                  <h2 className={clx("text-zinc-900", header[1])} data-testid="hero-header">
+                  <h2
+                    className={clx("text-zinc-900", header[1])}
+                    data-testid="hero-header"
+                  >
                     {header[0]}
                   </h2>
                 )}
 
                 {description && Array.isArray(description) ? (
                   <p
-                    className={clx("text-zinc-500 max-xl:max-w-prose xl:w-2/3", description[1])}
+                    className={clx(
+                      "text-zinc-500 max-xl:max-w-prose xl:w-2/3",
+                      description[1]
+                    )}
                     data-testid="hero-description"
                   >
                     {description[0]}
@@ -127,9 +143,16 @@ const Hero: FunctionComponent<HeroProps> = ({
                 ) : (
                   description
                 )}
-                <p className="text-zinc-500 flex gap-2 text-sm" data-testid="hero-views">
+                <p
+                  className="text-zinc-500 flex gap-2 text-sm"
+                  data-testid="hero-views"
+                >
                   <EyeIcon className="w-4.5 h-4.5 self-center" />
-                  {loading ? "..." : views !== null ? `${numFormat(views, "standard")} ${t("common:views", { count: views })}` : "-"}
+                  {loading
+                    ? "..."
+                    : views !== null
+                      ? `${numFormat(views, "standard")} ${t("common:views", { count: views })}`
+                      : "-"}
                 </p>
               </div>
             )}
@@ -138,9 +161,16 @@ const Hero: FunctionComponent<HeroProps> = ({
               <div className="space-y-3">
                 {action}
                 {last_updated && (
-                  <p className="text-zinc-500 text-sm" data-testid="hero-last-updated">
+                  <p
+                    className="text-zinc-500 text-sm"
+                    data-testid="hero-last-updated"
+                  >
                     {t("common:last_updated", {
-                      date: toDate(last_updated, "dd MMM yyyy, HH:mm", i18n.language),
+                      date: toDate(
+                        last_updated,
+                        "dd MMM yyyy, HH:mm",
+                        i18n.language
+                      ),
                     })}
                   </p>
                 )}

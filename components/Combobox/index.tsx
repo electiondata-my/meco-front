@@ -19,17 +19,14 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { matchSorter, MatchSorterOptions } from "match-sorter";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-type ComboBoxProps<T> = Omit<
-  ComboOptionProps<T>,
-  "option" | "style" | "isSelected" | "active" | "index" | "setSize" | "total"
-> & {
-  options: ComboOptionProp<T>[];
-  selected?: ComboOptionProp<T> | null;
-  onChange: (option?: ComboOptionProp<T>) => void;
+type ComboBoxProps<T> = Omit & {
+  options: ComboOptionProp[];
+  selected?: ComboOptionProp | null;
+  onChange: (option?: ComboOptionProp) => void;
   onSearch?: (query: string) => void;
   placeholder?: string;
   loading?: boolean;
-  config?: MatchSorterOptions<ComboOptionProp<T>>;
+  config?: MatchSorterOptions;
 };
 
 const ComboBox = <T extends unknown>({
@@ -42,7 +39,7 @@ const ComboBox = <T extends unknown>({
   image,
   loading = false,
   config = { keys: ["label"] },
-}: ComboBoxProps<T>) => {
+}: ComboBoxProps) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState<string>(selected ? selected.label : "");
 
@@ -50,7 +47,7 @@ const ComboBox = <T extends unknown>({
     setQuery(selected ? selected.label : "");
   }, [selected]);
 
-  const filteredOptions = useMemo<ComboOptionProp<T>[]>(
+  const filteredOptions = useMemo<ComboOptionProp[]>(
     () => matchSorter(options, query, config),
     [options, query, config]
   );
@@ -66,7 +63,7 @@ const ComboBox = <T extends unknown>({
   // items to render. This needs to be a smaller value so it doesn't try
   // to render every single item on mount.
   const [maxHeight, setMaxHeight] = useState(240);
-  const listRef = useRef<Array<HTMLElement | null>>([]);
+  const listRef = useRef<Array>([]);
 
   const { refs, floatingStyles, context } = useFloating<HTMLInputElement>({
     placement: "bottom-start",
@@ -126,7 +123,7 @@ const ComboBox = <T extends unknown>({
         )}
         spellCheck={false}
         {...getReferenceProps({
-          onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+          onChange: (event: React.ChangeEvent) => {
             const value = event.target.value;
             setQuery(value);
             if (onSearch) onSearch(value);
@@ -175,7 +172,11 @@ const ComboBox = <T extends unknown>({
       )}
       {open && (
         <FloatingPortal>
-          <FloatingFocusManager context={context} initialFocus={-1} visuallyHiddenDismiss>
+          <FloatingFocusManager
+            context={context}
+            initialFocus={-1}
+            visuallyHiddenDismiss
+          >
             <div
               className={clx(
                 "border-slate-200 dark:border-zinc-800 shadow-floating absolute z-20 max-h-60 w-full overflow-auto rounded-md border bg-white text-sm focus:outline-none dark:bg-zinc-900"
@@ -201,7 +202,7 @@ const ComboBox = <T extends unknown>({
                   ) : (
                     filteredOptions.map((option, i) => {
                       return (
-                        <ComboOption<T>
+                        <ComboOption
                           {...getItemProps({
                             key: i,
                             ref(node) {

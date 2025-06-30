@@ -37,13 +37,15 @@ class HTMLDocument extends Document {
           />
 
           {/* Tinybird Analytics */}
-          <Script
-            id="tinybird-script"
-            strategy="afterInteractive"
-            src="https://unpkg.com/@tinybirdco/flock.js"
-            data-token={process.env.NEXT_PUBLIC_TINYBIRD_TOKEN}
-            data-host="https://api.us-west-2.aws.tinybird.co"
-          />
+          {process.env.APP_ENV === "production" && (
+            <Script
+              id="tinybird-script"
+              strategy="afterInteractive"
+              src="https://unpkg.com/@tinybirdco/flock.js"
+              data-token={process.env.NEXT_PUBLIC_TINYBIRD_TOKEN}
+              data-host="https://api.us-west-2.aws.tinybird.co"
+            />
+          )}
 
           {/* PWA setting */}
           <meta name="application-name" content="ElectionData.MY" />

@@ -3,13 +3,14 @@ const { i18n } = require("./next-i18next.config");
 /**
  * Plugins / Constants
  */
-const analyzer = require("@next/bundle-analyzer")({
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE ?? false,
 });
-const pwa = require("next-pwa")({
+const withPWA = require("next-pwa")({
   dest: "public",
   register: true,
   skipWaiting: true,
+  disable: process.env.NODE_ENV === "development",
 });
 
 /**
@@ -19,7 +20,6 @@ const pwa = require("next-pwa")({
 const nextConfig = {
   i18n,
   reactStrictMode: true,
-  swcMinify: true,
   publicRuntimeConfig: {
     APP_NAME: "ElectionData.MY",
     META_AUTHOR: "",
@@ -36,29 +36,6 @@ const nextConfig = {
     });
     return config;
   },
-  async rewrites() {
-    return [
-      {
-        source: "/mp/lib.min.js",
-        destination: "https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js",
-      },
-      {
-        source: "/mp/lib.js",
-        destination: "https://cdn.mxpnl.com/libs/mixpanel-2-latest.js",
-      },
-      {
-        source: "/mp/decide",
-        destination: "https://decide.mixpanel.com/decide",
-      },
-      {
-        source: "/mp/:slug*",
-        destination: "https://api.mixpanel.com/:slug*",
-      },
-    ];
-  },
 };
 
-module.exports = () => {
-  const plugins = [pwa]; // add analyzer here later
-  return plugins.reduce((acc, next) => next(acc), nextConfig);
-};
+module.exports = withBundleAnalyzer(withPWA(nextConfig));
