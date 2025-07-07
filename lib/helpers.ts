@@ -3,15 +3,35 @@ import { createElement, ReactElement } from "react";
 import { CountryAndStates } from "@lib/constants";
 import DomToImage from "dom-to-image";
 import canvasToSvg from "canvas2svg";
-import { twMerge, ClassNameValue } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+import { type ClassValue, clsx } from "clsx";
 
+/**
+ * When using myds, we will reach limitation to extended theme, particulary font-size and font-color, where both using using `text-*`.
+ * in MYDS, we have "text-heading-md" and "text-txt-black-900", which are grouped together its utility grouping in twMerge, hence when the two used together, the former definition will be dropped.
+ * This is the solution to fix the issue.
+ */
+const twMerge = extendTailwindMerge({
+  override: {
+    classGroups: {
+      "font-size": [
+        {
+          text: [
+            (cls: string) => cls.startsWith("heading-"),
+            (cls: string) => cls.startsWith("body-"),
+          ],
+        },
+      ],
+    },
+  },
+});
 /**
  * Conditional class joiner.
  * @param args classNames
  * @returns string
  */
-export const clx = (...args: ClassNameValue[]): string => {
-  return twMerge(args);
+export const clx = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs));
 };
 
 /**
@@ -52,7 +72,9 @@ export const limitMax = (e: number, max: number = 100) => {
  * @param value number[]
  * @returns [min, max]
  */
-export const minMax = (values: Array<number | null>): [min: number, max: number] => {
+export const minMax = (
+  values: Array<number | null>,
+): [min: number, max: number] => {
   let min: number = 0;
   let max: number = 0;
   for (let num of values) {
@@ -77,13 +99,20 @@ export const minMax = (values: Array<number | null>): [min: number, max: number]
  */
 export const numFormat = (
   value: number,
-  type: "compact" | "standard" | "scientific" | "engineering" | undefined = "compact",
+  type:
+    | "compact"
+    | "standard"
+    | "scientific"
+    | "engineering"
+    | undefined = "compact",
   precision: number | [max: number, min: number] = 0,
   compactDisplay: "short" | "long" = "short",
   locale: string = "en",
-  smart: boolean = false
+  smart: boolean = false,
 ): string => {
-  const [max, min] = Array.isArray(precision) ? precision : [precision, precision];
+  const [max, min] = Array.isArray(precision)
+    ? precision
+    : [precision, precision];
 
   if (smart === true) {
     let formatter: Intl.NumberFormat;
@@ -148,10 +177,12 @@ export function smartNumFormat({
 export const toDate = (
   timestamp: number | string,
   format: string = "dd MMM yyyy",
-  locale: string = "en-GB"
+  locale: string = "en-GB",
 ): string => {
   const date =
-    typeof timestamp === "number" ? DateTime.fromMillis(timestamp) : DateTime.fromSQL(timestamp);
+    typeof timestamp === "number"
+      ? DateTime.fromMillis(timestamp)
+      : DateTime.fromSQL(timestamp);
   const formatted_date = date.setLocale(locale).toFormat(format);
 
   return formatted_date !== "Invalid DateTime" ? formatted_date : "N/A";
@@ -169,7 +200,9 @@ export const sortMsiaFirst = (array: Array<any>, key?: string): Array<any> => {
       if (a[key] === "mys") {
         return -1;
       }
-      return (CountryAndStates[a[key]] as string).localeCompare(CountryAndStates[b[key]]);
+      return (CountryAndStates[a[key]] as string).localeCompare(
+        CountryAndStates[b[key]],
+      );
     }
     if (a === "mys") {
       return -1;
@@ -184,21 +217,27 @@ export const sortMsiaFirst = (array: Array<any>, key?: string): Array<any> => {
  * @param key Comparator key
  * @returns Sorted array of objects
  */
-export const sortAlpha = (array: Array<Record<string, any>>, key: string): Array<any> => {
+export const sortAlpha = (
+  array: Array<Record<string, any>>,
+  key: string,
+): Array<any> => {
   return array.sort((a: any, b: any) => a[key].localeCompare(b[key]));
 };
 
 export const sortMulti = <T extends number>(
   object: Record<string, any[]>,
   index: string,
-  sort: (a: T, b: T) => number
+  sort: (a: T, b: T) => number,
 ) => {
   const indexed = Array.from(object[index].keys()).sort((a, b) =>
-    sort(object[index][a], object[index][b])
+    sort(object[index][a], object[index][b]),
   );
 
   return Object.fromEntries(
-    Object.entries(object).map(([key, value]) => [key, indexed.map(i => value[i])])
+    Object.entries(object).map(([key, value]) => [
+      key,
+      indexed.map((i) => value[i]),
+    ]),
   );
 };
 
@@ -217,7 +256,11 @@ export const copyClipboard = async (text: string): Promise<void> => {
 /**
  * Returns indices of top n largest/smallest item from an array
  */
-export const getTopIndices = (arr: number[], n: number, reverse = false): number[] => {
+export const getTopIndices = (
+  arr: number[],
+  n: number,
+  reverse = false,
+): number[] => {
   // create an array of [value, index] pairs
   const pairs = arr.map((value, index) => [value, index]);
 
@@ -228,7 +271,7 @@ export const getTopIndices = (arr: number[], n: number, reverse = false): number
   const topPairs = pairs.slice(0, n);
 
   // extract the indices from the top pairs and return them
-  return topPairs.map(pair => pair[1]);
+  return topPairs.map((pair) => pair[1]);
 };
 
 /**
@@ -286,10 +329,10 @@ export const chunkSplit = (text: string, len: number): string[] => {
 
 export const exportAs = async (
   type: "svg" | "png",
-  element: HTMLCanvasElement
+  element: HTMLCanvasElement,
 ): Promise<string> => {
   if (type === "svg") {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const canvas = canvasToSvg(element.width, element.height);
       canvas.drawImage(element, 0, 0);
       resolve("data:svg+xml;utf8,".concat(canvas.getSerializedSvg()));
@@ -311,9 +354,10 @@ export const interpolate = (raw_text: string): string | ReactElement[] => {
 
   if (matches.length <= 1) return raw_text;
 
-  return matches.map(item => {
+  return matches.map((item) => {
     const match = item.split("](");
-    if (match.length <= 1) return createElement("span", { className: "text-inherit" }, item);
+    if (match.length <= 1)
+      return createElement("span", { className: "text-inherit" }, item);
     const [text, url] = match;
     return createElement(
       "a",
@@ -323,7 +367,7 @@ export const interpolate = (raw_text: string): string | ReactElement[] => {
           "text-primary dark:text-primary-dark hover:underline inline [text-underline-position:from-font]",
         target: "_blank",
       },
-      text
+      text,
     );
   }) as ReactElement[];
 };
@@ -337,7 +381,7 @@ export const parseCookies = (cookie: string) => {
   const cookies = cookie.split(";");
   const parsedCookies: Record<string, string> = {};
 
-  cookies.forEach(cookie => {
+  cookies.forEach((cookie) => {
     const [name, value] = cookie.trim().split("=");
     parsedCookies[name] = decodeURIComponent(value);
   });
@@ -358,11 +402,12 @@ export const snakeCase = <T extends string>(str: T) => {
 };
 
 // MATH helpers
-export const average = (values: number[]): number => values.reduce((a, b) => a + b) / values.length;
+export const average = (values: number[]): number =>
+  values.reduce((a, b) => a + b) / values.length;
 
 export const standardDeviation = (values: number[]): number => {
   const mean = average(values);
-  const variance = average(values.map(x => Math.pow(x - mean, 2)));
+  const variance = average(values.map((x) => Math.pow(x - mean, 2)));
   return Math.sqrt(variance);
 };
 

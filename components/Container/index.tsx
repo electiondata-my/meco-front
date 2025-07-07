@@ -1,28 +1,32 @@
 import { clx } from "@lib/helpers";
-import { FunctionComponent, ReactNode } from "react";
+import React from "react";
 
-type ContainerProps = {
+type ContainerProps<T extends React.ElementType> = {
+  as?: T;
+  children?: React.ReactNode;
   background?: string;
   className?: string;
-  children?: ReactNode;
-};
+} & Omit<React.ComponentPropsWithoutRef<T>, "as" | "children">;
 
-const Container: FunctionComponent<ContainerProps> = ({
+const Container = <T extends React.ElementType = "section">({
+  as,
+  children,
   background,
   className,
-  children,
-}) => {
+  ...rest
+}: ContainerProps<T>) => {
+  const Component = as || "div";
   return (
-    <div className={clx("flex h-full w-full justify-center", background)}>
-      <div
-        className={clx(
-          "md:px-4.5 divide-y divide-slate-200 dark:divide-zinc-800 h-full w-full max-w-screen-2xl px-3 lg:px-6",
-          className
-        )}
-      >
-        {children}
-      </div>
-    </div>
+    <Component
+      className={clx(
+        "mx-auto grid h-full w-full grid-cols-4 gap-4.5 px-10 md:grid-cols-8 md:gap-6 md:px-[84px] lg:grid-cols-12",
+        background,
+        className,
+      )}
+      {...rest}
+    >
+      {children}
+    </Component>
   );
 };
 

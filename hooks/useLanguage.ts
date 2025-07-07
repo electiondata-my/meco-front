@@ -1,5 +1,5 @@
-import { OptionType } from "@lib/types";
 import { useRouter } from "next/router";
+import { useTransition } from "react";
 /**
  * Language switcher hook.
  * @returns Page with current language
@@ -7,10 +7,14 @@ import { useRouter } from "next/router";
 export const useLanguage = () => {
   const { pathname, asPath, query, locale, push } = useRouter();
 
-  const onLanguageChange = (lang: OptionType) => {
-    push({ pathname, query }, asPath, {
-      locale: lang.value,
-      scroll: false,
+  const [_, startTransition] = useTransition();
+
+  const onLanguageChange = (lang: string) => {
+    startTransition(() => {
+      push({ pathname, query }, asPath, {
+        locale: lang,
+        scroll: false,
+      });
     });
   };
 

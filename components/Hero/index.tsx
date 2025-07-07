@@ -11,6 +11,8 @@ import { clx, numFormat, toDate } from "@lib/helpers";
 import { useTranslation } from "next-i18next";
 import { AnalyticsContext } from "@lib/contexts/analytics";
 import { EyeIcon } from "@heroicons/react/20/solid";
+import HeroPattern from "./hero-pattern";
+import SectionGrid from "@components/Section/section-grid";
 
 type ConditionalHeroProps =
   | {
@@ -20,6 +22,7 @@ type ConditionalHeroProps =
       category?: never;
       description?: never;
       action?: never;
+      withPattern?: true;
     }
   | HeroDefault;
 
@@ -30,6 +33,7 @@ type HeroDefault = {
   category?: [text: string, className?: string];
   description?: [text: string, className?: string] | ReactNode;
   action?: ReactNode;
+  withPattern?: true;
 };
 
 type HeroProps = {
@@ -48,6 +52,7 @@ const Hero: FunctionComponent<HeroProps> = ({
   action,
   last_updated,
   pageId = "sitewide",
+  withPattern,
 }) => {
   const { t, i18n } = useTranslation();
   const { result } = useContext(AnalyticsContext);
@@ -79,7 +84,7 @@ const Hero: FunctionComponent<HeroProps> = ({
       case "blue":
         return "bg-gradient-radial from-[#A1BFFF] to-slate-50 dark:from-[#203053] dark:to-zinc-900";
       case "red":
-        return "bg-gradient-radial from-[#FFE1E1] to-slate-50 dark:from-[#492424] dark:to-zinc-900";
+        return "bg-gradient-radial from-bg-danger-100 to-bg-white";
       case "purple":
         return "bg-gradient-radial from-[#C4B5FD] to-slate-50 dark:from-[#281843] dark:to-zinc-900";
       case "green":
@@ -95,89 +100,72 @@ const Hero: FunctionComponent<HeroProps> = ({
 
   return (
     <Container
-      background={clx(background_style, "border-b dark:border-zinc-800")}
+      background={clx(background_style, "")}
       className={clx("relative", className)}
+      as="section"
     >
+      {withPattern && (
+        <div className="absolute flex h-full w-full justify-center overflow-hidden">
+          <HeroPattern className="animate-flow absolute motion-reduce:animate-none" />
+        </div>
+      )}
       {children ? (
         children
       ) : (
-        <div>
-          <div className="space-y-6 py-12 xl:w-full">
+        <SectionGrid>
+          <div className="flex max-w-[846px] flex-col items-center justify-center space-y-6 pt-16">
             {category && (
-              <div className="relative flex justify-between">
-                {category && (
-                  <span
-                    className={clx(
-                      "text-base font-semibold uppercase",
-                      category[1]
-                    )}
-                    data-testid="hero-category"
-                  >
-                    {category[0]}
-                  </span>
+              <h3
+                className={clx(
+                  "text-body-lg font-semibold uppercase leading-5 tracking-[0.2em]",
+                  category[1],
                 )}
-              </div>
+                data-testid="hero-category"
+              >
+                {category[0]}
+              </h3>
             )}
 
-            {(header || description || result?.view_count) && (
-              <div className="space-y-3">
-                {header && (
-                  <h2
-                    className={clx("text-zinc-900", header[1])}
-                    data-testid="hero-header"
-                  >
-                    {header[0]}
-                  </h2>
+            {header && (
+              <h1
+                className={clx(
+                  "font-heading text-heading-md font-semibold text-txt-black-900",
+                  header[1],
                 )}
-
-                {description && Array.isArray(description) ? (
-                  <p
-                    className={clx(
-                      "text-zinc-500 max-xl:max-w-prose xl:w-2/3",
-                      description[1]
-                    )}
-                    data-testid="hero-description"
-                  >
-                    {description[0]}
-                  </p>
-                ) : (
-                  description
-                )}
-                <p
-                  className="text-zinc-500 flex gap-2 text-sm"
-                  data-testid="hero-views"
-                >
-                  <EyeIcon className="w-4.5 h-4.5 self-center" />
-                  {loading
-                    ? "..."
-                    : views !== null
-                      ? `${numFormat(views, "standard")} ${t("common:views", { count: views })}`
-                      : "-"}
-                </p>
-              </div>
+                data-testid="hero-header"
+              >
+                {header[0]}
+              </h1>
             )}
 
-            {(action || last_updated) && (
-              <div className="space-y-3">
-                {action}
-                {last_updated && (
-                  <p
-                    className="text-zinc-500 text-sm"
-                    data-testid="hero-last-updated"
-                  >
-                    {t("common:last_updated", {
-                      date: toDate(
-                        last_updated,
-                        "dd MMM yyyy, HH:mm",
-                        i18n.language
-                      ),
-                    })}
-                  </p>
+            {description && Array.isArray(description) ? (
+              <p
+                className={clx(
+                  "w-full text-center text-body-md text-txt-black-700",
+                  description[1],
                 )}
-              </div>
+                data-testid="hero-description"
+              >
+                {description[0]}
+              </p>
+            ) : (
+              description
             )}
+            <p
+              className="flex gap-0.5 text-body-sm text-txt-black-500"
+              data-testid="hero-views"
+            >
+              <EyeIcon className="h-4.5 w-4.5 self-center" />
+              {loading
+                ? "..."
+                : views !== null
+                  ? `${numFormat(views, "standard")} ${t("common:views", { count: views })}`
+                  : "-"}
+            </p>
+
+            {action}
           </div>
-        </div>
+        </SectionGrid>
       )}
     </Container>
   );

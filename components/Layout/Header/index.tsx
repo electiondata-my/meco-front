@@ -4,12 +4,11 @@ import {
   NavbarMenuItem,
   NavbarAction,
 } from "@govtechmy/myds-react/navbar";
-// import LocaleSwitch from "./locale-switch";
 import { Suspense } from "react";
-// import { Link } from "@/lib/i18n/routing";
 import Image from "next/image";
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
+import LocaleSwitch from "./locale-switch";
 
 export default function Header() {
   return (
@@ -47,7 +46,7 @@ export default function Header() {
       <NavbarAction>
         <Suspense>
           <ThemeToggle />
-          {/* <LocaleSwitch /> */}
+          <LocaleSwitch />
         </Suspense>
       </NavbarAction>
     </Navbar>

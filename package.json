@@ -37,6 +37,7 @@
     "chartjs-plugin-annotation": "2.2.1",
     "chartjs-plugin-crosshair": "^1.2.0",
     "chartjs-plugin-datalabels": "^2.2.0",
+    "clsx": "^2.1.1",
     "cookie": "^0.5.0",
     "d3-scale-chromatic": "^3.0.0",
     "dom-to-image": "^2.6.0",
@@ -90,7 +91,8 @@
     "eslint-config-prettier": "^10.1.5",
     "lint-staged": ">=10",
     "postcss": "8.4.47",
-    "prettier": "latest",
+    "prettier": "3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.13",
     "tailwindcss": "3"
   },
   "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac"

@@ -4,7 +4,7 @@ import type { AnnotationPluginOptions } from "chartjs-plugin-annotation";
 import type { NextPage } from "next";
 import { UserConfig } from "next-i18next";
 import type { AppProps } from "next/app";
-import type { ReactElement, ReactNode } from "react";
+import type { JSX, ReactElement, ReactNode } from "react";
 
 export type AppPropsLayout = AppProps & {
   Component: Page;
@@ -17,30 +17,34 @@ export type Page = NextPage & {
 
 export type I18nConfig = UserConfig & { autoloadNs: string[] };
 
-export type defineConfig = (namespace: string[], autoloadNs: string[]) => I18nConfig;
+export type defineConfig = (
+  namespace: string[],
+  autoloadNs: string[]
+) => I18nConfig;
 
 // CHART INTERFACE
-export type ChartCrosshairOption<T extends keyof ChartTypeRegistry> = ChartOptions<T> & {
-  plugins: {
-    crosshair?:
-      | {
-          line: {
-            width?: number;
-            color?: string;
-            dashPattern?: [number, number];
-          };
-          zoom: {
-            enabled: boolean;
-          };
-          sync: {
-            enabled: boolean;
-          };
-        }
-      | false;
-    annotation?: AnnotationPluginOptions | false;
-    datalabels?: any | false;
+export type ChartCrosshairOption<T extends keyof ChartTypeRegistry> =
+  ChartOptions<T> & {
+    plugins: {
+      crosshair?:
+        | {
+            line: {
+              width?: number;
+              color?: string;
+              dashPattern?: [number, number];
+            };
+            zoom: {
+              enabled: boolean;
+            };
+            sync: {
+              enabled: boolean;
+            };
+          }
+        | false;
+      annotation?: AnnotationPluginOptions | false;
+      datalabels?: any | false;
+    };
   };
-};
 
 export type TimeseriesOption = {
   period: "auto" | "month" | "year";

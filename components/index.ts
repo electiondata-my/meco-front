@@ -17,11 +17,9 @@ export { default as ImageWithFallback } from "./ImageWithFallback";
 export { default as Input } from "./Input";
 export { default as Label } from "./Label";
 export { default as LeftRightCard } from "./LeftRightCard";
-export { default as Megamenu } from "./Nav/megamenu";
 export { default as Metadata } from "./Metadata";
 export { default as Markdown } from "./Markdown";
 export { default as Modal } from "./Modal";
-export { default as Nav } from "./Nav";
 export { default as Progress } from "./Progress";
 export { default as Radio } from "./Radio";
 export { default as Search } from "./Search";
@@ -37,7 +35,6 @@ export { default as Textarea } from "./Textarea";
 export { default as Toast, toast } from "./Toast";
 // export { default as Toggle } from "./Toggle";
 export { default as Tooltip } from "./Tooltip";
-export { default as ThemeToggle } from "./Nav/theme";
 
 /** Derivatives */
 export { default as StateDropdown } from "./Dropdown/StateDropdown";

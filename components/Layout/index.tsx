@@ -16,16 +16,10 @@ import {
 } from "@govtechmy/myds-react/icon";
 
 interface LayoutProps {
-  className?: string;
-  stateSelector?: ReactNode;
   children: ReactNode;
 }
 
-const Layout: FunctionComponent<LayoutProps> = ({
-  className,
-  children,
-  stateSelector,
-}) => {
+const Layout: FunctionComponent<LayoutProps> = ({ children }) => {
   return (
     <>
       <Masthead>

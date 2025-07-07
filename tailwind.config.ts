@@ -2,7 +2,6 @@ import { preset } from "@govtechmy/myds-style";
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -19,7 +18,7 @@ export default {
     extend: {
       backgroundImage: {
         "gradient-radial":
-          "radial-gradient(59.1% 166.02% at 50% -66.02%, var(--tw-gradient-stops))",
+          "radial-gradient(101.65% 92.54% at 50% 0%, var(--tw-gradient-stops))",
       },
       fontFamily: {
         poppins: ["var(--font-poppins)"],

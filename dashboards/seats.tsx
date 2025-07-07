@@ -8,14 +8,20 @@ import {
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
+import { Container, Hero, toast } from "@components/index";
+import SectionGrid from "@components/Section/section-grid";
 import {
-  At,
-  ComboBox,
-  Container,
-  Hero,
-  Section,
-  toast,
-} from "@components/index";
+  SearchBar,
+  SearchBarInput,
+  SearchBarInputContainer,
+  SearchBarSearchButton,
+  SearchBarResults,
+  SearchBarResultsList,
+  SearchBarResultsItem,
+  SearchBarClearButton,
+  SearchBarHint,
+} from "@govtechmy/myds-react/search-bar";
+import { Pill } from "@govtechmy/myds-react/pill";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
@@ -33,7 +39,7 @@ const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
-  }
+  },
 );
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
@@ -63,7 +69,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       state: seat_name.split(", ")[1],
       seat: seat_name.split(", ")[0],
       type: type,
-    })
+    }),
   );
 
   const DEFAULT_SEAT =
@@ -82,13 +88,15 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const fetchFullResult = async (
     election: string,
     seat: string,
-    date: string
+    date: string,
   ): Promise<Result<BaseResult[]>> => {
     const identifier = `${election}_${seat}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
       try {
-        const response = await get(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const response = await get(
+          `/results/${encodeURIComponent(seat)}/${date}.json`,
+        );
         const { ballot, summary } = response.data;
         const summaryStats = summary[0];
 
@@ -179,25 +187,56 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       <Toast />
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "home" }), "text-danger"]}
+        category={[t("hero.category", { ns: "home" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "home" })]}
         description={[t("hero.description", { ns: "home" })]}
         pageId="sitewide"
+        withPattern={true}
+        action={
+          <SearchBar size="large" className="w-full py-3 lg:max-w-[628px]">
+            <SearchBarInputContainer className="has-[input:focus]:border-otl-danger-300 has-[input:focus]:ring-otl-danger-200">
+              <SearchBarInput />
+              <SearchBarHint>
+                Press <Pill size="small">/</Pill> to search
+              </SearchBarHint>
+              <SearchBarClearButton />
+              <SearchBarSearchButton className="border-otl-danger-300 from-danger-400 to-danger-600 shadow-button focus:ring-fr-danger" />
+            </SearchBarInputContainer>
+            <SearchBarResults open={false}>
+              <SearchBarResultsList>
+                <SearchBarResultsItem value="foo">Foo</SearchBarResultsItem>
+                <SearchBarResultsItem value="bar">Bar</SearchBarResultsItem>
+              </SearchBarResultsList>
+            </SearchBarResults>
+          </SearchBar>
+        }
       />
 
       <Container>
-        <Section>
-          <div className="xl:grid xl:grid-cols-12">
-            <div className="xl:col-span-10 xl:col-start-2">
-              <h4 className="text-center">{t("header", { ns: "home" })}</h4>
-              <div className="mx-auto w-full py-6 sm:w-[500px]">
+        <SectionGrid className="space-y-10 py-16">
+          <h2 className="max-w-[846px] text-center font-heading text-heading-2xs font-semibold">
+            <span className="text-txt-danger">{SEAT_OPTION?.label}</span>
+            {
+              " is a {small / average-sized / large} {urban/rural} {Parlimen / DUN} in Melaka with 2,547,557 voters as of {election name} "
+            }
+          </h2>
+
+          <div className="flex h-[328px] w-[628px] items-center justify-center bg-bg-white-disabled text-center font-mono text-heading-xl">
+            container for mapbox
+          </div>
+        </SectionGrid>
+        <SectionGrid className="space-y-6 pb-16">
+          <div className="w-full space-y-10">
+            {/* <div className="mx-auto w-full py-6 sm:w-[500px]">
                 <ComboBox<SeatOption>
                   placeholder={t("search_seat", { ns: "home" })}
                   options={SEAT_OPTIONS}
                   config={{
                     baseSort: (a, b) => {
                       if (a.item.type === b.item.type) {
-                        return String(a.item.seat).localeCompare(String(b.item.seat));
+                        return String(a.item.seat).localeCompare(
+                          String(b.item.seat)
+                        );
                       }
                       return a.item.type === "parlimen" ? -1 : 1;
                     },
@@ -230,21 +269,51 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                     } else setData("seat_value", selected);
                   }}
                 />
+              </div> */}
+            <ElectionTable
+              title={
+                <h2 className="text-center font-heading text-heading-2xs font-semibold">
+                  {t("title", { ns: "home" })}
+                  <span className="text-txt-danger">{SEAT_OPTION?.label}</span>
+                </h2>
+              }
+              data={elections}
+              columns={seat_schema}
+              isLoading={data.loading}
+            />
+          </div>
+        </SectionGrid>
+
+        <SectionGrid className="space-y-10 py-16">
+          <h2 className="text-center font-heading text-heading-2xs font-semibold">
+            A breakdown of the 2,547,557 voters in{" "}
+            <span className="text-txt-danger">{SEAT_OPTION?.label}</span>
+          </h2>
+
+          <div className="flex w-full gap-6">
+            <div className="flex h-[516px] w-[410px] items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
+              PYRAMID Chart here
+            </div>
+            <div className="flex flex-1 flex-col gap-6">
+              <div className="flex h-full w-full gap-6">
+                <div className="flex h-[272px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
+                  CHART 1
+                </div>
+                <div className="flex h-[272px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
+                  CHART 2
+                </div>
               </div>
-              <ElectionTable
-                title={
-                  <h5 className="py-6">
-                    {t("title", { ns: "home" })}
-                    <span className="text-primary">{SEAT_OPTION?.label}</span>
-                  </h5>
-                }
-                data={elections}
-                columns={seat_schema}
-                isLoading={data.loading}
-              />
+              <div className="flex h-full w-full gap-6">
+                <div className="flex h-[220px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
+                  CHART 3
+                </div>
+                <div className="flex h-[220px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
+                  CHART 4
+                </div>
+              </div>
             </div>
           </div>
-        </Section>
+        </SectionGrid>
       </Container>
     </>
   );
