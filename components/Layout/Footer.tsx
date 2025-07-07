@@ -1,12 +1,10 @@
 import { useTranslation } from "@hooks/useTranslation";
-import { VoteIconSolid } from "@icons/index";
 import {
   Footer,
   SiteInfo,
   FooterSection,
   SiteLinkGroup,
   SiteLink,
-  FooterLogo,
 } from "@govtechmy/myds-react/footer";
 import Image from "next/image";
 import Link from "next/link";
