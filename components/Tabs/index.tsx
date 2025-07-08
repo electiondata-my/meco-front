@@ -29,11 +29,21 @@ interface ListProps {
   onChange: (index: number) => void;
 }
 
-const Panel: FunctionComponent<PanelProps> = ({ children, className, name }) => {
+const Panel: FunctionComponent<PanelProps> = ({
+  children,
+  className,
+  name,
+}) => {
   return <div className={className}>{children}</div>;
 };
 
-const List: FunctionComponent<ListProps> = ({ options, current, onChange, icons, className }) => {
+const List: FunctionComponent<ListProps> = ({
+  options,
+  current,
+  onChange,
+  icons,
+  className,
+}) => {
   return (
     <ul className={clx("flex flex-wrap", className)}>
       {options.map((option, index) => (
@@ -42,8 +52,8 @@ const List: FunctionComponent<ListProps> = ({ options, current, onChange, icons,
           className={clx(
             "flex cursor-pointer select-none self-center whitespace-nowrap rounded-full px-2.5 py-1 text-sm outline-none transition-colors",
             current === index
-              ? "bg-slate-200 dark:bg-zinc-800 font-medium text-zinc-900 dark:text-white"
-              : "text-zinc-500 bg-transparent hover:text-zinc-900 dark:hover:text-white"
+              ? "bg-slate-200 dark:bg-zinc-800 text-zinc-900 font-medium dark:text-white"
+              : "text-zinc-500 hover:text-zinc-900 bg-transparent dark:hover:text-white",
           )}
           onClick={() => onChange(index)}
         >
@@ -55,7 +65,10 @@ const List: FunctionComponent<ListProps> = ({ options, current, onChange, icons,
   );
 };
 
-const Tabs: FunctionComponent<TabsProps> & { Panel: typeof Panel; List: typeof List } = ({
+const Tabs: FunctionComponent<TabsProps> & {
+  Panel: typeof Panel;
+  List: typeof List;
+} = ({
   className = "",
   hidden,
   children,
@@ -71,7 +84,12 @@ const Tabs: FunctionComponent<TabsProps> & { Panel: typeof Panel; List: typeof L
   return (
     <>
       <Tab.Group selectedIndex={current} onChange={onChange}>
-        <div className={clx("flex flex-wrap items-end justify-between gap-3", className)}>
+        <div
+          className={clx(
+            "flex flex-wrap items-end justify-between gap-3",
+            className,
+          )}
+        >
           <div>
             {title && typeof title === "string" ? (
               <span className="text-base font-bold">{title}</span>
@@ -83,7 +101,7 @@ const Tabs: FunctionComponent<TabsProps> & { Panel: typeof Panel; List: typeof L
           <Tab.List
             className={clx(
               "flex flex-wrap items-center justify-between gap-2.5",
-              hidden && "hidden"
+              hidden && "hidden",
             )}
           >
             {controls}
@@ -95,8 +113,8 @@ const Tabs: FunctionComponent<TabsProps> & { Panel: typeof Panel; List: typeof L
                     clx(
                       "group flex flex-row rounded-full px-[10px] py-1 text-sm outline-none transition-colors",
                       selected
-                        ? "bg-slate-200 dark:bg-zinc-800 font-medium text-zinc-900 dark:text-white"
-                        : "text-zinc-500 bg-transparent hover:text-zinc-900 dark:hover:text-white"
+                        ? "bg-otl-gray-200 font-medium text-txt-black-900"
+                        : "bg-transparent text-txt-black-500 hover:text-bg-black-900",
                     )
                   }
                 >

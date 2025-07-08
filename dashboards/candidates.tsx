@@ -19,6 +19,7 @@ import dynamic from "next/dynamic";
 import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
+import SectionGrid from "@components/Section/section-grid";
 
 /**
  * Candidates Dashboard
@@ -29,7 +30,7 @@ const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
-  }
+  },
 );
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
@@ -43,18 +44,18 @@ const ElectionCandidatesDashboard: FunctionComponent<
   const { t } = useTranslation(["common", "candidates"]);
 
   const CANDIDATE_OPTIONS: Array<OptionType> = selection.map(
-    ({ name, slug, c, w, l }) => ({ 
-      label: `${name} (W${w}, L${l})`, 
+    ({ name, slug, c, w, l }) => ({
+      label: `${name} (W${w}, L${l})`,
       value: slug,
       contests: Number(c),
       wins: Number(w),
-      losses: Number(l)
-    })
+      losses: Number(l),
+    }),
   );
 
   const DEFAULT_CANDIDATE = "00103";
   const CANDIDATE_OPTION = CANDIDATE_OPTIONS.find(
-    (e) => e.value === (params.candidate ?? DEFAULT_CANDIDATE)
+    (e) => e.value === (params.candidate ?? DEFAULT_CANDIDATE),
   );
 
   const { cache } = useCache();
@@ -114,13 +115,15 @@ const ElectionCandidatesDashboard: FunctionComponent<
   const fetchFullResult = async (
     election: string,
     seat: string,
-    date: string
+    date: string,
   ): Promise<Result<BaseResult[]>> => {
     const identifier = `${election}_${seat}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
       try {
-        const response = await get(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const response = await get(
+          `/results/${encodeURIComponent(seat)}/${date}.json`,
+        );
         const { ballot, summary } = response.data;
         const summaryStats = summary[0];
 
@@ -169,14 +172,15 @@ const ElectionCandidatesDashboard: FunctionComponent<
       <Toast />
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "candidates" }), "text-danger"]}
+        category={[t("hero.category", { ns: "candidates" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "candidates" })]}
         description={[t("hero.description", { ns: "candidates" })]}
         last_updated={last_updated}
         pageId="/candidates"
+        withPattern={true}
       />
       <Container>
-        <Section>
+        <SectionGrid>
           <div className="xl:grid xl:grid-cols-12">
             <div className="xl:col-span-10 xl:col-start-2">
               <h4 className="text-center">
@@ -198,7 +202,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                   selected={
                     data.candidate_value
                       ? CANDIDATE_OPTIONS.find(
-                          (e) => e.value === data.candidate_value
+                          (e) => e.value === data.candidate_value,
                         )
                       : null
                   }
@@ -206,7 +210,11 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     if (selected) {
                       setData("loading", true);
                       setData("candidate_value", selected.value);
-                      push(routes.CANDIDATES + "/" + selected.value, undefined, { scroll: false });
+                      push(
+                        routes.CANDIDATES + "/" + selected.value,
+                        undefined,
+                        { scroll: false },
+                      );
                     } else setData("candidate_value", selected);
                   }}
                 />
@@ -251,7 +259,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
               </Tabs>
             </div>
           </div>
-        </Section>
+        </SectionGrid>
       </Container>
     </>
   );

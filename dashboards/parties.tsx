@@ -23,6 +23,7 @@ import dynamic from "next/dynamic";
 import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
+import SectionGrid from "@components/Section/section-grid";
 
 /**
  * Parties
@@ -33,7 +34,7 @@ const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
-  }
+  },
 );
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
@@ -57,7 +58,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
 
   const DEFAULT_PARTY = "PERIKATAN";
   const PARTY_OPTION = PARTY_OPTIONS.find(
-    (e) => e.value === (params.party ?? DEFAULT_PARTY)
+    (e) => e.value === (params.party ?? DEFAULT_PARTY),
   );
   const CURRENT_STATE = params.state ?? "mys";
 
@@ -127,7 +128,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
 
   const fetchFullResult = async (
     election: string,
-    state: string
+    state: string,
   ): Promise<Result<PartyResult>> => {
     const identifier = `${election}_${state}`;
     return new Promise(async (resolve) => {
@@ -135,7 +136,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
       const election_type = data.tab_index ? "dun" : "parlimen";
       const election_name = election ?? "GE-15";
       const url = `/elections/${state}/${election_type}-${election_name}.json`;
-      console.log(url);
       try {
         const { data: response } = await get(url);
         const ballot = response.ballot;
@@ -180,14 +180,15 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
       <Toast />
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "parties" }), "text-danger"]}
+        category={[t("hero.category", { ns: "parties" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "parties" })]}
         description={[t("hero.description", { ns: "parties" })]}
         last_updated={last_updated}
         pageId="/parties"
+        withPattern={true}
       />
       <Container>
-        <Section>
+        <SectionGrid>
           <div className="xl:grid xl:grid-cols-12">
             <div className="xl:col-span-10 xl:col-start-2">
               {/* Explore any party's entire electoral history */}
@@ -227,7 +228,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                           data.state ?? CURRENT_STATE
                         }`,
                         undefined,
-                        { scroll: false }
+                        { scroll: false },
                       );
                     } else setData("party_value", selected);
                   }}
@@ -264,7 +265,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                             data.party_value ? data.party_value : DEFAULT_PARTY
                           }/${selected.value}`,
                           undefined,
-                          { scroll: false }
+                          { scroll: false },
                         );
                       }}
                       width="inline-flex ml-0.5"
@@ -309,8 +310,8 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                           context: ["kul", "lbn", "pjy"].includes(params.state)
                             ? "dun_wp"
                             : ["mys", null].includes(params.state)
-                            ? "dun_mys"
-                            : "dun",
+                              ? "dun_mys"
+                              : "dun",
                         })}
                       </Trans>
                     }
@@ -319,7 +320,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
               </Tabs>
             </div>
           </div>
-        </Section>
+        </SectionGrid>
       </Container>
     </>
   );

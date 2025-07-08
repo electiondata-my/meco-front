@@ -20,6 +20,7 @@ import { VoteIconSolid } from "@icons/index";
 import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
 import { FunctionComponent } from "react";
+import SectionGrid from "@components/Section/section-grid";
 
 /**
  * Trivia
@@ -31,7 +32,7 @@ const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
-  }
+  },
 );
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
@@ -66,26 +67,28 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
       metric.push(curr);
       return prev;
     },
-    {} as Record<string, any>
+    {} as Record<string, any>,
   );
 
   const FILTER_OPTIONS: Array<OptionType> = ["slim", "big"].map(
     (key: string) => ({
       label: t(`trivia:${key}`),
       value: key,
-    })
+    }),
   );
 
   const fetchFullResult = async (
     election: string,
     seat: string,
-    date: string
+    date: string,
   ): Promise<Result<BaseResult[]>> => {
     const identifier = `${election}_${seat}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
       try {
-        const response = await get(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const response = await get(
+          `/results/${encodeURIComponent(seat)}/${date}.json`,
+        );
         const { ballot, summary } = response.data;
         const summaryStats = summary[0];
 
@@ -187,102 +190,128 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
       <Toast />
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "trivia" }), "text-danger"]}
+        category={[t("hero.category", { ns: "trivia" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "trivia" })]}
         description={[t("hero.description", { ns: "trivia" })]}
         last_updated={last_updated}
         pageId="/trivia"
+        withPattern={true}
       />
       <Container>
-        <div className="py-8 lg:py-12 xl:grid xl:grid-cols-12">
-          <div className="space-y-12 xl:col-span-10 xl:col-start-2">
-            <div className="flex flex-col items-center gap-6">
-              <h4 className="text-center">
-                {t("header", {
-                  ns: "trivia",
-                  country: CountryAndStates[params.state],
-                })}
-              </h4>
-              <StateDropdown
-                url={"/trivia"}
-                anchor="left"
-                width="w-fit"
-                currentState={params.state}
-                exclude={["kul", "lbn", "pjy"]}
-              />
-            </div>
+        <SectionGrid className="space-y-12 py-12">
+          <div className="flex flex-col items-center gap-6">
+            <h4 className="text-center font-heading text-heading-2xs font-bold">
+              {t("header", {
+                ns: "trivia",
+                country: CountryAndStates[params.state],
+              })}
+            </h4>
+            <StateDropdown
+              url={"/trivia"}
+              anchor="left"
+              width="w-fit"
+              currentState={params.state}
+              exclude={["kul", "lbn", "pjy"]}
+            />
+          </div>
 
-            <div className="space-y-12 lg:space-y-6">
-              <div className="border-slate-200 dark:border-zinc-800 w-full space-y-6 rounded-xl border-0 p-0 lg:border lg:p-8">
-                <div className="gap-3">
-                  <VoteIconSolid className="text-primary mx-auto h-16 w-16" />
-                  <h5 className="text-center">
-                    {t("majority", {
-                      ns: "trivia",
-                      context: data.filter,
-                      country: CountryAndStates[params.state],
-                    })}
-                  </h5>
-                </div>
-                <Tabs
-                  title={
-                    <Dropdown
-                      anchor="left"
-                      width="w-fit"
-                      options={FILTER_OPTIONS}
-                      selected={FILTER_OPTIONS.find(
-                        (e) => e.value === data.filter
-                      )}
-                      onChange={(e) => setData("filter", e.value)}
-                    />
-                  }
-                  current={data.tab_index}
-                  onChange={(index: number) => setData("tab_index", index)}
-                >
-                  <Panel name={t("parlimen")}>
-                    <div className="max-h-[500px] overflow-auto md:max-h-full">
-                      <ElectionTable
-                        data={output.parlimen[data.filter].sort(
-                          (a: Seat, b: Seat) =>
-                            data.filter === "big" &&
-                            Number(b.majority) - Number(a.majority)
-                        )}
-                        columns={seat_schema}
-                        isLoading={data.loading}
-                        highlightedRows={[0, 1, 2]}
-                      />
-                    </div>
-                  </Panel>
-                  <Panel name={t("dun")}>
+          <div className="space-y-12 lg:space-y-6">
+            <div className="border-slate-200 dark:border-zinc-800 w-full space-y-6 rounded-xl border-0 p-0 lg:border lg:p-8">
+              <div className="gap-3">
+                <VoteIconSolid className="mx-auto h-16 w-16 text-primary-600" />
+                <h5 className="text-center">
+                  {t("majority", {
+                    ns: "trivia",
+                    context: data.filter,
+                    country: CountryAndStates[params.state],
+                  })}
+                </h5>
+              </div>
+              <Tabs
+                title={
+                  <Dropdown
+                    anchor="left"
+                    width="w-fit"
+                    options={FILTER_OPTIONS}
+                    selected={FILTER_OPTIONS.find(
+                      (e) => e.value === data.filter,
+                    )}
+                    onChange={(e) => setData("filter", e.value)}
+                  />
+                }
+                current={data.tab_index}
+                onChange={(index: number) => setData("tab_index", index)}
+              >
+                <Panel name={t("parlimen")}>
+                  <div className="max-h-[500px] overflow-auto md:max-h-full">
                     <ElectionTable
-                      data={
-                        output.dun
-                          ? output.dun[data.filter].sort(
-                              (a: Seat, b: Seat) =>
-                                data.filter === "big" &&
-                                Number(b.majority) - Number(a.majority)
-                            )
-                          : {}
-                      }
+                      data={output.parlimen[data.filter].sort(
+                        (a: Seat, b: Seat) =>
+                          data.filter === "big" &&
+                          Number(b.majority) - Number(a.majority),
+                      )}
                       columns={seat_schema}
                       isLoading={data.loading}
-                      highlightedRows={[1, 2, 3]}
-                      empty={t("no_data_dun_wp", {
-                        ns: "parties",
-                        state: CountryAndStates[params.state],
-                      })}
+                      highlightedRows={[0, 1, 2]}
                     />
-                  </Panel>
-                </Tabs>
+                  </div>
+                </Panel>
+                <Panel name={t("dun")}>
+                  <ElectionTable
+                    data={
+                      output.dun
+                        ? output.dun[data.filter].sort(
+                            (a: Seat, b: Seat) =>
+                              data.filter === "big" &&
+                              Number(b.majority) - Number(a.majority),
+                          )
+                        : {}
+                    }
+                    columns={seat_schema}
+                    isLoading={data.loading}
+                    highlightedRows={[1, 2, 3]}
+                    empty={t("no_data_dun_wp", {
+                      ns: "parties",
+                      state: CountryAndStates[params.state],
+                    })}
+                  />
+                </Panel>
+              </Tabs>
+            </div>
+            <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:gap-6 xl:grid-cols-6">
+              <div className="border-slate-200 dark:border-zinc-800 space-y-6 rounded-xl border-0 p-0 lg:border lg:p-8 xl:col-span-2 xl:col-start-2">
+                <h5 className="text-center text-body-lg font-bold">
+                  {t("ge_veterans", { ns: "trivia" })}
+                </h5>
+                <BarMeter
+                  layout="horizontal"
+                  data={bar_parlimen.map((e) => ({
+                    x: e.name,
+                    y: e.competed,
+                  }))}
+                  relative
+                  formatY={(competed, name) => (
+                    <p className="whitespace-nowrap text-body-sm text-txt-black-500">{`${competed} (${t(
+                      "won",
+                      {
+                        ns: "trivia",
+                      },
+                    )} ${
+                      bar_parlimen.find(
+                        (e: Record<string, any>) => e.name === name,
+                      )?.won
+                    })`}</p>
+                  )}
+                />
               </div>
-              <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:gap-6 xl:grid-cols-6">
-                <div className="border-slate-200 dark:border-zinc-800 space-y-6 rounded-xl border-0 p-0 lg:border lg:p-8 xl:col-span-2 xl:col-start-2">
-                  <h5 className="text-center">
-                    {t("ge_veterans", { ns: "trivia" })}
-                  </h5>
+              <div className="flex h-max flex-col gap-y-6 rounded-xl border-0 border-otl-gray-200 p-0 lg:border lg:p-8 xl:col-span-2 xl:col-start-4">
+                <h5 className="text-center text-body-lg font-bold">
+                  {t("se_veterans", { ns: "trivia" })}
+                </h5>
+                {bar_dun ? (
                   <BarMeter
                     layout="horizontal"
-                    data={bar_parlimen.map((e) => ({
+                    data={bar_dun.map((e) => ({
                       x: e.name,
                       y: e.competed,
                     }))}
@@ -292,56 +321,33 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
                         "won",
                         {
                           ns: "trivia",
-                        }
-                      )} ${bar_parlimen.find(
-                        (e: Record<string, any>) => e.name === name
-                      )?.won})`}</p>
+                        },
+                      )} ${
+                        bar_dun.find(
+                          (e: Record<string, any>) => e.name === name,
+                        )?.won
+                      })`}</p>
                     )}
                   />
-                </div>
-                <div className="border-slate-200 dark:border-zinc-800 flex h-max flex-col gap-y-6 rounded-xl border-0 p-0 lg:border lg:p-8 xl:col-span-2 xl:col-start-4">
-                  <h5 className="text-center">
-                    {t("se_veterans", { ns: "trivia" })}
-                  </h5>
-                  {bar_dun ? (
-                    <BarMeter
-                      layout="horizontal"
-                      data={bar_dun.map((e) => ({
-                        x: e.name,
-                        y: e.competed,
-                      }))}
-                      relative
-                      formatY={(competed, name) => (
-                        <p className="whitespace-nowrap">{`${competed} (${t(
-                          "won",
-                          {
-                            ns: "trivia",
-                          }
-                        )} ${bar_dun.find(
-                          (e: Record<string, any>) => e.name === name
-                        )?.won})`}</p>
-                      )}
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <div className="bg-slate-200 dark:bg-zinc-800 flex h-auto w-[300px] rounded-md px-3 pb-2 pt-1">
-                        <p className="text-sm">
-                          <span className="inline-flex pr-1">
-                            <FaceFrownIcon className="h-5 w-5 translate-y-1" />
-                          </span>
-                          {t("no_data_dun_wp", {
-                            ns: "parties",
-                            state: CountryAndStates[params.state],
-                          })}
-                        </p>
-                      </div>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <div className="flex h-auto w-[300px] rounded-md bg-otl-gray-200 px-3 pb-2 pt-1">
+                      <p className="text-sm">
+                        <span className="inline-flex pr-1">
+                          <FaceFrownIcon className="h-5 w-5 translate-y-1" />
+                        </span>
+                        {t("no_data_dun_wp", {
+                          ns: "parties",
+                          state: CountryAndStates[params.state],
+                        })}
+                      </p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
-        </div>
+        </SectionGrid>
       </Container>
     </>
   );

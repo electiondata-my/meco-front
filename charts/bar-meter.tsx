@@ -56,9 +56,9 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
   }, [data, sort]);
 
   const layout_style: Record<typeof layout, string> = {
-    "horizontal": "flex flex-col w-full space-y-3",
+    horizontal: "flex flex-col w-full space-y-3",
     "state-horizontal": "flex flex-col w-full space-y-2",
-    "vertical": "flex flex-col lg:flex-row justify-around lg:h-[400px] ",
+    vertical: "flex flex-col lg:flex-row justify-around lg:h-[400px] ",
   };
 
   const renderBars = (item: BarMeterData, index: number) => {
@@ -67,8 +67,10 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
         return (
           <div className="space-y-2" key={item.x.concat(`_${index}`)}>
             <div className="flex justify-between">
-              <p className="text-sm">{formatX ? formatX(item.x) : item.x}</p>
-              <div className="text-zinc-500 flex text-sm dark:text-white">
+              <p className="text-body-sm">
+                {formatX ? formatX(item.x) : item.x}
+              </p>
+              <div className="flex text-body-sm text-txt-black-500">
                 {formatY ? (
                   formatY(item.y, item.x)
                 ) : (
@@ -78,9 +80,9 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
               </div>
             </div>
 
-            <div className="bg-slate-100 dark:bg-zinc-800 flex h-3 w-full overflow-x-hidden rounded-full">
+            <div className="flex h-3 w-full overflow-x-hidden rounded-full bg-otl-divider">
               <div
-                className="animate-slide h-full w-0 items-center overflow-hidden rounded-full bg-zinc-900 dark:bg-white"
+                className="h-full w-0 animate-slide items-center overflow-hidden rounded-full bg-bg-black-900"
                 style={{
                   ["--from-width" as string]: 0,
                   ["--to-width" as string]: percentFill(item.y),
@@ -97,7 +99,10 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
        */
       case "state-horizontal":
         return (
-          <div className="flex w-full items-center" key={item.x.concat(`_${index}`)}>
+          <div
+            className="flex w-full items-center"
+            key={item.x.concat(`_${index}`)}
+          >
             <div className="flex w-[40%] items-center gap-2 lg:w-[35%]">
               <Image
                 src={`/static/images/states/${item.x}.jpeg`}
@@ -105,19 +110,19 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
                 height={12}
                 alt={CountryAndStates[item.x]}
               />
-              <p className="text-zinc-500 truncate text-sm dark:text-white">
+              <p className="truncate text-body-sm text-txt-black-500">
                 {CountryAndStates[item.x]}
               </p>
             </div>
 
             <div className="flex flex-grow items-center gap-2">
-              <p className="text-zinc-500 w-[40px] text-sm">
+              <p className="w-[40px] text-body-sm text-txt-black-500">
                 {numFormat(item.y, "standard", precision)}
                 {unit}
               </p>
-              <div className="bg-slate-100 dark:bg-zinc-800 flex h-3 w-full overflow-x-hidden rounded-full">
+              <div className="flex h-3 w-full overflow-x-hidden rounded-full bg-otl-divider">
                 <div
-                  className="animate-slide h-full items-center overflow-hidden rounded-full bg-zinc-900 transition dark:bg-white"
+                  className="h-full animate-slide items-center overflow-hidden rounded-full bg-bg-black-900 transition"
                   style={{
                     ["--from-width" as string]: 0,
                     ["--to-width" as string]: percentFill(item.y),
@@ -140,7 +145,7 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
                 {numFormat(item.y, "standard", precision)}
                 {unit}
               </p>
-              <div className="bg-slate-100 dark:bg-zinc-800 relative flex h-[80%] w-6 overflow-x-hidden rounded-full">
+              <div className="relative flex h-[80%] w-6 overflow-x-hidden rounded-full bg-otl-divider">
                 <div
                   className="absolute bottom-0 w-full animate-[grow_1.5s_ease-in-out] items-center overflow-hidden rounded-full bg-[#0F172A] dark:bg-white"
                   style={{
@@ -153,16 +158,21 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
               <p>{item.x}</p>
             </div>
 
-            <div className="block space-y-1 pb-2 lg:hidden" key={item.x.concat(`_${index}`)}>
+            <div
+              className="block space-y-1 pb-2 lg:hidden"
+              key={item.x.concat(`_${index}`)}
+            >
               <div className="flex justify-between">
                 <p>{formatX ? formatX(item.x) : item.x}</p>
-                <div className="text-zinc-500 dark:text-white">
-                  {formatY ? formatY(item.y, item.x) : numFormat(item.y, "standard", precision)}
+                <div className="text-txt-black-500">
+                  {formatY
+                    ? formatY(item.y, item.x)
+                    : numFormat(item.y, "standard", precision)}
                   {unit}
                 </div>
               </div>
 
-              <div className="bg-slate-100 dark:bg-zinc-800 flex h-2.5 w-full overflow-x-hidden rounded-full">
+              <div className="flex h-2.5 w-full overflow-x-hidden rounded-full bg-otl-divider">
                 <div
                   className="h-full items-center overflow-hidden rounded-full bg-[#0F172A] dark:bg-white"
                   style={{ width: percentFill(item.y) }}
