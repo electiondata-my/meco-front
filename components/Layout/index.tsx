@@ -22,7 +22,7 @@ interface LayoutProps {
 const Layout: FunctionComponent<LayoutProps> = ({ children }) => {
   return (
     <>
-      <Masthead>
+      {/* <Masthead>
         <MastheadHeader>
           <MastheadTitle>Official Malaysian Government Website</MastheadTitle>
           <MastheadTrigger>Here&apos;s how you know</MastheadTrigger>
@@ -44,7 +44,7 @@ const Layout: FunctionComponent<LayoutProps> = ({ children }) => {
             sensitive information.
           </MastheadSection>
         </MastheadContent>
-      </Masthead>
+      </Masthead> */}
       <Header />
       {children}
       <Footer />
