@@ -19,7 +19,7 @@ const Container = <T extends React.ElementType = "section">({
   return (
     <Component
       className={clx(
-        "mx-auto grid h-full w-full grid-cols-4 gap-4.5 px-10 md:grid-cols-8 md:gap-6 md:px-[84px] lg:grid-cols-12",
+        "mx-auto grid h-full w-full grid-cols-4 gap-4.5 px-4.5 md:grid-cols-8 md:gap-6 md:px-6 lg:grid-cols-12",
         background,
         className,
       )}

@@ -29,7 +29,7 @@ function ComboOptionInner<T>(
     total,
     ...rest
   }: ComboOptionProps<T>,
-  ref: ForwardedRef<HTMLDivElement>
+  ref: ForwardedRef<HTMLDivElement>,
 ) {
   const id = useId();
 
@@ -46,20 +46,28 @@ function ComboOptionInner<T>(
       aria-setsize={total}
       aria-posinset={index + 1}
       className={clx(
-        "relative flex w-full cursor-pointer select-none flex-row gap-2 px-4 py-2",
-        active && "bg-slate-100 dark:bg-zinc-800"
+        "relative flex w-full cursor-pointer select-none flex-row gap-2 px-3 py-2 font-body text-body-sm",
+        active && "rounded-md bg-bg-washed",
       )}
     >
       <>
         {format ? (
-          <p className={clx("flex gap-x-1 truncate", isSelected ? "font-medium" : "font-normal")}>
+          <p
+            className={clx(
+              "flex items-center gap-x-1 truncate",
+              isSelected ? "font-medium" : "font-normal",
+            )}
+          >
             {format(option)}
           </p>
         ) : (
           <>
             {image && image(option.value)}
             <p
-              className={clx("block grow self-center", isSelected ? "font-medium" : "font-normal")}
+              className={clx(
+                "block grow self-center",
+                isSelected ? "font-medium" : "font-normal",
+              )}
             >
               {option.label}
             </p>
@@ -67,7 +75,7 @@ function ComboOptionInner<T>(
         )}
         {isSelected && (
           <span className="absolute inset-y-0 right-3 flex items-center">
-            <CheckCircleIcon className="text-primary dark:text-primary-dark h-4 w-4" />
+            <CheckCircleIcon className="h-4 w-4 text-primary-600" />
           </span>
         )}
       </>
@@ -78,7 +86,7 @@ function ComboOptionInner<T>(
 // Solution variant #2: Wrapping to make forwardRef work with generics
 // https://stackoverflow.com/questions/58469229/react-with-typescript-generics-while-using-react-forwardref
 const ComboOption = forwardRef(ComboOptionInner) as <T>(
-  props: ComboOptionProps<T> & { ref?: ForwardedRef<HTMLDivElement> }
+  props: ComboOptionProps<T> & { ref?: ForwardedRef<HTMLDivElement> },
 ) => ReturnType<typeof ComboOptionInner>;
 
 export default ComboOption;

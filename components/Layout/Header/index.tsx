@@ -12,7 +12,7 @@ import LocaleSwitch from "./locale-switch";
 
 export default function Header() {
   return (
-    <Navbar className="">
+    <Navbar className="sticky">
       <Link href={"/"} className="flex items-center gap-2.5 no-underline">
         <Image
           src="/static/images/icons/icon-512.png"
@@ -21,7 +21,7 @@ export default function Header() {
           height={28}
           className="aspect-auto select-none object-contain"
         />
-        <h1 className="font-poppins font-bold text-body-lg no-underline">
+        <h1 className="hidden font-poppins text-body-lg font-bold no-underline lg:block">
           ElectionData.MY
         </h1>
       </Link>

@@ -64,7 +64,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       console.error(error.message);
       return { notFound: true };
     }
-  }
+  },
 );
 
 export default Home;

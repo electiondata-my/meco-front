@@ -98,18 +98,19 @@ export type PartyResult = Array<{
 export type SeatOptions = {
   seat_name: string;
   type: ElectionType;
+  slug: string;
 };
 
 type ElectionParams<T> = T extends Candidate
   ? { candidate: string }
   : T extends Party
-  ? {
-      party: string;
-      state: string;
-    }
-  : T extends Seat
-  ? SeatOptions
-  : never;
+    ? {
+        party: string;
+        state: string;
+      }
+    : T extends Seat
+      ? SeatOptions
+      : never;
 
 export type ElectionResource<T extends Candidate | Party | Seat> = {
   last_updated: string;

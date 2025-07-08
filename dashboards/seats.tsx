@@ -8,20 +8,8 @@ import {
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
-import { Container, Hero, toast } from "@components/index";
+import { ComboBox, Container, Hero, toast } from "@components/index";
 import SectionGrid from "@components/Section/section-grid";
-import {
-  SearchBar,
-  SearchBarInput,
-  SearchBarInputContainer,
-  SearchBarSearchButton,
-  SearchBarResults,
-  SearchBarResultsList,
-  SearchBarResultsItem,
-  SearchBarClearButton,
-  SearchBarHint,
-} from "@govtechmy/myds-react/search-bar";
-import { Pill } from "@govtechmy/myds-react/pill";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
@@ -44,7 +32,7 @@ const ElectionTable = dynamic(
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
 interface ElectionSeatsProps extends ElectionResource<Seat> {
-  selection: Array<SeatOptions & { slug: string }>;
+  selection: Array<SeatOptions>;
 }
 
 type SeatOption = {
@@ -62,25 +50,23 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const { t } = useTranslation(["common", "home"]);
   const { cache } = useCache();
 
-  const SEAT_OPTIONS: Array<OptionType & SeatOption> = selection.map(
-    ({ seat_name, slug, type }) => ({
-      label: seat_name.concat(` (${t(type)})`),
-      value: type + "_" + slug,
-      state: seat_name.split(", ")[1],
-      seat: seat_name.split(", ")[0],
-      type: type,
-    }),
-  );
+  const SEAT_OPTIONS: Array<
+    Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption
+  > = selection.map(({ seat_name, slug, type }) => ({
+    label: seat_name.concat(` (${t(type)})`),
+    value: type + "_" + slug,
+    state: seat_name.split(", ")[1],
+    seat: seat_name.split(", ")[0],
+    type: type,
+  }));
 
-  const DEFAULT_SEAT =
-    params.type && params.seat_name
-      ? `${params.type}_${params.seat_name}`
-      : "p138-kota-melaka-melaka";
+  const CURRENT_SEAT =
+    params.type && params.seat_name && `${params.type}_${params.seat_name}`;
 
-  const SEAT_OPTION = SEAT_OPTIONS.find((e) => e.value === DEFAULT_SEAT);
+  const SELECTED_SEATS = SEAT_OPTIONS.find((e) => e.value === CURRENT_SEAT);
 
   const { data, setData } = useData({
-    seat_value: null,
+    seat_value: "",
     loading: false,
     elections: elections,
   });
@@ -193,109 +179,92 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         pageId="sitewide"
         withPattern={true}
         action={
-          <SearchBar size="large" className="w-full py-3 lg:max-w-[628px]">
-            <SearchBarInputContainer className="has-[input:focus]:border-otl-danger-300 has-[input:focus]:ring-otl-danger-200">
-              <SearchBarInput />
-              <SearchBarHint>
-                Press <Pill size="small">/</Pill> to search
-              </SearchBarHint>
-              <SearchBarClearButton />
-              <SearchBarSearchButton className="border-otl-danger-300 from-danger-400 to-danger-600 shadow-button focus:ring-fr-danger" />
-            </SearchBarInputContainer>
-            <SearchBarResults open={false}>
-              <SearchBarResultsList>
-                <SearchBarResultsItem value="foo">Foo</SearchBarResultsItem>
-                <SearchBarResultsItem value="bar">Bar</SearchBarResultsItem>
-              </SearchBarResultsList>
-            </SearchBarResults>
-          </SearchBar>
+          <div className="mx-auto w-full py-3 sm:w-[628px]">
+            <ComboBox<SeatOption>
+              placeholder={t("search_seat", { ns: "home" })}
+              options={SEAT_OPTIONS}
+              config={{
+                baseSort: (a: any, b: any) => {
+                  if (a.item.type === b.item.type) {
+                    return String(a.item.seat).localeCompare(
+                      String(b.item.seat),
+                    );
+                  }
+                  return a.item.type === "parlimen" ? -1 : 1;
+                },
+                keys: ["label", "seat", "state", "type"],
+              }}
+              format={(option) => (
+                <>
+                  <span>{`${option.seat}, ${option.state} `}</span>
+                  <span className="text-body-sm text-txt-black-500">
+                    {"(" + t(option.type) + ")"}
+                  </span>
+                </>
+              )}
+              selected={
+                data.seat_value
+                  ? SEAT_OPTIONS.find((e) => e.value === data.seat_value)
+                  : null
+              }
+              onChange={(selected) => {
+                if (selected) {
+                  setData("loading", true);
+                  setData("seat_value", selected.value);
+                  const [type, seat] = selected.value.split("_");
+                  push(`/${type}/${seat}`, undefined, { scroll: false })
+                    .catch((e) => {
+                      t("toast.request_failure"),
+                        toast.error("toast.try_again");
+                    })
+                    .finally(() => setData("loading", false));
+                } else setData("seat_value", "");
+              }}
+            />
+          </div>
         }
       />
 
       <Container>
-        <SectionGrid className="space-y-10 py-16">
+        <SectionGrid className="space-y-10 py-8 lg:py-16">
           <h2 className="max-w-[846px] text-center font-heading text-heading-2xs font-semibold">
-            <span className="text-txt-danger">{SEAT_OPTION?.label}</span>
+            <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
             {
               " is a {small / average-sized / large} {urban/rural} {Parlimen / DUN} in Melaka with 2,547,557 voters as of {election name} "
             }
           </h2>
 
-          <div className="flex h-[328px] w-[628px] items-center justify-center bg-bg-white-disabled text-center font-mono text-heading-xl">
+          <div className="flex items-center justify-center bg-bg-white-disabled p-6 text-center font-mono text-heading-xl lg:h-[328px] lg:w-[628px]">
             container for mapbox
           </div>
         </SectionGrid>
-        <SectionGrid className="space-y-6 pb-16">
-          <div className="w-full space-y-10">
-            {/* <div className="mx-auto w-full py-6 sm:w-[500px]">
-                <ComboBox<SeatOption>
-                  placeholder={t("search_seat", { ns: "home" })}
-                  options={SEAT_OPTIONS}
-                  config={{
-                    baseSort: (a, b) => {
-                      if (a.item.type === b.item.type) {
-                        return String(a.item.seat).localeCompare(
-                          String(b.item.seat)
-                        );
-                      }
-                      return a.item.type === "parlimen" ? -1 : 1;
-                    },
-                    keys: ["label", "seat", "state", "type"],
-                  }}
-                  format={(option) => (
-                    <>
-                      <span>{`${option.seat}, ${option.state} `}</span>
-                      <span className="text-zinc-500">
-                        {"(" + t(option.type) + ")"}
-                      </span>
-                    </>
-                  )}
-                  selected={
-                    data.seat_value
-                      ? SEAT_OPTIONS.find((e) => e.value === data.seat_value)
-                      : null
-                  }
-                  onChange={(selected) => {
-                    if (selected) {
-                      setData("loading", true);
-                      setData("seat_value", selected.value);
-                      const [type, seat] = selected.value.split("_");
-                      push(`/${type}/${seat}`, undefined, { scroll: false })
-                        .catch((e) => {
-                          t("toast.request_failure"),
-                            toast.error("toast.try_again");
-                        })
-                        .finally(() => setData("loading", false));
-                    } else setData("seat_value", selected);
-                  }}
-                />
-              </div> */}
-            <ElectionTable
-              title={
-                <h2 className="text-center font-heading text-heading-2xs font-semibold">
-                  {t("title", { ns: "home" })}
-                  <span className="text-txt-danger">{SEAT_OPTION?.label}</span>
-                </h2>
-              }
-              data={elections}
-              columns={seat_schema}
-              isLoading={data.loading}
-            />
-          </div>
+        <SectionGrid className="space-y-10 pb-8 lg:pb-16">
+          <ElectionTable
+            title={
+              <h2 className="text-center font-heading text-heading-2xs font-semibold">
+                {t("title", { ns: "home" })}
+                <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
+              </h2>
+            }
+            data={elections}
+            columns={seat_schema}
+            isLoading={data.loading}
+            className="w-full"
+          />
         </SectionGrid>
 
-        <SectionGrid className="space-y-10 py-16">
+        <SectionGrid className="space-y-10 py-8 lg:py-16">
           <h2 className="text-center font-heading text-heading-2xs font-semibold">
             A breakdown of the 2,547,557 voters in{" "}
-            <span className="text-txt-danger">{SEAT_OPTION?.label}</span>
+            <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
           </h2>
 
-          <div className="flex w-full gap-6">
-            <div className="flex h-[516px] w-[410px] items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
+          <div className="flex w-full flex-col gap-6 lg:flex-row">
+            <div className="flex items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl lg:h-[516px] lg:w-[410px]">
               PYRAMID Chart here
             </div>
             <div className="flex flex-1 flex-col gap-6">
-              <div className="flex h-full w-full gap-6">
+              <div className="flex h-full w-full flex-col gap-6 lg:flex-row">
                 <div className="flex h-[272px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
                   CHART 1
                 </div>
@@ -303,7 +272,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                   CHART 2
                 </div>
               </div>
-              <div className="flex h-full w-full gap-6">
+              <div className="flex h-full w-full flex-col gap-6 lg:flex-row">
                 <div className="flex h-[220px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
                   CHART 3
                 </div>

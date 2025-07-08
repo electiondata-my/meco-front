@@ -8,10 +8,15 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import BarPerc from "@charts/bar-perc";
-import { ImageWithFallback, Skeleton, Tooltip } from "@components/index";
+import { ImageWithFallback, Skeleton } from "@components/index";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { useTranslation } from "@hooks/useTranslation";
 import { FunctionComponent, ReactNode } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@govtechmy/myds-react/tooltip";
 
 export interface ElectionTableProps {
   className?: string;
@@ -79,22 +84,19 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "election_name":
         return (
           <div className="w-fit">
-            <Tooltip
-              tip={
-                cell.row.original.date &&
-                toDate(cell.row.original.date, "dd MMM yyyy", i18n.language)
-              }
-              className="max-xl:-left-3"
-            >
-              {(open) => (
+            <Tooltip>
+              <TooltipTrigger>
                 <div
                   className="cursor-help whitespace-nowrap underline decoration-dashed [text-underline-position:from-font]"
                   tabIndex={0}
-                  onClick={open}
                 >
                   {t(`election:${value}`)}
                 </div>
-              )}
+              </TooltipTrigger>
+              <TooltipContent>
+                {cell.row.original.date &&
+                  toDate(cell.row.original.date, "dd MMM yyyy", i18n.language)}
+              </TooltipContent>
             </Tooltip>
           </div>
         );
@@ -314,7 +316,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       <tr>
         <td
           colSpan={100}
-          className="bg-red-50 text-red-800 dark:text-red-200 border-slate-200 dark:border-zinc-800 border-b py-2 text-center text-sm italic dark:bg-[rgba(185,28,28,0.5)]"
+          className="border-b border-otl-gray-200 bg-bg-washed py-2 text-center text-body-sm italic text-txt-black-700"
         >
           {isMalay && change_ms ? change_ms : change_en}
         </td>
@@ -326,7 +328,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
     <>
       <div>
         {title && typeof title === "string" ? (
-          <span className="pb-6 text-base font-bold text-txt-black-900">
+          <span className="pb-6 text-body-md font-bold text-txt-black-900">
             {title}
           </span>
         ) : (
@@ -335,7 +337,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       </div>
       <div className={clx("relative", className)}>
         {/* Desktop */}
-        <table className="hidden w-full text-left text-sm md:table">
+        <table className="hidden w-full text-left text-body-sm md:table">
           <thead>
             {table.getHeaderGroups().map((headerGroup: any) => (
               <tr key={headerGroup.id}>
@@ -343,7 +345,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="whitespace-nowrap border-b-2 border-otl-gray-200 px-2 py-[10px] font-medium"
+                    className="whitespace-nowrap border-b-2 border-otl-gray-200 px-2 py-3 font-medium"
                   >
                     {header.isPlaceholder
                       ? null
@@ -390,7 +392,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                           highlight && colIndex === 0
                             ? "font-medium"
                             : "font-normal",
-                          "px-2 py-[10px]",
+                          "px-2 py-3",
                         )}
                       >
                         {isLoading ? (
@@ -417,7 +419,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             return (
               <div
                 key={"explanation-mobile-" + idx}
-                className="bg-red-50 text-red-800 dark:text-red-200 border-b border-otl-gray-200 py-2 text-center text-sm italic md:hidden dark:bg-[rgba(185,28,28,0.5)]"
+                className="border-b border-otl-gray-200 bg-bg-washed py-2 text-center text-body-sm italic text-txt-black-700 md:hidden"
               >
                 {isMalay && row.change_ms ? row.change_ms : row.change_en}
               </div>
@@ -452,7 +454,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           ) : (
             <div
               className={clx(
-                "flex flex-col space-y-2 border-b border-otl-gray-200 p-3 text-sm first:border-t-2 md:hidden",
+                "flex flex-col space-y-2 border-b border-otl-gray-200 p-3 text-body-sm first:border-t-2 md:hidden",
                 idx === 0 && "border-t-2",
                 highlight ? "bg-bg-black-50" : "bg-inherit",
               )}

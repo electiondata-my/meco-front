@@ -117,7 +117,7 @@ const Hero: FunctionComponent<HeroProps> = ({
             {category && (
               <h3
                 className={clx(
-                  "text-body-lg font-semibold uppercase leading-5 tracking-[0.2em]",
+                  "text-center text-body-lg font-semibold uppercase leading-5 tracking-[0.2em] lg:text-start",
                   category[1],
                 )}
                 data-testid="hero-category"
@@ -129,7 +129,7 @@ const Hero: FunctionComponent<HeroProps> = ({
             {header && (
               <h1
                 className={clx(
-                  "font-heading text-heading-md font-semibold text-txt-black-900",
+                  "text-center font-heading text-heading-md font-semibold text-txt-black-900 lg:text-start",
                   header[1],
                 )}
                 data-testid="hero-header"

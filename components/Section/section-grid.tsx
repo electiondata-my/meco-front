@@ -16,7 +16,7 @@ const SectionGrid = <T extends React.ElementType = "section">({
   return (
     <Component
       className={clx(
-        "col-span-full mx-auto flex max-w-screen-xl flex-col items-center justify-center xl:w-full",
+        "col-span-full mx-auto flex w-full max-w-screen-xl flex-col items-center justify-center xl:w-full",
         className,
       )}
       {...rest}
