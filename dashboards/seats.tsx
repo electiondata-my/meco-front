@@ -66,7 +66,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const SELECTED_SEATS = SEAT_OPTIONS.find((e) => e.value === CURRENT_SEAT);
 
   const { data, setData } = useData({
-    seat_value: "",
+    seat_value: CURRENT_SEAT,
     loading: false,
     elections: elections,
   });
@@ -135,7 +135,9 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       header: "",
       cell: ({ row }) => (
         <FullResults
-          options={data.elections}
+          options={data.elections.filter(
+            (election) => !("change_en" in election),
+          )}
           currentIndex={row.index}
           onChange={(option: Seat) =>
             fetchFullResult(option.election_name, option.seat, option.date)
