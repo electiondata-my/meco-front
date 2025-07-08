@@ -68,7 +68,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const { data, setData } = useData({
     seat_value: CURRENT_SEAT,
     loading: false,
-    elections: elections,
   });
 
   const fetchFullResult = async (
@@ -135,9 +134,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       header: "",
       cell: ({ row }) => (
         <FullResults
-          options={data.elections.filter(
-            (election) => !("change_en" in election),
-          )}
+          options={elections.filter((election) => !("change_en" in election))}
           currentIndex={row.index}
           onChange={(option: Seat) =>
             fetchFullResult(option.election_name, option.seat, option.date)
