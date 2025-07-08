@@ -7,7 +7,6 @@ import {
 } from "@heroicons/react/24/solid";
 import { generateSchema } from "@lib/schema/election-explorer";
 import {
-  Button,
   ImageWithFallback,
   List,
   Panel,
@@ -20,6 +19,8 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import dynamic from "next/dynamic";
 import { FunctionComponent } from "react";
+import SectionGrid from "@components/Section/section-grid";
+import { Button } from "@govtechmy/myds-react/button";
 
 /**
  * Election Explorer Dashboard
@@ -30,10 +31,10 @@ const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
-  }
+  },
 );
 const Choropleth = dynamic(() => import("@charts/choropleth"), {
-  loading: () => <SpinnerBox height="h-[400px] lg:h-[500px]" width="w-auto"/>,
+  loading: () => <SpinnerBox height="h-[400px] lg:h-[500px]" width="w-auto" />,
   ssr: false,
 });
 const Waffle = dynamic(() => import("@charts/waffle"), { ssr: false });
@@ -101,7 +102,7 @@ const Overview: FunctionComponent<OverviewProps> = ({
   });
 
   return (
-    <Section>
+    <SectionGrid className="space-y-12 py-6">
       <Tabs
         hidden
         current={data.toggle_index}
@@ -109,81 +110,81 @@ const Overview: FunctionComponent<OverviewProps> = ({
       >
         {PANELS.map((panel, index) => (
           <Tabs.Panel name={panel.name as string} icon={panel.icon} key={index}>
-            <div className="xl:grid xl:grid-cols-12">
-              <div className="flex flex-col gap-y-3 xl:col-span-10 xl:col-start-2">
-                <div className="flex flex-col items-baseline justify-between gap-y-3 sm:flex-row md:gap-y-0">
-                  <h5 className="w-fit">
-                    {t("election_of", {
-                      ns: "elections",
-                      context: (params.election ?? "GE-15").startsWith("G")
-                        ? "parlimen"
-                        : "dun",
-                    })}
-                    <span className="text-primary">
-                      {CountryAndStates[params.state ?? "mys"]}
-                    </span>
-                    <span>: </span>
-                    <span className="text-primary">
-                      {t(params.election ?? "GE-15", { ns: "election" })}
-                    </span>
-                  </h5>
-                  <div className="flex w-full justify-start sm:w-auto">
-                    <List
-                      options={[
-                        t("table", { ns: "elections" })
-                        // t("map", { ns: "elections" }),
-                        // t("summary", { ns: "elections" }),
-                      ]}
-                      icons={[
-                        <TableCellsIcon
-                          key="table_cell_icon"
-                          className="mr-1 h-5 w-5"
-                        />
-                        // <MapIcon key="map_icon" className="mr-1 h-5 w-5" />,
-                      ]}
-                      current={data.tab_index}
-                      onChange={(index) => setData("tab_index", index)}
-                    />
-                  </div>
-                </div>
-                <Tabs hidden current={data.tab_index}>
-                  <Panel
-                    name={t("table", { ns: "elections" })}
-                    icon={<TableCellsIcon className="mr-1 h-5 w-5" />}
-                  >
-                    <>
-                      <ElectionTable
-                        isLoading={data.isLoading}
-                        data={data.showMore ? table.slice(0, 6) : table}
-                        columns={generateSchema<Party>([
-                          {
-                            key: "party",
-                            id: "party",
-                            header: t("party_name"),
-                          },
-                          {
-                            key: "seats",
-                            id: "seats",
-                            header: t("seats_won"),
-                          },
-                          {
-                            key: "votes",
-                            id: "votes",
-                            header: t("votes_won"),
-                          },
-                        ])}
-                      />
-                      {data.showMore && (
-                        <Button
-                          className="btn-default mx-auto mt-6"
-                          onClick={() => setData("showMore", false)}
-                        >
-                          {t("show_more", { ns: "elections" })}
-                        </Button>
-                      )}
-                    </>
-                  </Panel>
-                  {/*
+            <div className="flex flex-col items-baseline justify-between gap-y-3 sm:flex-row md:gap-y-0">
+              <h5 className="w-fit text-body-lg font-bold">
+                {t("election_of", {
+                  ns: "elections",
+                  context: (params.election ?? "GE-15").startsWith("G")
+                    ? "parlimen"
+                    : "dun",
+                })}
+                <span className="text-primary-600">
+                  {CountryAndStates[params.state ?? "mys"]}
+                </span>
+                <span>: </span>
+                <span className="text-primary-600">
+                  {t(params.election ?? "GE-15", { ns: "election" })}
+                </span>
+              </h5>
+              <div className="flex w-full justify-start sm:w-auto">
+                <List
+                  options={[
+                    t("table", { ns: "elections" }),
+                    // t("map", { ns: "elections" }),
+                    // t("summary", { ns: "elections" }),
+                  ]}
+                  icons={[
+                    <TableCellsIcon
+                      key="table_cell_icon"
+                      className="mr-1 h-5 w-5"
+                    />,
+                    // <MapIcon key="map_icon" className="mr-1 h-5 w-5" />,
+                  ]}
+                  current={data.tab_index}
+                  onChange={(index) => setData("tab_index", index)}
+                />
+              </div>
+            </div>
+            <Tabs hidden current={data.tab_index}>
+              <Panel
+                name={t("table", { ns: "elections" })}
+                icon={<TableCellsIcon className="mr-1 h-5 w-5" />}
+              >
+                <>
+                  <ElectionTable
+                    isLoading={data.isLoading}
+                    className="pt-6"
+                    data={data.showMore ? table.slice(0, 6) : table}
+                    columns={generateSchema<Party>([
+                      {
+                        key: "party",
+                        id: "party",
+                        header: t("party_name"),
+                      },
+                      {
+                        key: "seats",
+                        id: "seats",
+                        header: t("seats_won"),
+                      },
+                      {
+                        key: "votes",
+                        id: "votes",
+                        header: t("votes_won"),
+                      },
+                    ])}
+                  />
+                  {data.showMore && (
+                    <Button
+                      variant={"default-outline"}
+                      className="mx-auto mt-6"
+                      onClick={() => setData("showMore", false)}
+                    >
+                      {t("show_more", { ns: "elections" })}
+                    </Button>
+                  )}
+                </>
+              </Panel>
+              {/*
                   <Panel
                     name={t("map", { ns: "elections" })}
                     icon={<MapIcon className="mr-1 h-5 w-5" />}
@@ -203,13 +204,11 @@ const Overview: FunctionComponent<OverviewProps> = ({
                     ...summary content...
                   </Panel>
                   */}
-                </Tabs>
-              </div>
-            </div>
+            </Tabs>
           </Tabs.Panel>
         ))}
       </Tabs>
-    </Section>
+    </SectionGrid>
   );
 };
 

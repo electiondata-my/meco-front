@@ -52,8 +52,8 @@ const List: FunctionComponent<ListProps> = ({
           className={clx(
             "flex cursor-pointer select-none self-center whitespace-nowrap rounded-full px-2.5 py-1 text-sm outline-none transition-colors",
             current === index
-              ? "bg-slate-200 dark:bg-zinc-800 text-zinc-900 font-medium dark:text-white"
-              : "text-zinc-500 hover:text-zinc-900 bg-transparent dark:hover:text-white",
+              ? "bg-otl-gray-200 font-medium text-txt-black-900"
+              : "bg-transparent text-txt-black-500 hover:text-txt-black-900",
           )}
           onClick={() => onChange(index)}
         >

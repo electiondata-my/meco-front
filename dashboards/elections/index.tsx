@@ -148,7 +148,9 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
       <Container>
         {/* Explore any election from Merdeka to the present! */}
         <SectionGrid className="pt-8 lg:pt-12">
-          <h4 className="text-center">{t("header_1", { ns: "elections" })}</h4>
+          <h4 className="text-center text-heading-2xs font-bold">
+            {t("header_1", { ns: "elections" })}
+          </h4>
 
           {/* Mobile */}
           <Modal
@@ -245,7 +247,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
             ref={divRef}
             className="sticky top-16 z-20 mx-auto mt-6 hidden w-fit items-center gap-2 lg:flex"
           >
-            <div className="border-slate-200 dark:border-zinc-800 dark:bg-zinc-900 max-w-fit rounded-full border bg-white p-1">
+            <div className="max-w-fit rounded-full border border-otl-gray-200 bg-bg-white p-1">
               <List
                 options={PANELS.map((item) => item.name)}
                 icons={PANELS.map((item) => item.icon)}
@@ -287,7 +289,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
           </div>
 
           <Overview choropleth={choropleth} params={params} table={table} />
-          <hr className="dark:border-zinc-800 border-slate-200 h-px"></hr>
+          <hr className="h-px w-full border-otl-gray-200"></hr>
 
           {/* View the full ballot for a specific seat */}
           <BallotSeat
@@ -295,7 +297,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
             seats={seats}
             state={params.state}
           />
-          <hr className="dark:border-zinc-800 border-slate-200 h-px"></hr>
+          <hr className="h-px w-full border-otl-gray-200"></hr>
 
           {/* Election analysis */}
           <ElectionAnalysis

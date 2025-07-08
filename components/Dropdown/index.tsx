@@ -127,7 +127,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
         clx(
           "relative flex w-full cursor-default select-none items-center gap-2 py-2 pr-4 text-txt-black-900",
           multiple ? "pl-10" : "pl-4",
-          active && "bg-slate-100 dark:bg-zinc-800",
+          active && "bg-bg-black-100",
         )
       }
       onClick={() => (multiple ? handleChange(option) : null)}
@@ -193,11 +193,11 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
           <Listbox.Button
             className={clx(
               "flex items-center gap-1.5 rounded-md px-3 py-1.5 shadow-button",
-              "text-start text-sm font-medium text-txt-black-900",
-              "active:bg-slate-100 hover:dark:bg-zinc-800 active:dark:bg-zinc-800 dark:bg-zinc-900 select-none bg-white",
-              "border-slate-200 dark:border-zinc-800 hover:border-slate-400 hover:dark:border-zinc-700 border outline-none",
+              "text-start text-body-sm font-medium text-txt-black-900",
+              "select-none bg-bg-white active:bg-bg-black-100",
+              "border border-otl-gray-200 outline-none hover:border-bg-black-400 hover:dark:border-bg-black-700",
               disabled &&
-                "disabled:bg-slate-200 dark:disabled:bg-zinc-800 disabled:border-slate-200 dark:disabled:border-zinc-800 disabled:text-slate-400 disabled:pointer-events-none disabled:cursor-not-allowed dark:disabled:text-txt-black-700",
+                "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-otl-gray-200 disabled:bg-otl-gray-200 disabled:text-txt-black-disabled dark:disabled:text-txt-black-700",
               width,
               className,
             )}
@@ -251,7 +251,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
             <Listbox.Options
               ref={optionsRef}
               className={clx(
-                "dark:ring-slate-800 shadow-floating ring-zinc-900 dark:bg-zinc-900 absolute z-20 mt-1 min-w-full rounded-md bg-white text-txt-black-900 ring-1 ring-opacity-5 focus:outline-none dark:text-white",
+                "shadow-floating absolute z-20 mt-1 min-w-full rounded-md bg-bg-white text-txt-black-900 ring-1 ring-otl-gray-200 ring-opacity-5 focus:outline-none",
                 availableOptions.length <= 100 && "max-h-60 overflow-auto",
                 anchor === "right"
                   ? "right-0"

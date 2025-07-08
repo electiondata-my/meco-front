@@ -49,7 +49,7 @@ const ComboBox = <T extends unknown>({
 
   const filteredOptions = useMemo<ComboOptionProp[]>(
     () => matchSorter(options, query, config),
-    [options, query, config]
+    [options, query, config],
   );
 
   const ITEMS_COUNT = filteredOptions.length;
@@ -101,25 +101,25 @@ const ComboBox = <T extends unknown>({
   });
 
   const { getReferenceProps, getFloatingProps, getItemProps } = useInteractions(
-    [role, dismiss, listNav]
+    [role, dismiss, listNav],
   );
 
   return (
     <div
       ref={refs.setReference}
       onClick={() => setOpen(!open)}
-      className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 hover:border-slate-400 dark:hover:border-zinc-700 shadow-button relative flex w-full select-none overflow-hidden rounded-full border focus:outline-none focus-visible:ring-0"
+      className="relative flex w-full select-none overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button hover:border-bg-black-400 focus:outline-none focus-visible:ring-0"
     >
       <span className="ml-4 flex h-auto max-h-8 w-8 shrink-0 justify-center self-center">
         {image && selected ? (
           image(selected.value)
         ) : (
-          <MagnifyingGlassIcon className="dark:text-zinc-500 h-5 w-5 text-zinc-900" />
+          <MagnifyingGlassIcon className="h-5 w-5 text-txt-black-900" />
         )}
       </span>
       <input
         className={clx(
-          "w-full truncate border-none bg-white py-3 pl-2 pr-10 text-base focus:outline-none focus:ring-0 dark:bg-zinc-900"
+          "w-full truncate border-none bg-bg-white py-3 pl-2 pr-10 text-base focus:outline-none focus:ring-0",
         )}
         spellCheck={false}
         {...getReferenceProps({
@@ -158,7 +158,7 @@ const ComboBox = <T extends unknown>({
 
       {(query.length > 0 || selected) && (
         <Button
-          className="hover:bg-slate-100 dark:hover:bg-zinc-800 group absolute right-2 top-2 flex h-8 w-8 items-center rounded-full"
+          className="group absolute right-2 top-2 flex h-8 w-8 items-center rounded-full hover:bg-bg-black-100"
           onClick={() => {
             setQuery("");
             setOpen(true);
@@ -167,7 +167,7 @@ const ComboBox = <T extends unknown>({
             (refs.reference.current as HTMLInputElement).focus();
           }}
         >
-          <XMarkIcon className="text-zinc-500 absolute right-1.5 h-5 w-5 group-hover:text-zinc-900 dark:group-hover:text-white" />
+          <XMarkIcon className="absolute right-1.5 h-5 w-5 text-txt-black-500 group-hover:text-txt-black-900" />
         </Button>
       )}
       {open && (
@@ -179,7 +179,7 @@ const ComboBox = <T extends unknown>({
           >
             <div
               className={clx(
-                "border-slate-200 dark:border-zinc-800 shadow-floating absolute z-20 max-h-60 w-full overflow-auto rounded-md border bg-white text-sm focus:outline-none dark:bg-zinc-900"
+                "shadow-floating absolute z-20 max-h-60 w-full overflow-auto rounded-md border border-otl-gray-200 bg-bg-white text-sm focus:outline-none",
               )}
               ref={refs.setFloating}
               tabIndex={-1}
@@ -191,12 +191,12 @@ const ComboBox = <T extends unknown>({
               {filteredOptions.length <= 150 ? (
                 <>
                   {loading ? (
-                    <div className="text-zinc-500 flex cursor-default select-none items-center gap-2 px-4 py-2">
+                    <div className="flex cursor-default select-none items-center gap-2 px-4 py-2 text-txt-black-500">
                       <Spinner loading={loading} />{" "}
                       {t("common:placeholder.loading")}
                     </div>
                   ) : filteredOptions.length === 0 && query !== "" ? (
-                    <p className="text-zinc-500 cursor-default select-none px-4 py-2">
+                    <p className="cursor-default select-none px-4 py-2 text-txt-black-500">
                       {t("common:placeholder.no_results")}
                     </p>
                   ) : (

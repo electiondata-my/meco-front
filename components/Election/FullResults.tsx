@@ -93,7 +93,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
   const Trigger = () => (
     <Button
       variant="reset"
-      className="btn text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+      className="flex gap-2 text-txt-black-500 hover:text-txt-black-900"
       onClick={() => {
         setData("loading", true);
         setOpen(true);
@@ -125,7 +125,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
                     onChange(option)
                       .then((results) => {
                         if (!results) return;
-                        setData("index", index);            
+                        setData("index", index);
                         setData("results", results);
                         getData(options[index]);
                       })
@@ -136,7 +136,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
                     "h-1 w-5 rounded-md",
                     index === data.index
                       ? "bg-zinc-900 dark:bg-white"
-                      : "bg-slate-200 hover:bg-slate-100 dark:bg-zinc-700 dark:hover:bg-zinc-800"
+                      : "bg-slate-200 hover:bg-slate-100 dark:bg-zinc-700 dark:hover:bg-zinc-800",
                   )}
                 />
               ))}
@@ -253,7 +253,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
       </DrawerTrigger>
       <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
         <DrawerHeader className="flex w-full flex-col items-start px-4 py-3 uppercase">
-          <div className="flex w-full justify-between items-center">
+          <div className="flex w-full items-center justify-between">
             <div className="flex flex-wrap gap-x-2 text-lg">
               <h5>
                 {isParty
@@ -265,7 +265,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
               </span>
             </div>
             <DrawerClose>
-              <XMarkIcon className="h-5 w-5 text-zinc-500" />
+              <XMarkIcon className="text-zinc-500 h-5 w-5" />
             </DrawerClose>
           </div>
           {!isParty && (

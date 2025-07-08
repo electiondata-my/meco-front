@@ -22,12 +22,13 @@ import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { get } from "@lib/api";
-import { CountryAndStates } from "@lib/constants";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { BaseResult, OverallSeat } from "../types";
 import { FullResultContent } from "../../components/Election/content";
 import { FunctionComponent, useEffect, useRef, useState } from "react";
+import { OptionType } from "@lib/types";
+import SectionGrid from "@components/Section/section-grid";
 
 /**
  * Election Explorer - Ballot Seat
@@ -60,7 +61,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
 
   const [open, setOpen] = useState<boolean>(false);
 
-  const filteredSeats = seats.filter(seat => {
+  const filteredSeats = seats.filter((seat) => {
     const partyLost = seat.party_lost || [];
     const selectedParty = data.filter_party;
     const selectedResult = data.filter_result;
@@ -71,7 +72,9 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
       } else if (selectedResult === t("lost_by", { ns: "elections" })) {
         return partyLost.includes(selectedParty);
       } else if (selectedResult === t("contested_by", { ns: "elections" })) {
-        return seat.party === selectedParty || partyLost.includes(selectedParty);
+        return (
+          seat.party === selectedParty || partyLost.includes(selectedParty)
+        );
       }
     } else if (selectedParty && selectedParty !== "") {
       // If only party is selected, show all seats where the party won or lost
@@ -86,29 +89,41 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
   // Dynamically generate party options based on filter_result
   let partyOptions: { label: string; value: string | null }[] = [];
   if (data.filter_result === t("won_by", { ns: "elections" })) {
-    partyOptions = Array.from(new Set(seats.map(seat => seat.party)))
-      .filter(party => !!party)
-      .map(party => ({ label: t(party, { ns: "parties" }), value: String(party) }))
+    partyOptions = Array.from(new Set(seats.map((seat) => seat.party)))
+      .filter((party) => !!party)
+      .map((party) => ({
+        label: t(party, { ns: "parties" }),
+        value: String(party),
+      }))
       .sort((a, b) => a.label.localeCompare(b.label));
   } else if (data.filter_result === t("lost_by", { ns: "elections" })) {
-    const lostParties = seats.flatMap(seat => seat.party_lost || []);
+    const lostParties = seats.flatMap((seat) => seat.party_lost || []);
     partyOptions = Array.from(new Set(lostParties))
-      .filter(party => !!party)
-      .map(party => ({ label: t(party, { ns: "parties" }), value: String(party) }))
+      .filter((party) => !!party)
+      .map((party) => ({
+        label: t(party, { ns: "parties" }),
+        value: String(party),
+      }))
       .sort((a, b) => a.label.localeCompare(b.label));
   } else {
     // Contested By: union of party and party_lost
     const allParties = [
-      ...seats.map(seat => seat.party),
-      ...seats.flatMap(seat => seat.party_lost || [])
+      ...seats.map((seat) => seat.party),
+      ...seats.flatMap((seat) => seat.party_lost || []),
     ];
     partyOptions = Array.from(new Set(allParties))
-      .filter(party => !!party)
-      .map(party => ({ label: t(party, { ns: "parties" }), value: String(party) }))
+      .filter((party) => !!party)
+      .map((party) => ({
+        label: t(party, { ns: "parties" }),
+        value: String(party),
+      }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }
   // Add 'All Parties' option at the top
-  partyOptions.unshift({ label: t("all_parties", { ns: "elections" }), value: "" });
+  partyOptions.unshift({
+    label: t("all_parties", { ns: "elections" }),
+    value: "",
+  });
 
   const SEAT_OPTIONS = filteredSeats.map((seat) => ({
     label: seat.seat,
@@ -141,7 +156,9 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
     else {
       setData("loading", true);
       try {
-        const response = await get(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const response = await get(
+          `/results/${encodeURIComponent(seat)}/${date}.json`,
+        );
         const { ballot, summary } = response.data;
         const summaryStats = summary[0];
         const votes = [
@@ -181,231 +198,241 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
   }, [seats]);
 
   return (
-    <Section>
-      <div className="grid grid-cols-12">
-        <div className="col-span-full col-start-1 space-y-12 xl:col-span-10 xl:col-start-2">
-          <div className="space-y-6">
-            <h4 className="text-center">
-              {t("header_2", { ns: "elections" })}
-            </h4>
-            <div className="flex items-center gap-2 mx-auto w-fit">
-              <div className="max-w-fit rounded-full bg-white p-1">
-                <Dropdown
-                  width="w-fit"
-                  anchor="left"
-                  placeholder={t("filter_by_result", { ns: "elections" })}
-                  options={[
-                    { label: t("contested_by", { ns: "elections" }), value: t("contested_by", { ns: "elections" }) },
-                    { label: t("won_by", { ns: "elections" }), value: t("won_by", { ns: "elections" }) },
-                    { label: t("lost_by", { ns: "elections" }), value: t("lost_by", { ns: "elections" }) }
-                  ]}
-                  selected={data.filter_result ? { label: t(data.filter_result), value: data.filter_result } : undefined}
-                  onChange={(selected) => {
-                    setData("filter_result", selected?.value ?? null);
-                  }}
-                />
-              </div>
-              <div className="max-w-fit rounded-full bg-white p-1">
-                <Dropdown
-                  width="w-fit"
-                  anchor="left"
-                  placeholder={t("filter_by_party", { ns: "elections" })}
-                  options={partyOptions.map(opt => ({
-                    ...opt,
-                    value: opt.value || "" // Convert null to empty string
-                  }))}
-                  selected={
-                    data.filter_party
-                      ? partyOptions.find(opt => opt.value === data.filter_party)?.value 
-                        ? { label: partyOptions.find(opt => opt.value === data.filter_party)!.label,
-                            value: partyOptions.find(opt => opt.value === data.filter_party)!.value! }
-                        : { label: partyOptions[0].label, value: "" }
-                      : { label: partyOptions[0].label, value: "" }
-                  }
-                  onChange={(selected) => {
-                    setData("filter_party", selected?.value ?? "");
-                  }}
-                />
-              </div>
-            </div>
-            <LeftRightCard
-              left={
-                <div
-                  className="relative flex h-fit w-full flex-col overflow-hidden 
-                px-3 pb-3 md:overflow-y-auto lg:h-[600px] lg:rounded-bl-xl lg:rounded-tr-none lg:pb-6 xl:px-6"
-                >
-                  <div className="bg-slate-50 dark:bg-zinc-800 dark:border-zinc-700 sticky top-0 z-10 border-b pb-3 pt-6">
-                    <ComboBox
-                      placeholder={t("home:search_seat")}
-                      options={SEAT_OPTIONS}
-                      selected={
-                        data.search_seat
-                          ? SEAT_OPTIONS.find(
-                              (e) => e.value === data.search_seat
-                            )
-                          : null
+    <SectionGrid className="space-y-12 py-12">
+      <div className="flex flex-col gap-6">
+        <h4 className="text-center font-heading text-heading-2xs font-bold">
+          {t("header_2", { ns: "elections" })}
+        </h4>
+        <div className="mx-auto flex w-fit items-center gap-2">
+          <div className="max-w-fit rounded-full bg-bg-white p-1">
+            <Dropdown
+              width="w-fit"
+              anchor="left"
+              placeholder={t("filter_by_result", { ns: "elections" })}
+              options={[
+                {
+                  label: t("contested_by", { ns: "elections" }),
+                  value: t("contested_by", { ns: "elections" }),
+                },
+                {
+                  label: t("won_by", { ns: "elections" }),
+                  value: t("won_by", { ns: "elections" }),
+                },
+                {
+                  label: t("lost_by", { ns: "elections" }),
+                  value: t("lost_by", { ns: "elections" }),
+                },
+              ]}
+              selected={
+                data.filter_result
+                  ? {
+                      label: t(data.filter_result),
+                      value: data.filter_result,
+                    }
+                  : undefined
+              }
+              onChange={(selected) => {
+                setData("filter_result", selected?.value ?? null);
+              }}
+            />
+          </div>
+          <div className="max-w-fit rounded-full bg-bg-white p-1">
+            <Dropdown
+              width="w-fit"
+              anchor="left"
+              placeholder={t("filter_by_party", { ns: "elections" })}
+              options={partyOptions.map((opt) => ({
+                ...opt,
+                value: opt.value || "", // Convert null to empty string
+              }))}
+              selected={
+                data.filter_party
+                  ? partyOptions.find((opt) => opt.value === data.filter_party)
+                      ?.value
+                    ? {
+                        label: partyOptions.find(
+                          (opt) => opt.value === data.filter_party,
+                        )!.label,
+                        value: partyOptions.find(
+                          (opt) => opt.value === data.filter_party,
+                        )!.value!,
                       }
-                      onChange={(selected) => {
-                        if (selected) {
-                          fetchSeatResult(selected.value, seats[0].date);
-                          setData("seat", selected.value);
-                          setData("search_seat", selected.value);
-                          scrollRef.current[selected.value]?.scrollIntoView({
-                            behavior: "smooth",
-                            block: "center",
-                            inline: "end",
-                          });
-                        } else setData("search_seat", selected);
-                      }}
-                    />
-                  </div>
-                  <Drawer open={open} onOpenChange={setOpen}>
-                    {election && (
-                      <div className="grid lg:flex lg:flex-col grid-flow-col grid-rows-3 h-[394px] lg:h-full overflow-x-auto lg:overflow-y-auto">
-                        {filteredSeats.map((_seat) => {
-                          const { seat, name, majority, majority_perc, party } =
-                            _seat;
-                          return (
-                            <div
-                              ref={(ref) => {
-                                scrollRef && (scrollRef.current[seat] = ref);
-                              }}
-                              key={seat}
-                              className="pt-3 pr-3 pb-px pl-px"
-                            >
-                              <div
-                                className={clx(
-                                  "flex flex-col h-full max-lg:w-72 w-full gap-2 p-3 text-sm",
-                                  "bg-white dark:bg-zinc-900 lg:hover:dark:bg-zinc-900/50 lg:active:bg-slate-100 lg:active:dark:bg-zinc-900",
-                                  "border border-slate-200 dark:border-zinc-800 lg:hover:border-slate-400 lg:dark:hover:border-zinc-700",
-                                  "rounded-xl focus:outline-none",
-                                  seat === data.seat &&
-                                    "lg:ring-primary lg:dark:ring-primary-dark lg:ring-1 lg:hover:border-transparent"
-                                )}
-                                onClick={() => {
-                                  setData("seat", seat);
-                                  setData("search_seat", seat);
-                                  fetchSeatResult(seat, seats[0].date);
-                                }}
-                              >
-                                <div className="flex w-full items-center justify-between">
-                                  <div className="flex gap-2">
-                                    <span className="text-zinc-500 text-sm font-medium">
-                                      {seat.slice(0, 5)}
-                                    </span>
-                                    <span className="truncate">
-                                      {seat.slice(5)}
-                                    </span>
-                                  </div>
-
-                                  <DrawerTrigger asChild>
-                                    <Button
-                                      type="reset"
-                                      className="text-zinc-500 p-0 lg:hidden"
-                                    >
-                                      <ArrowsPointingOutIcon className="h-4 w-4" />
-                                    </Button>
-                                  </DrawerTrigger>
-                                </div>
-
-                                <div className="flex w-full h-8 items-center gap-1.5">
-                                  <ImageWithFallback
-                                    className="border-slate-200 dark:border-zinc-800 rounded border"
-                                    src={`/static/images/parties/${party}.png`}
-                                    width={32}
-                                    height={18}
-                                    alt={t(`${party}`)}
-                                    style={{
-                                      width: "auto",
-                                      maxWidth: "32px",
-                                      height: "auto",
-                                      maxHeight: "32px",
-                                    }}
-                                  />
-                                  <span className="max-w-full truncate font-medium">{`${name} `}</span>
-                                  <span>{`(${party})`}</span>
-                                  <Won />
-                                </div>
-
-                                <div className="flex items-center gap-1.5">
-                                  <p className="text-zinc-500 text-sm">
-                                    {t("majority")}
-                                  </p>
-                                  <BarPerc
-                                    hidden
-                                    value={majority_perc}
-                                    size="h-[5px] w-[30px] xl:w-[50px]"
-                                  />
-                                  <span>
-                                    {majority === null
-                                      ? `—`
-                                      : numFormat(majority, "standard")}
-                                    {majority_perc === null
-                                      ? ` (—)`
-                                      : ` (${numFormat(
-                                          majority_perc,
-                                          "compact",
-                                          1
-                                        )}%)`}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                    <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
-                      <DrawerHeader className="flex gap-3 items-start w-full px-4 py-3">
-                        <FullResultHeader
-                          date={seats[0].date}
-                          election={election}
-                          seat={data.seat}
-                        />
-                        <DrawerClose>
-                          <XMarkIcon className="h-5 w-5 text-zinc-500" />
-                        </DrawerClose>
-                      </DrawerHeader>
-                      <FullResultContent
-                        columns={columns}
-                        data={data.results.data}
-                        highlightedRows={[0]}
-                        loading={data.loading}
-                        result="won"
-                        votes={data.results.votes}
-                      />
-                    </DrawerContent>
-                  </Drawer>
-                </div>
+                    : { label: partyOptions[0].label, value: "" }
+                  : { label: partyOptions[0].label, value: "" }
               }
-              right={
-                <div className="max-lg:hidden h-[600px] w-full space-y-8 overflow-y-auto p-8">
-                  {data.results.data &&
-                    data.results.data.length > 0 &&
-                    election && (
-                      <>
-                        <FullResultHeader
-                          date={seats[0].date}
-                          election={election}
-                          seat={data.seat}
-                        />
-                        <FullResultContent
-                          columns={columns}
-                          data={data.results.data}
-                          highlightedRows={[0]}
-                          loading={data.loading}
-                          result="won"
-                          votes={data.results.votes}
-                        />
-                      </>
-                    )}
-                </div>
-              }
+              onChange={(selected) => {
+                setData("filter_party", selected?.value ?? "");
+              }}
             />
           </div>
         </div>
       </div>
-    </Section>
+      <LeftRightCard
+        left={
+          <div className="relative flex h-fit w-full flex-col overflow-hidden bg-bg-washed px-3 pb-3 md:overflow-y-auto lg:h-[600px] lg:rounded-bl-xl lg:rounded-tl-xl lg:rounded-tr-none lg:pb-6 xl:px-6">
+            <div className="sticky top-0 z-10 border-b border-otl-gray-200 pb-3 pt-6">
+              <ComboBox
+                placeholder={t("home:search_seat")}
+                options={SEAT_OPTIONS}
+                selected={
+                  data.search_seat
+                    ? SEAT_OPTIONS.find((e) => e.value === data.search_seat)
+                    : null
+                }
+                onChange={(selected: OptionType) => {
+                  if (selected) {
+                    fetchSeatResult(selected.value, seats[0].date);
+                    setData("seat", selected.value);
+                    setData("search_seat", selected.value);
+                    scrollRef.current[selected.value]?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "center",
+                      inline: "end",
+                    });
+                  } else setData("search_seat", selected);
+                }}
+              />
+            </div>
+            <Drawer open={open} onOpenChange={setOpen}>
+              {election && (
+                <div className="grid h-[394px] grid-flow-col grid-rows-3 overflow-x-auto lg:flex lg:h-full lg:flex-col lg:overflow-y-auto">
+                  {filteredSeats.map((_seat) => {
+                    const { seat, name, majority, majority_perc, party } =
+                      _seat;
+                    return (
+                      <div
+                        ref={(ref) => {
+                          scrollRef && (scrollRef.current[seat] = ref);
+                        }}
+                        key={seat}
+                        className="pb-px pl-px pr-3 pt-3"
+                      >
+                        <div
+                          className={clx(
+                            "flex h-full w-full flex-col gap-2 p-3 text-body-sm max-lg:w-72",
+                            "bg-bg-white lg:active:bg-bg-black-100",
+                            "border border-bg-black-200 lg:hover:border-bg-black-400",
+                            "rounded-xl focus:outline-none",
+                            seat === data.seat &&
+                              "lg:ring-1 lg:ring-primary-600 lg:hover:border-transparent",
+                          )}
+                          onClick={() => {
+                            setData("seat", seat);
+                            setData("search_seat", seat);
+                            fetchSeatResult(seat, seats[0].date);
+                          }}
+                        >
+                          <div className="flex w-full items-center justify-between">
+                            <div className="flex gap-2">
+                              <span className="text-zinc-500 text-sm font-medium">
+                                {seat.slice(0, 5)}
+                              </span>
+                              <span className="truncate">{seat.slice(5)}</span>
+                            </div>
+
+                            <DrawerTrigger asChild>
+                              <Button
+                                type="reset"
+                                className="text-zinc-500 p-0 lg:hidden"
+                              >
+                                <ArrowsPointingOutIcon className="h-4 w-4" />
+                              </Button>
+                            </DrawerTrigger>
+                          </div>
+
+                          <div className="flex h-8 w-full items-center gap-1.5">
+                            <ImageWithFallback
+                              className="rounded border border-otl-gray-200"
+                              src={`/static/images/parties/${party}.png`}
+                              width={32}
+                              height={18}
+                              alt={t(`${party}`)}
+                              style={{
+                                width: "auto",
+                                maxWidth: "32px",
+                                height: "auto",
+                                maxHeight: "32px",
+                              }}
+                            />
+                            <span className="max-w-full truncate font-medium">{`${name} `}</span>
+                            <span>{`(${party})`}</span>
+                            <Won />
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-body-sm text-txt-black-500">
+                              {t("majority")}
+                            </p>
+                            <BarPerc
+                              hidden
+                              value={majority_perc}
+                              size="h-[5px] w-[30px] xl:w-[50px]"
+                            />
+                            <span>
+                              {majority === null
+                                ? `—`
+                                : numFormat(majority, "standard")}
+                              {majority_perc === null
+                                ? ` (—)`
+                                : ` (${numFormat(
+                                    majority_perc,
+                                    "compact",
+                                    1,
+                                  )}%)`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
+                <DrawerHeader className="flex w-full items-start gap-3 px-4 py-3">
+                  <FullResultHeader
+                    date={seats[0].date}
+                    election={election}
+                    seat={data.seat}
+                  />
+                  <DrawerClose>
+                    <XMarkIcon className="h-5 w-5 text-txt-black-500" />
+                  </DrawerClose>
+                </DrawerHeader>
+                <FullResultContent
+                  columns={columns}
+                  data={data.results.data}
+                  highlightedRows={[0]}
+                  loading={data.loading}
+                  result="won"
+                  votes={data.results.votes}
+                />
+              </DrawerContent>
+            </Drawer>
+          </div>
+        }
+        right={
+          <div className="h-[600px] w-full space-y-8 overflow-y-auto bg-bg-white p-8 max-lg:hidden">
+            {data.results.data && data.results.data.length > 0 && election && (
+              <>
+                <FullResultHeader
+                  date={seats[0].date}
+                  election={election}
+                  seat={data.seat}
+                />
+                <FullResultContent
+                  columns={columns}
+                  data={data.results.data}
+                  highlightedRows={[0]}
+                  loading={data.loading}
+                  result="won"
+                  votes={data.results.votes}
+                />
+              </>
+            )}
+          </div>
+        }
+      />
+    </SectionGrid>
   );
 };
 
@@ -422,14 +449,14 @@ const FullResultHeader = ({ date, election, seat }: FullResultHeaderProps) => {
   const [area, state] = seat.split(",");
 
   return (
-    <div className="flex flex-col grow gap-2">
-      <div className="flex flex-wrap gap-x-3 uppercase">
-        <h5>{area}</h5>
-        <p className="text-zinc-500 text-lg">{state}</p>
+    <div className="flex grow flex-col gap-2">
+      <div className="flex flex-wrap gap-x-1.5 text-body-lg uppercase">
+        <h5 className="font-bold">{area}</h5>
+        <p className="text-txt-black-500">{state}</p>
       </div>
-      <div className="flex flex-wrap items-center gap-x-3">
+      <div className="flex flex-wrap items-center gap-x-3 text-body-md">
         <p>{t(election)}</p>
-        <p className="text-zinc-500">
+        <p className="text-txt-black-500">
           {toDate(date, "dd MMM yyyy", i18n.language)}
         </p>
       </div>

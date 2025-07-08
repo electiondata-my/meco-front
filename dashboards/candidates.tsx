@@ -7,7 +7,6 @@ import {
   Container,
   Hero,
   Panel,
-  Section,
   Tabs,
   toast,
 } from "@components/index";
@@ -180,85 +179,80 @@ const ElectionCandidatesDashboard: FunctionComponent<
         withPattern={true}
       />
       <Container>
-        <SectionGrid>
-          <div className="xl:grid xl:grid-cols-12">
-            <div className="xl:col-span-10 xl:col-start-2">
-              <h4 className="text-center">
-                {t("header", { ns: "candidates" })}
-              </h4>
-              <div className="mx-auto w-full py-6 sm:w-[500px]">
-                <ComboBox
-                  placeholder={t("search_candidate", { ns: "candidates" })}
-                  options={CANDIDATE_OPTIONS}
-                  config={{
-                    baseSort: (a, b) => {
-                      if ((a.item.contests ?? 0) === (b.item.contests ?? 0)) {
-                        return (b.item.wins ?? 0) - (a.item.wins ?? 0);
-                      }
-                      return (b.item.contests ?? 0) - (a.item.contests ?? 0);
-                    },
-                    keys: ["label", "name"],
-                  }}
-                  selected={
-                    data.candidate_value
-                      ? CANDIDATE_OPTIONS.find(
-                          (e) => e.value === data.candidate_value,
-                        )
-                      : null
+        <SectionGrid className="space-y-12 py-12">
+          <h4 className="text-center font-heading text-heading-2xs font-bold">
+            {t("header", { ns: "candidates" })}
+          </h4>
+          <div className="mx-auto w-full sm:w-[500px]">
+            <ComboBox
+              placeholder={t("search_candidate", { ns: "candidates" })}
+              options={CANDIDATE_OPTIONS}
+              config={{
+                baseSort: (a: any, b: any) => {
+                  a;
+                  if ((a.item.contests ?? 0) === (b.item.contests ?? 0)) {
+                    return (b.item.wins ?? 0) - (a.item.wins ?? 0);
                   }
-                  onChange={(selected) => {
-                    if (selected) {
-                      setData("loading", true);
-                      setData("candidate_value", selected.value);
-                      push(
-                        routes.CANDIDATES + "/" + selected.value,
-                        undefined,
-                        { scroll: false },
-                      );
-                    } else setData("candidate_value", selected);
-                  }}
-                />
-              </div>
-              <Tabs
-                title={
-                  <h5>
-                    {t("title", { ns: "candidates" })}
-                    <span className="text-primary">
-                      {CANDIDATE_OPTION?.label}
-                    </span>
-                  </h5>
-                }
-                current={data.tab_index}
-                onChange={(index) => setData("tab_index", index)}
-                className="py-6"
-              >
-                <Panel name={t("parlimen")}>
-                  <ElectionTable
-                    data={elections.parlimen}
-                    columns={candidate_schema}
-                    isLoading={data.loading}
-                    empty={t("no_data", {
-                      ns: "candidates",
-                      name: CANDIDATE_OPTION?.label,
-                      context: "parliament",
-                    })}
-                  />
-                </Panel>
-                <Panel name={t("dun")}>
-                  <ElectionTable
-                    data={elections.dun}
-                    columns={candidate_schema}
-                    isLoading={data.loading}
-                    empty={t("no_data", {
-                      ns: "candidates",
-                      name: CANDIDATE_OPTION?.label,
-                      context: "dun",
-                    })}
-                  />
-                </Panel>
-              </Tabs>
-            </div>
+                  return (b.item.contests ?? 0) - (a.item.contests ?? 0);
+                },
+                keys: ["label", "name"],
+              }}
+              selected={
+                data.candidate_value
+                  ? CANDIDATE_OPTIONS.find(
+                      (e) => e.value === data.candidate_value,
+                    )
+                  : null
+              }
+              onChange={(selected: OptionType) => {
+                if (selected) {
+                  setData("loading", true);
+                  setData("candidate_value", selected.value);
+                  push(routes.CANDIDATES + "/" + selected.value, undefined, {
+                    scroll: false,
+                  });
+                } else setData("candidate_value", selected);
+              }}
+            />
           </div>
+          <Tabs
+            title={
+              <p className="text-body-lg font-bold">
+                {t("title", { ns: "candidates" })}
+                <span className="text-primary-600">
+                  {CANDIDATE_OPTION?.label}
+                </span>
+              </p>
+            }
+            current={data.tab_index}
+            onChange={(index) => setData("tab_index", index)}
+            className="w-full"
+          >
+            <Panel name={t("parlimen")}>
+              <ElectionTable
+                data={elections.parlimen}
+                columns={candidate_schema}
+                isLoading={data.loading}
+                empty={t("no_data", {
+                  ns: "candidates",
+                  name: CANDIDATE_OPTION?.label,
+                  context: "parliament",
+                })}
+              />
+            </Panel>
+            <Panel name={t("dun")}>
+              <ElectionTable
+                data={elections.dun}
+                columns={candidate_schema}
+                isLoading={data.loading}
+                empty={t("no_data", {
+                  ns: "candidates",
+                  name: CANDIDATE_OPTION?.label,
+                  context: "dun",
+                })}
+              />
+            </Panel>
+          </Tabs>
         </SectionGrid>
       </Container>
     </>

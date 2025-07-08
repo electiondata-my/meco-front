@@ -8,6 +8,7 @@ import {
   SetStateAction,
   useCallback,
   ReactNode,
+  JSX,
 } from "react";
 import {
   ColumnDef,
@@ -59,10 +60,10 @@ export interface TableProps {
   menu?: ReactElement;
   freeze?: string[];
   controls?: (
-    setColumnFilters: Dispatch<SetStateAction<ColumnFiltersState>>
+    setColumnFilters: Dispatch<SetStateAction<ColumnFiltersState>>,
   ) => ReactNode;
   search?: (
-    setGlobalFilter: DebouncedFunc<(query: string) => void>
+    setGlobalFilter: DebouncedFunc<(query: string) => void>,
   ) => ReactNode;
   sorts?: SortingState;
   cellClass?: string;
@@ -107,7 +108,7 @@ const Table: FunctionComponent<TableProps> = ({
 }) => {
   const columns = useMemo<ColumnDef<Record<string, any>>[]>(
     () => config as any,
-    [config]
+    [config],
   );
   const [sorting, setSorting] = useState<SortingState>(sorts);
   const [globalFilter, setGlobalFilter] = useState<string>("");
@@ -151,7 +152,7 @@ const Table: FunctionComponent<TableProps> = ({
     debounce((query: string) => {
       setGlobalFilter(query ?? "");
     }, 500),
-    []
+    [],
   );
 
   const calcStickyLeft = (cellId: string) => {
@@ -163,7 +164,7 @@ const Table: FunctionComponent<TableProps> = ({
   return (
     <div>
       <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-        <span className="text-base font-bold">{title}</span>
+        <span className="text-body-md font-bold">{title}</span>
         {menu && (
           <div className="flex items-center justify-end gap-2">{menu}</div>
         )}
@@ -181,7 +182,7 @@ const Table: FunctionComponent<TableProps> = ({
         <table
           className={clx(
             "relative mx-auto w-full table-auto border-separate border-spacing-0 whitespace-nowrap md:w-fit",
-            className
+            className,
           )}
           data-testid={props["data-testid"]}
         >
@@ -197,7 +198,7 @@ const Table: FunctionComponent<TableProps> = ({
                       className={clx(
                         freeze?.includes(header.id) &&
                           "sticky z-10 bg-inherit max-lg:border-r-2",
-                        "border-slate-200 dark:border-zinc-800 border-b-2 py-[10px] font-medium"
+                        "border-b-2 border-otl-gray-200 py-[10px] font-medium",
                       )}
                       style={{
                         left: freeze?.includes(header.id)
@@ -211,9 +212,9 @@ const Table: FunctionComponent<TableProps> = ({
                             header.subHeaders.length < 1
                               ? "flex select-none items-center justify-between gap-1 px-2 text-left text-sm"
                               : !header.column.columnDef.header
-                              ? "hidden"
-                              : "pr-2 text-end",
-                            header.column.getCanSort() ? "cursor-pointer" : ""
+                                ? "hidden"
+                                : "pr-2 text-end",
+                            header.column.getCanSort() ? "cursor-pointer" : "",
                           )}
                           onClick={
                             header.column.getCanSort()
@@ -222,14 +223,14 @@ const Table: FunctionComponent<TableProps> = ({
                           }
                         >
                           <div>
-                            <p className="font-medium text-zinc-900 dark:text-white">
+                            <p className="font-medium text-txt-black-900">
                               {flexRender(
                                 header.column.columnDef.header,
-                                header.getContext()
+                                header.getContext(),
                               )}
                             </p>
                             {header.column.columnDef?.subheader && (
-                              <p className="text-zinc-500 text-left dark:text-white">
+                              <p className="text-left text-txt-black-500">
                                 {header.column.columnDef?.subheader}
                               </p>
                             )}
@@ -243,13 +244,13 @@ const Table: FunctionComponent<TableProps> = ({
                                 {
                                   asc: (
                                     <UpDownIcon
-                                      className="h-5 w-5 text-zinc-900 dark:text-white"
+                                      className="h-5 w-5 text-txt-black-900"
                                       transform="down"
                                     />
                                   ),
                                   desc: (
                                     <UpDownIcon
-                                      className="h-5 w-5 text-zinc-900 dark:text-white"
+                                      className="h-5 w-5 text-txt-black-900"
                                       transform="up"
                                     />
                                   ),
@@ -257,7 +258,7 @@ const Table: FunctionComponent<TableProps> = ({
                               }
                               {header.column.getCanSort() &&
                                 !header.column.getIsSorted() && (
-                                  <UpDownIcon className="-m-1 h-5 w-5 text-zinc-900 dark:text-white" />
+                                  <UpDownIcon className="-m-1 h-5 w-5 text-txt-black-900" />
                                 )}
                             </span>
                           )}
@@ -276,9 +277,9 @@ const Table: FunctionComponent<TableProps> = ({
                   <tr
                     key={row.id}
                     className={clx(
-                      stripe ?
-                        "even:bg-slate-50 even:dark:bg-zinc-800 odd:bg-white odd:dark:bg-zinc-900"
-                        : "bg-white dark:bg-zinc-900"
+                      stripe
+                        ? "odd:bg-bg-white even:bg-bg-gray-50"
+                        : "bg-bg-white",
                     )}
                   >
                     {row.getVisibleCells().map((cell: any) => {
@@ -291,7 +292,7 @@ const Table: FunctionComponent<TableProps> = ({
                       const unit = cell.column.columnDef.unit ?? undefined;
 
                       const getPrecision = (
-                        precision?: number | Precision
+                        precision?: number | Precision,
                       ): number | [number, number] => {
                         if (!precision) return [1, 0];
                         else if (typeof precision === "number")
@@ -305,14 +306,14 @@ const Table: FunctionComponent<TableProps> = ({
                       };
 
                       const classNames = clx(
-                        "border-slate-200 dark:border-zinc-800 border-b px-2 py-2.5 max-sm:max-w-[150px] truncate",
+                        "border-otl-gray-200 border-b px-2 py-2.5 max-sm:max-w-[150px] truncate",
                         typeof value === "number" && "tabular-nums text-right",
                         lastCellInGroup.id === cell.column.id && "text-sm",
                         freeze?.includes(cell.column.id) &&
                           "sticky z-10 bg-inherit max-lg:border-r-2",
                         cell.column.columnDef.className
                           ? cell.column.columnDef.className
-                          : cellClass
+                          : cellClass,
                       );
 
                       const displayValue = () => {
@@ -320,12 +321,12 @@ const Table: FunctionComponent<TableProps> = ({
                           return numFormat(
                             value,
                             "standard",
-                            getPrecision(precision)
+                            getPrecision(precision),
                           );
                         if (value === "NaN") return "-";
                         return flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         );
                       };
                       return (
@@ -351,7 +352,7 @@ const Table: FunctionComponent<TableProps> = ({
               <tr>
                 <td
                   colSpan={table.getAllColumns().length}
-                  className="border-r border-zinc-900"
+                  className="border-r border-bg-black-900"
                 >
                   <div>{t("common:no_entries")}. </div>
                 </td>
@@ -362,7 +363,7 @@ const Table: FunctionComponent<TableProps> = ({
       </div>
       {enablePagination && data.length > 10 && (
         <div
-          className={`mt-5 flex items-center justify-center gap-4 text-sm font-medium`}
+          className={`mt-5 flex items-center justify-center gap-4 text-body-sm font-medium`}
         >
           <Button
             className="btn-disabled btn-default"
