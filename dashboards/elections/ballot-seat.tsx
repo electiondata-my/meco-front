@@ -197,7 +197,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
   }, [seats]);
 
   return (
-    <SectionGrid className="space-y-12 py-12">
+    <SectionGrid className="space-y-12 overflow-scroll py-12">
       <div className="flex flex-col gap-6">
         <h4 className="text-center font-heading text-heading-2xs font-bold">
           {t("header_2", { ns: "elections" })}
@@ -267,6 +267,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
         </div>
       </div>
       <LeftRightCard
+        leftBg="overflow-hidden"
         left={
           <div className="relative flex h-fit w-full flex-col overflow-hidden bg-bg-washed px-3 pb-3 md:overflow-y-auto lg:h-[600px] lg:rounded-bl-xl lg:rounded-tl-xl lg:rounded-tr-none lg:pb-6 xl:px-6">
             <div className="sticky top-0 z-10 border-b border-otl-gray-200 pb-3 pt-6">
@@ -294,7 +295,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
             </div>
             <Drawer open={open} onOpenChange={setOpen}>
               {election && (
-                <div className="grid h-[394px] grid-flow-col grid-rows-3 overflow-x-auto lg:flex lg:h-full lg:flex-col lg:overflow-y-auto">
+                <div className="grid h-[394px] max-w-xs grid-flow-col grid-rows-3 overflow-x-auto rounded-md lg:flex lg:h-full lg:w-full lg:flex-col lg:overflow-y-auto lg:overflow-x-clip">
                   {filteredSeats.map((_seat) => {
                     const { seat, name, majority, majority_perc, party } =
                       _seat;

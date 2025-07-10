@@ -116,8 +116,8 @@ const ElectionAnalysis: FunctionComponent<ElectionAnalysisProps> = ({
   });
 
   return (
-    <SectionGrid className="py-8 lg:py-12">
-      <h4 className="text-center text-heading-2xs font-bold">
+    <SectionGrid className="items-start overflow-scroll py-8 lg:items-center lg:py-12">
+      <h4 className="self-center text-center text-heading-2xs font-bold">
         {t("header_3", { ns: "elections" })}
       </h4>
       <div className="flex w-full justify-end py-3 lg:py-6">

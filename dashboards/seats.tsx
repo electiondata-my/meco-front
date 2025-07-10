@@ -315,7 +315,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               </h6>
               {pyramid && (
                 <Pyramid
-                  className="h-full w-full"
+                  className="h-[650px] w-full lg:h-full"
                   maxTicksLimitY={42}
                   customTooltip={pyramidPopulationTooltip}
                   data={{
