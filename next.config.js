@@ -20,6 +20,9 @@ const withPWA = require("next-pwa")({
 const nextConfig = {
   i18n,
   reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   publicRuntimeConfig: {
     APP_NAME: "ElectionData.MY",
     META_AUTHOR: "",

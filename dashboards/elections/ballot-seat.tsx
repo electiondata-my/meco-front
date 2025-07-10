@@ -151,8 +151,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
   const fetchSeatResult = async (seat: string, date: string) => {
     if (!election) return;
     const identifier = `${state}-${election}-${seat}`;
-    if (cache.has(identifier))
-      return setData("seat_result", cache.get(identifier));
+    if (cache.has(identifier)) return setData("results", cache.get(identifier));
     else {
       setData("loading", true);
       try {
@@ -279,7 +278,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                     ? SEAT_OPTIONS.find((e) => e.value === data.search_seat)
                     : null
                 }
-                onChange={(selected: OptionType) => {
+                onChange={(selected) => {
                   if (selected) {
                     fetchSeatResult(selected.value, seats[0].date);
                     setData("seat", selected.value);
@@ -289,7 +288,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                       block: "center",
                       inline: "end",
                     });
-                  } else setData("search_seat", selected);
+                  } else setData("search_seat", "");
                 }}
               />
             </div>

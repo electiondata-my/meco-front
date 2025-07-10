@@ -30,7 +30,9 @@ const CatalogueTimeseries: FunctionComponent<CatalogueTimeseriesProps> = ({
   translations,
 }) => {
   const { bind, dataset } = useContext(CatalogueContext);
-  const { data, setData } = useData({
+  const { data, setData } = useData<{
+    minmax: [number, number];
+  }>({
     minmax: [0, dataset.chart?.x ? dataset.chart?.x.length - 1 : 0],
   });
   const { coordinate } = useSlice(dataset.chart, data.minmax);
@@ -38,7 +40,7 @@ const CatalogueTimeseries: FunctionComponent<CatalogueTimeseriesProps> = ({
 
   const getPrecision = (
     precision: number | Precision,
-    key?: string
+    key?: string,
   ): number | [number, number] => {
     if (!precision) return [1, 0];
     else if (typeof precision === "number") return precision;
@@ -85,7 +87,7 @@ const CatalogueTimeseries: FunctionComponent<CatalogueTimeseriesProps> = ({
 
   useWatch(() => {
     if (dataset.chart.x) setData("minmax", [0, dataset.chart.x.length - 1]);
-  }, [config.range, dataset.chart.x, data.ctx]);
+  }, [config.range, dataset.chart.x]);
 
   return (
     <SliderProvider>
@@ -108,7 +110,7 @@ const CatalogueTimeseries: FunctionComponent<CatalogueTimeseriesProps> = ({
                     ? numFormat(
                         item.parsed.y,
                         "standard",
-                        getPrecision(config.precision)
+                        getPrecision(config.precision),
                       )
                     : "-"
                 }`;
@@ -128,7 +130,7 @@ const CatalogueTimeseries: FunctionComponent<CatalogueTimeseriesProps> = ({
               data={dataset.chart.x}
               value={data.minmax}
               period={SHORT_PERIOD[config.range]}
-              onChange={(e) => setData("minmax", e)}
+              onChange={(e) => setData("minmax", [e[0], e[0]])}
             />
           </>
         ) : (

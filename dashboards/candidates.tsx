@@ -60,7 +60,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
   const { cache } = useCache();
   const { data, setData } = useData({
     tab_index: 0, // parlimen = 0; dun = 1
-    candidate_value: null,
+    candidate_value: "",
     loading: false,
     parlimen: elections.parlimen,
     dun: elections.dun,
@@ -204,14 +204,14 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     )
                   : null
               }
-              onChange={(selected: OptionType) => {
+              onChange={(selected) => {
                 if (selected) {
                   setData("loading", true);
                   setData("candidate_value", selected.value);
                   push(routes.CANDIDATES + "/" + selected.value, undefined, {
                     scroll: false,
                   });
-                } else setData("candidate_value", selected);
+                } else setData("candidate_value", "");
               }}
             />
           </div>
