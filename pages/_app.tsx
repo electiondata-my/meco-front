@@ -1,5 +1,6 @@
 import Nexti18NextConfig from "../next-i18next.config";
 import "../styles/globals.css";
+import "mapbox-gl/dist/mapbox-gl.css";
 import Layout from "@components/Layout";
 import Progress from "@components/Progress";
 import { clx } from "@lib/helpers";
@@ -27,7 +28,7 @@ function App({ Component, pageProps }: AppPropsLayout) {
       className={clx(
         inter.className,
         poppins.variable,
-        "box-border flex h-full min-h-screen flex-col bg-bg-white font-body text-body-sm text-txt-black-900"
+        "box-border flex h-full min-h-screen flex-col bg-bg-white font-body text-body-sm text-txt-black-900",
       )}
     >
       <ThemeProvider attribute="class">

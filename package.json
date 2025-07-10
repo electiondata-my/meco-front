@@ -50,6 +50,7 @@
     "leaflet.markercluster": "^1.5.3",
     "lodash": "^4.17.21",
     "luxon": "^3.6.1",
+    "mapbox-gl": "^3.13.0",
     "match-sorter": "^8.0.3",
     "mitt": "^3.0.1",
     "next": "15.3.4",
