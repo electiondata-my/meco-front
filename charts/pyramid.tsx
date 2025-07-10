@@ -8,6 +8,8 @@ import {
   BarElement,
   Tooltip as ChartTooltip,
   ChartData,
+  Chart,
+  TooltipModel,
 } from "chart.js";
 import { Bar as BarCanvas } from "react-chartjs-2";
 import { numFormat } from "@lib/helpers";
@@ -21,7 +23,12 @@ type PyramidProps = ChartHeaderProps & {
   unitY?: string;
   minX?: number;
   maxX?: number;
+  maxTicksLimitY?: number;
   precision?: [number, number] | number;
+  customTooltip?: (context: {
+    chart: Chart;
+    tooltip: TooltipModel<"bar">;
+  }) => void;
   enableLegend?: boolean;
   enableGridX?: boolean;
   enableGridY?: boolean;
@@ -42,6 +49,8 @@ const Pyramid: FunctionComponent<PyramidProps> = ({
   enableGridY = false,
   minX,
   maxX,
+  maxTicksLimitY,
+  customTooltip,
   _ref,
 }) => {
   const ref =
@@ -73,6 +82,11 @@ const Pyramid: FunctionComponent<PyramidProps> = ({
     indexAxis: "y",
     maintainAspectRatio: false,
     responsive: true,
+    interaction: {
+      mode: "index",
+      intersect: false,
+      axis: "y",
+    },
     plugins: {
       legend: {
         display: enableLegend,
@@ -80,6 +94,8 @@ const Pyramid: FunctionComponent<PyramidProps> = ({
         align: "start",
       },
       tooltip: {
+        enabled: !customTooltip,
+        position: "nearest",
         bodyFont: {
           family: "Inter",
         },
@@ -90,6 +106,7 @@ const Pyramid: FunctionComponent<PyramidProps> = ({
             }`;
           },
         },
+        external: customTooltip,
       },
       crosshair: false,
       annotation: false,
@@ -132,6 +149,7 @@ const Pyramid: FunctionComponent<PyramidProps> = ({
             family: "Inter",
           },
           padding: 6,
+          maxTicksLimit: maxTicksLimitY,
           callback: function (value: string | number) {
             return this.getLabels()[value as number].replace("-above", "+");
           },

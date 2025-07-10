@@ -3,6 +3,11 @@ import { CountryAndStates } from "@lib/constants";
 import { clx, limitMax, maxBy, numFormat } from "@lib/helpers";
 import Image from "next/image";
 import { FunctionComponent, ReactNode, useMemo } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@govtechmy/myds-react/tooltip";
 
 type BarMeterProps = ChartHeaderProps & {
   className?: string;
@@ -13,6 +18,7 @@ type BarMeterProps = ChartHeaderProps & {
   sort?: "asc" | "desc" | ((a: BarMeterData, b: BarMeterData) => number);
   layout?: "horizontal" | "vertical" | "state-horizontal";
   precision?: number | [max: number, min: number];
+  tooltipVariable?: string;
   formatY?: (value: number, key?: string) => ReactNode;
   formatX?: (key: string) => string;
 };
@@ -20,6 +26,7 @@ type BarMeterProps = ChartHeaderProps & {
 export type BarMeterData = {
   x: string;
   y: number;
+  abs?: number;
 };
 
 const BarMeter: FunctionComponent<BarMeterProps> = ({
@@ -34,6 +41,7 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
   sort = undefined,
   relative = false,
   precision = 1,
+  tooltipVariable,
   formatY,
   formatX,
 }) => {
@@ -81,14 +89,32 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
             </div>
 
             <div className="flex h-3 w-full overflow-x-hidden rounded-full bg-otl-divider">
-              <div
-                className="h-full w-0 animate-slide items-center overflow-hidden rounded-full bg-bg-black-900"
-                style={{
-                  ["--from-width" as string]: 0,
-                  ["--to-width" as string]: percentFill(item.y),
-                  width: percentFill(item.y),
-                }}
-              />
+              {tooltipVariable ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="h-full w-0 animate-slide items-center overflow-hidden rounded-full bg-bg-black-900"
+                      style={{
+                        ["--from-width" as string]: 0,
+                        ["--to-width" as string]: percentFill(item.y),
+                        width: percentFill(item.y),
+                      }}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {item.abs ? numFormat(item.abs, "standard", 0) : "N/A"}
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <div
+                  className="h-full w-0 animate-slide items-center overflow-hidden rounded-full bg-bg-black-900"
+                  style={{
+                    ["--from-width" as string]: 0,
+                    ["--to-width" as string]: percentFill(item.y),
+                    width: percentFill(item.y),
+                  }}
+                />
+              )}
             </div>
           </div>
         );

@@ -19,6 +19,7 @@ import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useLanguage } from "@hooks/useLanguage";
 import { numFormat } from "@lib/helpers";
+import { Chart, TooltipModel } from "chart.js";
 
 /**
  * Seats
@@ -323,6 +324,8 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               {pyramid && (
                 <Pyramid
                   className="h-full w-full"
+                  maxTicksLimitY={42}
+                  customTooltip={pyramidPopulationTooltip}
                   data={{
                     labels: pyramid["ages"].map((age, index, arr) => {
                       if (index === arr.length - 1) {
@@ -361,6 +364,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                   </h6>
                   <BarMeter
                     layout="horizontal"
+                    tooltipVariable="abs"
                     data={Array.isArray(data) ? data : []}
                     formatX={(key) => t(`barmeter.${key}`, { ns: "home" })}
                     formatY={(perc, name) => (
@@ -378,3 +382,79 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
 };
 
 export default ElectionSeatsDashboard;
+
+// Create custom tooltip in chartjs for Population Pyramid
+const getOrCreateTooltip = (chart: Chart): HTMLDivElement => {
+  const parent = chart.canvas.parentNode as HTMLElement;
+  let tooltipEl = parent.querySelector(
+    "div.chartjs-custom-tooltip",
+  ) as HTMLDivElement | null;
+
+  if (!tooltipEl) {
+    tooltipEl = document.createElement("div");
+    tooltipEl.className =
+      "chartjs-custom-tooltip absolute z-50 pointer-events-none opacity-0 transition-opacity duration-100 " +
+      "rounded-sm bg-bg-black-950 border border-bg-black-950 shadow-card px-3 pt-2 pb-3 text-body-xs text-txt-white";
+
+    const table = document.createElement("table");
+    table.className = "m-0";
+    tooltipEl.appendChild(table);
+
+    parent.appendChild(tooltipEl);
+  }
+
+  return tooltipEl;
+};
+
+const pyramidPopulationTooltip = (context: {
+  chart: Chart;
+  tooltip: TooltipModel<"bar">;
+}) => {
+  const { chart, tooltip } = context;
+  const tooltipEl = getOrCreateTooltip(chart);
+
+  if (!tooltip || tooltip.opacity === 0) {
+    tooltipEl.style.opacity = "0";
+    return;
+  }
+
+  const dataIndex = tooltip.dataPoints?.[0]?.dataIndex ?? 0;
+  const label = tooltip.dataPoints?.[0]?.label ?? "";
+
+  const male = Math.abs(chart.data.datasets[0].data[dataIndex] as number);
+  const female = Math.abs(chart.data.datasets[1].data[dataIndex] as number);
+  const total = male + female || 1;
+  const malePct = ((male / total) * 100).toFixed(0);
+  const femalePct = ((female / total) * 100).toFixed(0);
+
+  const table = tooltipEl.querySelector("table");
+  if (table) {
+    table.innerHTML = `
+      <thead>
+        <tr><th class="text-left font-medium pb-1">${label} years old</th></tr>
+      </thead>
+      <div class='w-full h-px bg-txt-black-700 my-2' />
+      <tbody class="flex items-center gap-3">
+        <tr class="flex flex-col">
+          <td class="flex gap-2 items-center">
+            <span class="h-2 w-2 bg-bg-primary-500 rounded-full"></span>
+            <span class="font-medium">Male</span> (${malePct}%)
+          </td>
+          <td class="text-body-xs text-txt-black-500">${male.toLocaleString()}</td>
+        </tr>
+        <tr class="flex flex-col">
+          <td class="flex gap-2 items-center">
+            <span class="h-2 w-2 bg-bg-danger-600 rounded-full"></span>
+            <span class="font-medium">Female</span> (${femalePct}%)
+          </td>
+          <td class="text-body-xs text-txt-black-500">${female.toLocaleString()}</td>
+        </tr>
+      </tbody>
+    `;
+  }
+
+  const { top, left } = chart.canvas.getBoundingClientRect();
+  tooltipEl.style.opacity = "1";
+  tooltipEl.style.left = `${left + window.scrollX + tooltip.caretX}px`;
+  tooltipEl.style.top = `${top + window.scrollY + tooltip.caretY}px`;
+};
