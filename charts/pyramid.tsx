@@ -44,8 +44,15 @@ const Pyramid: FunctionComponent<PyramidProps> = ({
   maxX,
   _ref,
 }) => {
-  const ref = useRef<ChartJSOrUndefined<"bar", any[], string | number>>();
-  ChartJS.register(CategoryScale, LinearScale, PointElement, BarElement, ChartTooltip);
+  const ref =
+    useRef<ChartJSOrUndefined<"bar", any[], string | number>>(undefined);
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    BarElement,
+    ChartTooltip,
+  );
 
   const display = (value: number, type: "compact" | "standard"): string => {
     return numFormat(value, type, precision) + (unitY ?? "");
@@ -56,8 +63,8 @@ const Pyramid: FunctionComponent<PyramidProps> = ({
    */
   const equimax = useMemo<number>(() => {
     let raw: number[] = [];
-    data.datasets.forEach(item => {
-      raw = raw.concat(item.data.map(value => Math.abs(value)));
+    data.datasets.forEach((item) => {
+      raw = raw.concat(item.data.map((value) => Math.abs(value)));
     });
     return Math.max(...raw);
   }, [data]);

@@ -17,6 +17,8 @@ import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
 import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
+import { useLanguage } from "@hooks/useLanguage";
+import { numFormat } from "@lib/helpers";
 
 /**
  * Seats
@@ -30,9 +32,37 @@ const ElectionTable = dynamic(
   },
 );
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
+const Pyramid = dynamic(() => import("@charts/pyramid"), { ssr: false });
+const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
+
+type Barmeter = {
+  votertype: { regular: number; early: number; postal: number };
+  sex: { male: number; female: number };
+  age: {
+    "18_20": number;
+    "21_39": number;
+    "40_59": number;
+    "60_79": number;
+    "80_plus": number;
+  };
+  ethnic: {
+    malay: number;
+    chinese: number;
+    indian: number;
+    bumi_sabah: number;
+    bumi_sarawak: number;
+    orang_asli: number;
+    other: number;
+  };
+};
 
 interface ElectionSeatsProps extends ElectionResource<Seat> {
   selection: Array<SeatOptions>;
+  pyramid: { ages: number[]; male: number[]; female: number[] };
+  voters_total: number;
+  desc_en: string;
+  desc_ms: string;
+  barmeter: Barmeter;
 }
 
 type SeatOption = {
@@ -46,9 +76,15 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   last_updated,
   params,
   selection,
+  desc_en,
+  desc_ms,
+  pyramid,
+  voters_total,
+  barmeter,
 }) => {
   const { t } = useTranslation(["common", "home"]);
   const { cache } = useCache();
+  const { language } = useLanguage();
 
   const SEAT_OPTIONS: Array<
     Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption
@@ -167,6 +203,24 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     return () => events.off("routeChangeComplete", finishLoading);
   }, [params]);
 
+  const barmeter_data = barmeter
+    ? Object?.entries(barmeter).map(([key, value]) => {
+        const entries = Object.entries(value);
+        const total = entries?.reduce((sum, [, y]) => sum + y, 0);
+        let _v = entries.map(([k, v]) => ({
+          x: k,
+          y: (v / total) * 100,
+          abs: v,
+        }));
+
+        if (key !== "age") {
+          _v = _v.sort((a, b) => b.y - a.y);
+        }
+
+        return [key, _v];
+      })
+    : [];
+
   return (
     <>
       <Toast />
@@ -227,10 +281,10 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       <Container>
         <SectionGrid className="space-y-10 py-8 lg:py-16">
           <h2 className="max-w-[846px] text-center font-heading text-heading-2xs font-semibold">
-            <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
-            {
-              " is a {small / average-sized / large} {urban/rural} {Parlimen / DUN} in Melaka with 2,547,557 voters as of {election name} "
-            }
+            <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
+            {language === "en-GB"
+              ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
+              : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
 
           <div className="flex items-center justify-center bg-bg-white-disabled p-6 text-center font-mono text-heading-xl lg:h-[328px] lg:w-[628px]">
@@ -254,33 +308,66 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
 
         <SectionGrid className="space-y-10 py-8 lg:py-16">
           <h2 className="text-center font-heading text-heading-2xs font-semibold">
-            A breakdown of the 2,547,557 voters in{" "}
+            A breakdown of the{" "}
+            {voters_total && numFormat(voters_total, "standard")} voters in{" "}
             <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
           </h2>
 
           <div className="flex w-full flex-col gap-6 lg:flex-row">
-            <div className="flex items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl lg:h-[516px] lg:w-[410px]">
-              PYRAMID Chart here
+            <div className="flex flex-[0.65] flex-col items-start justify-start gap-6 lg:h-[516px] lg:w-[410px]">
+              <h6 className="text-body-lg font-semibold">gender_age_distr</h6>
+              {pyramid && (
+                <Pyramid
+                  className="h-full w-full"
+                  data={{
+                    labels: pyramid["ages"].map((age, index, arr) => {
+                      if (index === arr.length - 1) {
+                        return "100+";
+                      }
+                      return String(age);
+                    }),
+                    datasets: [
+                      {
+                        label: "Male",
+                        backgroundColor: "#3A75F6",
+                        data: pyramid["male"].map((val, i) => -val),
+                        borderRadius: 5,
+                        minBarLength: 4,
+                      },
+                      {
+                        label: "Female",
+                        data: pyramid["female"].map((val, i) => val),
+                        backgroundColor: "#dc2626",
+                        borderRadius: 5,
+                        minBarLength: 4,
+                      },
+                    ],
+                  }}
+                />
+              )}
             </div>
-            <div className="flex flex-1 flex-col gap-6">
-              <div className="flex h-full w-full flex-col gap-6 lg:flex-row">
-                <div className="flex h-[272px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
-                  CHART 1
+            <div className="flex w-full flex-1 flex-row flex-wrap gap-6">
+              {barmeter_data.map(([type, data]) => (
+                <div
+                  key={type as string}
+                  className="flex w-[350px] flex-col justify-start gap-6"
+                >
+                  <h6 className="text-body-lg font-semibold">
+                    {type as string}
+                  </h6>
+                  <BarMeter
+                    layout="horizontal"
+                    data={Array.isArray(data) ? data : []}
+                    relative
+                    formatY={(perc, name) => (
+                      <p className="whitespace-nowrap text-body-sm text-txt-black-500">{`${numFormat(perc, "compact", [2, 2])}%`}</p>
+                    )}
+                  />
                 </div>
-                <div className="flex h-[272px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
-                  CHART 2
-                </div>
-              </div>
-              <div className="flex h-full w-full flex-col gap-6 lg:flex-row">
-                <div className="flex h-[220px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
-                  CHART 3
-                </div>
-                <div className="flex h-[220px] flex-1 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white-disabled text-center font-mono text-heading-xl">
-                  CHART 4
-                </div>
-              </div>
+              ))}
             </div>
           </div>
+          <div className="w-[250px]"></div>
         </SectionGrid>
       </Container>
     </>

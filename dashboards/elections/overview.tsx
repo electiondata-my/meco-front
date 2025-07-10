@@ -99,6 +99,7 @@ const Overview: FunctionComponent<OverviewProps> = ({
     tab_index: 0,
     showMore: table.length > 6,
     isLoading: false,
+    toggle_index: 0,
   });
 
   return (

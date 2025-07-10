@@ -82,8 +82,6 @@ const FullResults = <T extends Candidate | Party | Seat>({
     loading: false,
   });
 
-  console.log(options);
-
   const selected = options[currentIndex];
   const isCandidate = typeof selected === "object" && "result" in selected;
   const isParty =

@@ -14,16 +14,21 @@ const DUNSeat: Page = ({
   last_updated,
   params,
   selection,
-  elections,
+  seat,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   return (
     <>
       <Metadata keywords="dun" />
       <ElectionSeatsDashboard
-        elections={elections}
+        elections={seat.data}
         last_updated={last_updated}
         params={params}
         selection={selection}
+        desc_en={seat.desc_en}
+        desc_ms={seat.desc_ms}
+        voters_total={seat.voters_total}
+        pyramid={seat.pyramid}
+        barmeter={seat.barmeter}
       />
     </>
   );
@@ -68,14 +73,14 @@ export const getStaticProps: GetStaticProps = withi18n(
           last_updated: "",
           params: { seat_name: slug, type: "dun" },
           selection,
-          elections: seat.data,
+          seat: seat,
         },
       };
     } catch (error: any) {
       console.error(error.message);
       return { notFound: true };
     }
-  }
+  },
 );
 
 export default DUNSeat;

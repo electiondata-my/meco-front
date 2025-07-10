@@ -40,7 +40,7 @@ export type Seat = {
   name: string;
   majority: number;
   majority_perc: number;
-  type: ElectionType;
+  // type: ElectionType;
 };
 
 export type PartySummary = {
