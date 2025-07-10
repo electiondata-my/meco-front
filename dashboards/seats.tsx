@@ -194,15 +194,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     },
   ]);
 
-  const { events, push } = useRouter();
-  useEffect(() => {
-    const finishLoading = () => {
-      setData("loading", false);
-      setData("seat_value", `${params.type}_${params.seat_name}`);
-    };
-    events.on("routeChangeComplete", finishLoading);
-    return () => events.off("routeChangeComplete", finishLoading);
-  }, [params]);
+  const { push } = useRouter();
 
   const barmeter_data = barmeter
     ? Object?.entries(barmeter).map(([key, value]) => {

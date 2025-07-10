@@ -21,6 +21,7 @@ const ParlimenSeat: Page = ({
     <>
       <Metadata keywords="parlimen" />
       <ElectionSeatsDashboard
+        key={`${params.type}-${params.seat_name}`}
         elections={seat.data}
         last_updated={last_updated}
         params={params}
