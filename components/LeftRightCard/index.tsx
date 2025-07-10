@@ -24,16 +24,23 @@ const LeftRightCard: FunctionComponent<CardProps> = ({
 }) => {
   return (
     <>
-      <div className="border-slate-200 dark:border-zinc-800 flex flex-col items-stretch overflow-visible rounded-xl border lg:flex-row">
+      <div className="flex flex-col items-stretch overflow-visible rounded-xl border border-otl-gray-200 lg:flex-row">
         <div
           className={clx(
-            "border-slate-200 dark:border-zinc-800 w-full overflow-visible lg:w-1/3 lg:border-r max-lg:rounded-xl lg:rounded-l-xl",
-            leftBg
+            "w-full overflow-visible border-otl-gray-200 max-lg:rounded-xl lg:w-1/3 lg:rounded-l-xl lg:border-r",
+            leftBg,
           )}
         >
           {left}
         </div>
-        <div className={clx("w-full rounded-b-xl lg:w-2/3 lg:rounded-r-xl", rightBg)}>{right}</div>
+        <div
+          className={clx(
+            "w-full rounded-b-xl lg:w-2/3 lg:rounded-r-xl",
+            rightBg,
+          )}
+        >
+          {right}
+        </div>
       </div>
     </>
   );

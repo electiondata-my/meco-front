@@ -31,7 +31,7 @@ const BarPerc: FunctionComponent<BarPercProps> = ({
       {!hidden && (
         <div className="flex justify-between">
           {label && <p>{label}</p>}
-          <div className="text-inherit dark:text-white">
+          <div className="text-txt-black-900">
             {value !== null ? (
               <p>
                 {numFormat(value, "standard", precision)}
@@ -45,10 +45,13 @@ const BarPerc: FunctionComponent<BarPercProps> = ({
       )}
 
       <div
-        className={clx("bg-slate-100 dark:bg-zinc-800 flex overflow-x-hidden rounded-full", size)}
+        className={clx(
+          "flex overflow-x-hidden rounded-full bg-bg-black-100",
+          size,
+        )}
       >
         <div
-          className="h-full items-center overflow-hidden rounded-full bg-slate-900 dark:bg-white"
+          className="h-full items-center overflow-hidden rounded-full bg-bg-black-900"
           style={{ width: percentFill(value) }}
         />
       </div>

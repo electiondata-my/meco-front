@@ -1,77 +1,74 @@
-import { At, Container } from "@components/index";
 import { useTranslation } from "@hooks/useTranslation";
-import { VoteIconSolid } from "@icons/index";
+import {
+  Footer,
+  SiteInfo,
+  FooterSection,
+  SiteLinkGroup,
+  SiteLink,
+} from "@govtechmy/myds-react/footer";
+import Image from "next/image";
+import Link from "next/link";
 
-const Footer = () => {
+const LayoutFooter = () => {
   const { t } = useTranslation();
 
   return (
-    <Container background="bg-slate-50 dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 pt-12 pb-16 z-10">
-      <div className="flex w-full max-md:flex-col max-md:gap-8 md:justify-between">
-        <div className="flex gap-4">
-          {/* LOGO */}
-          <VoteIconSolid className="h-9 w-9 rounded-full bg-gradient-to-br from-zinc-700 to-black text-white" />
-          <div>
-            <div className="mb-2 font-bold">ElectionData.MY</div>
-            <p className="text-zinc-500 text-sm">
-              {t("footer.copyright")}
-            </p>
+    <Footer>
+      <FooterSection className="w-full">
+        <SiteInfo className="lg:col-end-3">
+          <div className="flex items-center gap-x-2.5 text-txt-black-900">
+            <Image
+              src="/static/images/icons/icon-512.png"
+              alt="ElectionData.MY Logo"
+              width={28}
+              height={28}
+              className="aspect-auto select-none object-contain"
+            />
+            <h1 className="font-poppins text-body-lg font-bold no-underline">
+              ElectionData.MY
+            </h1>
           </div>
-        </div>
-        <div className="flex gap-6 text-sm">
-          {/* USEFUL SITES */}
-          <div className="flex w-full flex-col gap-2 md:w-[200px]">
-            <p className="font-bold">{t("footer.useful_sites")}</p>
+          <p className="text-body-sm text-txt-black-700">
+            {t("footer.copyright")}
+          </p>
+        </SiteInfo>
 
-            <At
-              className="link-dim"
-              scrollTop={false}
-              external
-              href="https://spr.gov.my/"
-            >
+        {/* Buffer Group */}
+        <SiteLinkGroup className="lg:col-span-6" groupTitle=""></SiteLinkGroup>
+        {/* End of Buffer Group */}
+
+        <SiteLinkGroup className="" groupTitle={t("footer.useful_sites")}>
+          <SiteLink asChild className="w-fit">
+            <Link target="_blank" href={"https://spr.gov.my"}>
               {t("footer.spr")}
-            </At>
-            <At
-              className="link-dim"
-              scrollTop={false}
-              external
-              href="https://www.tindakmalaysia.org/"
-            >
+            </Link>
+          </SiteLink>
+          <SiteLink asChild className="w-fit">
+            <Link target="_blank" href={"https://www.tindakmalaysia.org"}>
               Tindak Malaysia
-            </At>
-            <At
-              className="link-dim"
-              scrollTop={false}
-              external
-              href="https://bersih.org/"
-            >
+            </Link>
+          </SiteLink>
+          <SiteLink asChild className="w-fit">
+            <Link target="_blank" href={"https://bersih.org"}>
               BERSIH
-            </At>
-            {/* <At className="link-dim" scrollTop={false} href="#">
-              {t("common:footer.ai")}
-            </At> */}
-          </div>
-
-          {/* OPEN DATA */}
-          <div className="flex w-full flex-col gap-2 md:w-[200px]">
-            <p className="font-bold">{t("footer.open_data")}</p>
-
-            <At className="link-dim" scrollTop={false} href="#">
+            </Link>
+          </SiteLink>
+        </SiteLinkGroup>
+        <SiteLinkGroup groupTitle={t("footer.open_data")}>
+          <SiteLink asChild className="w-fit">
+            <Link target="_blank" href={"#"}>
               {t("footer.download")}
-            </At>
-            <At
-              className="link-dim"
-              scrollTop={false}
-              external
-              href="https://www.arxiv.org/abs/2505.06564"
-            >
+            </Link>
+          </SiteLink>
+          <SiteLink asChild className="w-fit">
+            <Link target="_blank" href={"https://www.arxiv.org/abs/2505.06564"}>
               {t("footer.documentation")}
-            </At>
-          </div>
-        </div>
-      </div>
-    </Container>
+            </Link>
+          </SiteLink>
+        </SiteLinkGroup>
+      </FooterSection>
+    </Footer>
   );
 };
 
-export default Footer;
+export default LayoutFooter;

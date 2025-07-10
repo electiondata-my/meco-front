@@ -26,6 +26,7 @@ import Overview from "./overview";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import { toDate } from "@lib/helpers";
+import SectionGrid from "@components/Section/section-grid";
 
 /**
  * Election Explorer Dashboard
@@ -121,7 +122,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
         "state",
         NON_SE_STATE.includes(data.state ?? "mys")
           ? null
-          : data.state || CURRENT_STATE
+          : data.state || CURRENT_STATE,
       );
       setData("election", null);
     } else {
@@ -137,16 +138,19 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
       <Toast />
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "elections" }), "text-danger"]}
+        category={[t("hero.category", { ns: "elections" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "elections" })]}
         description={[t("hero.description", { ns: "elections" })]}
         last_updated={last_updated}
         pageId="/elections"
+        withPattern={true}
       />
       <Container>
         {/* Explore any election from Merdeka to the present! */}
-        <Section className="pt-8 lg:pt-12">
-          <h4 className="text-center">{t("header_1", { ns: "elections" })}</h4>
+        <SectionGrid className="pt-6 lg:pt-6">
+          {/* <h4 className="text-center text-heading-2xs font-bold">
+            {t("header_1", { ns: "elections" })}
+          </h4> */}
 
           {/* Mobile */}
           <Modal
@@ -161,14 +165,14 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
           >
             {(close) => (
               <div className="flex flex-col">
-                <div className="bg-white dark:bg-zinc-900">
+                <div className="dark:bg-zinc-900 bg-white">
                   <div className="dark:divide-washed-dark divide-y px-3 pb-3">
                     <div className="space-y-2 py-3">
                       <Label
                         label={t("election", { ns: "elections" }) + ":"}
                         className="text-sm"
                       />
-                      <div className="border-slate-200 dark:border-zinc-800 max-w-fit rounded-full border bg-white p-1 dark:bg-zinc-900">
+                      <div className="border-slate-200 dark:border-zinc-800 dark:bg-zinc-900 max-w-fit rounded-full border bg-white p-1">
                         <List
                           options={PANELS.map((item) => item.name)}
                           icons={PANELS.map((item) => item.icon)}
@@ -201,10 +205,10 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
                         selected={
                           TOGGLE_IS_PARLIMEN
                             ? GE_OPTIONS.find(
-                                (e) => e.value === data.election_acronym
+                                (e) => e.value === data.election_acronym,
                               )
                             : SE_OPTIONS.find(
-                                (e) => e.value === data.election_acronym
+                                (e) => e.value === data.election_acronym,
                               )
                         }
                         disabled={!data.state}
@@ -214,13 +218,13 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
                       />
                     </div>
                   </div>
-                  <div className="dark:border-washed-dark flex w-full flex-col gap-2 border-t bg-white p-3 dark:bg-black">
+                  <div className="dark:border-washed-dark dark:bg-black flex w-full flex-col gap-2 border-t bg-white p-3">
                     <Button
                       className="btn-primary w-full justify-center"
                       onClick={() => {
                         setData("loading", true);
                         push(
-                          `${routes.ELECTIONS}/${data.state}/${data.election_acronym}`
+                          `${routes.ELECTIONS}/${data.state}/${data.election_acronym}`,
                         );
                       }}
                     >
@@ -241,9 +245,9 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
           {/* Desktop */}
           <div
             ref={divRef}
-            className="sticky top-16 z-20 mt-6 hidden items-center gap-2 lg:flex mx-auto w-fit"
+            className="sticky top-16 z-20 mx-auto mt-3 hidden w-fit items-center gap-2 lg:flex"
           >
-            <div className="border-slate-200 dark:border-zinc-800 max-w-fit rounded-full border bg-white p-1 dark:bg-zinc-900">
+            <div className="max-w-fit rounded-full border border-otl-gray-200 bg-bg-white p-1">
               <List
                 options={PANELS.map((item) => item.name)}
                 icons={PANELS.map((item) => item.icon)}
@@ -257,7 +261,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
                 if (TOGGLE_IS_PARLIMEN && data.election_acronym) {
                   setData("loading", true);
                   push(
-                    `${routes.ELECTIONS}/${selected.value}/${data.election_acronym}`
+                    `${routes.ELECTIONS}/${selected.value}/${data.election_acronym}`,
                   );
                 } else setData("election_acronym", null);
                 setData("state", selected.value);
@@ -285,7 +289,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
           </div>
 
           <Overview choropleth={choropleth} params={params} table={table} />
-          <hr className="dark:border-zinc-800 border-slate-200 h-px"></hr>
+          <hr className="h-px w-full border-otl-gray-200"></hr>
 
           {/* View the full ballot for a specific seat */}
           <BallotSeat
@@ -293,7 +297,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
             seats={seats}
             state={params.state}
           />
-          <hr className="dark:border-zinc-800 border-slate-200 h-px"></hr>
+          <hr className="h-px w-full border-otl-gray-200"></hr>
 
           {/* Election analysis */}
           <ElectionAnalysis
@@ -302,7 +306,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
             state={params.state}
             toggle={data.toggle_index}
           />
-        </Section>
+        </SectionGrid>
       </Container>
     </>
   );

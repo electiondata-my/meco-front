@@ -1,7 +1,7 @@
 import { Color, useColor } from "@hooks/useColor";
 import { MapControl, MapControlRef } from "@hooks/useMap";
 import { minMax, numFormat } from "@lib/helpers";
-import { FeatureCollection } from "geojson";
+// import { FeatureCollection } from "geojson";
 import { LatLng, LatLngBounds, LatLngExpression, LatLngTuple } from "leaflet";
 import { useTheme } from "next-themes";
 import {
@@ -58,27 +58,23 @@ const GeoChoropleth: FunctionComponent<GeoChoroplethProps> = ({
   const { theme } = useTheme();
   const { t } = useTranslation();
   const ref = useRef<MapControlRef>(null);
-  const [choromap, setChoromap] = useState<FeatureCollection | undefined>(undefined);
+  const [choromap, setChoromap] = useState<any | undefined>(undefined);
   const [min, max] = minMax(data.values);
 
   const { interpolate } = useColor(color, [min, max]);
 
   useEffect(() => {
-    import(`@lib/geojson/${type}/_map`).then(item => {
-      setChoromap(item.default as unknown as FeatureCollection);
+    import(`@lib/geojson/${type}/_map`).then((item) => {
+      setChoromap(item.default as unknown as any);
       if (onReady) onReady(true);
     });
   }, [type]);
 
-  useImperativeHandle(
-    _ref,
-    () => {
-      return {
-        print: (text: string) => ref.current?.printAsImage(text),
-      };
-    },
-    [ref]
-  );
+  useImperativeHandle(_ref, () => {
+    return {
+      print: (text: string) => ref.current?.printAsImage(text),
+    };
+  }, [ref]);
 
   return (
     <div className={className}>
@@ -100,8 +96,9 @@ const GeoChoropleth: FunctionComponent<GeoChoroplethProps> = ({
 
         {/* GeoChoropleth */}
         <>
-          {choromap?.features.map(feature => {
-            const value = data?.values[data.labels.indexOf(feature.properties![type])];
+          {choromap?.features.map((feature: any) => {
+            const value =
+              data?.values[data.labels.indexOf(feature.properties![type])];
 
             return (
               <GeoJSON
@@ -109,7 +106,9 @@ const GeoChoropleth: FunctionComponent<GeoChoroplethProps> = ({
                 data={feature}
                 style={{
                   color: "#0000001A",
-                  fillColor: enableFill ? interpolate(value) : interpolate(0.33, true), // assuming with enableFill
+                  fillColor: enableFill
+                    ? interpolate(value)
+                    : interpolate(0.33, true), // assuming with enableFill
                   fillOpacity: 0.6,
                 }}
                 onEachFeature={(_, layer) => {

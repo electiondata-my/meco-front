@@ -1,5 +1,6 @@
 import { TableConfig } from "@charts/table";
 import LeftRightCard from "@components/LeftRightCard";
+import SectionGrid from "@components/Section/section-grid";
 import { SpinnerBox } from "@components/Spinner";
 import { List, Panel, default as Tabs } from "@components/Tabs";
 import { OverallSeat } from "@dashboards/types";
@@ -115,49 +116,50 @@ const ElectionAnalysis: FunctionComponent<ElectionAnalysisProps> = ({
   });
 
   return (
-    <div className="grid grid-cols-12 py-8 lg:py-12">
-      <div className="col-span-full col-start-1 xl:col-span-10 xl:col-start-2">
-        <h4 className="text-center">{t("header_3", { ns: "elections" })}</h4>
-        <div className="flex justify-end py-3 lg:py-6">
-          <List
-            options={[
-              t("table", { ns: "elections" })
-              // t("map", { ns: "elections" }),
-            ]}
-            icons={[
-              <TableCellsIcon key="table_cell_icon" className="mr-1 h-5 w-5" />
-              // <MapIcon key="map_icon" className="mr-1 h-5 w-5" />,
-            ]}
-            current={data.tab_index}
-            onChange={(index) => setData("tab_index", index)}
+    <SectionGrid className="items-start overflow-scroll py-8 lg:items-center lg:py-12">
+      <h4 className="self-center text-center text-heading-2xs font-bold">
+        {t("header_3", { ns: "elections" })}
+      </h4>
+      <div className="flex w-full justify-end py-3 lg:py-6">
+        <List
+          options={[
+            t("table", { ns: "elections" }),
+            // t("map", { ns: "elections" }),
+          ]}
+          icons={[
+            <TableCellsIcon key="table_cell_icon" className="mr-1 h-5 w-5" />,
+            // <MapIcon key="map_icon" className="mr-1 h-5 w-5" />,
+          ]}
+          current={data.tab_index}
+          onChange={(index) => setData("tab_index", index)}
+        />
+      </div>
+      <Tabs hidden current={data.tab_index}>
+        <Panel
+          name={t("table", { ns: "elections" })}
+          icon={<TableCellsIcon className="mr-1 h-5 w-5" />}
+        >
+          <Table
+            className="table-sticky-header md:w-full"
+            data={analysisData}
+            enablePagination={10}
+            config={
+              state !== "mys"
+                ? config.filter((col) => col.id !== "state")
+                : config
+            }
+            freeze={["constituency"]}
+            precision={{
+              default: 0,
+              columns: {
+                majority_perc: 1,
+                voter_turnout_perc: 1,
+                votes_rejected_perc: 1,
+              },
+            }}
           />
-        </div>
-        <Tabs hidden current={data.tab_index}>
-          <Panel
-            name={t("table", { ns: "elections" })}
-            icon={<TableCellsIcon className="mr-1 h-5 w-5" />}
-          >
-            <Table
-              className="table-sticky-header"
-              data={analysisData}
-              enablePagination={10}
-              config={
-                state !== "mys"
-                  ? config.filter((col) => col.id !== "state")
-                  : config
-              }
-              freeze={["constituency"]}
-              precision={{
-                default: 0,
-                columns: {
-                  majority_perc: 1,
-                  voter_turnout_perc: 1,
-                  votes_rejected_perc: 1,
-                },
-              }}
-            />
-          </Panel>
-          {/*
+        </Panel>
+        {/*
           <Panel
             name={t("map", { ns: "elections" })}
             icon={<MapIcon className="mr-1 h-5 w-5" />}
@@ -173,9 +175,8 @@ const ElectionAnalysis: FunctionComponent<ElectionAnalysisProps> = ({
             />
           </Panel>
           */}
-        </Tabs>
-      </div>
-    </div>
+      </Tabs>
+    </SectionGrid>
   );
 };
 

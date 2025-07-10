@@ -1,8 +1,13 @@
 import { Chart as ChartJS, Tooltip } from "chart.js";
-import { ChoroplethController, GeoFeature, ColorScale, ProjectionScale } from "chartjs-chart-geo";
+import {
+  ChoroplethController,
+  GeoFeature,
+  ColorScale,
+  ProjectionScale,
+} from "chartjs-chart-geo";
 import { ChartHeaderProps, default as ChartHeader } from "./chart-header";
 // import { ArrowPathIcon, MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
-import { FeatureCollection } from "geojson";
+// import { FeatureCollection } from "geojson";
 import { Color } from "@hooks/useColor";
 import { clx, numFormat } from "@lib/helpers";
 import { ChartCrosshairOption, Geotype } from "@lib/types";
@@ -52,9 +57,15 @@ const Choropleth: FunctionComponent<ChoroplethProps> = ({
   onReady,
   _ref,
 }) => {
-  const [desktopMap, setDesktopMap] = useState<FeatureCollection | undefined>(undefined);
-  const [mobileMap, setMobileMap] = useState<FeatureCollection | undefined>(undefined);
-  ChartJS.register(ChoroplethController, ProjectionScale, ColorScale, GeoFeature, Tooltip);
+  const [desktopMap, setDesktopMap] = useState<any | undefined>(undefined);
+  const [mobileMap, setMobileMap] = useState<any | undefined>(undefined);
+  ChartJS.register(
+    ChoroplethController,
+    ProjectionScale,
+    ColorScale,
+    GeoFeature,
+    Tooltip,
+  );
 
   useEffect(() => {
     const fetchMaps = async () => {
@@ -63,8 +74,8 @@ const Choropleth: FunctionComponent<ChoroplethProps> = ({
         import(`@lib/geojson/${type}/_mobile`),
       ]);
 
-      setDesktopMap(desktop.default as FeatureCollection);
-      setMobileMap(mobile.default as FeatureCollection);
+      setDesktopMap(desktop.default as any);
+      setMobileMap(mobile.default as any);
       if (onReady) onReady(true);
     };
 
@@ -91,11 +102,12 @@ const Choropleth: FunctionComponent<ChoroplethProps> = ({
         callbacks: {
           label: function (item: any) {
             if (!item.raw.feature.properties[type]) return "";
-            if (item.raw.value === null) return `${item.raw.feature.properties[type]}: No data`;
+            if (item.raw.value === null)
+              return `${item.raw.feature.properties[type]}: No data`;
             return `${item.raw.feature.properties[type]}${`: ${prefix ?? ""}${numFormat(
               item.raw.value,
               "standard",
-              precision
+              precision,
             )}${unit ?? ""}`}`;
           },
         },
@@ -138,7 +150,10 @@ const Choropleth: FunctionComponent<ChoroplethProps> = ({
                     data: desktopMap
                       ? desktopMap.features.map((feature: any) => ({
                           feature: feature,
-                          value: data.values[data.labels.indexOf(feature.properties[type])],
+                          value:
+                            data.values[
+                              data.labels.indexOf(feature.properties[type])
+                            ],
                         }))
                       : [],
                   },
@@ -166,7 +181,10 @@ const Choropleth: FunctionComponent<ChoroplethProps> = ({
                     data: mobileMap
                       ? mobileMap.features.map((feature: any) => ({
                           feature: feature,
-                          value: data.values[data.labels.indexOf(feature.properties[type])],
+                          value:
+                            data.values[
+                              data.labels.indexOf(feature.properties[type])
+                            ],
                         }))
                       : [],
                   },

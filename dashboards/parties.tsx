@@ -8,7 +8,6 @@ import {
   Hero,
   ImageWithFallback,
   Panel,
-  Section,
   StateDropdown,
   Tabs,
   toast,
@@ -23,6 +22,7 @@ import dynamic from "next/dynamic";
 import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
+import SectionGrid from "@components/Section/section-grid";
 
 /**
  * Parties
@@ -33,7 +33,7 @@ const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
-  }
+  },
 );
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
@@ -57,7 +57,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
 
   const DEFAULT_PARTY = "PERIKATAN";
   const PARTY_OPTION = PARTY_OPTIONS.find(
-    (e) => e.value === (params.party ?? DEFAULT_PARTY)
+    (e) => e.value === (params.party ?? DEFAULT_PARTY),
   );
   const CURRENT_STATE = params.state ?? "mys";
 
@@ -127,7 +127,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
 
   const fetchFullResult = async (
     election: string,
-    state: string
+    state: string,
   ): Promise<Result<PartyResult>> => {
     const identifier = `${election}_${state}`;
     return new Promise(async (resolve) => {
@@ -135,7 +135,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
       const election_type = data.tab_index ? "dun" : "parlimen";
       const election_name = election ?? "GE-15";
       const url = `/elections/${state}/${election_type}-${election_name}.json`;
-      console.log(url);
       try {
         const { data: response } = await get(url);
         const ballot = response.ballot;
@@ -180,146 +179,143 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
       <Toast />
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "parties" }), "text-danger"]}
+        category={[t("hero.category", { ns: "parties" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "parties" })]}
         description={[t("hero.description", { ns: "parties" })]}
         last_updated={last_updated}
         pageId="/parties"
+        withPattern={true}
       />
       <Container>
-        <Section>
-          <div className="xl:grid xl:grid-cols-12">
-            <div className="xl:col-span-10 xl:col-start-2">
-              {/* Explore any party's entire electoral history */}
-              <h4 className="text-center">{t("header", { ns: "parties" })}</h4>
-              <div className="mx-auto w-full py-6 sm:w-[500px]">
-                <ComboBox
-                  placeholder={t("search_party", { ns: "parties" })}
-                  image={(value) => (
-                    <div className="flex h-auto max-h-8 w-8 justify-center self-center">
-                      <ImageWithFallback
-                        className="border-slate-200 dark:border-zinc-700 rounded border"
-                        src={`/static/images/parties/${value}.png`}
-                        width={28}
-                        height={18}
-                        alt={value}
-                        style={{
-                          width: "auto",
-                          maxWidth: "28px",
-                          height: "auto",
-                          maxHeight: "28px",
-                        }}
-                      />
-                    </div>
-                  )}
-                  options={PARTY_OPTIONS}
-                  selected={
-                    data.party_value
-                      ? PARTY_OPTIONS.find((e) => e.value === data.party_value)
-                      : null
-                  }
-                  onChange={(selected) => {
-                    if (selected) {
-                      setData("loading", true);
-                      setData("party_value", selected.value);
-                      push(
-                        `${routes.PARTIES}/${selected.value}/${
-                          data.state ?? CURRENT_STATE
-                        }`,
-                        undefined,
-                        { scroll: false }
-                      );
-                    } else setData("party_value", selected);
-                  }}
-                />
-              </div>
-              <Tabs
-                title={
-                  <span className="text-lg leading-9">
+        <SectionGrid className="space-y-12 py-6">
+          {/* Explore any party's entire electoral history */}
+          <div className="mt-3 space-y-6">
+            {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
+              {t("header", { ns: "parties" })}
+            </h4> */}
+            <div className="mx-auto w-full sm:w-[628px]">
+              <ComboBox
+                placeholder={t("search_party", { ns: "parties" })}
+                image={(value: string) => (
+                  <div className="flex h-auto max-h-8 w-8 justify-center self-center">
                     <ImageWithFallback
-                      className="border-slate-200 dark:border-zinc-800 mr-2 inline-block rounded border"
-                      src={`/static/images/parties/${
-                        PARTY_OPTION?.value ?? DEFAULT_PARTY
-                      }.png`}
-                      width={32}
+                      className="rounded border border-otl-gray-200"
+                      src={`/static/images/parties/${value}.png`}
+                      width={28}
                       height={18}
-                      alt={t(PARTY_OPTION?.value ?? DEFAULT_PARTY)}
-                      inline
-                    />
-                    <Trans>
-                      {t("title", {
-                        ns: "parties",
-                        party: `$t(party:${
-                          PARTY_OPTION?.value ?? DEFAULT_PARTY
-                        })`,
-                      })}
-                    </Trans>
-                    <StateDropdown
-                      currentState={data.state ?? "mys"}
-                      onChange={(selected) => {
-                        setData("loading", true);
-                        setData("state", selected.value);
-                        push(
-                          `${routes.PARTIES}/${
-                            data.party_value ? data.party_value : DEFAULT_PARTY
-                          }/${selected.value}`,
-                          undefined,
-                          { scroll: false }
-                        );
+                      alt={value}
+                      style={{
+                        width: "auto",
+                        maxWidth: "28px",
+                        height: "auto",
+                        maxHeight: "28px",
                       }}
-                      width="inline-flex ml-0.5"
-                      anchor="left"
                     />
-                  </span>
+                  </div>
+                )}
+                options={PARTY_OPTIONS}
+                selected={
+                  data.party_value
+                    ? PARTY_OPTIONS.find((e) => e.value === data.party_value)
+                    : null
                 }
-                current={data.tab_index}
-                onChange={(index: number) => setData("tab_index", index)}
-                className="py-6"
-              >
-                <Panel name={t("parlimen")}>
-                  <ElectionTable
-                    data={elections.parlimen}
-                    columns={party_schema}
-                    isLoading={data.loading}
-                    empty={
-                      <Trans>
-                        {t("no_data", {
-                          ns: "parties",
-                          party: `$t(party:${params.party ?? DEFAULT_PARTY})`,
-                          state: CountryAndStates[params.state],
-                          context: "parlimen",
-                        })}
-                      </Trans>
-                    }
-                  />
-                </Panel>
-                <Panel name={t("dun")}>
-                  <ElectionTable
-                    data={
-                      ["mys", null].includes(params.state) ? [] : elections.dun
-                    }
-                    columns={party_schema}
-                    isLoading={data.loading}
-                    empty={
-                      <Trans>
-                        {t("no_data", {
-                          ns: "parties",
-                          party: `$t(party:${params.party ?? DEFAULT_PARTY})`,
-                          state: CountryAndStates[params.state],
-                          context: ["kul", "lbn", "pjy"].includes(params.state)
-                            ? "dun_wp"
-                            : ["mys", null].includes(params.state)
-                            ? "dun_mys"
-                            : "dun",
-                        })}
-                      </Trans>
-                    }
-                  />
-                </Panel>
-              </Tabs>
+                onChange={(selected: OptionType) => {
+                  if (selected) {
+                    setData("loading", true);
+                    setData("party_value", selected.value);
+                    push(
+                      `${routes.PARTIES}/${selected.value}/${
+                        data.state ?? CURRENT_STATE
+                      }`,
+                      undefined,
+                      { scroll: false },
+                    );
+                  } else setData("party_value", selected);
+                }}
+              />
             </div>
           </div>
-        </Section>
+          <Tabs
+            title={
+              <span className="text-body-lg leading-[28px]">
+                <ImageWithFallback
+                  className="mr-2 inline-block rounded border border-otl-gray-200"
+                  src={`/static/images/parties/${
+                    PARTY_OPTION?.value ?? DEFAULT_PARTY
+                  }.png`}
+                  width={32}
+                  height={18}
+                  alt={t(PARTY_OPTION?.value ?? DEFAULT_PARTY)}
+                  inline
+                />
+                <Trans>
+                  {t("title", {
+                    ns: "parties",
+                    party: `$t(party:${PARTY_OPTION?.value ?? DEFAULT_PARTY})`,
+                  })}
+                </Trans>
+                <StateDropdown
+                  currentState={data.state ?? "mys"}
+                  onChange={(selected) => {
+                    setData("loading", true);
+                    setData("state", selected.value);
+                    push(
+                      `${routes.PARTIES}/${
+                        data.party_value ? data.party_value : DEFAULT_PARTY
+                      }/${selected.value}`,
+                      undefined,
+                      { scroll: false },
+                    );
+                  }}
+                  width="inline-flex ml-0.5"
+                  anchor="left"
+                />
+              </span>
+            }
+            current={data.tab_index}
+            onChange={(index: number) => setData("tab_index", index)}
+            className="w-full"
+          >
+            <Panel name={t("parlimen")}>
+              <ElectionTable
+                data={elections.parlimen}
+                columns={party_schema}
+                isLoading={data.loading}
+                empty={
+                  <Trans>
+                    {t("no_data", {
+                      ns: "parties",
+                      party: `$t(party:${params.party ?? DEFAULT_PARTY})`,
+                      state: CountryAndStates[params.state],
+                      context: "parlimen",
+                    })}
+                  </Trans>
+                }
+              />
+            </Panel>
+            <Panel name={t("dun")}>
+              <ElectionTable
+                data={["mys", null].includes(params.state) ? [] : elections.dun}
+                columns={party_schema}
+                isLoading={data.loading}
+                empty={
+                  <Trans>
+                    {t("no_data", {
+                      ns: "parties",
+                      party: `$t(party:${params.party ?? DEFAULT_PARTY})`,
+                      state: CountryAndStates[params.state],
+                      context: ["kul", "lbn", "pjy"].includes(params.state)
+                        ? "dun_wp"
+                        : ["mys", null].includes(params.state)
+                          ? "dun_mys"
+                          : "dun",
+                    })}
+                  </Trans>
+                }
+              />
+            </Panel>
+          </Tabs>
+        </SectionGrid>
       </Container>
     </>
   );

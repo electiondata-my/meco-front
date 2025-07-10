@@ -80,19 +80,26 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
   const { t } = useTranslation();
   const isSelected = (option: OptionType): boolean => {
     return (
-      multiple && (selected as OptionType[]).some((item: OptionType) => item.value === option.value)
+      multiple &&
+      (selected as OptionType[]).some(
+        (item: OptionType) => item.value === option.value,
+      )
     );
   };
 
   const handleDeselect = (option: OptionType): any => {
-    return (selected as OptionType[]).filter((item: OptionType) => item.value !== option.value);
+    return (selected as OptionType[]).filter(
+      (item: OptionType) => item.value !== option.value,
+    );
   };
   const handleChange = (options: any) => {
     if (!multiple) return onChange(options);
 
     const added = options;
     if (!isSelected(added)) {
-      selected && Array.isArray(selected) ? onChange([...selected, options]) : onChange([options]);
+      selected && Array.isArray(selected)
+        ? onChange([...selected, options])
+        : onChange([options]);
     } else {
       onChange(handleDeselect(added));
     }
@@ -118,9 +125,9 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
       style={style}
       className={({ active }) =>
         clx(
-          "relative flex w-full cursor-default select-none items-center gap-2 py-2 pr-4",
+          "relative flex w-full cursor-default select-none items-center gap-2 py-2 pr-4 text-txt-black-900",
           multiple ? "pl-10" : "pl-4",
-          active && "bg-slate-100 dark:bg-zinc-800"
+          active && "bg-bg-black-100",
         )
       }
       onClick={() => (multiple ? handleChange(option) : null)}
@@ -140,7 +147,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
       <span
         className={clx(
           "block flex-grow truncate",
-          option === selected ? "font-medium" : "font-normal"
+          option === selected ? "font-medium" : "font-normal",
         )}
       >
         {option.label}
@@ -152,7 +159,10 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
           <input
             type="checkbox"
             checked={
-              selected && (selected as OptionType[]).some(item => item.value === option.value)
+              selected &&
+              (selected as OptionType[]).some(
+                (item) => item.value === option.value,
+              )
             }
             className="border-slate-200 text-primary dark:border-zinc-700 dark:bg-zinc-800 dark:checked:border-primary dark:checked:bg-primary-dark h-4 w-4 rounded focus:ring-0"
           />
@@ -160,9 +170,11 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
       )}
 
       {/* Checkmark */}
-      {!multiple && selected && (selected as OptionType).value === option.value && (
-        <CheckCircleIcon className="text-primary dark:text-primary-dark h-4 w-4" />
-      )}
+      {!multiple &&
+        selected &&
+        (selected as OptionType).value === option.value && (
+          <CheckCircleIcon className="h-4 w-4 text-primary-600" />
+        )}
     </Listbox.Option>
   );
 
@@ -171,21 +183,23 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
       {label && <Label label={label}></Label>}
       <Listbox
         value={selected}
-        onChange={(option: OptionType & OptionType[]) => !multiple && handleChange(option)}
+        onChange={(option: OptionType & OptionType[]) =>
+          !multiple && handleChange(option)
+        }
         multiple={multiple}
         disabled={disabled}
       >
         <div className="relative text-sm">
           <Listbox.Button
             className={clx(
-              "shadow-button flex items-center gap-1.5 rounded-md px-3 py-1.5",
-              "text-start text-sm font-medium text-zinc-900 dark:text-white",
-              "active:bg-slate-100 hover:dark:bg-zinc-800 active:dark:bg-zinc-800 select-none bg-white dark:bg-zinc-900",
-              "border-slate-200 dark:border-zinc-800 hover:border-slate-400 hover:dark:border-zinc-700 border outline-none",
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 shadow-button",
+              "text-start text-body-sm font-medium text-txt-black-900",
+              "select-none bg-bg-white active:bg-bg-black-100",
+              "border border-otl-gray-200 outline-none hover:border-bg-black-400 hover:dark:border-bg-black-700",
               disabled &&
-                "disabled:bg-slate-200 dark:disabled:bg-zinc-800 disabled:border-slate-200 dark:disabled:border-zinc-800 disabled:text-slate-400 dark:disabled:text-zinc-700 disabled:pointer-events-none disabled:cursor-not-allowed",
+                "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-otl-gray-200 disabled:bg-otl-gray-200 disabled:text-txt-black-disabled dark:disabled:text-txt-black-700",
               width,
-              className
+              className,
             )}
           >
             <>
@@ -194,7 +208,9 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
 
               {/* Sublabel */}
               {sublabel && (
-                <span className="text-zinc-500 block w-fit min-w-min truncate">{sublabel}</span>
+                <span className="block w-fit min-w-min truncate text-txt-black-500">
+                  {sublabel}
+                </span>
               )}
 
               {/* Flag (selected) */}
@@ -211,11 +227,13 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
 
               {/* Label */}
               <span className="flex flex-grow truncate">
-                {multiple ? title : (selected as OptionType)?.label || placeholder || "Select"}
+                {multiple
+                  ? title
+                  : (selected as OptionType)?.label || placeholder || "Select"}
               </span>
               {/* Label (multiple) */}
               {multiple && (selected as OptionType[])?.length > 0 && (
-                <span className="dark:bg-primary-dark bg-primary w-4.5 h-5 rounded-md text-center text-white">
+                <span className="dark:bg-primary-dark bg-primary h-5 w-4.5 rounded-md text-center text-white">
                   {selected && (selected as OptionType[]).length}
                 </span>
               )}
@@ -233,13 +251,21 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
             <Listbox.Options
               ref={optionsRef}
               className={clx(
-                "dark:ring-slate-800  shadow-floating absolute z-20 mt-1 min-w-full rounded-md bg-white text-zinc-900 ring-1 ring-zinc-900 ring-opacity-5 focus:outline-none dark:bg-zinc-900 dark:text-white",
+                "shadow-floating absolute z-20 mt-1 min-w-full rounded-md bg-bg-white text-txt-black-900 ring-1 ring-otl-gray-200 ring-opacity-5 focus:outline-none",
                 availableOptions.length <= 100 && "max-h-60 overflow-auto",
-                anchor === "right" ? "right-0" : anchor === "left" ? "left-0" : anchor
+                anchor === "right"
+                  ? "right-0"
+                  : anchor === "left"
+                    ? "left-0"
+                    : anchor,
               )}
             >
               {/* Description - optional*/}
-              {description && <p className="text-zinc-500 px-3 pb-1 pt-2 text-xs">{description}</p>}
+              {description && (
+                <p className="px-3 pb-1 pt-2 text-xs text-txt-black-500">
+                  {description}
+                </p>
+              )}
 
               {/* Search - optional*/}
               {enableSearch && (
@@ -250,7 +276,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
                     value={search}
                     className="border-none focus:ring-transparent"
                     placeholder={t("common:placeholder.search") + "..."}
-                    onChange={value => setSearch(value)}
+                    onChange={(value) => setSearch(value)}
                   />
                 </div>
               )}
@@ -262,15 +288,32 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
                   itemCount={availableOptions.length}
                   itemSize={36}
                 >
-                  {({ index, style }: { index: number; style: CSSProperties }) => {
+                  {({
+                    index,
+                    style,
+                  }: {
+                    index: number;
+                    style: CSSProperties;
+                  }) => {
                     const option = availableOptions[index];
-                    return <ListboxOption option={option} index={index} style={style} />;
+                    return (
+                      <ListboxOption
+                        option={option}
+                        index={index}
+                        style={style}
+                      />
+                    );
                   }}
                 </FixedSizeList>
               ) : (
                 <>
                   {availableOptions.map((option, index) => (
-                    <ListboxOption key={index} option={option} index={index} style={null} />
+                    <ListboxOption
+                      key={index}
+                      option={option}
+                      index={index}
+                      style={null}
+                    />
                   ))}
                 </>
               )}
@@ -278,8 +321,10 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
               {/* Clear / Reset */}
               {enableClear && (
                 <button
-                  onClick={() => (multiple ? onChange([]) : onChange(undefined))}
-                  className="text-zinc-500 hover:bg-slate-100 dark:hover:bg-zinc-800 dark:border-zinc-800 group relative flex w-full cursor-default select-none items-center gap-2 border-t py-3 pl-10 pr-4 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() =>
+                    multiple ? onChange([]) : onChange(undefined)
+                  }
+                  className="hover:bg-slate-100 dark:hover:bg-zinc-800 dark:border-zinc-800 group relative flex w-full cursor-default select-none items-center gap-2 border-t py-3 pl-10 pr-4 text-txt-black-500 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={Array.isArray(selected) && selected.length === 0}
                 >
                   <p>{t("common:clear")}</p>

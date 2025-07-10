@@ -71,23 +71,32 @@ const Bar: FunctionComponent<BarProps> = ({
   tooltipEnabled = true,
   _ref,
 }) => {
-  const ref = useRef<ChartJSOrUndefined<"bar", any[], string | number>>();
+  const ref =
+    useRef<ChartJSOrUndefined<"bar", any[], string | number>>(undefined);
   const isVertical = useMemo(() => layout === "vertical", [layout]);
   const { size } = useContext(WindowContext);
-  ChartJS.register(CategoryScale, LinearScale, PointElement, BarElement, ChartTooltip, Legend);
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    BarElement,
+    ChartTooltip,
+    Legend,
+  );
   const { theme = "light" } = useTheme();
 
   const display = (
     value: number,
     type: "compact" | "standard",
-    precision: number | [number, number]
+    precision: number | [number, number],
   ): string => {
     return (prefixY ?? "") + numFormat(value, type, precision) + (unitY ?? "");
   };
 
   const displayLabel = (value: string) => {
     const label = formatX ? formatX(value) : value;
-    if (label.length > 25 && size.width < BREAKPOINTS.SM) return label.slice(0, 25).concat("..");
+    if (label.length > 25 && size.width < BREAKPOINTS.SM)
+      return label.slice(0, 25).concat("..");
     return label;
   };
 
@@ -95,7 +104,10 @@ const Bar: FunctionComponent<BarProps> = ({
     if (!reverse) return data;
     return {
       labels: data.labels?.slice().reverse(),
-      datasets: data.datasets.map(set => ({ ...set, data: set.data.slice().reverse() })),
+      datasets: data.datasets.map((set) => ({
+        ...set,
+        data: set.data.slice().reverse(),
+      })),
     };
   }, [data]);
 
@@ -162,7 +174,11 @@ const Bar: FunctionComponent<BarProps> = ({
           },
           stepSize:
             enableStep && Math.min.apply(Math, _data.datasets[0].data) <= 0
-              ? Math.ceil(Math.abs(Math.floor(Math.min.apply(Math, _data.datasets[0].data))))
+              ? Math.ceil(
+                  Math.abs(
+                    Math.floor(Math.min.apply(Math, _data.datasets[0].data)),
+                  ),
+                )
               : 0,
           callback: function (value: string | number) {
             if (!formatX) {
@@ -207,7 +223,7 @@ const Bar: FunctionComponent<BarProps> = ({
             return displayLabel(
               isVertical
                 ? display(value as number, "compact", precision)
-                : this.getLabelForValue(value as number).concat(unitX ?? "")
+                : this.getLabelForValue(value as number).concat(unitX ?? ""),
             );
           },
         },
@@ -226,12 +242,15 @@ const Bar: FunctionComponent<BarProps> = ({
           id={id}
           data-testid={id}
           ref={_ref ?? ref}
-          onClick={event => {
+          onClick={(event) => {
             if (ref?.current) {
               const element = getElementAtEvent(ref.current, event);
               onClick &&
                 element.length &&
-                onClick(_data?.labels![element[0].index].toString(), element[0].index);
+                onClick(
+                  _data?.labels![element[0].index].toString(),
+                  element[0].index,
+                );
             }
           }}
           data={_data}

@@ -2,6 +2,7 @@ import ResultBadge from "@components/Election/ResultBadge";
 import type {
   BaseResult,
   Candidate,
+  ElectionResult,
   Party,
   PartyResult,
   Seat,
@@ -61,14 +62,23 @@ const FullResults = <T extends Candidate | Party | Seat>({
   const { t, i18n } = useTranslation(["common", "election"]);
   const [open, setOpen] = useState<boolean>(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-  const { data, setData } = useData({
+  const { data, setData } = useData<{
+    index: number;
+    badge: ElectionResult | undefined;
+    area: string;
+    date: string;
+    election_name: string;
+    state: string;
+    loading: boolean;
+    results: Result<BaseResult[] | PartyResult> | undefined;
+  }>({
     index: currentIndex,
     area: "",
-    badge: "",
+    badge: undefined,
     date: "",
     election_name: "",
     state: "",
-    results: {},
+    results: undefined,
     loading: false,
   });
 
@@ -93,7 +103,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
   const Trigger = () => (
     <Button
       variant="reset"
-      className="btn text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+      className="flex gap-2 text-txt-black-500 hover:text-txt-black-900"
       onClick={() => {
         setData("loading", true);
         setOpen(true);
@@ -125,7 +135,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
                     onChange(option)
                       .then((results) => {
                         if (!results) return;
-                        setData("index", index);            
+                        setData("index", index);
                         setData("results", results);
                         getData(options[index]);
                       })
@@ -136,7 +146,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
                     "h-1 w-5 rounded-md",
                     index === data.index
                       ? "bg-zinc-900 dark:bg-white"
-                      : "bg-slate-200 hover:bg-slate-100 dark:bg-zinc-700 dark:hover:bg-zinc-800"
+                      : "bg-slate-200 hover:bg-slate-100 dark:bg-zinc-700 dark:hover:bg-zinc-800",
                   )}
                 />
               ))}
@@ -207,12 +217,12 @@ const FullResults = <T extends Candidate | Party | Seat>({
           <DialogHeader className="pr-8 uppercase">
             <div className="flex w-full items-center justify-between">
               <div className="flex flex-wrap gap-x-2 text-lg">
-                <h5>
+                <h5 className="text-body-lg font-semibold">
                   {isParty
                     ? t(data.election_name, { ns: "election" })
                     : data.area}
                 </h5>
-                <span className="text-zinc-500">
+                <span className="font-normal text-txt-black-500">
                   {isParty ? data.date : data.state}
                 </span>
               </div>
@@ -220,20 +230,20 @@ const FullResults = <T extends Candidate | Party | Seat>({
               {isCandidate && <ResultBadge value={data.badge} />}
             </div>
             {!isParty && (
-              <div className="flex flex-wrap gap-x-2">
+              <div className="flex flex-wrap gap-x-2 text-body-sm">
                 <span>{t(data.election_name, { ns: "election" })}</span>
-                <span className="text-zinc-500">{data.date}</span>
+                <span className="text-txt-black-500">{data.date}</span>
               </div>
             )}
           </DialogHeader>
           <FullResultContent
-            data={data.results.data}
+            data={data.results?.data}
             columns={columns}
             loading={data.loading}
             highlighted={highlighted}
             highlightedRows={highlightedRows}
             result={isCandidate ? selected.result : undefined}
-            votes={data.results.votes}
+            votes={data.results?.votes ?? []}
           />
           <Pagination />
         </DialogContent>
@@ -253,7 +263,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
       </DrawerTrigger>
       <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
         <DrawerHeader className="flex w-full flex-col items-start px-4 py-3 uppercase">
-          <div className="flex w-full justify-between items-center">
+          <div className="flex w-full items-center justify-between">
             <div className="flex flex-wrap gap-x-2 text-lg">
               <h5>
                 {isParty
@@ -265,7 +275,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
               </span>
             </div>
             <DrawerClose>
-              <XMarkIcon className="h-5 w-5 text-zinc-500" />
+              <XMarkIcon className="text-zinc-500 h-5 w-5" />
             </DrawerClose>
           </div>
           {!isParty && (
@@ -277,13 +287,13 @@ const FullResults = <T extends Candidate | Party | Seat>({
           {isCandidate && <ResultBadge value={data.badge} />}
         </DrawerHeader>
         <FullResultContent
-          data={data.results.data}
+          data={data.results?.data}
           columns={columns}
           loading={data.loading}
           highlighted={highlighted}
           highlightedRows={highlightedRows}
           result={isCandidate ? selected.result : undefined}
-          votes={data.results.votes}
+          votes={data.results?.votes || []}
         />
         <DrawerFooter>
           <Pagination />

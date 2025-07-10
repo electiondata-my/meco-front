@@ -8,14 +8,8 @@ import {
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
-import {
-  At,
-  ComboBox,
-  Container,
-  Hero,
-  Section,
-  toast,
-} from "@components/index";
+import { ComboBox, Container, Hero, toast } from "@components/index";
+import SectionGrid from "@components/Section/section-grid";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
@@ -23,6 +17,9 @@ import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
 import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
+import { useLanguage } from "@hooks/useLanguage";
+import { numFormat } from "@lib/helpers";
+import { Chart, TooltipModel } from "chart.js";
 
 /**
  * Seats
@@ -33,12 +30,40 @@ const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
-  }
+  },
 );
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
+const Pyramid = dynamic(() => import("@charts/pyramid"), { ssr: false });
+const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
+
+type Barmeter = {
+  votertype: { regular: number; early: number; postal: number };
+  sex: { male: number; female: number };
+  age: {
+    "18_20": number;
+    "21_39": number;
+    "40_59": number;
+    "60_79": number;
+    "80_plus": number;
+  };
+  ethnic: {
+    malay: number;
+    chinese: number;
+    indian: number;
+    bumi_sabah: number;
+    bumi_sarawak: number;
+    orang_asli: number;
+    other: number;
+  };
+};
 
 interface ElectionSeatsProps extends ElectionResource<Seat> {
-  selection: Array<SeatOptions & { slug: string }>;
+  selection: Array<SeatOptions>;
+  pyramid: { ages: number[]; male: number[]; female: number[] };
+  voters_total: number;
+  desc_en: string;
+  desc_ms: string;
+  barmeter: Barmeter;
 }
 
 type SeatOption = {
@@ -52,43 +77,48 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   last_updated,
   params,
   selection,
+  desc_en,
+  desc_ms,
+  pyramid,
+  voters_total,
+  barmeter,
 }) => {
   const { t } = useTranslation(["common", "home"]);
   const { cache } = useCache();
+  const { language } = useLanguage();
 
-  const SEAT_OPTIONS: Array<OptionType & SeatOption> = selection.map(
-    ({ seat_name, slug, type }) => ({
-      label: seat_name.concat(` (${t(type)})`),
-      value: type + "_" + slug,
-      state: seat_name.split(", ")[1],
-      seat: seat_name.split(", ")[0],
-      type: type,
-    })
-  );
+  const SEAT_OPTIONS: Array<
+    Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption
+  > = selection.map(({ seat_name, slug, type }) => ({
+    label: seat_name.concat(` (${t(type)})`),
+    value: type + "_" + slug,
+    state: seat_name.split(", ")[1],
+    seat: seat_name.split(", ")[0],
+    type: type,
+  }));
 
-  const DEFAULT_SEAT =
-    params.type && params.seat_name
-      ? `${params.type}_${params.seat_name}`
-      : "p138-kota-melaka-melaka";
+  const CURRENT_SEAT =
+    params.type && params.seat_name && `${params.type}_${params.seat_name}`;
 
-  const SEAT_OPTION = SEAT_OPTIONS.find((e) => e.value === DEFAULT_SEAT);
+  const SELECTED_SEATS = SEAT_OPTIONS.find((e) => e.value === CURRENT_SEAT);
 
   const { data, setData } = useData({
-    seat_value: `${params.type}_${params.seat_name}`,
+    seat_value: CURRENT_SEAT,
     loading: false,
-    elections: elections,
   });
 
   const fetchFullResult = async (
     election: string,
     seat: string,
-    date: string
+    date: string,
   ): Promise<Result<BaseResult[]>> => {
     const identifier = `${election}_${seat}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
       try {
-        const response = await get(`/results/${encodeURIComponent(seat)}/${date}.json`);
+        const response = await get(
+          `/results/${encodeURIComponent(seat)}/${date}.json`,
+        );
         const { ballot, summary } = response.data;
         const summaryStats = summary[0];
 
@@ -141,7 +171,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       header: "",
       cell: ({ row }) => (
         <FullResults
-          options={data.elections}
+          options={elections.filter((election) => !("change_en" in election))}
           currentIndex={row.index}
           onChange={(option: Seat) =>
             fetchFullResult(option.election_name, option.seat, option.date)
@@ -166,80 +196,257 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
 
   const { push } = useRouter();
 
+  const barmeter_data = barmeter
+    ? Object?.entries(barmeter).map(([key, value]) => {
+        const entries = Object.entries(value);
+        const total = entries?.reduce((sum, [, y]) => sum + y, 0);
+        let _v = entries.map(([k, v]) => ({
+          x: k,
+          y: (v / total) * 100,
+          abs: v,
+        }));
+
+        if (key !== "age") {
+          _v = _v.sort((a, b) => b.y - a.y);
+        }
+
+        return [key, _v];
+      })
+    : [];
+
   return (
     <>
       <Toast />
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "home" }), "text-danger"]}
+        category={[t("hero.category", { ns: "home" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "home" })]}
         description={[t("hero.description", { ns: "home" })]}
         pageId="sitewide"
+        withPattern={true}
+        action={
+          <div className="mx-auto w-full py-3 sm:w-[628px]">
+            <ComboBox<SeatOption>
+              placeholder={t("search_seat", { ns: "home" })}
+              options={SEAT_OPTIONS}
+              config={{
+                baseSort: (a: any, b: any) => {
+                  if (a.item.type === b.item.type) {
+                    return String(a.item.seat).localeCompare(
+                      String(b.item.seat),
+                    );
+                  }
+                  return a.item.type === "parlimen" ? -1 : 1;
+                },
+                keys: ["label", "seat", "state", "type"],
+              }}
+              format={(option) => (
+                <>
+                  <span>{`${option.seat}, ${option.state} `}</span>
+                  <span className="text-body-sm text-txt-black-500">
+                    {"(" + t(option.type) + ")"}
+                  </span>
+                </>
+              )}
+              selected={
+                data.seat_value
+                  ? SEAT_OPTIONS.find((e) => e.value === data.seat_value)
+                  : null
+              }
+              onChange={(selected) => {
+                if (selected) {
+                  setData("loading", true);
+                  setData("seat_value", selected.value);
+                  const [type, seat] = selected.value.split("_");
+                  push(`/${type}/${seat}`, undefined, { scroll: false })
+                    .catch((e) => {
+                      t("toast.request_failure"),
+                        toast.error("toast.try_again");
+                    })
+                    .finally(() => setData("loading", false));
+                } else setData("seat_value", "");
+              }}
+            />
+          </div>
+        }
       />
 
       <Container>
-        <Section>
-          <div className="xl:grid xl:grid-cols-12">
-            <div className="xl:col-span-10 xl:col-start-2">
-              <h4 className="text-center">{t("header", { ns: "home" })}</h4>
-              <div className="mx-auto w-full py-6 sm:w-[500px]">
-                <ComboBox<SeatOption>
-                  placeholder={t("search_seat", { ns: "home" })}
-                  options={SEAT_OPTIONS}
-                  config={{
-                    baseSort: (a, b) => {
-                      if (a.item.type === b.item.type) {
-                        return String(a.item.seat).localeCompare(String(b.item.seat));
+        <SectionGrid className="space-y-10 py-8 lg:py-16">
+          <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
+            <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
+            {language === "en-GB"
+              ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
+              : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
+          </h2>
+
+          <div className="flex items-center justify-center bg-bg-white-disabled p-6 text-center font-mono text-heading-xl lg:h-[328px] lg:w-[628px]">
+            container for mapbox
+          </div>
+        </SectionGrid>
+        <SectionGrid className="space-y-10 pb-8 lg:pb-16">
+          <ElectionTable
+            title={
+              <h2 className="text-center font-heading text-heading-2xs font-semibold">
+                {t("title", { ns: "home" })}
+                <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
+              </h2>
+            }
+            data={elections}
+            columns={seat_schema}
+            isLoading={data.loading}
+            className="w-full"
+          />
+        </SectionGrid>
+
+        <SectionGrid className="space-y-10 py-8 lg:py-16">
+          <h2 className="text-center font-heading text-heading-2xs font-semibold">
+            {t("breakdown_voters", {
+              ns: "home",
+              number: voters_total && numFormat(voters_total, "standard"),
+            })}
+            <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
+          </h2>
+
+          <div className="flex w-full flex-col gap-6 lg:flex-row">
+            <div className="flex flex-[0.75] flex-col items-start justify-start gap-6">
+              <h6 className="text-body-lg font-semibold">
+                {t("gender_age_distr", { ns: "home" })}
+              </h6>
+              {pyramid && (
+                <Pyramid
+                  className="h-[650px] w-full lg:h-full"
+                  maxTicksLimitY={42}
+                  customTooltip={pyramidPopulationTooltip}
+                  data={{
+                    labels: pyramid["ages"].map((age, index, arr) => {
+                      if (index === arr.length - 1) {
+                        return "100+";
                       }
-                      return a.item.type === "parlimen" ? -1 : 1;
-                    },
-                    keys: ["label", "seat", "state", "type"],
-                  }}
-                  format={(option) => (
-                    <>
-                      <span>{`${option.seat}, ${option.state} `}</span>
-                      <span className="text-zinc-500">
-                        {"(" + t(option.type) + ")"}
-                      </span>
-                    </>
-                  )}
-                  selected={
-                    data.seat_value
-                      ? SEAT_OPTIONS.find((e) => e.value === data.seat_value)
-                      : null
-                  }
-                  onChange={(selected) => {
-                    if (selected) {
-                      setData("loading", true);
-                      setData("seat_value", selected.value);
-                      const [type, seat] = selected.value.split("_");
-                      push(`/${type}/${seat}`, undefined, { scroll: false })
-                        .catch((e) => {
-                          t("toast.request_failure"),
-                            toast.error("toast.try_again");
-                        })
-                        .finally(() => setData("loading", false));
-                    } else setData("seat_value", selected);
+                      return String(age);
+                    }),
+                    datasets: [
+                      {
+                        label: "Male",
+                        backgroundColor: "#3A75F6",
+                        data: pyramid["male"].map((val, i) => -val),
+                        borderRadius: 5,
+                        minBarLength: 4,
+                      },
+                      {
+                        label: "Female",
+                        data: pyramid["female"].map((val, i) => val),
+                        backgroundColor: "#dc2626",
+                        borderRadius: 5,
+                        minBarLength: 4,
+                      },
+                    ],
                   }}
                 />
-              </div>
-              <ElectionTable
-                title={
-                  <h5 className="py-6">
-                    {t("title", { ns: "home" })}
-                    <span className="text-primary">{SEAT_OPTION?.label}</span>
-                  </h5>
-                }
-                data={elections}
-                columns={seat_schema}
-                isLoading={data.loading}
-              />
+              )}
+            </div>
+            <div className="flex w-full flex-1 flex-row flex-wrap gap-6">
+              {barmeter_data.map(([type, data]) => (
+                <div
+                  key={type as string}
+                  className="flex w-[345px] flex-col justify-start gap-6"
+                >
+                  <h6 className="text-body-lg font-semibold">
+                    {t(`${type as string}`, { ns: "home" })}
+                  </h6>
+                  <BarMeter
+                    layout="horizontal"
+                    tooltipVariable="abs"
+                    data={Array.isArray(data) ? data : []}
+                    formatX={(key) => t(`barmeter.${key}`, { ns: "home" })}
+                    formatY={(perc, name) => (
+                      <p className="whitespace-nowrap text-body-sm text-txt-black-500">{`${numFormat(perc, "compact", [2, 2])}%`}</p>
+                    )}
+                  />
+                </div>
+              ))}
             </div>
           </div>
-        </Section>
+        </SectionGrid>
       </Container>
     </>
   );
 };
 
 export default ElectionSeatsDashboard;
+
+// Create custom tooltip in chartjs for Population Pyramid
+const getOrCreateTooltip = (chart: Chart): HTMLDivElement => {
+  const parent = chart.canvas.parentNode as HTMLElement;
+  let tooltipEl = parent.querySelector(
+    "div.chartjs-custom-tooltip",
+  ) as HTMLDivElement | null;
+
+  if (!tooltipEl) {
+    tooltipEl = document.createElement("div");
+    tooltipEl.className =
+      "chartjs-custom-tooltip absolute z-50 pointer-events-none opacity-0 transition-opacity duration-100 " +
+      "rounded-sm bg-bg-black-950 border border-bg-black-950 shadow-card px-3 pt-2 pb-3 text-body-xs text-txt-white";
+
+    const table = document.createElement("table");
+    table.className = "m-0";
+    tooltipEl.appendChild(table);
+
+    parent.appendChild(tooltipEl);
+  }
+
+  return tooltipEl;
+};
+
+const pyramidPopulationTooltip = (context: {
+  chart: Chart;
+  tooltip: TooltipModel<"bar">;
+}) => {
+  const { chart, tooltip } = context;
+  const tooltipEl = getOrCreateTooltip(chart);
+
+  if (!tooltip || tooltip.opacity === 0) {
+    tooltipEl.style.opacity = "0";
+    return;
+  }
+
+  const dataIndex = tooltip.dataPoints?.[0]?.dataIndex ?? 0;
+  const label = tooltip.dataPoints?.[0]?.label ?? "";
+
+  const male = Math.abs(chart.data.datasets[0].data[dataIndex] as number);
+  const female = Math.abs(chart.data.datasets[1].data[dataIndex] as number);
+  const total = male + female || 1;
+  const malePct = ((male / total) * 100).toFixed(0);
+  const femalePct = ((female / total) * 100).toFixed(0);
+
+  const table = tooltipEl.querySelector("table");
+  if (table) {
+    table.innerHTML = `
+      <thead>
+        <tr><th class="text-left font-medium pb-1">${label} years old</th></tr>
+      </thead>
+      <div class='w-full h-px bg-txt-black-700 my-2' />
+      <tbody class="flex items-center gap-3">
+        <tr class="flex flex-col">
+          <td class="flex gap-2 items-center">
+            <span class="h-2 w-2 bg-bg-primary-500 rounded-full"></span>
+            <span class="font-medium">Male</span> (${malePct}%)
+          </td>
+          <td class="text-body-xs text-txt-black-500">${male.toLocaleString()}</td>
+        </tr>
+        <tr class="flex flex-col">
+          <td class="flex gap-2 items-center">
+            <span class="h-2 w-2 bg-bg-danger-600 rounded-full"></span>
+            <span class="font-medium">Female</span> (${femalePct}%)
+          </td>
+          <td class="text-body-xs text-txt-black-500">${female.toLocaleString()}</td>
+        </tr>
+      </tbody>
+    `;
+  }
+
+  const { top, left } = chart.canvas.getBoundingClientRect();
+  tooltipEl.style.opacity = "1";
+  tooltipEl.style.left = `${left + window.scrollX + tooltip.caretX}px`;
+  tooltipEl.style.top = `${top + window.scrollY + tooltip.caretY}px`;
+};

@@ -8,10 +8,15 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import BarPerc from "@charts/bar-perc";
-import { ImageWithFallback, Skeleton, Tooltip } from "@components/index";
+import { ImageWithFallback, Skeleton } from "@components/index";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { useTranslation } from "@hooks/useTranslation";
 import { FunctionComponent, ReactNode } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@govtechmy/myds-react/tooltip";
 
 export interface ElectionTableProps {
   className?: string;
@@ -64,16 +69,12 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
     let percent;
     switch (id) {
       case "index":
-        return highlight ? (
-          <p className="text-primary dark:text-primary-dark">{value}</p>
-        ) : (
-          value
-        );
+        return highlight ? <p className="text-primary-600">{value}</p> : value;
       case "name":
         return highlight ? (
           <p>
             {value}
-            <span className="inline-flex translate-y-0.5 ml-1">
+            <span className="ml-1 inline-flex translate-y-0.5">
               <ResultBadge hidden value={cell.row.original.result} />
             </span>
           </p>
@@ -83,22 +84,19 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "election_name":
         return (
           <div className="w-fit">
-            <Tooltip
-              tip={
-                cell.row.original.date &&
-                toDate(cell.row.original.date, "dd MMM yyyy", i18n.language)
-              }
-              className="max-xl:-left-3"
-            >
-              {(open) => (
+            <Tooltip>
+              <TooltipTrigger>
                 <div
                   className="cursor-help whitespace-nowrap underline decoration-dashed [text-underline-position:from-font]"
                   tabIndex={0}
-                  onClick={open}
                 >
                   {t(`election:${value}`)}
                 </div>
-              )}
+              </TooltipTrigger>
+              <TooltipContent>
+                {cell.row.original.date &&
+                  toDate(cell.row.original.date, "dd MMM yyyy", i18n.language)}
+              </TooltipContent>
             </Tooltip>
           </div>
         );
@@ -107,7 +105,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           <div className="flex items-center gap-1.5">
             <div className="relative flex h-auto w-8 justify-center">
               <ImageWithFallback
-                className="border-slate-200 dark:border-zinc-800 rounded border"
+                className="rounded border border-otl-gray-200"
                 src={`/static/images/parties/${value}.png`}
                 width={32}
                 height={18}
@@ -177,9 +175,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
     switch (id) {
       case "index":
         return highlight ? (
-          <p className="text-primary dark:text-primary-dark font-bold">
-            #{value}
-          </p>
+          <p className="font-bold text-primary-600">#{value}</p>
         ) : (
           <>#{value}</>
         );
@@ -188,7 +184,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           <div className="flex items-center gap-1.5">
             <div className="relative flex h-auto w-8 justify-center">
               <ImageWithFallback
-                className="border-slate-200 dark:border-zinc-800 rounded border"
+                className="rounded border border-otl-gray-200"
                 src={`/static/images/parties/${value}.png`}
                 width={32}
                 height={18}
@@ -221,11 +217,9 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "election_name":
         return (
           <div className="flex flex-wrap gap-x-3 text-sm">
-            <p className="font-medium">
-              {t(`election:${value}`)}
-            </p>
+            <p className="font-medium">{t(`election:${value}`)}</p>
             {cell.row.original.date && (
-              <p className="text-zinc-500">
+              <p className="text-txt-black-500">
                 {toDate(cell.row.original.date, "dd MMM yyyy", i18n.language)}
               </p>
             )}
@@ -236,7 +230,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         const total = cell.row.original.seats_total;
         return (
           <div className="flex flex-col space-y-1">
-            <p className="text-zinc-500 font-medium">
+            <p className="font-medium text-txt-black-500">
               {flexRender(cell.column.columnDef.header, cell.getContext())}
             </p>
             <div className="flex items-center gap-2">
@@ -256,7 +250,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         percent = cell.row.original.votes_perc;
         return (
           <div className="flex flex-col space-y-1">
-            <p className="text-zinc-500 font-medium">
+            <p className="font-medium text-txt-black-500">
               {flexRender(cell.column.columnDef.header, cell.getContext())}
             </p>
             <div className="flex flex-wrap items-center gap-2">
@@ -273,7 +267,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         percent = cell.row.original.majority_perc;
         return (
           <div className="flex flex-row gap-2">
-            <p className="text-zinc-500 font-medium">
+            <p className="font-medium text-txt-black-500">
               {flexRender(cell.column.columnDef.header, cell.getContext())}
             </p>
             {typeof value === "number" ? (
@@ -293,7 +287,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "result":
         return (
           <div className="flex flex-col space-y-1">
-            <p className="text-zinc-500 font-medium">
+            <p className="font-medium text-txt-black-500">
               {flexRender(cell.column.columnDef.header, cell.getContext())}
             </p>
             <ResultBadge value={value} />
@@ -312,12 +306,18 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   };
 
   // Add this component for explanation rows
-  const ExplanationRow: FunctionComponent<{ change_en: string; change_ms?: string }> = ({ change_en, change_ms }) => {
+  const ExplanationRow: FunctionComponent<{
+    change_en: string;
+    change_ms?: string;
+  }> = ({ change_en, change_ms }) => {
     const { i18n } = useTranslation();
     const isMalay = i18n.language && i18n.language.startsWith("ms");
     return (
       <tr>
-        <td colSpan={100} className="bg-red-50 dark:bg-[rgba(185,28,28,0.5)] text-center py-2 text-sm italic text-red-800 dark:text-red-200 border-b border-slate-200 dark:border-zinc-800">
+        <td
+          colSpan={100}
+          className="border-b border-otl-gray-200 bg-bg-washed py-2 text-center text-body-sm italic text-txt-black-700"
+        >
           {isMalay && change_ms ? change_ms : change_en}
         </td>
       </tr>
@@ -328,7 +328,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
     <>
       <div>
         {title && typeof title === "string" ? (
-          <span className="pb-6 text-base font-bold dark:text-white">
+          <span className="pb-6 text-body-md font-bold text-txt-black-900">
             {title}
           </span>
         ) : (
@@ -337,7 +337,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       </div>
       <div className={clx("relative", className)}>
         {/* Desktop */}
-        <table className="hidden w-full text-left text-sm md:table">
+        <table className="hidden w-full text-left text-body-sm md:table">
           <thead>
             {table.getHeaderGroups().map((headerGroup: any) => (
               <tr key={headerGroup.id}>
@@ -345,13 +345,13 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="border-slate-200 dark:border-zinc-800 whitespace-nowrap border-b-2 px-2 py-[10px] font-medium"
+                    className="whitespace-nowrap border-b-2 border-otl-gray-200 px-2 py-3 font-medium"
                   >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </th>
                 ))}
@@ -361,37 +361,51 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           <tbody>
             {data.map((row: any, idx: number) => {
               if (row.change_en) {
-                return <ExplanationRow key={"explanation-" + idx} change_en={row.change_en} change_ms={row.change_ms} />;
+                return (
+                  <ExplanationRow
+                    key={"explanation-" + idx}
+                    change_en={row.change_en}
+                    change_ms={row.change_ms}
+                  />
+                );
               }
               // Use react-table for normal rows
-              const tableRow = table.getRowModel().rows.find((r: any) => r.index === idx);
+              const tableRow = table
+                .getRowModel()
+                .rows.find((r: any) => r.index === idx);
               if (!tableRow) return null;
               const highlight = isHighlighted(tableRow);
               return (
                 <tr
                   key={tableRow.id}
                   className={clx(
-                    highlight ? "bg-slate-50 dark:bg-zinc-950" : "bg-inherit",
-                    "border-slate-200 dark:border-zinc-800 border-b"
+                    highlight ? "bg-bg-black-50" : "bg-inherit",
+                    "border-b border-otl-gray-200",
                   )}
                 >
-                  {tableRow.getVisibleCells().map((cell: any, colIndex: number) => (
-                    <td
-                      key={cell.id}
-                      className={clx(
-                        highlight && colIndex === 0
-                          ? "font-medium"
-                          : "font-normal",
-                        "px-2 py-[10px]"
-                      )}
-                    >
-                      {isLoading ? (
-                        <Skeleton />
-                      ) : (
-                        lookupDesktop(cell.column.columnDef.id, cell, highlight)
-                      )}
-                    </td>
-                  ))}
+                  {tableRow
+                    .getVisibleCells()
+                    .map((cell: any, colIndex: number) => (
+                      <td
+                        key={cell.id}
+                        className={clx(
+                          highlight && colIndex === 0
+                            ? "font-medium"
+                            : "font-normal",
+                          "px-2 py-3",
+                        )}
+                      >
+                        {isLoading ? (
+                          <Skeleton />
+                        ) : (
+                          lookupDesktop(
+                            cell.column.columnDef.id,
+                            cell,
+                            highlight,
+                          )
+                        )}
+                      </td>
+                    ))}
                 </tr>
               );
             })}
@@ -403,13 +417,18 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           if (row.change_en) {
             const isMalay = i18n.language && i18n.language.startsWith("ms");
             return (
-              <div key={"explanation-mobile-" + idx} className="bg-red-50 dark:bg-[rgba(185,28,28,0.5)] text-center py-2 text-sm italic text-red-800 dark:text-red-200 border-b border-slate-200 dark:border-zinc-800 md:hidden">
+              <div
+                key={"explanation-mobile-" + idx}
+                className="border-b border-otl-gray-200 bg-bg-washed py-2 text-center text-body-sm italic text-txt-black-700 md:hidden"
+              >
                 {isMalay && row.change_ms ? row.change_ms : row.change_en}
               </div>
             );
           }
           // Use react-table for normal rows
-          const tableRow = table.getRowModel().rows.find((r: any) => r.index === idx);
+          const tableRow = table
+            .getRowModel()
+            .rows.find((r: any) => r.index === idx);
           if (!tableRow) return null;
           const ids = table.getAllColumns().map((col) => col.id);
           const highlight = isHighlighted(tableRow);
@@ -419,11 +438,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             _row[cell.column.columnDef.id] = lookupMobile(
               cell.column.columnDef.id,
               cell,
-              highlight
+              highlight,
             );
           });
           return isLoading ? (
-            <div className="flex flex-col gap-2 p-3 md:hidden border-slate-200 dark:border-zinc-800 border-b first-of-type:border-t-2">
+            <div className="flex flex-col gap-2 border-b border-otl-gray-200 p-3 first-of-type:border-t-2 md:hidden">
               <Skeleton className="w-full" />
               <div className="grid grid-cols-2 gap-3">
                 <Skeleton className="w-24" />
@@ -435,17 +454,16 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           ) : (
             <div
               className={clx(
-                "border-slate-200 dark:border-zinc-800 flex flex-col space-y-2 border-b p-3 text-sm first:border-t-2 md:hidden",
+                "flex flex-col space-y-2 border-b border-otl-gray-200 p-3 text-body-sm first:border-t-2 md:hidden",
                 idx === 0 && "border-t-2",
-                highlight ? "bg-slate-50 dark:bg-[#121212]" : "bg-inherit"
+                highlight ? "bg-bg-black-50" : "bg-inherit",
               )}
               key={idx}
             >
               {/* Row 1 - Election Name / Date / Full result */}
-              {[
-                "election_name",
-                "full_result"
-              ].some((id) => ids.includes(id)) && (
+              {["election_name", "full_result"].some((id) =>
+                ids.includes(id),
+              ) && (
                 <div className="flex items-start justify-between gap-x-2">
                   <div className="flex gap-x-2">
                     {_row.index}
@@ -485,8 +503,8 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           );
         })}
         {!data.length && (
-          <div className="flex items-center justify-center h-[200px]">
-            <div className="bg-slate-200 dark:bg-zinc-800 flex h-auto w-[300px] rounded-md px-3 pb-2 pt-1 lg:w-fit">
+          <div className="flex h-[200px] items-center justify-center">
+            <div className="flex h-auto w-[300px] rounded-md bg-otl-gray-200 px-3 pb-2 pt-1 lg:w-fit">
               <p className="text-sm">
                 <span className="inline-flex pr-1">
                   <FaceFrownIcon className="h-5 w-5 translate-y-1" />
