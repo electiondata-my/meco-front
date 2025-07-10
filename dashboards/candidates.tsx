@@ -179,11 +179,11 @@ const ElectionCandidatesDashboard: FunctionComponent<
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-12 py-12">
-          <h4 className="text-center font-heading text-heading-2xs font-bold">
+        <SectionGrid className="space-y-12 py-6">
+          {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
             {t("header", { ns: "candidates" })}
-          </h4>
-          <div className="mx-auto w-full sm:w-[500px]">
+          </h4> */}
+          <div className="mx-auto mt-3 w-full sm:w-[628px]">
             <ComboBox
               placeholder={t("search_candidate", { ns: "candidates" })}
               options={CANDIDATE_OPTIONS}

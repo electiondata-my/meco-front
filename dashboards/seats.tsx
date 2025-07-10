@@ -280,7 +280,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
 
       <Container>
         <SectionGrid className="space-y-10 py-8 lg:py-16">
-          <h2 className="max-w-[846px] text-center font-heading text-heading-2xs font-semibold">
+          <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
             {language === "en-GB"
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
@@ -316,7 +316,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           </h2>
 
           <div className="flex w-full flex-col gap-6 lg:flex-row">
-            <div className="flex flex-[0.65] flex-col items-start justify-start gap-6 lg:h-[516px] lg:w-[410px]">
+            <div className="flex flex-[0.75] flex-col items-start justify-start gap-6">
               <h6 className="text-body-lg font-semibold">
                 {t("gender_age_distr", { ns: "home" })}
               </h6>
@@ -354,7 +354,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               {barmeter_data.map(([type, data]) => (
                 <div
                   key={type as string}
-                  className="flex w-[350px] flex-col justify-start gap-6"
+                  className="flex w-[345px] flex-col justify-start gap-6"
                 >
                   <h6 className="text-body-lg font-semibold">
                     {t(`${type as string}`, { ns: "home" })}
@@ -362,7 +362,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                   <BarMeter
                     layout="horizontal"
                     data={Array.isArray(data) ? data : []}
-                    relative
                     formatX={(key) => t(`barmeter.${key}`, { ns: "home" })}
                     formatY={(perc, name) => (
                       <p className="whitespace-nowrap text-body-sm text-txt-black-500">{`${numFormat(perc, "compact", [2, 2])}%`}</p>

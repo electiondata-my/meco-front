@@ -198,14 +198,14 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-12 py-12">
-          <div className="flex flex-col items-center gap-6">
-            <h4 className="text-center font-heading text-heading-2xs font-bold">
+        <SectionGrid className="space-y-12 py-6 pb-12">
+          <div className="mt-3 flex flex-col items-center gap-6">
+            {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
               {t("header", {
                 ns: "trivia",
                 country: CountryAndStates[params.state],
               })}
-            </h4>
+            </h4> */}
             <StateDropdown
               url={"/trivia"}
               anchor="left"
@@ -216,7 +216,7 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
           </div>
 
           <div className="space-y-12 lg:space-y-6">
-            <div className="border-slate-200 dark:border-zinc-800 w-full space-y-6 rounded-xl border-0 p-0 lg:border lg:p-8">
+            <div className="border-slate-200 dark:border-zinc-800 w-full space-y-6 rounded-xl border-0 p-0 lg:border lg:p-4">
               <div className="gap-3">
                 <VoteIconSolid className="mx-auto h-16 w-16 text-primary-600" />
                 <h5 className="text-center">
@@ -278,7 +278,7 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
                 </Panel>
               </Tabs>
             </div>
-            <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:gap-6 xl:grid-cols-6">
+            {/* <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:gap-6 xl:grid-cols-6">
               <div className="border-slate-200 dark:border-zinc-800 space-y-6 rounded-xl border-0 p-0 lg:border lg:p-8 xl:col-span-2 xl:col-start-2">
                 <h5 className="text-center text-body-lg font-bold">
                   {t("ge_veterans", { ns: "trivia" })}
@@ -345,7 +345,7 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
                   </div>
                 )}
               </div>
-            </div>
+            </div> */}
           </div>
         </SectionGrid>
       </Container>

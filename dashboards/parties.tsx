@@ -187,19 +187,19 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-12 py-12">
+        <SectionGrid className="space-y-12 py-6">
           {/* Explore any party's entire electoral history */}
-          <div className="space-y-6">
-            <h4 className="text-center font-heading text-heading-2xs font-bold">
+          <div className="mt-3 space-y-6">
+            {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
               {t("header", { ns: "parties" })}
-            </h4>
-            <div className="mx-auto w-full sm:w-[500px]">
+            </h4> */}
+            <div className="mx-auto w-full sm:w-[628px]">
               <ComboBox
                 placeholder={t("search_party", { ns: "parties" })}
                 image={(value: string) => (
                   <div className="flex h-auto max-h-8 w-8 justify-center self-center">
                     <ImageWithFallback
-                      className="border-slate-200 dark:border-zinc-700 rounded border"
+                      className="rounded border border-otl-gray-200"
                       src={`/static/images/parties/${value}.png`}
                       width={28}
                       height={18}

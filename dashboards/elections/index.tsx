@@ -147,10 +147,10 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
       />
       <Container>
         {/* Explore any election from Merdeka to the present! */}
-        <SectionGrid className="pt-8 lg:pt-12">
-          <h4 className="text-center text-heading-2xs font-bold">
+        <SectionGrid className="pt-6 lg:pt-6">
+          {/* <h4 className="text-center text-heading-2xs font-bold">
             {t("header_1", { ns: "elections" })}
-          </h4>
+          </h4> */}
 
           {/* Mobile */}
           <Modal
@@ -245,7 +245,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
           {/* Desktop */}
           <div
             ref={divRef}
-            className="sticky top-16 z-20 mx-auto mt-6 hidden w-fit items-center gap-2 lg:flex"
+            className="sticky top-16 z-20 mx-auto mt-3 hidden w-fit items-center gap-2 lg:flex"
           >
             <div className="max-w-fit rounded-full border border-otl-gray-200 bg-bg-white p-1">
               <List
