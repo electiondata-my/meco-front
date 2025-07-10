@@ -308,14 +308,18 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
 
         <SectionGrid className="space-y-10 py-8 lg:py-16">
           <h2 className="text-center font-heading text-heading-2xs font-semibold">
-            A breakdown of the{" "}
-            {voters_total && numFormat(voters_total, "standard")} voters in{" "}
+            {t("breakdown_voters", {
+              ns: "home",
+              number: voters_total && numFormat(voters_total, "standard"),
+            })}
             <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
           </h2>
 
           <div className="flex w-full flex-col gap-6 lg:flex-row">
             <div className="flex flex-[0.65] flex-col items-start justify-start gap-6 lg:h-[516px] lg:w-[410px]">
-              <h6 className="text-body-lg font-semibold">gender_age_distr</h6>
+              <h6 className="text-body-lg font-semibold">
+                {t("gender_age_distr", { ns: "home" })}
+              </h6>
               {pyramid && (
                 <Pyramid
                   className="h-full w-full"
@@ -353,12 +357,13 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                   className="flex w-[350px] flex-col justify-start gap-6"
                 >
                   <h6 className="text-body-lg font-semibold">
-                    {type as string}
+                    {t(`${type as string}`, { ns: "home" })}
                   </h6>
                   <BarMeter
                     layout="horizontal"
                     data={Array.isArray(data) ? data : []}
                     relative
+                    formatX={(key) => t(`barmeter.${key}`, { ns: "home" })}
                     formatY={(perc, name) => (
                       <p className="whitespace-nowrap text-body-sm text-txt-black-500">{`${numFormat(perc, "compact", [2, 2])}%`}</p>
                     )}
@@ -367,7 +372,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               ))}
             </div>
           </div>
-          <div className="w-[250px]"></div>
         </SectionGrid>
       </Container>
     </>
