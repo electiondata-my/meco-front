@@ -273,6 +273,14 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       />
 
       <Container>
+        {/* <SectionGrid className="space-y-10 py-8 lg:py-16">
+          <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
+            <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
+            {language === "en-GB"
+              ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
+              : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
+          </h2>
+        </SectionGrid> */}
         <SectionGrid className="space-y-10 py-8 lg:py-16">
           <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
@@ -280,12 +288,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
               : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
-
-          <div className="flex items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[328px] lg:w-[628px]">
-            <Mapbox />
-          </div>
-        </SectionGrid>
-        <SectionGrid className="space-y-10 pb-8 lg:pb-16">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-heading-2xs font-semibold">
