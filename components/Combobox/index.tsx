@@ -113,6 +113,7 @@ const ComboBox = <T extends unknown>({
       className="relative flex w-full select-none overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button hover:border-bg-black-400 focus:outline-none focus-visible:ring-0"
     >
       <input
+        id="combobox-input"
         className={clx(
           "w-full truncate border-none bg-bg-white py-2.5 pl-4.5 pr-10 text-body-md focus:outline-none focus:ring-0",
         )}

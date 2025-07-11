@@ -225,54 +225,49 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         description={[t("hero.description", { ns: "home" })]}
         pageId="sitewide"
         withPattern={true}
-        action={
-          <div className="mx-auto w-full py-3 sm:w-[628px]">
-            <ComboBox<SeatOption>
-              placeholder={t("search_seat", { ns: "home" })}
-              options={SEAT_OPTIONS}
-              config={{
-                baseSort: (a: any, b: any) => {
-                  if (a.item.type === b.item.type) {
-                    return String(a.item.seat).localeCompare(
-                      String(b.item.seat),
-                    );
-                  }
-                  return a.item.type === "parlimen" ? -1 : 1;
-                },
-                keys: ["label", "seat", "state", "type"],
-              }}
-              format={(option) => (
-                <>
-                  <span>{`${option.seat}, ${option.state} `}</span>
-                  <span className="text-body-sm text-txt-black-500">
-                    {"(" + t(option.type) + ")"}
-                  </span>
-                </>
-              )}
-              selected={
-                data.seat_value
-                  ? SEAT_OPTIONS.find((e) => e.value === data.seat_value)
-                  : null
-              }
-              onChange={(selected) => {
-                if (selected) {
-                  setData("loading", true);
-                  setData("seat_value", selected.value);
-                  const [type, seat] = selected.value.split("_");
-                  push(`/${type}/${seat}`, undefined, { scroll: false })
-                    .catch((e) => {
-                      t("toast.request_failure"),
-                        toast.error("toast.try_again");
-                    })
-                    .finally(() => setData("loading", false));
-                } else setData("seat_value", "");
-              }}
-            />
-          </div>
-        }
       />
 
       <Container>
+        <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 sm:w-[628px]">
+          <ComboBox<SeatOption>
+            placeholder={t("search_seat", { ns: "home" })}
+            options={SEAT_OPTIONS}
+            config={{
+              baseSort: (a: any, b: any) => {
+                if (a.item.type === b.item.type) {
+                  return String(a.item.seat).localeCompare(String(b.item.seat));
+                }
+                return a.item.type === "parlimen" ? -1 : 1;
+              },
+              keys: ["label", "seat", "state", "type"],
+            }}
+            format={(option) => (
+              <>
+                <span>{`${option.seat}, ${option.state} `}</span>
+                <span className="text-body-sm text-txt-black-500">
+                  {"(" + t(option.type) + ")"}
+                </span>
+              </>
+            )}
+            selected={
+              data.seat_value
+                ? SEAT_OPTIONS.find((e) => e.value === data.seat_value)
+                : null
+            }
+            onChange={(selected) => {
+              if (selected) {
+                setData("loading", true);
+                setData("seat_value", selected.value);
+                const [type, seat] = selected.value.split("_");
+                push(`/${type}/${seat}`, undefined, { scroll: false })
+                  .catch((e) => {
+                    t("toast.request_failure"), toast.error("toast.try_again");
+                  })
+                  .finally(() => setData("loading", false));
+              } else setData("seat_value", "");
+            }}
+          />
+        </div>
         {/* <SectionGrid className="space-y-10 py-8 lg:py-16">
           <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
@@ -281,7 +276,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
         </SectionGrid> */}
-        <SectionGrid className="space-y-10 py-8 lg:py-16">
+        <SectionGrid className="space-y-10 py-8 lg:pb-16 lg:pt-10">
           <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
             {language === "en-GB"
