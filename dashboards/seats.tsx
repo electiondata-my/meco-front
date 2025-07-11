@@ -15,7 +15,7 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
-import { FunctionComponent, useEffect } from "react";
+import { FunctionComponent } from "react";
 import { useRouter } from "next/router";
 import { useLanguage } from "@hooks/useLanguage";
 import { numFormat } from "@lib/helpers";
@@ -35,6 +35,7 @@ const ElectionTable = dynamic(
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 const Pyramid = dynamic(() => import("@charts/pyramid"), { ssr: false });
 const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
+const Mapbox = dynamic(() => import("@components/Mapbox"), { ssr: false });
 
 type Barmeter = {
   votertype: { regular: number; early: number; postal: number };
@@ -280,8 +281,8 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
 
-          <div className="flex items-center justify-center bg-bg-white-disabled p-6 text-center font-mono text-heading-xl lg:h-[328px] lg:w-[628px]">
-            container for mapbox
+          <div className="flex items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[328px] lg:w-[628px]">
+            <Mapbox />
           </div>
         </SectionGrid>
         <SectionGrid className="space-y-10 pb-8 lg:pb-16">
