@@ -14,7 +14,7 @@ const LayoutFooter = () => {
 
   return (
     <Footer>
-      <FooterSection className="w-full">
+      <FooterSection className="w-full border-0 lg:pb-0">
         <SiteInfo className="lg:col-end-3">
           <div className="flex items-center gap-x-2.5 text-txt-black-900">
             <Image
