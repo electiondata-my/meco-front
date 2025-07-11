@@ -310,14 +310,13 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           </h2>
 
           <div className="flex w-full flex-col gap-6 lg:flex-row">
-            <div className="flex flex-[0.75] flex-col items-start justify-start gap-6">
+            <div className="flex flex-col items-start justify-start gap-6 lg:flex-1 xl:flex-[0.75]">
               <h6 className="text-body-lg font-semibold">
                 {t("gender_age_distr", { ns: "home" })}
               </h6>
               {pyramid && (
                 <Pyramid
                   className="h-[650px] w-full lg:h-full"
-                  maxTicksLimitY={42}
                   customTooltip={pyramidPopulationTooltip}
                   data={{
                     labels: pyramid["ages"].map((age, index, arr) => {
@@ -346,7 +345,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 />
               )}
             </div>
-            <div className="flex w-full flex-1 flex-row flex-wrap gap-6">
+            <div className="flex w-full flex-1 flex-row flex-wrap gap-6 lg:flex-[0.75] xl:flex-1">
               {barmeter_data.map(([type, data]) => (
                 <div
                   key={type as string}
