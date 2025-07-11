@@ -264,24 +264,24 @@ const FullResults = <T extends Candidate | Party | Seat>({
       <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
         <DrawerHeader className="flex w-full flex-col items-start px-4 py-3 uppercase">
           <div className="flex w-full items-center justify-between">
-            <div className="flex flex-wrap gap-x-2 text-lg">
-              <h5>
+            <div className="flex flex-wrap items-center gap-x-2 text-lg">
+              <h5 className="text-body-lg font-semibold">
                 {isParty
                   ? t(data.election_name, { ns: "election" })
                   : data.area}
               </h5>
-              <span className="text-zinc-500">
+              <span className="text-txt-black-500">
                 {isParty ? data.date : data.state}
               </span>
             </div>
             <DrawerClose>
-              <XMarkIcon className="text-zinc-500 h-5 w-5" />
+              <XMarkIcon className="h-5 w-5 text-txt-black-500" />
             </DrawerClose>
           </div>
           {!isParty && (
             <div className="flex flex-wrap gap-x-2">
               <span>{t(data.election_name, { ns: "election" })}</span>
-              <span className="text-zinc-500">{data.date}</span>
+              <span className="text-txt-black-500">{data.date}</span>
             </div>
           )}
           {isCandidate && <ResultBadge value={data.badge} />}

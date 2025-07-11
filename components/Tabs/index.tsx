@@ -1,4 +1,10 @@
-import { FunctionComponent, ReactElement, ReactNode, useMemo } from "react";
+import {
+  Fragment,
+  FunctionComponent,
+  ReactElement,
+  ReactNode,
+  useMemo,
+} from "react";
 import { Tab } from "@headlessui/react";
 import { clx } from "@lib/helpers";
 
@@ -83,7 +89,7 @@ const Tabs: FunctionComponent<TabsProps> & {
   }, [children]);
   return (
     <>
-      <Tab.Group selectedIndex={current} onChange={onChange}>
+      <Tab.Group as={Fragment} selectedIndex={current} onChange={onChange}>
         <div
           className={clx(
             "flex flex-wrap items-end justify-between gap-3",

@@ -46,7 +46,7 @@ const BarPerc: FunctionComponent<BarPercProps> = ({
 
       <div
         className={clx(
-          "flex overflow-x-hidden rounded-full bg-bg-black-100",
+          "flex overflow-x-hidden rounded-full bg-bg-washed",
           size,
         )}
       >

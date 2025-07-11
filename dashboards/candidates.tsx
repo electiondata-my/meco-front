@@ -179,7 +179,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-12 py-6">
+        <SectionGrid className="space-y-6 py-6 lg:space-y-12">
           {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
             {t("header", { ns: "candidates" })}
           </h4> */}

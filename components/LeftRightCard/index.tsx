@@ -24,7 +24,7 @@ const LeftRightCard: FunctionComponent<CardProps> = ({
 }) => {
   return (
     <>
-      <div className="flex flex-col items-stretch overflow-visible rounded-xl border border-otl-gray-200 lg:flex-row">
+      <div className="flex w-full flex-col items-stretch overflow-visible rounded-xl border border-otl-gray-200 lg:flex-row">
         <div
           className={clx(
             "w-full overflow-visible border-otl-gray-200 max-lg:rounded-xl lg:w-1/3 lg:rounded-l-xl lg:border-r",
