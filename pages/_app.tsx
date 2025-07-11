@@ -27,7 +27,7 @@ function App({ Component, pageProps }: AppPropsLayout) {
       className={clx(
         inter.className,
         poppins.variable,
-        "box-border flex h-full min-h-screen flex-col bg-bg-white font-body text-body-sm text-txt-black-900",
+        "box-border flex min-h-screen flex-col bg-bg-white font-body text-body-sm text-txt-black-900",
       )}
     >
       <ThemeProvider attribute="class">

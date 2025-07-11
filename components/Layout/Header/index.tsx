@@ -12,7 +12,7 @@ import LocaleSwitch from "./locale-switch";
 
 export default function Header() {
   return (
-    <Navbar className="sticky">
+    <Navbar>
       <Link href={"/"} className="flex items-center gap-2.5 no-underline">
         <Image
           src="/static/images/icons/icon-512.png"
