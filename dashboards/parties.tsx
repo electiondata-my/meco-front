@@ -187,7 +187,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-12 py-6">
+        <SectionGrid className="space-y-6 py-6 lg:space-y-12">
           {/* Explore any party's entire electoral history */}
           <div className="mt-3 space-y-6">
             {/* <h4 className="text-center font-heading text-heading-2xs font-bold">

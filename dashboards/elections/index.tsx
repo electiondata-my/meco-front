@@ -151,7 +151,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
           {/* <h4 className="text-center text-heading-2xs font-bold">
             {t("header_1", { ns: "elections" })}
           </h4> */}
-
           {/* Mobile */}
           <Modal
             trigger={(open) => (
@@ -241,7 +240,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
               </div>
             )}
           </Modal>
-
           {/* Desktop */}
           <div
             ref={divRef}
@@ -287,10 +285,8 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
               disabled={!data.state}
             />
           </div>
-
           <Overview choropleth={choropleth} params={params} table={table} />
           <hr className="h-px w-full border-otl-gray-200"></hr>
-
           {/* View the full ballot for a specific seat */}
           <BallotSeat
             election={params.election}
@@ -298,7 +294,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
             state={params.state}
           />
           <hr className="h-px w-full border-otl-gray-200"></hr>
-
           {/* Election analysis */}
           <ElectionAnalysis
             choropleth={choropleth}

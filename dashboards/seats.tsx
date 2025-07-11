@@ -15,7 +15,7 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
-import { FunctionComponent, useEffect } from "react";
+import { FunctionComponent } from "react";
 import { useRouter } from "next/router";
 import { useLanguage } from "@hooks/useLanguage";
 import { numFormat } from "@lib/helpers";
@@ -35,6 +35,7 @@ const ElectionTable = dynamic(
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 const Pyramid = dynamic(() => import("@charts/pyramid"), { ssr: false });
 const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
+const Mapbox = dynamic(() => import("@components/Mapbox"), { ssr: false });
 
 type Barmeter = {
   votertype: { regular: number; early: number; postal: number };
@@ -272,6 +273,14 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       />
 
       <Container>
+        {/* <SectionGrid className="space-y-10 py-8 lg:py-16">
+          <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
+            <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
+            {language === "en-GB"
+              ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
+              : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
+          </h2>
+        </SectionGrid> */}
         <SectionGrid className="space-y-10 py-8 lg:py-16">
           <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
@@ -279,12 +288,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
               : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
-
-          <div className="flex items-center justify-center bg-bg-white-disabled p-6 text-center font-mono text-heading-xl lg:h-[328px] lg:w-[628px]">
-            container for mapbox
-          </div>
-        </SectionGrid>
-        <SectionGrid className="space-y-10 pb-8 lg:pb-16">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-heading-2xs font-semibold">
@@ -309,14 +312,13 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           </h2>
 
           <div className="flex w-full flex-col gap-6 lg:flex-row">
-            <div className="flex flex-[0.75] flex-col items-start justify-start gap-6">
+            <div className="flex flex-col items-start justify-start gap-6 lg:flex-1 xl:flex-[0.75]">
               <h6 className="text-body-lg font-semibold">
                 {t("gender_age_distr", { ns: "home" })}
               </h6>
               {pyramid && (
                 <Pyramid
                   className="h-[650px] w-full lg:h-full"
-                  maxTicksLimitY={42}
                   customTooltip={pyramidPopulationTooltip}
                   data={{
                     labels: pyramid["ages"].map((age, index, arr) => {
@@ -345,7 +347,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 />
               )}
             </div>
-            <div className="flex w-full flex-1 flex-row flex-wrap gap-6">
+            <div className="flex w-full flex-1 flex-row flex-wrap gap-6 lg:flex-[0.75] xl:flex-1">
               {barmeter_data.map(([type, data]) => (
                 <div
                   key={type as string}

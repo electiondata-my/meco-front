@@ -103,7 +103,7 @@ const Overview: FunctionComponent<OverviewProps> = ({
   });
 
   return (
-    <SectionGrid className="space-y-12 py-6">
+    <SectionGrid className="space-y-12 py-6" as="div">
       <Tabs
         hidden
         current={data.toggle_index}

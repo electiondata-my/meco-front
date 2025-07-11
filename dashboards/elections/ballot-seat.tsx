@@ -267,7 +267,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
         </div>
       </div>
       <LeftRightCard
-        leftBg="overflow-hidden"
+        leftBg="overflow-hidden lg:max-w-[360px]"
         left={
           <div className="relative flex h-fit w-full flex-col overflow-hidden bg-bg-washed px-3 pb-3 md:overflow-y-auto lg:h-[600px] lg:rounded-bl-xl lg:rounded-tl-xl lg:rounded-tr-none lg:pb-6 xl:px-6">
             <div className="sticky top-0 z-10 border-b border-otl-gray-200 pb-3 pt-6">
@@ -305,7 +305,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                           scrollRef && (scrollRef.current[seat] = ref);
                         }}
                         key={seat}
-                        className="pb-px pl-px pr-3 pt-3"
+                        className="pb-px pl-px pr-3 pt-3 lg:pr-0"
                       >
                         <div
                           className={clx(
@@ -359,27 +359,30 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                             <Won />
                           </div>
 
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-body-sm text-txt-black-500">
-                              {t("majority")}
-                            </p>
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between">
+                              <p className="text-body-sm text-txt-black-500">
+                                {t("majority")}
+                              </p>
+                              <span>
+                                {majority === null
+                                  ? `—`
+                                  : numFormat(majority, "standard")}
+                                {majority_perc === null
+                                  ? ` (—)`
+                                  : ` (${numFormat(
+                                      majority_perc,
+                                      "compact",
+                                      1,
+                                    )}%)`}
+                              </span>
+                            </div>
+
                             <BarPerc
                               hidden
                               value={majority_perc}
-                              size="h-[5px] w-[30px] xl:w-[50px]"
+                              size="h-[5px] w-[30px] lg:w-[288px]"
                             />
-                            <span>
-                              {majority === null
-                                ? `—`
-                                : numFormat(majority, "standard")}
-                              {majority_perc === null
-                                ? ` (—)`
-                                : ` (${numFormat(
-                                    majority_perc,
-                                    "compact",
-                                    1,
-                                  )}%)`}
-                            </span>
                           </div>
                         </div>
                       </div>

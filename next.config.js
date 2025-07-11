@@ -23,6 +23,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  images: {
+    domains: ["api.mapbox.com"],
+  },
   publicRuntimeConfig: {
     APP_NAME: "ElectionData.MY",
     META_AUTHOR: "",
