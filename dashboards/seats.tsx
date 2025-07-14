@@ -306,14 +306,16 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
           </h2>
 
-          <div className="flex w-full flex-col gap-6 lg:flex-row">
-            <div className="flex flex-col items-start justify-start gap-6 lg:flex-1 xl:flex-[0.75]">
-              <h6 className="text-body-lg font-semibold">
-                {t("gender_age_distr", { ns: "home" })}
-              </h6>
+          <div className="flex w-full flex-col gap-6 xl:flex-row">
+            <div className="flex flex-col items-start justify-start gap-6 xl:flex-[0.70]">
               {pyramid && (
                 <Pyramid
-                  className="h-[650px] w-full lg:h-full"
+                  title={
+                    <h6 className="text-body-lg font-semibold">
+                      {t("gender_age_distr", { ns: "home" })}
+                    </h6>
+                  }
+                  className="h-[500px] w-full xl:h-[95%]"
                   customTooltip={pyramidPopulationTooltip}
                   data={{
                     labels: pyramid["ages"].map((age, index, arr) => {
@@ -342,18 +344,20 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 />
               )}
             </div>
-            <div className="flex w-full flex-1 flex-row flex-wrap gap-6 lg:flex-[0.75] xl:flex-1">
+            <div className="flex w-full flex-1 flex-row flex-wrap gap-6 xl:flex-1">
               {barmeter_data.map(([type, data]) => (
                 <div
                   key={type as string}
-                  className="flex w-[345px] flex-col justify-start gap-6"
+                  className="flex w-full flex-col justify-start gap-6 xl:w-[345px]"
                 >
-                  <h6 className="text-body-lg font-semibold">
-                    {t(`${type as string}`, { ns: "home" })}
-                  </h6>
                   <BarMeter
                     layout="horizontal"
                     tooltipVariable="abs"
+                    title={
+                      <h6 className="text-body-lg font-semibold">
+                        {t(`${type as string}`, { ns: "home" })}
+                      </h6>
+                    }
                     data={Array.isArray(data) ? data : []}
                     formatX={(key) => t(`barmeter.${key}`, { ns: "home" })}
                     formatY={(perc, name) => (
