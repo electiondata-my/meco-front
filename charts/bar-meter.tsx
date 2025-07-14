@@ -18,7 +18,7 @@ type BarMeterProps = ChartHeaderProps & {
   sort?: "asc" | "desc" | ((a: BarMeterData, b: BarMeterData) => number);
   layout?: "horizontal" | "vertical" | "state-horizontal";
   precision?: number | [max: number, min: number];
-  tooltipVariable?: string;
+  tooltipVariable?: keyof BarMeterData;
   formatY?: (value: number, key?: string) => ReactNode;
   formatX?: (key: string) => string;
 };
@@ -102,7 +102,9 @@ const BarMeter: FunctionComponent<BarMeterProps> = ({
                     />
                   </TooltipTrigger>
                   <TooltipContent>
-                    {item.abs ? numFormat(item.abs, "standard", 0) : "N/A"}
+                    {typeof item[tooltipVariable] === "number"
+                      ? numFormat(item[tooltipVariable], "standard", 0)
+                      : "N/A"}
                   </TooltipContent>
                 </Tooltip>
               ) : (
