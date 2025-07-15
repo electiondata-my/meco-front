@@ -122,3 +122,9 @@ export type ElectionResource<T extends Candidate | Party | Seat> = {
     : T[];
   params: ElectionParams<T>;
 };
+
+export interface Boundaries {
+  bounds: [number, number, number, number];
+  center: [number, number];
+  polygons: Record<number, [string, string[]]>;
+}

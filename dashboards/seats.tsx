@@ -1,5 +1,6 @@
 import {
   BaseResult,
+  Boundaries,
   ElectionResource,
   ElectionType,
   Seat,
@@ -35,9 +36,11 @@ const ElectionTable = dynamic(
 const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 const Pyramid = dynamic(() => import("@charts/pyramid"), { ssr: false });
 const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
-const Mapbox = dynamic(() => import("@components/Mapbox"), { ssr: false });
+const Mapbox = dynamic(() => import("@components/Mapbox/my-area"), {
+  ssr: false,
+});
 
-type Barmeter = {
+type MyAreaBarmeter = {
   votertype: { regular: number; early: number; postal: number };
   sex: { male: number; female: number };
   age: {
@@ -64,7 +67,8 @@ interface ElectionSeatsProps extends ElectionResource<Seat> {
   voters_total: number;
   desc_en: string;
   desc_ms: string;
-  barmeter: Barmeter;
+  barmeter: MyAreaBarmeter;
+  boundaries: Boundaries;
 }
 
 type SeatOption = {
@@ -83,6 +87,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   pyramid,
   voters_total,
   barmeter,
+  boundaries,
 }) => {
   const { t } = useTranslation(["common", "home"]);
   const { cache } = useCache();
@@ -226,8 +231,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         pageId="sitewide"
         withPattern={true}
       />
-
-      <Container>
+      <Container className="lg:gap-16">
         <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 sm:w-[628px]">
           <ComboBox<SeatOption>
             placeholder={t("search_seat", { ns: "home" })}
@@ -268,21 +272,22 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             }}
           />
         </div>
-        {/* <SectionGrid className="space-y-10 py-8 lg:py-16">
+        <SectionGrid className="space-y-10">
           <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
             {language === "en-GB"
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
               : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
-        </SectionGrid> */}
-        <SectionGrid className="space-y-10 py-8 lg:pb-16 lg:pt-10">
-          <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
-            <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
-            {language === "en-GB"
-              ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
-              : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
-          </h2>
+          <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[328px] lg:w-[628px]">
+            {boundaries ? (
+              <Mapbox type="map" boundaries={boundaries} />
+            ) : (
+              <p>{t("common:toast.request_failure")}</p>
+            )}
+          </div>
+        </SectionGrid>
+        <SectionGrid className="space-y-10 py-8 lg:pb-16">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-heading-2xs font-semibold">
@@ -297,7 +302,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           />
         </SectionGrid>
 
-        <SectionGrid className="space-y-10 py-8 lg:py-16">
+        <SectionGrid className="space-y-10 py-8 lg:pb-16">
           <h2 className="text-center font-heading text-heading-2xs font-semibold">
             {t("breakdown_voters", {
               ns: "home",
