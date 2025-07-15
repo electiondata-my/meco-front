@@ -29,7 +29,7 @@ const DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
 const COLOR_INDEX = [
   ["rgba(220, 38, 38, 1)", "rgba(252, 165, 165, 0.5)"],
   ["rgba(234, 179, 8, 1)", "rgba(254, 240, 138, 0.5)"],
-  ["rgba(255, 234, 0, 1)", "rgba(255, 247, 156, 0.5)"],
+  ["rgba(81, 255, 0, 1)", "rgba(216, 255, 197, 0.5)"],
   ["rgba(22, 163, 74, 1)", "rgba(187, 247, 208, 0.5)"],
   ["rgba(58, 117, 246, 1)", "rgba(194, 213, 255, 0.5)"],
   ["rgba(0, 155, 173, 1)", "rgba(104, 224, 238, 0.5)"],
@@ -103,7 +103,7 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
                 paint={{
                   "line-color":
                     COLOR_INDEX[index]?.[0] ?? "rgba(220, 38, 38, 1)",
-                  "line-width": 1,
+                  "line-width": 2,
                   "line-opacity": 1,
                 }}
                 filter={["in", "code_parlimen", ...seats]}
