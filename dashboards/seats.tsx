@@ -92,6 +92,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const { cache } = useCache();
   const { language } = useLanguage();
   const { toast } = useToast();
+  const { push } = useRouter();
 
   const SEAT_OPTIONS: Array<
     Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption
@@ -204,8 +205,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     },
   ]);
 
-  const { push } = useRouter();
-
   const barmeter_data = barmeter
     ? Object?.entries(barmeter).map(([key, value]) => {
         const entries = Object.entries(value);
@@ -266,7 +265,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 setData("loading", true);
                 setData("seat_value", selected.value);
                 const [type, seat] = selected.value.split("_");
-                push(`/${type}/${seat}`, undefined, { scroll: false })
+                push(`/${type}/${seat}`, `/${type}/${seat}`, { scroll: false })
                   .catch((e) => {
                     toast({
                       variant: "error",
@@ -288,7 +287,11 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           </h2>
           <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
             {boundaries ? (
-              <Mapbox type="map" boundaries={boundaries} />
+              <Mapbox
+                type="map"
+                boundaries={boundaries}
+                seat_info={SELECTED_SEATS}
+              />
             ) : (
               <p>{t("common:toast.request_failure")}</p>
             )}

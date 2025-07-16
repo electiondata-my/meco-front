@@ -3,9 +3,18 @@ import Map, { Layer, MapRef, Source } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "next-themes";
 import { fitGeoJSONBoundsToView } from "@lib/helpers";
-import { Boundaries } from "@dashboards/types";
+import { Boundaries, ElectionType } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { Checkbox } from "@govtechmy/myds-react/checkbox";
+import { useRouter } from "next/router";
+import { OptionType } from "@lib/types";
+import { useSearchParams } from "next/navigation";
+
+type SeatOption = {
+  state: string;
+  seat: string;
+  type: ElectionType;
+};
 
 type MapboxDefault = {
   type: "map";
@@ -21,6 +30,7 @@ type ConditionalMapboxProps =
 
 type MapboxProps = {
   boundaries: Boundaries;
+  seat_info?: Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption;
 } & ConditionalMapboxProps;
 
 const LIGHT_STYLE = "mapbox://styles/mapbox/light-v11";
@@ -36,10 +46,26 @@ const COLOR_INDEX = [
   ["rgba(255, 1, 255, 1)", "rgba(255, 191, 255, 0.5)"],
 ];
 
-const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
+const MapboxMyArea: FC<MapboxProps> = ({
+  type,
+  seatGeoJson,
+  boundaries,
+  seat_info,
+}) => {
   const { resolvedTheme } = useTheme();
   const [styleUrl, setStyleUrl] = useState(LIGHT_STYLE);
   const { t } = useTranslation(["common", "home"]);
+
+  console.log(boundaries);
+
+  const { replace } = useRouter();
+
+  const sp = useSearchParams();
+
+  const currentBoundYers = sp.get("bound_years");
+
+  // const usedTileset =
+
   const [selectedBounds, setSelectedBounds] = useState([
     Object.entries(boundaries.polygons).reverse()[0][1][0],
   ]);
@@ -58,19 +84,13 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
 
   const mapRef = useRef<MapRef | null>(null);
 
-  const { center, zoom } = fitGeoJSONBoundsToView(
-    boundaries.bounds,
-    628,
-    328,
-    undefined,
-    0.8,
-  );
-
-  const [longitude, latitude] = center;
+  const [longitude, latitude] = boundaries.center;
 
   const boundData = Object.entries(boundaries.polygons).sort(
     (a, b) => Number(b[0]) - Number(a[0]),
   );
+
+  const [seat_type, seat] = seat_info ? seat_info.value.split("_") : ["", ""];
 
   return (
     <Map
@@ -80,7 +100,7 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
       initialViewState={{
         longitude,
         latitude,
-        zoom,
+        zoom: boundaries.zoom,
       }}
       style={{ width: "100%", height: "100%" }}
       mapStyle={styleUrl}
@@ -105,7 +125,11 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
                   "line-width": 2,
                   "line-opacity": 1,
                 }}
-                filter={["in", "code_parlimen", ...seats]}
+                filter={[
+                  "in",
+                  seat_type === "parlimen" ? "parlimen" : "dun",
+                  ...seats,
+                ]}
               />
               {selectedBounds.length <= 2 && (
                 <Layer
@@ -117,7 +141,11 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
                     "fill-color":
                       COLOR_INDEX[index]?.[1] ?? "rgba(220, 38, 38, 1)",
                   }}
-                  filter={["in", "code_parlimen", ...seats]}
+                  filter={[
+                    "in",
+                    seat_type === "parlimen" ? "parlimen" : "dun",
+                    ...seats,
+                  ]}
                 />
               )}
             </Source>
@@ -143,10 +171,38 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
                 )}
                 onCheckedChange={(checked) => {
                   if (checked) {
+                    const filter = [
+                      ...selectedBounds.map(
+                        (selected) => selected.split("_")[1],
+                      ),
+                      year,
+                    ];
+
                     setSelectedBounds((prev) => [...prev, hdata[0]]);
+                    replace(
+                      `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
+                      undefined,
+                      {
+                        scroll: false,
+                        shallow: true,
+                      },
+                    );
                   } else {
+                    const filter = selectedBounds
+                      .filter((bound) => bound !== hdata[0])
+                      .map((selected) => selected.split("_")[1]);
+
                     setSelectedBounds((prev) =>
                       prev.filter((bound) => bound !== hdata[0]),
+                    );
+
+                    replace(
+                      `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
+                      undefined,
+                      {
+                        scroll: false,
+                        shallow: true,
+                      },
                     );
                   }
                 }}

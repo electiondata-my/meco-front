@@ -221,7 +221,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
               title={
                 <p className="text-body-lg font-bold">
                   {t("title", { ns: "candidates" })}
-                  <span className="text-primary-600">
+                  <span className="text-txt-danger">
                     {CANDIDATE_OPTION?.label}
                   </span>
                   <Tooltip>

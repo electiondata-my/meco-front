@@ -28,6 +28,7 @@ const DUNSeat: Page = ({
       />
       <ElectionSeatsDashboard
         key={`${params.type}-${params.seat_name}`}
+        boundaries={seat.boundaries}
         elections={seat.data}
         params={params}
         selection={selection}

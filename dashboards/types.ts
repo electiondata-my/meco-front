@@ -123,7 +123,7 @@ export type ElectionResource<T extends Candidate | Party | Seat> = {
 };
 
 export interface Boundaries {
-  bounds: [number, number, number, number];
+  zoom: number;
   center: [number, number];
   polygons: Record<number, [string, string[]]>;
 }
