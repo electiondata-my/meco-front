@@ -233,7 +233,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         pageId="sitewide"
         withPattern={true}
       />
-      <Container className="gap-8 lg:gap-16 lg:pb-16">
+      <Container className="gap-8 pb-8 lg:gap-16 lg:pb-16">
         <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 md:w-[727px]">
           <ComboBox<SeatOption>
             placeholder={t("search_seat", { ns: "home" })}
