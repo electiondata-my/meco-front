@@ -28,7 +28,7 @@ const nextConfig = {
   },
   publicRuntimeConfig: {
     APP_NAME: "ElectionData.MY",
-    META_AUTHOR: "",
+    META_AUTHOR: "electiondata-my",
     META_THEME: "",
     META_KEYWORDS: "open data statistics election malaysia",
     META_DOMAIN: "ElectionData.MY",

@@ -1,5 +1,5 @@
 import { GeoChoroplethRef } from "@charts/geochoropleth";
-import { toast } from "@components/Toast";
+import { useToast } from "@govtechmy/myds-react/hooks";
 import {
   CloudArrowDownIcon,
   DocumentArrowDownIcon,
@@ -85,6 +85,7 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
     const leaflet = useRef<GeoChoroplethRef | null>(null);
     const { png } = useExport(Boolean(leaflet.current), dataset.meta.unique_id);
     const { track } = useAnalytics(dataset);
+    const { toast } = useToast();
 
     const _downloads = (() => {
       switch (dataset.type) {
@@ -133,7 +134,7 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
                 href: () => {
                   download(
                     urls.parquet,
-                    dataset.meta.unique_id.concat(".parquet")
+                    dataset.meta.unique_id.concat(".parquet"),
                   );
                   track("parquet");
                 },
@@ -170,7 +171,7 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
                 href() {
                   download(
                     urls.parquet,
-                    dataset.meta.unique_id.concat(".parquet")
+                    dataset.meta.unique_id.concat(".parquet"),
                   );
                   track("parquet");
                 },
@@ -193,7 +194,7 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
                 href: () => {
                   download(
                     chartjs!.toBase64Image("png", 1),
-                    dataset.meta.unique_id.concat(".png")
+                    dataset.meta.unique_id.concat(".png"),
                   );
                   track("png");
                 },
@@ -209,14 +210,18 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
                 href: () => {
                   exportAs("svg", chartjs!.canvas)
                     .then((dataUrl) =>
-                      download(dataUrl, dataset.meta.unique_id.concat(".svg"))
+                      download(dataUrl, dataset.meta.unique_id.concat(".svg")),
                     )
                     .then(() => track("svg"))
                     .catch((e) => {
-                      toast.error(
-                        t("toast.image_download_failure", { ns: "common" }),
-                        t("toast.try_again", { ns: "common" })
-                      );
+                      toast({
+                        variant: "error",
+                        title: t("toast.image_download_failure", {
+                          ns: "common",
+                        }),
+                        description: t("toast.try_again", { ns: "common" }),
+                      });
+
                       console.error(e);
                     });
                 },
@@ -247,7 +252,7 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
                 href: () => {
                   download(
                     urls.parquet,
-                    dataset.meta.unique_id.concat(".parquet")
+                    dataset.meta.unique_id.concat(".parquet"),
                   );
                   track("parquet");
                 },

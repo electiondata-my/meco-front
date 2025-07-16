@@ -1,6 +1,5 @@
 import { BaseResult, ElectionEnum, Seat } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
-import { FaceFrownIcon } from "@heroicons/react/24/outline";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
 import {
@@ -10,7 +9,6 @@ import {
   Panel,
   StateDropdown,
   Tabs,
-  toast,
 } from "@components/index";
 import { CountryAndStates } from "@lib/constants";
 import { useCache } from "@hooks/useCache";
@@ -21,24 +19,21 @@ import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
 import { FunctionComponent } from "react";
 import SectionGrid from "@components/Section/section-grid";
+import { useToast } from "@govtechmy/myds-react/hooks";
 
 /**
  * Trivia
  * @overview Status: Live
  */
 
-const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
 const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
   },
 );
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
-
 interface ElectionTriviaProps {
   bar_dun: Array<{ name: string; competed: number; won: number }>;
-  last_updated: string;
   params: { state: string };
   bar_parlimen: Array<{ name: string; competed: number; won: number }>;
   table: Array<{ type: string; metric: string }>;
@@ -46,13 +41,14 @@ interface ElectionTriviaProps {
 
 const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
   bar_dun,
-  last_updated,
   params,
   bar_parlimen,
   table,
 }) => {
   const { t } = useTranslation(["common", "trivia", "parties"]);
   const { cache } = useCache();
+  const { toast } = useToast();
+
   const { data, setData } = useData({
     filter: "slim",
     loading: false,
@@ -115,7 +111,11 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
         cache.set(identifier, result);
         resolve(result);
       } catch (e) {
-        toast.error(t("toast.request_failure"), t("toast.try_again"));
+        toast({
+          variant: "error",
+          title: t("toast.request_failure"),
+          description: t("toast.try_again"),
+        });
         throw new Error("Invalid party. Message: " + e);
       }
     });
@@ -187,25 +187,17 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "trivia" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "trivia" })]}
         description={[t("hero.description", { ns: "trivia" })]}
-        last_updated={last_updated}
         pageId="/trivia"
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-6 py-6 pb-12 lg:space-y-12">
+        <SectionGrid className="space-y-6 py-6 lg:space-y-12 lg:pb-16">
           <div className="mt-3 flex flex-col items-center gap-6">
-            {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
-              {t("header", {
-                ns: "trivia",
-                country: CountryAndStates[params.state],
-              })}
-            </h4> */}
             <StateDropdown
               url={"/trivia"}
               anchor="left"

@@ -8,6 +8,7 @@ import { appWithTranslation } from "next-i18next";
 import { ThemeProvider } from "next-themes";
 import { ReactNode } from "react";
 import { Inter, Poppins } from "next/font/google";
+import { AutoToast } from "@govtechmy/myds-react/toast";
 
 const inter = Inter({ subsets: ["latin"] });
 const poppins = Poppins({
@@ -33,6 +34,7 @@ function App({ Component, pageProps }: AppPropsLayout) {
       <ThemeProvider attribute="class">
         {layout(<Component {...pageProps} />, pageProps)}
         <Progress />
+        <AutoToast />
       </ThemeProvider>
     </main>
   );

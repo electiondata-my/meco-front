@@ -134,7 +134,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         return (
           <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
             <div>
-              <BarPerc hidden value={percent} />
+              <BarPerc hidden value={percent} size="w-[100px] h-[5px]" />
             </div>
             <p className="whitespace-nowrap">{`${value} / ${total} ${
               percent !== null
@@ -152,7 +152,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         return (
           <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
             <div className="lg:self-center">
-              <BarPerc hidden value={percent} />
+              <BarPerc hidden value={percent} size="w-[100px] h-[5px]" />
             </div>
             <span className="whitespace-nowrap">
               {value !== null ? numFormat(value, "standard") : `—`}
@@ -254,7 +254,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               {flexRender(cell.column.columnDef.header, cell.getContext())}
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <BarPerc hidden value={percent} />
+              <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
               <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${
                 percent !== null
                   ? `${numFormat(percent, "compact", [1, 1])}%`
@@ -274,7 +274,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               <p className="font-bold">{value}</p>
             ) : (
               <div className="flex items-center gap-2">
-                <BarPerc hidden value={percent} />
+                <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
                 <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${
                   percent !== null
                     ? `${numFormat(percent, "compact", [1, 1])}%`

@@ -23,13 +23,13 @@ import {
 } from "@components/drawer";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { ArrowsPointingOutIcon, XMarkIcon } from "@heroicons/react/24/solid";
-import Button from "@components/Button";
 import { clx, toDate } from "@lib/helpers";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { useState } from "react";
 import { useMediaQuery } from "@hooks/useMediaQuery";
 import { FullResultContent } from "./content";
+import { ButtonIcon, Button } from "@govtechmy/myds-react/button";
 
 export type Result<T> = {
   data: T;
@@ -102,8 +102,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
 
   const Trigger = () => (
     <Button
-      variant="reset"
-      className="flex gap-2 text-txt-black-500 hover:text-txt-black-900"
+      variant="default-ghost"
       onClick={() => {
         setData("loading", true);
         setOpen(true);
@@ -116,7 +115,9 @@ const FullResults = <T extends Candidate | Party | Seat>({
           .finally(() => setData("loading", false));
       }}
     >
-      <ArrowsPointingOutIcon className="h-4.5 w-4.5" />
+      <ButtonIcon>
+        <ArrowsPointingOutIcon className="h-4.5 w-4.5" />
+      </ButtonIcon>
       <p className="whitespace-nowrap font-normal">{t("full_result")}</p>
     </Button>
   );
@@ -124,78 +125,52 @@ const FullResults = <T extends Candidate | Party | Seat>({
   const Pagination = () => {
     if (options.length > 1)
       return (
-        <div className="space-y-3">
-          {options && options?.length <= 10 && (
-            <div className="flex flex-row items-center justify-center gap-1.5">
-              {options?.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setData("loading", true);
-                    onChange(option)
-                      .then((results) => {
-                        if (!results) return;
-                        setData("index", index);
-                        setData("results", results);
-                        getData(options[index]);
-                      })
-                      .finally(() => setData("loading", false));
-                  }}
-                  disabled={index === data.index}
-                  className={clx(
-                    "h-1 w-5 rounded-md",
-                    index === data.index
-                      ? "bg-zinc-900 dark:bg-white"
-                      : "bg-slate-200 hover:bg-slate-100 dark:bg-zinc-700 dark:hover:bg-zinc-800",
-                  )}
-                />
-              ))}
-            </div>
-          )}
-
-          <div className="flex items-center justify-center gap-4 text-sm font-medium">
-            <Button
-              className="btn-default btn-disabled"
-              onClick={() => {
-                setData("loading", true);
-                onChange(options[data.index - 1])
-                  .then((results) => {
-                    if (!results) return;
-                    setData("index", data.index - 1);
-                    getData(options[data.index - 1]);
-                    setData("results", results);
-                  })
-                  .finally(() => setData("loading", false));
-              }}
-              disabled={data.index === 0}
-            >
+        <div className="flex items-center justify-center gap-4 pt-3 text-sm font-medium">
+          <Button
+            variant={"default-outline"}
+            onClick={() => {
+              setData("loading", true);
+              onChange(options[data.index - 1])
+                .then((results) => {
+                  if (!results) return;
+                  setData("index", data.index - 1);
+                  getData(options[data.index - 1]);
+                  setData("results", results);
+                })
+                .finally(() => setData("loading", false));
+            }}
+            disabled={data.index === 0}
+          >
+            <ButtonIcon>
               <ChevronLeftIcon className="h-4.5 w-4.5" />
-              {t("common:previous")}
-            </Button>
-            {options.length > 10 && (
-              <span className="flex items-center gap-1 text-center text-sm">
-                {`${data.index + 1} / ${options.length}`}
-              </span>
-            )}
-            <Button
-              className="btn-default btn-disabled"
-              onClick={() => {
-                setData("loading", true);
-                onChange(options[data.index + 1])
-                  .then((results) => {
-                    if (!results) return;
-                    setData("index", data.index + 1);
-                    setData("results", results);
-                    getData(options[data.index + 1]);
-                  })
-                  .finally(() => setData("loading", false));
-              }}
-              disabled={data.index === options.length - 1}
-            >
-              {t("common:next")}
+            </ButtonIcon>
+            {t("common:previous")}
+          </Button>
+
+          <span className="flex items-center gap-1 text-center text-sm">
+            {`${data.index + 1} of ${options.length}`}
+          </span>
+
+          <Button
+            variant={"default-outline"}
+            onClick={() => {
+              setData("loading", true);
+              onChange(options[data.index + 1])
+                .then((results) => {
+                  if (!results) return;
+                  setData("index", data.index + 1);
+                  setData("results", results);
+                  getData(options[data.index + 1]);
+                })
+                .finally(() => setData("loading", false));
+            }}
+            disabled={data.index === options.length - 1}
+          >
+            {t("common:next")}
+            <ButtonIcon>
               <ChevronRightIcon className="h-4.5 w-4.5" />
-            </Button>
-          </div>
+            </ButtonIcon>
+          </Button>
         </div>
       );
     return <></>;

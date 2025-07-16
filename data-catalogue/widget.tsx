@@ -31,19 +31,19 @@ const CatalogueTimeseries = dynamic(
   () => import("@charts/partials/timeseries"),
   {
     ssr: false,
-  }
+  },
 );
 const CatalogueChoropleth = dynamic(
   () => import("@charts/partials/choropleth"),
   {
     ssr: false,
-  }
+  },
 );
 const CatalogueGeoChoropleth = dynamic(
   () => import("@charts/partials/geochoropleth"),
   {
     ssr: false,
-  }
+  },
 );
 const CatalogueScatter = dynamic(() => import("@charts/partials/scatter"), {
   ssr: false,
@@ -94,9 +94,7 @@ interface CatalogueWidgetProps {
       desc: string;
       title: string;
     }>;
-    next_update: string;
     description: string;
-    last_updated: string;
   };
   urls: {
     [key: string]: string;
@@ -126,7 +124,7 @@ const CatalogueShow: FunctionComponent<CatalogueWidgetProps> = ({
           return key !== "date_slider";
         })
         .map(([_, value]) => value as OptionType),
-    [filter]
+    [filter],
   );
   const [rows, setRows] = useState<number>(10);
   const ROW_HEIGHT = 40;
@@ -137,10 +135,10 @@ const CatalogueShow: FunctionComponent<CatalogueWidgetProps> = ({
         Math.floor(
           (size.height -
             (size.width > BREAKPOINTS.MD ? ROW_HEIGHT * 4 : ROW_HEIGHT * 6)) /
-            ROW_HEIGHT
-        )
+            ROW_HEIGHT,
+        ),
       ),
-    [size.height, size.width]
+    [size.height, size.width],
   );
 
   const renderChart = (): ReactNode | undefined => {
@@ -199,7 +197,7 @@ const CatalogueShow: FunctionComponent<CatalogueWidgetProps> = ({
                 Object.keys(dataset.table[0]),
                 translations,
                 config.freeze,
-                (item, key) => item[key]
+                (item, key) => item[key],
               )}
               enablePagination={rows}
             />
@@ -239,7 +237,7 @@ const CatalogueShow: FunctionComponent<CatalogueWidgetProps> = ({
                 date: toDate(
                   metadata.data_as_of,
                   "dd MMM yyyy, HH:mm",
-                  i18n.language
+                  i18n.language,
                 ),
               })}
             </span>
@@ -261,7 +259,7 @@ const CatalogueShow: FunctionComponent<CatalogueWidgetProps> = ({
             className="pt-4"
             type="single"
             value={config.dates?.options.indexOf(
-              filter[config.dates.key].value ?? config.dates.default
+              filter[config.dates.key].value ?? config.dates.default,
             )}
             data={config.dates.options}
             period={SHORT_PERIOD[config.dates.interval]}
@@ -280,7 +278,7 @@ const CatalogueShow: FunctionComponent<CatalogueWidgetProps> = ({
           height={14}
           alt="Jata Negara"
         />
-        <small className="text-zinc-500 space-x-2 ">
+        <small className="text-zinc-500 space-x-2">
           <a
             href={`https://data.spr.gov.my${
               i18n.language === "ms-MY" ? "/ms-MY" : ""

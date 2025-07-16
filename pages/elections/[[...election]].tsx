@@ -11,25 +11,23 @@ import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 
 const ElectionExplorerIndex: Page = ({
   choropleth,
-  last_updated,
   meta,
   params,
   seats,
   selection,
   table,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("elections");
 
   return (
     <AnalyticsProvider meta={meta}>
       <Metadata
-        title={t("header")}
-        description={t("description")}
+        title={t("hero.header", { ns: "elections" })}
+        description={t("hero.description", { ns: "elections" })}
         keywords=""
       />
       <ElectionExplorerDashboard
         choropleth={choropleth}
-        last_updated={last_updated}
         params={params}
         seats={seats}
         selection={selection}
@@ -67,9 +65,12 @@ export const getStaticProps: GetStaticProps = withi18n(
         else return e.value.data;
       });
 
-      const selection: Array<{ state: string, election: string }> = dropdown.data;
+      const selection: Array<{ state: string; election: string }> =
+        dropdown.data;
       const stateExists = selection.some((e) => e.state === state);
-      const electionExists = selection.some((e) => e.election === election_name);
+      const electionExists = selection.some(
+        (e) => e.election === election_name,
+      );
 
       if (!stateExists || !electionExists) return { notFound: true };
 
@@ -90,7 +91,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       console.error(error.message);
       return { notFound: true };
     }
-  }
+  },
 );
 
 export default ElectionExplorerIndex;

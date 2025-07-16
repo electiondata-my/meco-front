@@ -11,7 +11,6 @@ import { GetStaticProps, InferGetStaticPropsType } from "next";
  */
 
 const Home: Page = ({
-  last_updated,
   params,
   selection,
   seat,
@@ -21,7 +20,6 @@ const Home: Page = ({
       <Metadata keywords="" />
       <ElectionSeatsDashboard
         elections={seat.data}
-        last_updated={last_updated}
         params={params}
         selection={selection}
         desc_en={seat.desc_en}
@@ -29,6 +27,7 @@ const Home: Page = ({
         voters_total={seat.voters_total}
         pyramid={seat.pyramid}
         barmeter={seat.barmeter}
+        boundaries={seat.boundaries}
       />
     </>
   );
@@ -55,7 +54,6 @@ export const getStaticProps: GetStaticProps = withi18n(
       return {
         notFound: false,
         props: {
-          last_updated: "",
           meta: {
             id: "home",
             type: "misc",

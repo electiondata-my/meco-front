@@ -12,8 +12,6 @@ import {
   ComboBox,
   ImageWithFallback,
   LeftRightCard,
-  Section,
-  toast,
   Dropdown,
 } from "@components/index";
 import { ArrowsPointingOutIcon } from "@heroicons/react/20/solid";
@@ -27,8 +25,8 @@ import { generateSchema } from "@lib/schema/election-explorer";
 import { BaseResult, OverallSeat } from "../types";
 import { FullResultContent } from "../../components/Election/content";
 import { FunctionComponent, useEffect, useRef, useState } from "react";
-import { OptionType } from "@lib/types";
 import SectionGrid from "@components/Section/section-grid";
+import { useToast } from "@govtechmy/myds-react/hooks";
 
 /**
  * Election Explorer - Ballot Seat
@@ -48,6 +46,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
 }) => {
   const { t } = useTranslation(["common", "elections", "home"]);
   const { cache } = useCache();
+  const { toast } = useToast();
   const scrollRef = useRef<Record<string, HTMLDivElement | null>>({});
 
   const { data, setData } = useData({
@@ -182,7 +181,11 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
         setData("results", results);
         setData("loading", false);
       } catch (e) {
-        toast.error(t("toast.request_failure"), t("toast.try_again"));
+        toast({
+          variant: "error",
+          title: t("toast.request_failure"),
+          description: t("toast.try_again"),
+        });
         throw new Error("Invalid election or seat. Message: " + e);
       }
     }

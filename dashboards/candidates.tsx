@@ -2,14 +2,7 @@ import { BaseResult, Candidate, ElectionResource } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
-import {
-  ComboBox,
-  Container,
-  Hero,
-  Panel,
-  Tabs,
-  toast,
-} from "@components/index";
+import { ComboBox, Container, Hero, Panel, Tabs } from "@components/index";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
@@ -19,6 +12,13 @@ import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import SectionGrid from "@components/Section/section-grid";
+import { useToast } from "@govtechmy/myds-react/hooks";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@govtechmy/myds-react/tooltip";
+import { QuestionCircleIcon } from "@govtechmy/myds-react/icon";
 
 /**
  * Candidates Dashboard
@@ -31,7 +31,6 @@ const ElectionTable = dynamic(
     ssr: false,
   },
 );
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
 interface ElectionCandidatesProps extends ElectionResource<Candidate> {
   selection: Record<"name" | "slug" | "c" | "w" | "l", string>[];
@@ -39,8 +38,9 @@ interface ElectionCandidatesProps extends ElectionResource<Candidate> {
 
 const ElectionCandidatesDashboard: FunctionComponent<
   ElectionCandidatesProps
-> = ({ elections, last_updated, params, selection }) => {
+> = ({ elections, params, selection }) => {
   const { t } = useTranslation(["common", "candidates"]);
+  const { toast } = useToast();
 
   const CANDIDATE_OPTIONS: Array<OptionType> = selection.map(
     ({ name, slug, c, w, l }) => ({
@@ -149,7 +149,11 @@ const ElectionCandidatesDashboard: FunctionComponent<
         cache.set(identifier, result);
         resolve(result);
       } catch (e) {
-        toast.error(t("toast.request_failure"), t("toast.try_again"));
+        toast({
+          variant: "error",
+          title: t("toast.request_failure"),
+          description: t("toast.try_again"),
+        });
         throw new Error("Invalid election or seat. Message: " + e);
       }
     });
@@ -168,91 +172,99 @@ const ElectionCandidatesDashboard: FunctionComponent<
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "candidates" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "candidates" })]}
         description={[t("hero.description", { ns: "candidates" })]}
-        last_updated={last_updated}
         pageId="/candidates"
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-6 py-6 lg:space-y-12">
-          {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
-            {t("header", { ns: "candidates" })}
-          </h4> */}
-          <div className="mx-auto mt-3 w-full sm:w-[628px]">
-            <ComboBox
-              placeholder={t("search_candidate", { ns: "candidates" })}
-              options={CANDIDATE_OPTIONS}
-              config={{
-                baseSort: (a: any, b: any) => {
-                  a;
-                  if ((a.item.contests ?? 0) === (b.item.contests ?? 0)) {
-                    return (b.item.wins ?? 0) - (a.item.wins ?? 0);
-                  }
-                  return (b.item.contests ?? 0) - (a.item.contests ?? 0);
-                },
-                keys: ["label", "name"],
-              }}
-              selected={
-                data.candidate_value
-                  ? CANDIDATE_OPTIONS.find(
-                      (e) => e.value === data.candidate_value,
-                    )
-                  : null
-              }
-              onChange={(selected) => {
-                if (selected) {
-                  setData("loading", true);
-                  setData("candidate_value", selected.value);
-                  push(routes.CANDIDATES + "/" + selected.value, undefined, {
-                    scroll: false,
-                  });
-                } else setData("candidate_value", "");
-              }}
-            />
+        <SectionGrid className="space-y-6 py-6 lg:space-y-16 lg:pb-16">
+          <div className="mt-3">
+            <div className="mx-auto w-full md:w-[727px]">
+              <ComboBox
+                placeholder={t("search_candidate", { ns: "candidates" })}
+                options={CANDIDATE_OPTIONS}
+                config={{
+                  baseSort: (a: any, b: any) => {
+                    a;
+                    if ((a.item.contests ?? 0) === (b.item.contests ?? 0)) {
+                      return (b.item.wins ?? 0) - (a.item.wins ?? 0);
+                    }
+                    return (b.item.contests ?? 0) - (a.item.contests ?? 0);
+                  },
+                  keys: ["label", "name"],
+                }}
+                selected={
+                  data.candidate_value
+                    ? CANDIDATE_OPTIONS.find(
+                        (e) => e.value === data.candidate_value,
+                      )
+                    : null
+                }
+                onChange={(selected) => {
+                  if (selected) {
+                    setData("loading", true);
+                    setData("candidate_value", selected.value);
+                    push(routes.CANDIDATES + "/" + selected.value, undefined, {
+                      scroll: false,
+                    });
+                  } else setData("candidate_value", "");
+                }}
+              />
+            </div>
           </div>
-          <Tabs
-            title={
-              <p className="text-body-lg font-bold">
-                {t("title", { ns: "candidates" })}
-                <span className="text-primary-600">
-                  {CANDIDATE_OPTION?.label}
-                </span>
-              </p>
-            }
-            current={data.tab_index}
-            onChange={(index) => setData("tab_index", index)}
-            className="w-full"
-          >
-            <Panel name={t("parlimen")}>
-              <ElectionTable
-                data={elections.parlimen}
-                columns={candidate_schema}
-                isLoading={data.loading}
-                empty={t("no_data", {
-                  ns: "candidates",
-                  name: CANDIDATE_OPTION?.label,
-                  context: "parliament",
-                })}
-              />
-            </Panel>
-            <Panel name={t("dun")}>
-              <ElectionTable
-                data={elections.dun}
-                columns={candidate_schema}
-                isLoading={data.loading}
-                empty={t("no_data", {
-                  ns: "candidates",
-                  name: CANDIDATE_OPTION?.label,
-                  context: "dun",
-                })}
-              />
-            </Panel>
-          </Tabs>
+          <div className="w-full space-y-6">
+            <Tabs
+              title={
+                <p className="text-body-lg font-bold">
+                  {t("title", { ns: "candidates" })}
+                  <span className="text-txt-danger">
+                    {CANDIDATE_OPTION?.label}
+                  </span>
+                  <Tooltip>
+                    <TooltipTrigger className="inline-flex h-6 w-6 items-center justify-center">
+                      <QuestionCircleIcon className="h-4 w-4 text-txt-black-500" />
+                    </TooltipTrigger>
+                    {/* TODO: to pass this data */}
+                    <TooltipContent>
+                      Malay male, born 8 Feb 1903 - died 6 Dec 1990 (age 87)
+                    </TooltipContent>
+                  </Tooltip>
+                </p>
+              }
+              current={data.tab_index}
+              onChange={(index) => setData("tab_index", index)}
+              className="w-full gap-4"
+            >
+              <Panel name={t("parlimen")}>
+                <ElectionTable
+                  data={elections.parlimen}
+                  columns={candidate_schema}
+                  isLoading={data.loading}
+                  empty={t("no_data", {
+                    ns: "candidates",
+                    name: CANDIDATE_OPTION?.label,
+                    context: "parliament",
+                  })}
+                />
+              </Panel>
+              <Panel name={t("dun")}>
+                <ElectionTable
+                  data={elections.dun}
+                  columns={candidate_schema}
+                  isLoading={data.loading}
+                  empty={t("no_data", {
+                    ns: "candidates",
+                    name: CANDIDATE_OPTION?.label,
+                    context: "dun",
+                  })}
+                />
+              </Panel>
+            </Tabs>
+          </div>
         </SectionGrid>
       </Container>
     </>

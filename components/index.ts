@@ -32,7 +32,6 @@ export { default as Slider } from "./Slider";
 export { default as Spinner, SpinnerBox } from "./Spinner";
 export { default as Tabs, Panel, List } from "./Tabs";
 export { default as Textarea } from "./Textarea";
-export { default as Toast, toast } from "./Toast";
 // export { default as Toggle } from "./Toggle";
 export { default as Tooltip } from "./Tooltip";
 

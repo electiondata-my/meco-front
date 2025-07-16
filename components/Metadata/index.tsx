@@ -7,9 +7,15 @@ interface MetadataProps {
   title?: string | null;
   description?: string | null;
   keywords?: string;
+  image?: string;
 }
 
-const Metadata: FunctionComponent<MetadataProps> = ({ title, description, keywords = "" }) => {
+const Metadata: FunctionComponent<MetadataProps> = ({
+  title,
+  description,
+  keywords = "",
+  image,
+}) => {
   const { t, i18n } = useTranslation();
   const {
     publicRuntimeConfig: {
@@ -32,7 +38,7 @@ const Metadata: FunctionComponent<MetadataProps> = ({ title, description, keywor
     keywords: keywords.concat(META_KEYWORDS),
     domain: META_DOMAIN,
     url: META_URL,
-    image: META_IMAGE.replace("{{lang}}", i18n.language),
+    image: image ? image : META_IMAGE.replace("{{lang}}", i18n.language),
   };
 
   return (
@@ -43,6 +49,7 @@ const Metadata: FunctionComponent<MetadataProps> = ({ title, description, keywor
       <meta name="description" content={META.description} />
       <meta name="author" content={META.author} />
       <meta name="theme-color" content={META.themeColor} />
+      <meta property="og:site_name" content={APP_NAME} />
 
       {/* <!-- Facebook Meta Tags --> */}
       <meta property="og:url" content={META.url} />
