@@ -196,7 +196,7 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-6 py-6 pb-12 lg:space-y-12">
+        <SectionGrid className="space-y-6 py-6 pb-16 lg:space-y-12">
           <div className="mt-3 flex flex-col items-center gap-6">
             {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
               {t("header", {
