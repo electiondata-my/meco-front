@@ -19,7 +19,10 @@ const ParlimenSeat: Page = ({
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   return (
     <>
-      <Metadata keywords="parlimen" />
+      <Metadata
+        keywords="parlimen"
+        image={`${process.env.NEXT_PUBLIC_API_URL_S3}/og-image/${params.seat_name}.png`}
+      />
       <ElectionSeatsDashboard
         key={`${params.type}-${params.seat_name}`}
         elections={seat.data}
