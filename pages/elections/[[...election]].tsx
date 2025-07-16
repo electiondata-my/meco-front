@@ -11,7 +11,6 @@ import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 
 const ElectionExplorerIndex: Page = ({
   choropleth,
-  last_updated,
   meta,
   params,
   seats,
@@ -29,7 +28,6 @@ const ElectionExplorerIndex: Page = ({
       />
       <ElectionExplorerDashboard
         choropleth={choropleth}
-        last_updated={last_updated}
         params={params}
         seats={seats}
         selection={selection}

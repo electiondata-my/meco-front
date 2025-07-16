@@ -113,7 +113,6 @@ type ElectionParams<T> = T extends Candidate
       : never;
 
 export type ElectionResource<T extends Candidate | Party | Seat> = {
-  last_updated: string;
   elections: T extends Candidate | Party
     ? {
         parlimen: T[];

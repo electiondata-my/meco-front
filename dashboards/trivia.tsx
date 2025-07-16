@@ -34,7 +34,6 @@ const ElectionTable = dynamic(
 );
 interface ElectionTriviaProps {
   bar_dun: Array<{ name: string; competed: number; won: number }>;
-  last_updated: string;
   params: { state: string };
   bar_parlimen: Array<{ name: string; competed: number; won: number }>;
   table: Array<{ type: string; metric: string }>;
@@ -42,7 +41,6 @@ interface ElectionTriviaProps {
 
 const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
   bar_dun,
-  last_updated,
   params,
   bar_parlimen,
   table,
@@ -194,7 +192,6 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
         category={[t("hero.category", { ns: "trivia" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "trivia" })]}
         description={[t("hero.description", { ns: "trivia" })]}
-        last_updated={last_updated}
         pageId="/trivia"
         withPattern={true}
       />

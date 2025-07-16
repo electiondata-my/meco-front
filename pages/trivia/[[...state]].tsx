@@ -9,13 +9,11 @@ import { WindowProvider } from "@lib/contexts/window";
 import { get } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
 import { withi18n } from "@lib/decorators";
-import { clx } from "@lib/helpers";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 
 const ElectionTriviaState: Page = ({
   bar_dun,
-  last_updated,
   meta,
   params,
   bar_parlimen,
@@ -34,7 +32,6 @@ const ElectionTriviaState: Page = ({
       />
       <ElectionTriviaDashboard
         bar_dun={bar_dun}
-        last_updated={last_updated}
         params={params}
         bar_parlimen={bar_parlimen}
         table={table}
@@ -42,29 +39,6 @@ const ElectionTriviaState: Page = ({
     </AnalyticsProvider>
   );
 };
-
-ElectionTriviaState.layout = (page, props) => (
-  <WindowProvider>
-    <Layout
-      stateSelector={
-        <StateDropdown
-          width="w-max xl:w-64"
-          url="/trivia"
-          exclude={["kul", "lbn", "pjy"]}
-          currentState={props.params.state}
-          hideOnScroll
-        />
-      }
-    >
-      <StateModal
-        state={props.params.state}
-        url="/trivia"
-        exclude={["kul", "lbn", "pjy"]}
-      />
-      {page}
-    </Layout>
-  </WindowProvider>
-);
 
 export const getStaticPaths: GetStaticPaths = () => {
   return {

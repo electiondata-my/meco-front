@@ -9,7 +9,6 @@ import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 
 const ElectionParties: Page = ({
-  last_updated,
   meta,
   params,
   selection,
@@ -26,7 +25,6 @@ const ElectionParties: Page = ({
       />
       <ElectionPartiesDashboard
         elections={elections}
-        last_updated={last_updated}
         params={params}
         selection={selection}
       />
@@ -72,7 +70,6 @@ export const getStaticProps: GetStaticProps = withi18n(
 
       return {
         props: {
-          // last_updated: party.data_last_updated,
           meta: {
             id: "parties",
             type: "dashboard",

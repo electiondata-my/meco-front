@@ -51,19 +51,19 @@ const CatalogueTimeseries = dynamic(
   () => import("@charts/partials/timeseries"),
   {
     ssr: false,
-  }
+  },
 );
 const CatalogueChoropleth = dynamic(
   () => import("@charts/partials/choropleth"),
   {
     ssr: false,
-  }
+  },
 );
 const CatalogueGeoChoropleth = dynamic(
   () => import("@charts/partials/geochoropleth"),
   {
     ssr: false,
-  }
+  },
 );
 const CatalogueScatter = dynamic(() => import("@charts/partials/scatter"), {
   ssr: false,
@@ -115,9 +115,7 @@ interface CatalogueShowProps {
       desc: string;
       title: string;
     }>;
-    next_update: string;
     description: string;
-    last_updated: string;
   };
   urls: {
     [key: string]: string;
@@ -151,7 +149,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
   const { filter, setFilter } = useFilter(
     config.context,
     { id: params.id },
-    true
+    true,
   );
   const { result, track } = useAnalytics(dataset);
 
@@ -222,10 +220,10 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                 SHORT_PERIOD_FORMAT[
                   filter.range.value as keyof typeof SHORT_PERIOD_FORMAT
                 ],
-                i18n.language
+                i18n.language,
               );
             else return item[key];
-          }
+          },
         );
       case "GEOPOINT":
       case "TABLE":
@@ -233,7 +231,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
           columns,
           translations,
           config.freeze,
-          (item, key) => item[key]
+          (item, key) => item[key],
         );
       default:
         return UNIVERSAL_TABLE_SCHEMA(columns, translations, config.freeze);
@@ -248,11 +246,11 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
           title={<h4 data-testid="catalogue-title">{dataset.meta.title}</h4>}
           description={
             <p
-              className="whitespace-pre-line text-base text-dim"
+              className="text-dim whitespace-pre-line text-base"
               data-testid="catalogue-description"
             >
               {interpolate(
-                dataset.meta.desc.substring(dataset.meta.desc.indexOf("]") + 1)
+                dataset.meta.desc.substring(dataset.meta.desc.indexOf("]") + 1),
               )}
             </p>
           }
@@ -297,7 +295,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
           <div
             className={clx(
               "flex gap-3 pb-3",
-              config.options !== null ? "justify-between" : "justify-end"
+              config.options !== null ? "justify-between" : "justify-end",
             )}
           >
             <div className={clx("flex gap-2")}>
@@ -321,7 +319,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
           <div
             className={clx(
               show.value === "chart" ? "block" : "hidden",
-              "space-y-2"
+              "space-y-2",
             )}
           >
             {renderChart()}
@@ -333,13 +331,11 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
               className={clx(
                 dataset.type !== "TABLE" &&
                   "mx-auto max-h-[500px] overflow-auto",
-                show.value === "table" ? "block" : "hidden"
+                show.value === "table" ? "block" : "hidden",
               )}
             >
               <Table
-                className={clx(
-                  "table-default table-sticky-header"
-                )}
+                className={clx("table-default table-sticky-header")}
                 stripe={true}
                 responsive={dataset.type === "TABLE"}
                 data={dataset.table}
@@ -369,7 +365,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             <Slider
               type="single"
               value={config.dates?.options.indexOf(
-                config.context[config.dates.key]?.value || config.dates.default
+                config.context[config.dates.key]?.value || config.dates.default,
               )}
               data={config.dates.options}
               period={SHORT_PERIOD[config.dates.interval]}
@@ -389,7 +385,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
           />
 
           {/* Views / download count*/}
-          <p className="flex justify-end gap-2 py-6 text-sm text-dim">
+          <p className="text-dim flex justify-end gap-2 py-6 text-sm">
             <span>
               {`${numFormat(result?.view_count ?? 0, "compact")} ${t("views", {
                 ns: "common",
@@ -405,7 +401,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                   result?.download_png,
                   result?.download_svg,
                 ]) ?? 0,
-                "compact"
+                "compact",
               )} ${t("downloads", {
                 ns: "common",
                 count:
@@ -420,7 +416,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
           </p>
         </Section>
 
-        <div className="space-y-8 border-b py-8 dark:border-b-outlineHover-dark lg:py-12">
+        <div className="dark:border-b-outlineHover-dark space-y-8 border-b py-8 lg:py-12">
           {/* How is this data produced? */}
           <Section
             title={t("header_1")}
@@ -469,14 +465,14 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
         {/* Metadata */}
         <Section
           title={"Metadata"}
-          className="mx-auto border-b py-8 dark:border-b-outlineHover-dark lg:py-12"
+          className="dark:border-b-outlineHover-dark mx-auto border-b py-8 lg:py-12"
         >
-          <Card className="bg-background p-6 dark:border-outlineHover-dark dark:bg-washed-dark">
+          <Card className="bg-background dark:border-outlineHover-dark dark:bg-washed-dark p-6">
             <div className="space-y-6">
               {/* Dataset description */}
               <div className="space-y-3">
                 <h5>{t("meta_desc")}</h5>
-                <p className="leading-relaxed text-dim">
+                <p className="text-dim leading-relaxed">
                   {interpolate(metadata.description)}
                 </p>
               </div>
@@ -485,7 +481,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                 <h5>{t("meta_def")}</h5>
                 {metadata.definitions?.length > 0 && (
                   <>
-                    <ul className="ml-6 list-outside list-disc text-dim md:hidden">
+                    <ul className="text-dim ml-6 list-outside list-disc md:hidden">
                       {metadata.definitions?.map((item) => (
                         <li key={item.title}>
                           <span className="flex gap-x-1">
@@ -509,7 +505,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                           const [type, definition] = [
                             raw.substring(
                               raw.indexOf("[") + 1,
-                              raw.indexOf("]")
+                              raw.indexOf("]"),
                             ),
                             raw.substring(raw.indexOf("]") + 1),
                           ];
@@ -525,42 +521,18 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                         })}
                         config={METADATA_TABLE_SCHEMA(
                           t,
-                          dataset.type === "TABLE"
+                          dataset.type === "TABLE",
                         )}
                       />
                     </div>
                   </>
                 )}
               </div>
-              {/* Last updated */}
-              <div className="space-y-3">
-                <h5>{t("last_updated", { ns: "common", date: "" })}</h5>
-                <p
-                  className="whitespace-pre-line text-dim"
-                  data-testid="catalogue-last-updated"
-                >
-                  {toDate(
-                    metadata.last_updated,
-                    "dd MMM yyyy, HH:mm",
-                    i18n.language
-                  )}
-                </p>
-              </div>
-              {/* Next update */}
-              <div className="space-y-3">
-                <h5>{t("next_update", { date: "" })}</h5>
-                <p className="text-dim" data-testid="catalogue-next-update">
-                  {toDate(
-                    metadata.next_update,
-                    "dd MMM yyyy, HH:mm",
-                    i18n.language
-                  )}
-                </p>
-              </div>
+
               {/* Data Source */}
               <div className="space-y-3">
                 <h5>{t("meta_source")}</h5>
-                <ul className="ml-6 list-outside list-disc text-dim">
+                <ul className="text-dim ml-6 list-outside list-disc">
                   {metadata.source?.map((source) => (
                     <li key={source}>{source}</li>
                   ))}
@@ -569,26 +541,26 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
               {/* URLs to dataset */}
               <div className="space-y-3">
                 <h5>{t("meta_url")}</h5>
-                <ul className="ml-6 list-outside list-disc text-dim">
+                <ul className="text-dim ml-6 list-outside list-disc">
                   {Object.entries(metadata.url).map(
                     ([key, url]: [string, unknown]) =>
                       url ? (
                         <li key={url as string}>
                           <a
                             href={url as string}
-                            className="break-all text-primary [text-underline-position:from-font] hover:underline dark:text-primary-dark"
+                            className="text-primary dark:text-primary-dark break-all [text-underline-position:from-font] hover:underline"
                             onClick={() =>
                               track(
                                 key === "link_geojson"
                                   ? "csv"
-                                  : (key as "parquet" | "csv")
+                                  : (key as "parquet" | "csv"),
                               )
                             }
                           >
                             {url as string}
                           </a>
                         </li>
-                      ) : undefined
+                      ) : undefined,
                   )}
                 </ul>
               </div>
@@ -598,7 +570,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                 <p className="text-dim">
                   {t("license_text")}{" "}
                   <a
-                    className="lowercase text-primary [text-underline-position:from-font] hover:underline dark:text-primary-dark"
+                    className="text-primary dark:text-primary-dark lowercase [text-underline-position:from-font] hover:underline"
                     target="_blank"
                     rel="noopener"
                     href="https://creativecommons.org/licenses/by/4.0/"
@@ -614,7 +586,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
         {/* Download */}
         <Section
           title={t("download")}
-          className="mx-auto border-b py-12 dark:border-b-outlineHover-dark "
+          className="dark:border-b-outlineHover-dark mx-auto border-b py-12"
         >
           <div className="space-y-5">
             {downloads?.chart.length > 0 && (
@@ -638,7 +610,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             {downloads?.data.length > 0 && (
               <>
                 <h5>Data</h5>
-                <div className="gap-4.5 grid grid-cols-1 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4.5 md:grid-cols-2">
                   {downloads?.data.map((props) => (
                     <DownloadCard
                       key={`${dataset.meta.unique_id}_${props.id}`}
@@ -714,9 +686,9 @@ const DownloadCard: FunctionComponent<DownloadCard> = ({
   return (
     <Card
       onClick={href}
-      className="bg-slate-50 p-4.5 dark:border-zinc-700 dark:bg-zinc-800"
+      className="bg-slate-50 dark:border-zinc-700 dark:bg-zinc-800 p-4.5"
     >
-      <div className="gap-4.5 flex items-center">
+      <div className="flex items-center gap-4.5">
         {["svg", "png"].includes(id) ? (
           <Image
             src={image || ""}

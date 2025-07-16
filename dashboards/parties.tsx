@@ -42,7 +42,6 @@ interface ElectionPartiesProps extends ElectionResource<Party> {
 
 const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
   elections,
-  last_updated,
   params,
   selection,
 }) => {
@@ -185,7 +184,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         category={[t("hero.category", { ns: "parties" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "parties" })]}
         description={[t("hero.description", { ns: "parties" })]}
-        last_updated={last_updated}
         pageId="/parties"
         withPattern={true}
       />

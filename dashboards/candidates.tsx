@@ -32,7 +32,7 @@ interface ElectionCandidatesProps extends ElectionResource<Candidate> {
 
 const ElectionCandidatesDashboard: FunctionComponent<
   ElectionCandidatesProps
-> = ({ elections, last_updated, params, selection }) => {
+> = ({ elections, params, selection }) => {
   const { t } = useTranslation(["common", "candidates"]);
   const { toast } = useToast();
 
@@ -171,7 +171,6 @@ const ElectionCandidatesDashboard: FunctionComponent<
         category={[t("hero.category", { ns: "candidates" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "candidates" })]}
         description={[t("hero.description", { ns: "candidates" })]}
-        last_updated={last_updated}
         pageId="/candidates"
         withPattern={true}
       />

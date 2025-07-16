@@ -11,7 +11,6 @@ import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
  */
 
 const DUNSeat: Page = ({
-  last_updated,
   params,
   selection,
   seat,
@@ -30,7 +29,6 @@ const DUNSeat: Page = ({
       <ElectionSeatsDashboard
         key={`${params.type}-${params.seat_name}`}
         elections={seat.data}
-        last_updated={last_updated}
         params={params}
         selection={selection}
         desc_en={seat.desc_en}
@@ -79,7 +77,6 @@ export const getStaticProps: GetStaticProps = withi18n(
             id: "dun-" + params.seat,
             type: "dashboard",
           },
-          last_updated: "",
           params: { seat_name: slug, type: "dun" },
           selection,
           seat: seat,

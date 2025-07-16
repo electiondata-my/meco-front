@@ -33,7 +33,6 @@ import SectionGrid from "@components/Section/section-grid";
 
 interface ElectionExplorerProps {
   choropleth: any;
-  last_updated: string;
   params: {
     state: string;
     election: string;
@@ -48,7 +47,6 @@ interface ElectionExplorerProps {
 
 const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
   choropleth,
-  last_updated,
   params,
   seats,
   selection,
@@ -136,7 +134,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
         category={[t("hero.category", { ns: "elections" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "elections" })]}
         description={[t("hero.description", { ns: "elections" })]}
-        last_updated={last_updated}
         pageId="/elections"
         withPattern={true}
       />

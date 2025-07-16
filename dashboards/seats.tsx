@@ -79,7 +79,6 @@ type SeatOption = {
 
 const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   elections,
-  last_updated,
   params,
   selection,
   desc_en,
