@@ -1,4 +1,4 @@
-import { ElectionResource, Party, PartyResult, PartySummary } from "./types";
+import { ElectionResource, Party, PartyResult } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
@@ -10,7 +10,6 @@ import {
   Panel,
   StateDropdown,
   Tabs,
-  toast,
 } from "@components/index";
 import { CountryAndStates } from "@lib/constants";
 import { useCache } from "@hooks/useCache";
@@ -23,6 +22,7 @@ import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import SectionGrid from "@components/Section/section-grid";
+import { useToast } from "@govtechmy/myds-react/hooks";
 
 /**
  * Parties
@@ -35,7 +35,6 @@ const ElectionTable = dynamic(
     ssr: false,
   },
 );
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
 interface ElectionPartiesProps extends ElectionResource<Party> {
   selection: { party: string }[];
@@ -49,6 +48,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
 }) => {
   const { t } = useTranslation(["common", "parties"]);
   const { cache } = useCache();
+  const { toast } = useToast();
 
   const PARTY_OPTIONS: Array<OptionType> = selection.map((option) => ({
     label: t(option.party, { ns: "party" }),
@@ -157,7 +157,11 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         cache.set(identifier, result);
         resolve(result);
       } catch (e) {
-        toast.error(t("toast.request_failure"), t("toast.try_again"));
+        toast({
+          variant: "error",
+          title: t("toast.request_failure"),
+          description: t("toast.try_again"),
+        });
         throw new Error("Invalid party. Message: " + e);
       }
     });
@@ -176,7 +180,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "parties" }), "text-txt-danger"]}

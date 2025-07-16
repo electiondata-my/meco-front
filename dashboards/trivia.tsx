@@ -1,6 +1,5 @@
 import { BaseResult, ElectionEnum, Seat } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
-import { FaceFrownIcon } from "@heroicons/react/24/outline";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
 import {
@@ -10,7 +9,6 @@ import {
   Panel,
   StateDropdown,
   Tabs,
-  toast,
 } from "@components/index";
 import { CountryAndStates } from "@lib/constants";
 import { useCache } from "@hooks/useCache";
@@ -21,21 +19,19 @@ import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
 import { FunctionComponent } from "react";
 import SectionGrid from "@components/Section/section-grid";
+import { useToast } from "@govtechmy/myds-react/hooks";
 
 /**
  * Trivia
  * @overview Status: Live
  */
 
-const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
 const ElectionTable = dynamic(
   () => import("@components/Election/ElectionTable"),
   {
     ssr: false,
   },
 );
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
-
 interface ElectionTriviaProps {
   bar_dun: Array<{ name: string; competed: number; won: number }>;
   last_updated: string;
@@ -53,6 +49,8 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
 }) => {
   const { t } = useTranslation(["common", "trivia", "parties"]);
   const { cache } = useCache();
+  const { toast } = useToast();
+
   const { data, setData } = useData({
     filter: "slim",
     loading: false,
@@ -115,7 +113,11 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
         cache.set(identifier, result);
         resolve(result);
       } catch (e) {
-        toast.error(t("toast.request_failure"), t("toast.try_again"));
+        toast({
+          variant: "error",
+          title: t("toast.request_failure"),
+          description: t("toast.try_again"),
+        });
         throw new Error("Invalid party. Message: " + e);
       }
     });
@@ -187,7 +189,6 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "trivia" }), "text-txt-danger"]}

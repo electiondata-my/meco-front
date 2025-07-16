@@ -2,14 +2,7 @@ import { BaseResult, Candidate, ElectionResource } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
-import {
-  ComboBox,
-  Container,
-  Hero,
-  Panel,
-  Tabs,
-  toast,
-} from "@components/index";
+import { ComboBox, Container, Hero, Panel, Tabs } from "@components/index";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
@@ -19,6 +12,7 @@ import { FunctionComponent, useEffect } from "react";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import SectionGrid from "@components/Section/section-grid";
+import { useToast } from "@govtechmy/myds-react/hooks";
 
 /**
  * Candidates Dashboard
@@ -31,7 +25,6 @@ const ElectionTable = dynamic(
     ssr: false,
   },
 );
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
 interface ElectionCandidatesProps extends ElectionResource<Candidate> {
   selection: Record<"name" | "slug" | "c" | "w" | "l", string>[];
@@ -41,6 +34,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
   ElectionCandidatesProps
 > = ({ elections, last_updated, params, selection }) => {
   const { t } = useTranslation(["common", "candidates"]);
+  const { toast } = useToast();
 
   const CANDIDATE_OPTIONS: Array<OptionType> = selection.map(
     ({ name, slug, c, w, l }) => ({
@@ -149,7 +143,11 @@ const ElectionCandidatesDashboard: FunctionComponent<
         cache.set(identifier, result);
         resolve(result);
       } catch (e) {
-        toast.error(t("toast.request_failure"), t("toast.try_again"));
+        toast({
+          variant: "error",
+          title: t("toast.request_failure"),
+          description: t("toast.try_again"),
+        });
         throw new Error("Invalid election or seat. Message: " + e);
       }
     });
@@ -168,7 +166,6 @@ const ElectionCandidatesDashboard: FunctionComponent<
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "candidates" }), "text-txt-danger"]}

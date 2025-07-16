@@ -67,7 +67,6 @@
     "react-markdown": "^8.0.7",
     "react-virtualized-auto-sizer": "^1.0.20",
     "react-window": "^1.8.9",
-    "sonner": "^0.7.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.8.3",

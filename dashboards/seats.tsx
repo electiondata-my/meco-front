@@ -9,7 +9,7 @@ import {
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
-import { ComboBox, Container, Hero, toast } from "@components/index";
+import { ComboBox, Container, Hero } from "@components/index";
 import SectionGrid from "@components/Section/section-grid";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
@@ -21,6 +21,7 @@ import { useRouter } from "next/router";
 import { useLanguage } from "@hooks/useLanguage";
 import { numFormat } from "@lib/helpers";
 import { Chart, TooltipModel } from "chart.js";
+import { useToast } from "@govtechmy/myds-react/hooks";
 
 /**
  * Seats
@@ -33,7 +34,6 @@ const ElectionTable = dynamic(
     ssr: false,
   },
 );
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 const Pyramid = dynamic(() => import("@charts/pyramid"), { ssr: false });
 const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
 const Mapbox = dynamic(() => import("@components/Mapbox/my-area"), {
@@ -92,6 +92,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const { t } = useTranslation(["common", "home"]);
   const { cache } = useCache();
   const { language } = useLanguage();
+  const { toast } = useToast();
 
   const SEAT_OPTIONS: Array<
     Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption
@@ -151,7 +152,11 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         cache.set(identifier, result);
         resolve(result);
       } catch (e) {
-        toast.error(t("toast.request_failure"), t("toast.try_again"));
+        toast({
+          variant: "error",
+          title: t("toast.request_failure"),
+          description: t("toast.try_again"),
+        });
         throw new Error("Invalid election or seat. Message: " + e);
       }
     });
@@ -222,7 +227,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "home" }), "text-txt-danger"]}
@@ -265,7 +269,11 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 const [type, seat] = selected.value.split("_");
                 push(`/${type}/${seat}`, undefined, { scroll: false })
                   .catch((e) => {
-                    t("toast.request_failure"), toast.error("toast.try_again");
+                    toast({
+                      variant: "error",
+                      title: t("toast.request_failure"),
+                      description: t("toast.try_again"),
+                    });
                   })
                   .finally(() => setData("loading", false));
               } else setData("seat_value", "");

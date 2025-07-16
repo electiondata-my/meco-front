@@ -11,7 +11,6 @@ import {
   Label,
   List,
   Modal,
-  Section,
   StateDropdown,
 } from "@components/index";
 import { CountryAndStates } from "@lib/constants";
@@ -20,7 +19,6 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { useScrollIntersect } from "@hooks/useScrollIntersect";
 import { OptionType } from "@lib/types";
-import dynamic from "next/dynamic";
 import { FunctionComponent, useMemo, useRef } from "react";
 import Overview from "./overview";
 import { useRouter } from "next/router";
@@ -32,8 +30,6 @@ import SectionGrid from "@components/Section/section-grid";
  * Election Explorer Dashboard
  * @overview Status: In-development
  */
-
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 
 interface ElectionExplorerProps {
   choropleth: any;
@@ -135,7 +131,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "elections" }), "text-txt-danger"]}
