@@ -193,7 +193,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
             {/* <h4 className="text-center font-heading text-heading-2xs font-bold">
               {t("header", { ns: "parties" })}
             </h4> */}
-            <div className="mx-auto w-full sm:w-[628px]">
+            <div className="mx-auto w-full md:w-[727px]">
               <ComboBox
                 placeholder={t("search_party", { ns: "parties" })}
                 image={(value: string) => (

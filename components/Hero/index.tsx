@@ -113,7 +113,7 @@ const Hero: FunctionComponent<HeroProps> = ({
         children
       ) : (
         <SectionGrid>
-          <div className="flex max-w-[846px] flex-col items-center justify-center space-y-6 pt-16">
+          <div className="flex max-w-[727px] flex-col items-center justify-center space-y-6 pt-16">
             {category && (
               <h3
                 className={clx(

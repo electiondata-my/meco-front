@@ -6,6 +6,7 @@ import { fitGeoJSONBoundsToView } from "@lib/helpers";
 import { Boundaries } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { Checkbox } from "@govtechmy/myds-react/checkbox";
+import { useMediaQuery } from "@hooks/useMediaQuery";
 
 type MapboxDefault = {
   type: "map";
@@ -27,13 +28,13 @@ const LIGHT_STYLE = "mapbox://styles/mapbox/light-v11";
 const DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
 
 const COLOR_INDEX = [
-  ["rgba(220, 38, 38, 1)", "rgba(252, 165, 165, 0.5)"],
-  ["rgba(234, 179, 8, 1)", "rgba(254, 240, 138, 0.5)"],
-  ["rgba(81, 255, 0, 1)", "rgba(216, 255, 197, 0.5)"],
-  ["rgba(22, 163, 74, 1)", "rgba(185, 255, 168, 0.5)"],
-  ["rgba(58, 117, 246, 1)", "rgba(194, 213, 255, 0.5)"],
-  ["rgba(0, 155, 173, 1)", "rgba(104, 224, 238, 0.5)"],
-  ["rgba(163, 0, 227, 1)", "rgba(226, 153, 255, 0.5)"],
+  ["rgba(255, 1, 0, 1)", "rgba(255, 194, 194, 0.5)"],
+  ["rgba(255, 128, 0, 1)", "rgba(255, 206, 157, 0.5)"],
+  ["rgba(255, 224, 50, 1)", "rgba(255, 241, 166, 0.5)"],
+  ["rgba(0, 255, 1, 1)", "rgba(162, 255, 162, 0.5)"],
+  ["rgba(1, 255, 255, 1)", "rgba(185, 255, 255, 0.5)"],
+  ["rgba(1, 128, 255, 1)", "rgba(194, 224, 255, 0.5)"],
+  ["rgba(255, 1, 255, 1)", "rgba(255, 191, 255, 0.5)"],
 ];
 
 const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
@@ -43,6 +44,7 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
   const [selectedBounds, setSelectedBounds] = useState([
     Object.entries(boundaries.polygons).reverse()[0][1][0],
   ]);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   useEffect(() => {
     if (resolvedTheme === "dark") setStyleUrl(DARK_STYLE);
@@ -52,7 +54,7 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
   if (type === "static") {
     const fullURl = `https://api.mapbox.com/styles/v1/mapbox/${resolvedTheme === "dark" ? "dark-v11" : "light-v11"}/static/${seatGeoJson}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
     return (
-      <img src={fullURl} alt="mapbox-static-image" width={628} height={380} />
+      <img src={fullURl} alt="mapbox-static-image" width={846} height={400} />
     );
   }
 
@@ -62,9 +64,9 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
     boundaries.bounds,
     628,
     328,
-    { right: 200, left: 200, top: 10, bottom: 10 },
-    0.5,
-    [0.05, 0],
+    undefined,
+    isDesktop ? 0.5 : 0.8,
+    isDesktop ? [0.05, 0] : [0, -0.05],
   );
 
   const [longitude, latitude] = center;
@@ -126,36 +128,38 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
         </>
       ))}
 
-      <div className="absolute right-4 top-4 flex h-fit w-40 flex-col rounded-md border border-otl-gray-200 bg-bg-dialog p-[5px] shadow-context-menu">
-        <p className="px-2.5 py-1.5 text-body-2xs font-medium text-txt-black-500">
+      <div className="absolute bottom-10 right-4 flex h-fit w-[330px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog px-3 pb-2 pt-3 shadow-context-menu lg:right-4 lg:top-4 lg:w-40 lg:p-[5px]">
+        <p className="px-2.5 py-1.5 text-center text-body-2xs font-medium text-txt-black-500 lg:text-start">
           {t("boundaries_years")}
         </p>
-        {boundData.map(([year, hdata], index) => (
-          <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs font-medium text-txt-black-700">
-            <div
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: COLOR_INDEX[index]?.[0] }}
-            />
-            <p className="flex-1">{year}</p>
-            <Checkbox
-              checked={Boolean(
-                selectedBounds.find((bound) => bound === hdata[0]),
-              )}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  setSelectedBounds((prev) => [...prev, hdata[0]]);
-                } else {
-                  setSelectedBounds((prev) =>
-                    prev.filter((bound) => bound !== hdata[0]),
-                  );
+        <div className="flex h-[120px] flex-col flex-wrap gap-x-4 lg:h-full">
+          {boundData.map(([year, hdata], index) => (
+            <div className="flex items-center gap-2 py-1.5 text-body-xs font-medium text-txt-black-700 lg:px-2.5">
+              <div
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: COLOR_INDEX[index]?.[0] }}
+              />
+              <p className="flex-1">{year}</p>
+              <Checkbox
+                checked={Boolean(
+                  selectedBounds.find((bound) => bound === hdata[0]),
+                )}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setSelectedBounds((prev) => [...prev, hdata[0]]);
+                  } else {
+                    setSelectedBounds((prev) =>
+                      prev.filter((bound) => bound !== hdata[0]),
+                    );
+                  }
+                }}
+                disabled={
+                  selectedBounds.length === 1 && selectedBounds[0] === hdata[0]
                 }
-              }}
-              disabled={
-                selectedBounds.length === 1 && selectedBounds[0] === hdata[0]
-              }
-            />
-          </div>
-        ))}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </Map>
   );

@@ -231,8 +231,8 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         pageId="sitewide"
         withPattern={true}
       />
-      <Container className="lg:gap-16">
-        <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 sm:w-[628px]">
+      <Container className="gap-8 lg:gap-16">
+        <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 md:w-[727px]">
           <ComboBox<SeatOption>
             placeholder={t("search_seat", { ns: "home" })}
             options={SEAT_OPTIONS}
@@ -272,14 +272,14 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             }}
           />
         </div>
-        <SectionGrid className="space-y-10">
-          <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
+        <SectionGrid className="space-y-8 lg:space-y-10">
+          <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
             {language === "en-GB"
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
               : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
-          <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[328px] lg:w-[628px]">
+          <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
             {boundaries ? (
               <Mapbox type="map" boundaries={boundaries} />
             ) : (
@@ -287,7 +287,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             )}
           </div>
         </SectionGrid>
-        <SectionGrid className="space-y-10 py-8 lg:pb-16">
+        <SectionGrid className="space-y-6 pb-6 lg:space-y-10 lg:py-8 lg:pb-16">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-heading-2xs font-semibold">
@@ -302,7 +302,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           />
         </SectionGrid>
 
-        <SectionGrid className="space-y-10 py-8 lg:pb-16">
+        <SectionGrid className="space-y-10 pb-8 lg:py-8 lg:pb-16">
           <h2 className="text-center font-heading text-heading-2xs font-semibold">
             {t("breakdown_voters", {
               ns: "home",
