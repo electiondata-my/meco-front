@@ -9,8 +9,11 @@ import Image from "next/image";
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
 import LocaleSwitch from "./locale-switch";
+import { useTranslation } from "@hooks/useTranslation";
 
 export default function Header() {
+  const { t } = useTranslation([]);
+
   return (
     <Navbar>
       <Link href={"/"} className="flex items-center gap-2.5 no-underline">
@@ -27,19 +30,19 @@ export default function Header() {
       </Link>
       <NavbarMenu>
         <NavbarMenuItem href={"/"} asChild>
-          <Link href={"/"}>{"My Area"}</Link>
+          <Link href={"/"}>{t("common:nav.home")}</Link>
         </NavbarMenuItem>
         <NavbarMenuItem href={"/elections"} asChild>
-          <Link href={"/elections"}>{"Elections"}</Link>
+          <Link href={"/elections"}>{t("common:nav.elections")}</Link>
         </NavbarMenuItem>
         <NavbarMenuItem href={"/candidates"} asChild>
-          <Link href={"/candidates"}>{"Candidates"}</Link>
+          <Link href={"/candidates"}>{t("common:nav.candidates")}</Link>
         </NavbarMenuItem>
         <NavbarMenuItem href={"/parties"} asChild>
-          <Link href={"/parties"}>{"Parties"}</Link>
+          <Link href={"/parties"}>{t("common:nav.parties")}</Link>
         </NavbarMenuItem>
         <NavbarMenuItem href={"/trivia"} asChild>
-          <Link href={"/trivia"}>{"Trivia"}</Link>
+          <Link href={"/trivia"}>Trivia</Link>
         </NavbarMenuItem>
       </NavbarMenu>
 

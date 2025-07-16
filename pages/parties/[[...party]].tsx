@@ -15,13 +15,13 @@ const ElectionParties: Page = ({
   selection,
   elections,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("parties");
 
   return (
     <AnalyticsProvider meta={meta}>
       <Metadata
-        title={t("header")}
-        description={t("description")}
+        title={t("hero.header", { ns: "parties" })}
+        description={t("hero.description", { ns: "parties" })}
         keywords=""
       />
       <ElectionPartiesDashboard
@@ -45,16 +45,17 @@ export const getStaticProps: GetStaticProps = withi18n(
   ["election", "parties", "party"],
   async ({ params }) => {
     try {
-      const [party = "PERIKATAN", state_code = "mys"] = (params?.party as string[] ?? []);
+      const [party = "PERIKATAN", state_code = "mys"] =
+        (params?.party as string[]) ?? [];
       const state = state_code ? CountryAndStates[state_code] : "Malaysia";
 
       const results = await Promise.allSettled([
         get("/parties/dropdown.json"),
-        get(`/parties/${party ?? "PERIKATAN"}/parlimen/${state ?? "Malaysia"}.json`),
+        get(
+          `/parties/${party ?? "PERIKATAN"}/parlimen/${state ?? "Malaysia"}.json`,
+        ),
         ...(!["mys", "kul", "pjy", "lbn"].includes(state_code)
-          ? [
-              get(`/parties/${party ?? "PERIKATAN"}/dun/${state}.json`),
-            ]
+          ? [get(`/parties/${party ?? "PERIKATAN"}/dun/${state}.json`)]
           : []),
       ]).catch((e) => {
         throw new Error("Invalid party name. Message: " + e);
@@ -83,7 +84,9 @@ export const getStaticProps: GetStaticProps = withi18n(
           selection,
           elections: {
             parlimen: parlimen.data ?? [],
-            dun: !["mys", "kul", "pjy", "lbn"].includes(state_code) ? dun.data : [],
+            dun: !["mys", "kul", "pjy", "lbn"].includes(state_code)
+              ? dun.data
+              : [],
           },
         },
       };
@@ -91,7 +94,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       console.error(e.message);
       return { notFound: true };
     }
-  }
+  },
 );
 
 export default ElectionParties;

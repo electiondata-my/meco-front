@@ -6,7 +6,6 @@ import { fitGeoJSONBoundsToView } from "@lib/helpers";
 import { Boundaries } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { Checkbox } from "@govtechmy/myds-react/checkbox";
-import { useMediaQuery } from "@hooks/useMediaQuery";
 
 type MapboxDefault = {
   type: "map";
@@ -44,7 +43,6 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
   const [selectedBounds, setSelectedBounds] = useState([
     Object.entries(boundaries.polygons).reverse()[0][1][0],
   ]);
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   useEffect(() => {
     if (resolvedTheme === "dark") setStyleUrl(DARK_STYLE);
@@ -65,8 +63,7 @@ const MapboxMyArea: FC<MapboxProps> = ({ type, seatGeoJson, boundaries }) => {
     628,
     328,
     undefined,
-    isDesktop ? 0.5 : 0.8,
-    isDesktop ? [0.05, 0] : [0, -0.05],
+    0.8,
   );
 
   const [longitude, latitude] = center;

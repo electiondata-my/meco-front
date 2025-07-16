@@ -21,13 +21,15 @@ const ElectionTriviaState: Page = ({
   bar_parlimen,
   table,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("trivia");
 
   return (
     <AnalyticsProvider meta={meta}>
       <Metadata
-        title={CountryAndStates[params.state].concat(" - Trivia")}
-        description={t("description")}
+        title={CountryAndStates[params.state].concat(
+          ` - ${t("hero.header", { ns: "trivia" })}`,
+        )}
+        description={t("hero.description", { ns: "trivia" })}
         keywords={""}
       />
       <ElectionTriviaDashboard
@@ -93,7 +95,7 @@ export const getStaticProps: GetStaticProps = withi18n(
         table: slim_big ?? [],
       },
     };
-  }
+  },
 );
 
 export default ElectionTriviaState;

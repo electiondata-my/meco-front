@@ -15,13 +15,13 @@ const ElectionCandidates: Page = ({
   params,
   selection,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("candidates");
 
   return (
     <AnalyticsProvider meta={meta}>
       <Metadata
-        title={t("header")}
-        description={t("description")}
+        title={t("hero.header", { ns: "candidates" })}
+        description={t("hero.description", { ns: "candidates" })}
         keywords=""
       />
       <ElectionCandidatesDashboard
@@ -83,7 +83,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       console.error(e.message);
       return { notFound: true };
     }
-  }
+  },
 );
 
 export default ElectionCandidates;

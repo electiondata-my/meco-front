@@ -16,11 +16,16 @@ const DUNSeat: Page = ({
   selection,
   seat,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
+  const currentSeat = selection.find(
+    (seats: any) => seats.slug === params.seat_name,
+  );
+
   return (
     <>
       <Metadata
         keywords="dun"
         image={`${process.env.NEXT_PUBLIC_API_URL_S3}/og-image/${params.seat_name}.png`}
+        title={currentSeat.seat_name}
       />
       <ElectionSeatsDashboard
         key={`${params.type}-${params.seat_name}`}

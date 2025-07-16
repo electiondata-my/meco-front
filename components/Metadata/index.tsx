@@ -49,6 +49,7 @@ const Metadata: FunctionComponent<MetadataProps> = ({
       <meta name="description" content={META.description} />
       <meta name="author" content={META.author} />
       <meta name="theme-color" content={META.themeColor} />
+      <meta property="og:site_name" content={APP_NAME} />
 
       {/* <!-- Facebook Meta Tags --> */}
       <meta property="og:url" content={META.url} />
