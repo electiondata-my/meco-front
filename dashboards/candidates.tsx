@@ -13,6 +13,12 @@ import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import SectionGrid from "@components/Section/section-grid";
 import { useToast } from "@govtechmy/myds-react/hooks";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@govtechmy/myds-react/tooltip";
+import { QuestionCircleIcon } from "@govtechmy/myds-react/icon";
 
 /**
  * Candidates Dashboard
@@ -175,7 +181,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-6 py-6 pb-16 lg:space-y-16">
+        <SectionGrid className="space-y-6 py-6 lg:space-y-16 lg:pb-16">
           <div className="mt-3">
             <div className="mx-auto w-full md:w-[727px]">
               <ComboBox
@@ -218,11 +224,20 @@ const ElectionCandidatesDashboard: FunctionComponent<
                   <span className="text-primary-600">
                     {CANDIDATE_OPTION?.label}
                   </span>
+                  <Tooltip>
+                    <TooltipTrigger className="inline-flex h-6 w-6 items-center justify-center">
+                      <QuestionCircleIcon className="h-4 w-4 text-txt-black-500" />
+                    </TooltipTrigger>
+                    {/* TODO: to pass this data */}
+                    <TooltipContent>
+                      Malay male, born 8 Feb 1903 - died 6 Dec 1990 (age 87)
+                    </TooltipContent>
+                  </Tooltip>
                 </p>
               }
               current={data.tab_index}
               onChange={(index) => setData("tab_index", index)}
-              className="w-full"
+              className="w-full gap-4"
             >
               <Panel name={t("parlimen")}>
                 <ElectionTable

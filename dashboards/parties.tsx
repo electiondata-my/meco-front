@@ -194,8 +194,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         withPattern={true}
       />
       <Container>
-        <SectionGrid className="space-y-6 py-6 pb-16 lg:space-y-16">
-          {/* Explore any party's entire electoral history */}
+        <SectionGrid className="space-y-6 py-6 lg:space-y-16 lg:pb-16">
           <div className="mt-3">
             <div className="mx-auto w-full md:w-[727px]">
               <ComboBox
@@ -242,39 +241,41 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
           <div className="w-full space-y-6">
             <Tabs
               title={
-                <span className="flex items-center gap-1.5 text-body-lg leading-[28px]">
-                  <ImageWithFallback
-                    className="mr-2 inline-block rounded border border-otl-gray-200"
-                    src={`/static/images/parties/${
-                      PARTY_OPTION?.value ?? DEFAULT_PARTY
-                    }.png`}
-                    width={32}
-                    height={18}
-                    alt={t(PARTY_OPTION?.value ?? DEFAULT_PARTY)}
-                    inline
-                  />
-                  <Trans>
-                    {t("title", {
-                      ns: "parties",
-                      party: `$t(party:${PARTY_OPTION?.value ?? DEFAULT_PARTY})`,
-                    })}
-                  </Trans>
-                  <StateDropdown
-                    currentState={data.state ?? "mys"}
-                    onChange={(selected) => {
-                      setData("loading", true);
-                      setData("state", selected.value);
-                      push(
-                        `${routes.PARTIES}/${
-                          data.party_value ? data.party_value : DEFAULT_PARTY
-                        }/${selected.value}`,
-                        undefined,
-                        { scroll: false },
-                      );
-                    }}
-                    width="inline-flex"
-                    anchor="left"
-                  />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-body-lg leading-[28px]">
+                    <ImageWithFallback
+                      className="mr-2 inline-block rounded border border-otl-gray-200"
+                      src={`/static/images/parties/${
+                        PARTY_OPTION?.value ?? DEFAULT_PARTY
+                      }.png`}
+                      width={32}
+                      height={18}
+                      alt={t(PARTY_OPTION?.value ?? DEFAULT_PARTY)}
+                      inline
+                    />
+                    <Trans>
+                      {t("title", {
+                        ns: "parties",
+                        party: `$t(party:${PARTY_OPTION?.value ?? DEFAULT_PARTY})`,
+                      })}
+                    </Trans>
+                    <StateDropdown
+                      currentState={data.state ?? "mys"}
+                      onChange={(selected) => {
+                        setData("loading", true);
+                        setData("state", selected.value);
+                        push(
+                          `${routes.PARTIES}/${
+                            data.party_value ? data.party_value : DEFAULT_PARTY
+                          }/${selected.value}`,
+                          undefined,
+                          { scroll: false },
+                        );
+                      }}
+                      width="inline-flex"
+                      anchor="left"
+                    />
+                  </span>
                   <Tooltip>
                     <TooltipTrigger className="h-6 w-6">
                       <QuestionCircleIcon className="h-4 w-4 text-txt-black-500" />
@@ -285,11 +286,11 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                       Cheng Lock, V. T. Sambanthan and still active until today
                     </TooltipContent>
                   </Tooltip>
-                </span>
+                </div>
               }
               current={data.tab_index}
               onChange={(index: number) => setData("tab_index", index)}
-              className="w-full"
+              className="w-full gap-4"
             >
               <Panel name={t("parlimen")}>
                 <ElectionTable
