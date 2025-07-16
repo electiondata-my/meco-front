@@ -233,7 +233,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         pageId="sitewide"
         withPattern={true}
       />
-      <Container className="gap-8 lg:gap-16">
+      <Container className="gap-8 lg:gap-16 lg:pb-16">
         <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 md:w-[727px]">
           <ComboBox<SeatOption>
             placeholder={t("search_seat", { ns: "home" })}
@@ -297,7 +297,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             )}
           </div>
         </SectionGrid>
-        <SectionGrid className="space-y-6 pb-6 lg:space-y-10 lg:py-8 lg:pb-16">
+        <SectionGrid className="space-y-6 lg:space-y-10">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-heading-2xs font-semibold">
@@ -312,7 +312,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           />
         </SectionGrid>
 
-        <SectionGrid className="space-y-10 pb-8 lg:py-8 lg:pb-16">
+        <SectionGrid className="space-y-6 lg:space-y-10">
           <h2 className="text-center font-heading text-heading-2xs font-semibold">
             {t("breakdown_voters", {
               ns: "home",

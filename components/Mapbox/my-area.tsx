@@ -2,7 +2,6 @@ import { FC, useEffect, useRef, useState } from "react";
 import Map, { Layer, MapRef, Source } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "next-themes";
-import { fitGeoJSONBoundsToView } from "@lib/helpers";
 import { Boundaries, ElectionType } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { Checkbox } from "@govtechmy/myds-react/checkbox";
@@ -56,8 +55,6 @@ const MapboxMyArea: FC<MapboxProps> = ({
   const [styleUrl, setStyleUrl] = useState(LIGHT_STYLE);
   const { t } = useTranslation(["common", "home"]);
 
-  console.log(boundaries);
-
   const { replace } = useRouter();
 
   const sp = useSearchParams();
@@ -66,6 +63,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
 
   // const usedTileset =
 
+  // this should be amended for URL search params to work
   const [selectedBounds, setSelectedBounds] = useState([
     Object.entries(boundaries.polygons).reverse()[0][1][0],
   ]);
@@ -153,9 +151,9 @@ const MapboxMyArea: FC<MapboxProps> = ({
         </>
       ))}
 
-      <div className="absolute bottom-10 right-4 flex h-fit w-[330px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog px-3 pb-2 pt-3 shadow-context-menu lg:right-4 lg:top-4 lg:w-40 lg:p-[5px]">
+      <div className="absolute bottom-10 right-1/2 flex h-fit w-[330px] translate-x-1/2 flex-col rounded-md border border-otl-gray-200 bg-bg-dialog px-3 pb-2 pt-3 shadow-context-menu lg:right-4 lg:top-4 lg:w-40 lg:translate-x-0 lg:p-[5px]">
         <p className="px-2.5 py-1.5 text-center text-body-2xs font-medium text-txt-black-500 lg:text-start">
-          {t("boundaries_years")}
+          {t("home:boundaries_years")}
         </p>
         <div className="flex h-[120px] flex-col flex-wrap gap-x-4 lg:h-full">
           {boundData.map(([year, hdata], index) => (
@@ -171,39 +169,39 @@ const MapboxMyArea: FC<MapboxProps> = ({
                 )}
                 onCheckedChange={(checked) => {
                   if (checked) {
-                    const filter = [
-                      ...selectedBounds.map(
-                        (selected) => selected.split("_")[1],
-                      ),
-                      year,
-                    ];
+                    // const filter = [
+                    //   ...selectedBounds.map(
+                    //     (selected) => selected.split("_")[1],
+                    //   ),
+                    //   year,
+                    // ];
 
                     setSelectedBounds((prev) => [...prev, hdata[0]]);
-                    replace(
-                      `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
-                      undefined,
-                      {
-                        scroll: false,
-                        shallow: true,
-                      },
-                    );
+                    // replace(
+                    //   `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
+                    //   undefined,
+                    //   {
+                    //     scroll: false,
+                    //     shallow: true,
+                    //   },
+                    // );
                   } else {
-                    const filter = selectedBounds
-                      .filter((bound) => bound !== hdata[0])
-                      .map((selected) => selected.split("_")[1]);
+                    // const filter = selectedBounds
+                    //   .filter((bound) => bound !== hdata[0])
+                    //   .map((selected) => selected.split("_")[1]);
 
                     setSelectedBounds((prev) =>
                       prev.filter((bound) => bound !== hdata[0]),
                     );
 
-                    replace(
-                      `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
-                      undefined,
-                      {
-                        scroll: false,
-                        shallow: true,
-                      },
-                    );
+                    // replace(
+                    //   `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
+                    //   undefined,
+                    //   {
+                    //     scroll: false,
+                    //     shallow: true,
+                    //   },
+                    // );
                   }
                 }}
                 disabled={
