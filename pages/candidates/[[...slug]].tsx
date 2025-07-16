@@ -10,23 +10,21 @@ import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 
 const ElectionCandidates: Page = ({
   elections,
-  last_updated,
   meta,
   params,
   selection,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const { t } = useTranslation("common");
+  const { t } = useTranslation("candidates");
 
   return (
     <AnalyticsProvider meta={meta}>
       <Metadata
-        title={t("header")}
-        description={t("description")}
+        title={t("hero.header", { ns: "candidates" })}
+        description={t("hero.description", { ns: "candidates" })}
         keywords=""
       />
       <ElectionCandidatesDashboard
         elections={elections}
-        last_updated={last_updated}
         params={params}
         selection={selection}
       />
@@ -66,7 +64,6 @@ export const getStaticProps: GetStaticProps = withi18n(
 
       return {
         props: {
-          // last_updated: candidate.data_last_updated,
           meta: {
             id: "candidates",
             type: "dashboard",
@@ -83,7 +80,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       console.error(e.message);
       return { notFound: true };
     }
-  }
+  },
 );
 
 export default ElectionCandidates;

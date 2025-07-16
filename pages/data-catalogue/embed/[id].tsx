@@ -101,7 +101,7 @@ export const getServerSideProps: GetServerSideProps = withi18n(
       });
       config.options =
         data.API.filters?.filter(
-          (item: DCFilter) => item.key !== "date_slider"
+          (item: DCFilter) => item.key !== "date_slider",
         ) ?? null;
 
       return {
@@ -128,12 +128,10 @@ export const getServerSideProps: GetServerSideProps = withi18n(
               link_geojson: data.metadata.url.link_geojson ?? null,
             },
             data_as_of: data.metadata.data_as_of,
-            last_updated: data.metadata.last_updated,
-            next_update: data.metadata.next_update,
             description: data.metadata.dataset_desc,
             source: data.metadata.data_source,
             definitions: data.metadata.out_dataset.concat(
-              data.metadata?.in_dataset ?? []
+              data.metadata?.in_dataset ?? [],
             ),
           },
           urls: data.downloads ?? {},
@@ -147,7 +145,7 @@ export const getServerSideProps: GetServerSideProps = withi18n(
   },
   {
     cache_expiry: 21600, // 6 hrs
-  }
+  },
 );
 
 export default CatalogueEmbed;

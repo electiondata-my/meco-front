@@ -11,7 +11,6 @@ import {
   Label,
   List,
   Modal,
-  Section,
   StateDropdown,
 } from "@components/index";
 import { CountryAndStates } from "@lib/constants";
@@ -20,7 +19,6 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { useScrollIntersect } from "@hooks/useScrollIntersect";
 import { OptionType } from "@lib/types";
-import dynamic from "next/dynamic";
 import { FunctionComponent, useMemo, useRef } from "react";
 import Overview from "./overview";
 import { useRouter } from "next/router";
@@ -33,11 +31,8 @@ import SectionGrid from "@components/Section/section-grid";
  * @overview Status: In-development
  */
 
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
-
 interface ElectionExplorerProps {
   choropleth: any;
-  last_updated: string;
   params: {
     state: string;
     election: string;
@@ -52,7 +47,6 @@ interface ElectionExplorerProps {
 
 const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
   choropleth,
-  last_updated,
   params,
   seats,
   selection,
@@ -135,13 +129,11 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "elections" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "elections" })]}
         description={[t("hero.description", { ns: "elections" })]}
-        last_updated={last_updated}
         pageId="/elections"
         withPattern={true}
       />

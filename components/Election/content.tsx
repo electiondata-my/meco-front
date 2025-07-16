@@ -36,7 +36,7 @@ const FullResultContent = ({
       <div className="space-y-3">
         <div className="font-bold">{t("election_result")}</div>
         <ElectionTable
-          className="md:max-h-96 w-full overflow-y-auto"
+          className="w-full overflow-y-auto md:max-h-96"
           data={data}
           columns={columns}
           isLoading={loading}
@@ -47,7 +47,7 @@ const FullResultContent = ({
       </div>
 
       <div className="space-y-3">
-        <div className="font-bold">{t("voting_statistics")}</div>
+        <p className="text-body-sm font-semibold">{t("voting_statistics")}</p>
         {votes && votes.length > 0 ? (
           <div className="flex flex-col gap-3 text-sm">
             {votes.map(({ x, abs, perc }, i: number) =>
@@ -56,26 +56,29 @@ const FullResultContent = ({
                   className={clx(
                     votes.length > 2
                       ? { 0: "w-48", 1: "w-64", 2: "w-56" }[i]
-                      : { 0: "w-64", 1: "w-56" }[i]
+                      : { 0: "w-64", 1: "w-56" }[i],
                   )}
                 />
               ) : (
-                <div className="flex flex-wrap gap-3 whitespace-nowrap" key={x}>
-                  <p className="w-28 md:w-fit">{t(x)}:</p>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <BarPerc hidden value={perc} size={"h-[5px] w-[50px]"} />
-                    <p>{`${abs !== null ? numFormat(abs, "standard") : "—"} ${
+                <div
+                  className="flex w-[245px] flex-col gap-3 whitespace-nowrap"
+                  key={x}
+                >
+                  <div className="flex items-center justify-between gap-3 text-body-sm text-txt-black-500">
+                    <p className="w-28 md:w-fit">{t(x)}:</p>
+                    <p className="text-txt-black-700">{`${abs !== null ? numFormat(abs, "standard") : "—"} ${
                       perc !== null
                         ? `(${numFormat(perc, "compact", [1, 1])}%)`
                         : "(—)"
                     }`}</p>
                   </div>
+                  <BarPerc hidden value={perc} size={"h-[5px] w-[245px]"} />
                 </div>
-              )
+              ),
             )}
           </div>
         ) : (
-          <div className="flex flex-col gap-3 text-sm h-full">
+          <div className="flex h-full flex-col gap-3 text-sm">
             {Array(3)
               .fill(null)
               .map((_, i) => (

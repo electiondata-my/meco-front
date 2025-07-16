@@ -1,4 +1,3 @@
-import { dummyData } from "@components/Election/ElectionTable";
 import Metadata from "@components/Metadata";
 import ElectionSeatsDashboard from "@dashboards/seats";
 import { get } from "@lib/api";
@@ -12,18 +11,24 @@ import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
  */
 
 const ParlimenSeat: Page = ({
-  last_updated,
   params,
   selection,
   seat,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
+  const currentSeat = selection.find(
+    (seats: any) => seats.slug === params.seat_name,
+  );
   return (
     <>
-      <Metadata keywords="parlimen" />
+      <Metadata
+        keywords="parlimen"
+        image={`${process.env.NEXT_PUBLIC_API_URL_S3}/og-image/${params.seat_name}.png`}
+        title={currentSeat.seat_name}
+      />
       <ElectionSeatsDashboard
         key={`${params.type}-${params.seat_name}`}
+        boundaries={seat.boundaries}
         elections={seat.data}
-        last_updated={last_updated}
         params={params}
         selection={selection}
         desc_en={seat.desc_en}
@@ -72,7 +77,6 @@ export const getStaticProps: GetStaticProps = withi18n(
             id: "parlimen-" + params.seat,
             type: "dashboard",
           },
-          last_updated: "",
           params: { seat_name: slug, type: "parlimen" },
           selection: dropdown.data,
           seat: seat,

@@ -5,6 +5,7 @@ import DomToImage from "dom-to-image";
 import canvasToSvg from "canvas2svg";
 import { extendTailwindMerge } from "tailwind-merge";
 import { type ClassValue, clsx } from "clsx";
+import { BBox } from "geojson";
 
 /**
  * When using myds, we will reach limitation to extended theme, particulary font-size and font-color, where both using using `text-*`.
@@ -25,6 +26,7 @@ const twMerge = extendTailwindMerge({
     },
   },
 });
+
 /**
  * Conditional class joiner.
  * @param args classNames
@@ -421,3 +423,55 @@ type KeyValueType<T extends string> = {
 type SnakeCase<S extends string> = S extends `${infer T}-${infer U}`
   ? `${Lowercase<T>}_${SnakeCase<U>}`
   : Lowercase<S>;
+
+/**
+ * Convert a GeoJSON bounding box into center + zoom that fits it in the viewport with padding.
+ *
+ * @param bbox [minLng, minLat, maxLng, maxLat]
+ * @param widthPx Width of the map container in pixels
+ * @param heightPx Height of the map container in pixels
+ * @param padding Padding in pixels (default: 40)
+ * @param offset The offset zoom to add to the calculation
+ * @returns { center: [lng, lat], zoom: number }
+ */
+export function fitGeoJSONBoundsToView(
+  bbox: BBox,
+  widthPx: number,
+  heightPx: number,
+  padding:
+    | { top: number; bottom: number; left: number; right: number }
+    | number = 40,
+  offset = 0,
+  shiftCenter?: [number, number],
+): { center: [number, number]; zoom: number } {
+  const [minLng, minLat, maxLng, maxLat] = bbox;
+
+  const centerLng = (minLng + maxLng) / 2 + (shiftCenter ? shiftCenter[0] : 0);
+  const centerLat = (minLat + maxLat) / 2 + (shiftCenter ? shiftCenter[1] : 0);
+
+  const boundsWidth = maxLng - minLng;
+  const boundsHeight = maxLat - minLat;
+
+  const usableWidth =
+    widthPx -
+    (typeof padding === "number" ? 2 * padding : padding.left + padding.right);
+  const usableHeight =
+    heightPx -
+    (typeof padding === "number" ? 2 * padding : padding.top + padding.bottom);
+
+  // Prevent division by zero
+  if (boundsWidth === 0 || boundsHeight === 0) {
+    return { center: [centerLng, centerLat], zoom: 14 };
+  }
+
+  const WORLD_DIM = 512; // Mapbox uses 512px base tiles
+  const lngZoom = Math.log2((WORLD_DIM * 360) / (boundsWidth * usableWidth));
+  const latZoom = Math.log2((WORLD_DIM * 180) / (boundsHeight * usableHeight));
+
+  const zoom = Math.min(lngZoom - offset, latZoom - offset, 24); // clamp max zoom
+
+  return {
+    center: [centerLng, centerLat],
+    zoom: Math.max(zoom, 0),
+  };
+}

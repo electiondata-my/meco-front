@@ -1,5 +1,6 @@
 import {
   BaseResult,
+  Boundaries,
   ElectionResource,
   ElectionType,
   Seat,
@@ -8,7 +9,7 @@ import {
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
-import { ComboBox, Container, Hero, toast } from "@components/index";
+import { ComboBox, Container, Hero } from "@components/index";
 import SectionGrid from "@components/Section/section-grid";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
@@ -20,6 +21,7 @@ import { useRouter } from "next/router";
 import { useLanguage } from "@hooks/useLanguage";
 import { numFormat } from "@lib/helpers";
 import { Chart, TooltipModel } from "chart.js";
+import { useToast } from "@govtechmy/myds-react/hooks";
 
 /**
  * Seats
@@ -32,12 +34,13 @@ const ElectionTable = dynamic(
     ssr: false,
   },
 );
-const Toast = dynamic(() => import("@components/Toast"), { ssr: false });
 const Pyramid = dynamic(() => import("@charts/pyramid"), { ssr: false });
 const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
-const Mapbox = dynamic(() => import("@components/Mapbox"), { ssr: false });
+const Mapbox = dynamic(() => import("@components/Mapbox/my-area"), {
+  ssr: false,
+});
 
-type Barmeter = {
+type MyAreaBarmeter = {
   votertype: { regular: number; early: number; postal: number };
   sex: { male: number; female: number };
   age: {
@@ -64,7 +67,8 @@ interface ElectionSeatsProps extends ElectionResource<Seat> {
   voters_total: number;
   desc_en: string;
   desc_ms: string;
-  barmeter: Barmeter;
+  barmeter: MyAreaBarmeter;
+  boundaries: Boundaries;
 }
 
 type SeatOption = {
@@ -75,7 +79,6 @@ type SeatOption = {
 
 const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   elections,
-  last_updated,
   params,
   selection,
   desc_en,
@@ -83,10 +86,13 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   pyramid,
   voters_total,
   barmeter,
+  boundaries,
 }) => {
   const { t } = useTranslation(["common", "home"]);
   const { cache } = useCache();
   const { language } = useLanguage();
+  const { toast } = useToast();
+  const { push } = useRouter();
 
   const SEAT_OPTIONS: Array<
     Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption
@@ -146,7 +152,11 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         cache.set(identifier, result);
         resolve(result);
       } catch (e) {
-        toast.error(t("toast.request_failure"), t("toast.try_again"));
+        toast({
+          variant: "error",
+          title: t("toast.request_failure"),
+          description: t("toast.try_again"),
+        });
         throw new Error("Invalid election or seat. Message: " + e);
       }
     });
@@ -195,8 +205,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     },
   ]);
 
-  const { push } = useRouter();
-
   const barmeter_data = barmeter
     ? Object?.entries(barmeter).map(([key, value]) => {
         const entries = Object.entries(value);
@@ -217,7 +225,6 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
 
   return (
     <>
-      <Toast />
       <Hero
         background="red"
         category={[t("hero.category", { ns: "home" }), "text-txt-danger"]}
@@ -226,9 +233,8 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         pageId="sitewide"
         withPattern={true}
       />
-
-      <Container>
-        <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 sm:w-[628px]">
+      <Container className="gap-8 lg:gap-16 lg:pb-16">
+        <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 md:w-[727px]">
           <ComboBox<SeatOption>
             placeholder={t("search_seat", { ns: "home" })}
             options={SEAT_OPTIONS}
@@ -259,30 +265,39 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 setData("loading", true);
                 setData("seat_value", selected.value);
                 const [type, seat] = selected.value.split("_");
-                push(`/${type}/${seat}`, undefined, { scroll: false })
+                push(`/${type}/${seat}`, `/${type}/${seat}`, { scroll: false })
                   .catch((e) => {
-                    t("toast.request_failure"), toast.error("toast.try_again");
+                    toast({
+                      variant: "error",
+                      title: t("toast.request_failure"),
+                      description: t("toast.try_again"),
+                    });
                   })
                   .finally(() => setData("loading", false));
               } else setData("seat_value", "");
             }}
           />
         </div>
-        {/* <SectionGrid className="space-y-10 py-8 lg:py-16">
-          <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
+        <SectionGrid className="space-y-8 lg:space-y-10">
+          <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
             {language === "en-GB"
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
               : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
-        </SectionGrid> */}
-        <SectionGrid className="space-y-10 py-8 lg:pb-16 lg:pt-10">
-          <h2 className="max-w-[628px] text-center font-heading text-heading-2xs font-semibold">
-            <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
-            {language === "en-GB"
-              ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
-              : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
-          </h2>
+          <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
+            {boundaries ? (
+              <Mapbox
+                type="map"
+                boundaries={boundaries}
+                seat_info={SELECTED_SEATS}
+              />
+            ) : (
+              <p>{t("common:toast.request_failure")}</p>
+            )}
+          </div>
+        </SectionGrid>
+        <SectionGrid className="space-y-6 lg:space-y-10">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-heading-2xs font-semibold">
@@ -297,7 +312,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           />
         </SectionGrid>
 
-        <SectionGrid className="space-y-10 py-8 lg:py-16">
+        <SectionGrid className="space-y-6 lg:space-y-10">
           <h2 className="text-center font-heading text-heading-2xs font-semibold">
             {t("breakdown_voters", {
               ns: "home",

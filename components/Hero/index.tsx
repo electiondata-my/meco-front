@@ -1,15 +1,13 @@
 import {
   FunctionComponent,
   ReactNode,
-  useContext,
   useMemo,
   useEffect,
   useState,
 } from "react";
 import Container from "@components/Container";
-import { clx, numFormat, toDate } from "@lib/helpers";
+import { clx, numFormat } from "@lib/helpers";
 import { useTranslation } from "next-i18next";
-import { AnalyticsContext } from "@lib/contexts/analytics";
 import { EyeIcon } from "@heroicons/react/20/solid";
 import HeroPattern from "./hero-pattern";
 import SectionGrid from "@components/Section/section-grid";
@@ -17,7 +15,6 @@ import SectionGrid from "@components/Section/section-grid";
 type ConditionalHeroProps =
   | {
       children?: ReactNode;
-      last_updated?: never;
       header?: never;
       category?: never;
       description?: never;
@@ -28,7 +25,6 @@ type ConditionalHeroProps =
 
 type HeroDefault = {
   children?: never;
-  last_updated?: string | number;
   header?: [text: string, className?: string];
   category?: [text: string, className?: string];
   description?: [text: string, className?: string] | ReactNode;
@@ -50,12 +46,10 @@ const Hero: FunctionComponent<HeroProps> = ({
   header,
   description,
   action,
-  last_updated,
   pageId = "sitewide",
   withPattern,
 }) => {
-  const { t, i18n } = useTranslation();
-  const { result } = useContext(AnalyticsContext);
+  const { t } = useTranslation();
 
   // Tinybird view count for the given pageId
   const [views, setViews] = useState<number | null>(null);
@@ -113,7 +107,7 @@ const Hero: FunctionComponent<HeroProps> = ({
         children
       ) : (
         <SectionGrid>
-          <div className="flex max-w-[846px] flex-col items-center justify-center space-y-6 pt-16">
+          <div className="flex max-w-[727px] flex-col items-center justify-center space-y-6 pt-16">
             {category && (
               <h3
                 className={clx(
