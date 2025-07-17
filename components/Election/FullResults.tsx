@@ -103,6 +103,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
   const Trigger = () => (
     <Button
       variant="default-ghost"
+      className="border-0 py-0"
       onClick={() => {
         setData("loading", true);
         setOpen(true);

@@ -103,19 +103,13 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "party":
         return (
           <div className="flex items-center gap-1.5">
-            <div className="relative flex h-auto w-8 justify-center">
+            <div className="relative flex h-4.5 w-8 justify-center">
               <ImageWithFallback
-                className="rounded border border-otl-gray-200"
+                className="rounded-[2px] border border-otl-gray-200"
                 src={`/static/images/parties/${value}.png`}
                 width={32}
                 height={18}
                 alt={value}
-                style={{
-                  width: "auto",
-                  maxWidth: "32px",
-                  height: "auto",
-                  maxHeight: "32px",
-                }}
               />
             </div>
             <span>
@@ -182,19 +176,13 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "party":
         return (
           <div className="flex items-center gap-1.5">
-            <div className="relative flex h-auto w-8 justify-center">
+            <div className="relative flex h-4.5 w-8">
               <ImageWithFallback
-                className="rounded border border-otl-gray-200"
+                className="rounded-[2px] border border-otl-gray-200"
                 src={`/static/images/parties/${value}.png`}
                 width={32}
                 height={18}
                 alt={value}
-                style={{
-                  width: "auto",
-                  maxWidth: "32px",
-                  height: "auto",
-                  maxHeight: "32px",
-                }}
               />
             </div>
             {cell.row.original.name ? (
@@ -392,7 +380,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                           highlight && colIndex === 0
                             ? "font-medium"
                             : "font-normal",
-                          "px-2 py-3",
+                          "px-2 py-[11px]",
                         )}
                       >
                         {isLoading ? (
