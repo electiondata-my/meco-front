@@ -11,6 +11,7 @@ import Map, {
   Layer,
   LngLatLike,
   MapRef,
+  Marker,
   Source,
   useMap,
 } from "react-map-gl/mapbox";
@@ -40,6 +41,7 @@ import { DialogTitle } from "@components/dialog";
 import { useCache } from "@hooks/useCache";
 import { get } from "@lib/api";
 import { useToast } from "@govtechmy/myds-react/hooks";
+import { clx } from "@lib/helpers";
 
 interface DelimiationExplorerProps {
   sidebar: Record<string, Array<[string, string]>>;
@@ -100,8 +102,10 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
 
   const { open, styleUrl, dropdown, seat_value, current_del } = data;
 
-  const [hoverInfo, setHoverInfo] = useState<{
-    properties: any;
+  const [popupInfo, setPopupInfo] = useState<{
+    lat: number;
+    lng: number;
+    label: string;
   } | null>(null);
 
   useEffect(() => {
@@ -122,9 +126,6 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
 
     if (features.length > 0) {
       const feature = features[0];
-      setHoverInfo({
-        properties: feature.properties,
-      });
 
       const zoomData = dropdown.find(
         (d) =>
@@ -133,6 +134,11 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
       );
 
       if (zoomData) {
+        setPopupInfo({
+          lat: zoomData.center[1],
+          lng: zoomData.center[0],
+          label: zoomData.label,
+        });
         mymap.flyTo({
           center: zoomData.center,
           zoom: zoomData.zoom,
@@ -262,6 +268,17 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
             }}
           />
         </Source>
+
+        {popupInfo && (
+          <Marker
+            anchor="top"
+            longitude={Number(popupInfo.lng)}
+            latitude={Number(popupInfo.lat)}
+          >
+            <div>{popupInfo.label}</div>
+          </Marker>
+        )}
+
         <div className="absolute right-1/2 top-4 flex w-fit translate-x-1/2 items-start gap-2 px-4 py-4 md:w-[500px] lg:left-10 lg:top-0 lg:translate-x-0">
           <ComboBox<{
             value: string;
@@ -290,6 +307,12 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
 
                 if (!mymap) return;
 
+                setPopupInfo({
+                  lat: selected.center[1],
+                  lng: selected.center[0],
+                  label: selected.label,
+                });
+
                 mymap.flyTo({
                   center: selected.center,
                   zoom: selected.zoom,
@@ -306,12 +329,14 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
             open={open}
             setOpen={(open) => setData("open", open)}
             sidebar={sidebar}
+            current={current_del}
             setDelimitation={(selected) => {
               if (current_del !== selected) {
                 setData("current_del", selected);
                 setData("seat_value", "");
                 fetchDropdownList(selected);
                 setData("open", false);
+                setPopupInfo(null);
 
                 if (!mymap) return;
 
@@ -350,12 +375,14 @@ interface MapDrawerProps {
   setOpen: (open: boolean) => void;
   sidebar: Record<string, Array<[string, string]>>;
   setDelimitation: (selected: string) => void;
+  current: string;
 }
 
 const MapDrawer: FunctionComponent<MapDrawerProps> = ({
   open,
   setOpen,
   sidebar,
+  current,
   setDelimitation,
 }) => {
   const type = Object.keys(sidebar)[0];
@@ -393,7 +420,11 @@ const MapDrawer: FunctionComponent<MapDrawerProps> = ({
                 <Button
                   key={l}
                   variant={"default-ghost"}
-                  className="w-full hover:bg-bg-washed-active"
+                  className={clx(
+                    "w-full hover:bg-bg-washed-active",
+                    current === l[0] &&
+                      "bg-bg-danger-600/50 text-txt-white hover:bg-bg-danger-600/80",
+                  )}
                   onClick={(e) => {
                     setDelimitation(l[0]);
                   }}
