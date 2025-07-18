@@ -260,3 +260,8 @@ export const PoliticalPartyColours: Record<string, string> = (() => {
     return { ...prev, ...{ [current.key]: current.colour } };
   }, {});
 })();
+
+export const MapboxMapStyle = {
+  LIGHT_STYLE: "mapbox://styles/mapbox/light-v11",
+  DARK_STYLE: "mapbox://styles/mapbox/dark-v11",
+};

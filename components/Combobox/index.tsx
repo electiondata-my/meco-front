@@ -150,6 +150,7 @@ const ComboBox = <T extends unknown>({
               setOpen(false);
             }
           },
+          autoComplete: "off",
         })}
       />
 
@@ -278,8 +279,9 @@ const ComboBox = <T extends unknown>({
                         const option = filteredOptions[virtualItem.index];
                         return (
                           <ComboOption
+                            key={virtualItem.index}
                             {...getItemProps({
-                              key: virtualItem.index,
+                              // key: virtualItem.index,
                               ref(node) {
                                 listRef.current[virtualItem.index] = node;
                               },

@@ -9,6 +9,7 @@ const Drawer = ({
   <DrawerPrimitive.Root
     shouldScaleBackground={shouldScaleBackground}
     {...props}
+    autoFocus={true}
   />
 );
 Drawer.displayName = "Drawer";
@@ -40,12 +41,12 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={clx(
-        "fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900",
-        className
+        "fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-xl border border-otl-gray-200 bg-bg-white",
+        className,
       )}
       {...props}
     >
-      <div className="mx-auto mt-2 flex h-1 w-10 shrink-0 rounded-full bg-border" />
+      <div className="bg-border mx-auto mt-2 flex h-1 w-10 shrink-0 rounded-full" />
       {children}
     </DrawerPrimitive.Content>
   </DrawerPortal>
@@ -69,8 +70,8 @@ const DrawerFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={clx(
-      "mt-auto flex flex-col gap-2 border-t p-4 dark:border-zinc-700",
-      className
+      "dark:border-zinc-700 mt-auto flex flex-col gap-2 border-t p-4",
+      className,
     )}
     {...props}
   />
@@ -84,8 +85,8 @@ const DrawerTitle = React.forwardRef<
   <DrawerPrimitive.Title
     ref={ref}
     className={clx(
-      "text-lg font-semibold leading-none tracking-tight",
-      className
+      "text-body-lg font-semibold leading-none tracking-tight",
+      className,
     )}
     {...props}
   />
@@ -98,7 +99,7 @@ const DrawerDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Description
     ref={ref}
-    className={clx("text-sm", className)}
+    className={clx("text-body-sm", className)}
     {...props}
   />
 ));

@@ -1,0 +1,16 @@
+{
+  "name": "ElectionData.MY",
+  "short_name": "ElectionData.MY",
+  "icons": [
+    {
+      "src": "/static/images/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#FFFFFF",
+  "background_color": "#FFFFFF",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}

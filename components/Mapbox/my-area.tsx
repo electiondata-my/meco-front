@@ -1,6 +1,5 @@
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, Fragment, useEffect, useRef, useState } from "react";
 import Map, { Layer, MapRef, Source } from "react-map-gl/mapbox";
-import "mapbox-gl/dist/mapbox-gl.css";
 import { useTheme } from "next-themes";
 import { Boundaries, ElectionType } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
@@ -8,6 +7,7 @@ import { Checkbox } from "@govtechmy/myds-react/checkbox";
 import { useRouter } from "next/router";
 import { OptionType } from "@lib/types";
 import { useSearchParams } from "next/navigation";
+import { MapboxMapStyle } from "@lib/constants";
 
 type SeatOption = {
   state: string;
@@ -32,9 +32,6 @@ type MapboxProps = {
   seat_info?: Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption;
 } & ConditionalMapboxProps;
 
-const LIGHT_STYLE = "mapbox://styles/mapbox/light-v11";
-const DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
-
 const COLOR_INDEX = [
   ["rgba(255, 1, 0, 1)", "rgba(255, 194, 194, 0.5)"],
   ["rgba(255, 128, 0, 1)", "rgba(255, 206, 157, 0.5)"],
@@ -51,6 +48,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
   boundaries,
   seat_info,
 }) => {
+  const { LIGHT_STYLE, DARK_STYLE } = MapboxMapStyle;
   const { resolvedTheme } = useTheme();
   const [styleUrl, setStyleUrl] = useState(LIGHT_STYLE);
   const { t } = useTranslation(["common", "home"]);
@@ -92,6 +90,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
 
   return (
     <Map
+      id="myarea-map"
       ref={mapRef}
       reuseMaps={true}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
@@ -105,7 +104,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
       interactiveLayerIds={boundData.map(([years, hdata]) => hdata[0])}
     >
       {boundData.map(([year, [id, seats]], index) => (
-        <>
+        <Fragment key={year}>
           {selectedBounds.find((selected) => selected === id) && (
             <Source
               key={id}
@@ -148,7 +147,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
               )}
             </Source>
           )}
-        </>
+        </Fragment>
       ))}
 
       <div className="absolute bottom-10 right-1/2 flex h-fit w-[330px] translate-x-1/2 flex-col rounded-md border border-otl-gray-200 bg-bg-dialog px-3 pb-2 pt-3 shadow-context-menu lg:right-4 lg:top-4 lg:w-40 lg:translate-x-0 lg:p-[5px]">
@@ -157,7 +156,10 @@ const MapboxMyArea: FC<MapboxProps> = ({
         </p>
         <div className="flex h-[120px] flex-col flex-wrap gap-x-4 lg:h-full">
           {boundData.map(([year, hdata], index) => (
-            <div className="flex items-center gap-2 py-1.5 text-body-xs font-medium text-txt-black-700 lg:px-2.5">
+            <div
+              key={year}
+              className="flex items-center gap-2 py-1.5 text-body-xs font-medium text-txt-black-700 lg:px-2.5"
+            >
               <div
                 className="h-2 w-2 rounded-full"
                 style={{ backgroundColor: COLOR_INDEX[index]?.[0] }}
