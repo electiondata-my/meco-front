@@ -1,3 +1,5 @@
+@import "mapbox-gl/dist/mapbox-gl.css";
+
 @import "@govtechmy/myds-style/color.css";
 
 /* Import Light theme */
@@ -10,6 +12,7 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
 
 /* MODULE CSS */
 /* @import "./dashboards/general.css";
