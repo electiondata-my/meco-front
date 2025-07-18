@@ -279,7 +279,7 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
           </Marker>
         )}
 
-        <div className="absolute right-1/2 top-4 flex w-fit translate-x-1/2 items-start gap-2 px-4 py-4 md:w-[500px] lg:left-10 lg:top-0 lg:translate-x-0">
+        <div className="absolute right-1/2 top-4 flex w-[325px] translate-x-1/2 items-start gap-2 px-4 py-4 sm:w-[500px] lg:left-10 lg:top-0 lg:translate-x-0">
           <ComboBox<{
             value: string;
             code: string;
@@ -323,7 +323,7 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
           />
         </div>
       </Map>
-      <div className="absolute right-1/2 top-4 flex h-screen w-fit translate-x-1/2 items-start gap-2 lg:left-0 lg:top-0 lg:translate-x-0">
+      <div className="absolute left-0 top-4 flex h-screen w-fit items-start gap-2 lg:left-0 lg:top-0 lg:translate-x-0">
         <div className="flex h-full w-12 flex-col items-center justify-center py-4">
           <MapDrawer
             open={open}
@@ -403,7 +403,7 @@ const MapDrawer: FunctionComponent<MapDrawerProps> = ({
           </ButtonIcon>
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-screen max-h-screen w-1/5 bg-bg-white px-4 py-2 font-body text-body-md">
+      <DrawerContent className="h-screen max-h-screen w-4/5 bg-bg-white px-4 py-2 font-body text-body-md lg:w-1/5">
         <DrawerHeader className="flex items-center px-0">
           <DialogTitle className="flex-1">{type}</DialogTitle>
           <DrawerDescription></DrawerDescription>
