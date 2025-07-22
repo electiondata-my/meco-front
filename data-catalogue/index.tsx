@@ -1,31 +1,30 @@
-import {
-  At,
-  Button,
-  Container,
-  Hero,
-  Search,
-  Section,
-  Sidebar,
-} from "@components/index";
-import { XMarkIcon } from "@heroicons/react/20/solid";
-import { SparklesIcon } from "@heroicons/react/24/outline";
-import { useFilter } from "@hooks/useFilter";
+import { Container, Hero, Sidebar, StateDropdown } from "@components/index";
+import SectionGrid from "@components/Section/section-grid";
 import { useTranslation } from "@hooks/useTranslation";
 import { BREAKPOINTS } from "@lib/constants";
 import { WindowContext } from "@lib/contexts/window";
 import { routes } from "@lib/routes";
-import { OptionType } from "@lib/types";
 import { Trans } from "next-i18next";
 import {
   FunctionComponent,
   useMemo,
   useRef,
-  ForwardRefExoticComponent,
-  forwardRef,
-  useImperativeHandle,
-  ForwardedRef,
   useContext,
+  useEffect,
 } from "react";
+import {
+  SearchBar,
+  SearchBarInput,
+  SearchBarInputContainer,
+  SearchBarSearchButton,
+  SearchBarClearButton,
+  SearchBarHint,
+} from "@govtechmy/myds-react/search-bar";
+import { Pill } from "@govtechmy/myds-react/pill";
+import { useData } from "@hooks/useData";
+import useFocus from "@hooks/useFocus";
+import { clx } from "@lib/helpers";
+import Link from "next/link";
 
 /**
  * Catalogue Index
@@ -34,28 +33,22 @@ import {
 
 export type Catalogue = {
   id: string;
-  catalog_name: string;
+  title: string;
+  description?: string;
 };
 
 interface CatalogueIndexProps {
   query: Record<string, string>;
   collection: Record<string, any>;
-  sources: string[];
 }
 
 const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
   query,
   collection,
-  sources,
 }) => {
   const { t } = useTranslation(["catalogue", "common"]);
   const scrollRef = useRef<Record<string, HTMLElement | null>>({});
-  const filterRef = useRef<CatalogueFilterRef>(null);
   const { size } = useContext(WindowContext);
-  const sourceOptions = sources.map((source) => ({
-    label: source,
-    value: source,
-  }));
 
   const _collection = useMemo<Array<[string, any]>>(() => {
     const resultCollection: Array<[string, Catalogue[]]> = [];
@@ -74,74 +67,68 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
   return (
     <>
       <Hero
-        background="blue"
-        category={[t("category"), "text-primary dark:text-primary-dark"]}
+        background="red"
+        category={[t("category"), "text-txt-danger"]}
         header={[t("header")]}
         description={[<Trans>{t("description")}</Trans>]}
-        pageId="/data-catalogue"
-        // action={
-        //   <div className="flex flex-wrap items-center gap-6">
-        //     <At
-        //       href={routes.DATA_GPT}
-        //       className="text-primary group flex items-center gap-2 text-sm font-medium"
-        //     >
-        //       <SparklesIcon className="h-5 w-5" />
-        //       <span className="group-hover:underline">{t("try_datagpt")}</span>
-        //     </At>
-        //   </div>
-        // }
+        pageId={routes.DATA_CATALOGUE}
+        withPattern={true}
       />
 
+      <CatalogueFilter />
       <Container className="min-h-screen">
-        <Sidebar
-          categories={Object.entries(collection).map(
-            ([category, subcategory]) => [category, Object.keys(subcategory)]
-          )}
-          onSelect={(selected) =>
-            scrollRef.current[selected]?.scrollIntoView({
-              behavior: "smooth",
-              block: size.width <= BREAKPOINTS.LG ? "start" : "center",
-              inline: "end",
-            })
-          }
-        >
-          <CatalogueFilter
-            ref={filterRef}
-            query={query}
-            sources={sourceOptions}
-          />
-
-          {_collection.length > 0 ? (
-            _collection.map(([title, datasets]) => {
-              return (
-                <Section
-                  title={title}
-                  key={title}
-                  ref={(ref) => (scrollRef.current[title] = ref)}
-                  className="p-2 max-lg:first-of-type:pb-8 max-lg:first-of-type:pt-14 py-6 lg:p-8"
-                >
-                  <ul className="columns-1 space-y-3 sm:columns-3">
-                    {datasets.map((item: Catalogue, index: number) => (
-                      <li key={index}>
-                        <At
-                          href={`/data-catalogue/${item.id}`}
-                          className="text-primary dark:text-primary-dark no-underline [text-underline-position:from-font] hover:underline"
-                          prefetch={false}
-                        >
-                          {item.catalog_name}
-                        </At>
-                      </li>
-                    ))}
-                  </ul>
-                </Section>
-              );
-            })
-          ) : (
-            <p className="text-zinc-500 p-2 pt-16 lg:p-8">
-              {t("common:no_entries")}.
-            </p>
-          )}
-        </Sidebar>
+        <SectionGrid className="py-6 lg:py-16">
+          <Sidebar
+            categories={Object.entries(collection).map(
+              ([category, subcategory]) => [category, Object.keys(subcategory)],
+            )}
+            onSelect={(selected) =>
+              scrollRef.current[selected]?.scrollIntoView({
+                behavior: "smooth",
+                block: size.width <= BREAKPOINTS.LG ? "start" : "center",
+                inline: "end",
+              })
+            }
+          >
+            <Container className="grid-cols-1 gap-0 space-y-8 px-0 md:grid-cols-1 md:gap-0 md:px-0 lg:grid-cols-1 lg:space-y-16">
+              {_collection.length > 0 ? (
+                _collection.map(([title, datasets]) => {
+                  return (
+                    <SectionGrid
+                      key={title}
+                      ref={(ref) => (scrollRef.current[title] = ref)}
+                      className="col-span-full items-start justify-start space-y-6"
+                    >
+                      <h4 className="font-heading text-heading-2xs text-txt-black-900">
+                        {title}
+                      </h4>
+                      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                        {datasets.map((item: Catalogue, index: number) => (
+                          <Link
+                            key={`${item.id}-${index}`}
+                            href={`${routes.DATA_CATALOGUE}/${item.id}`}
+                            className="flex columns-2 flex-col gap-4.5 rounded-lg border border-otl-gray-200 bg-bg-white p-4"
+                          >
+                            <p className="text-body-lg font-semibold">
+                              {item.title}
+                            </p>
+                            <p className="line-clamp-2 text-body-sm text-txt-black-500">
+                              {item.description}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    </SectionGrid>
+                  );
+                })
+              ) : (
+                <p className="p-2 pt-16 text-txt-black-500 lg:p-8">
+                  {t("common:no_entries")}.
+                </p>
+              )}
+            </Container>
+          </Sidebar>
+        </SectionGrid>
       </Container>
     </>
   );
@@ -151,68 +138,111 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
  * Catalogue Filter Component
  */
 interface CatalogueFilterProps {
-  query: Record<string, any>;
-  sources: OptionType[];
-  ref?: ForwardedRef<CatalogueFilterRef>;
+  // query: Record<string, any>;
 }
 
-interface CatalogueFilterRef {
-  setFilter: (key: string, value: any) => void;
-}
+const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
+  const { t } = useTranslation(["catalogue", "common"]);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const { focused } = useFocus(searchRef);
+  const { data, setData } = useData({
+    query: "",
+    isStick: false,
+  });
 
-const CatalogueFilter: ForwardRefExoticComponent<CatalogueFilterProps> =
-  forwardRef(({ query }, ref) => {
-    const { t } = useTranslation(["catalogue", "common"]);
+  const { query, isStick } = data;
 
-    const { filter, setFilter, actives } = useFilter({
-      search: query.search ?? "",
-    });
-
-    const reset = () => {
-      setFilter("search", "");
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "/") {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+      // Check if 'CMD + K' or 'Ctrl + K' key combination is pressed
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        searchRef.current?.blur();
+      }
     };
 
-    useImperativeHandle(ref, () => {
-      return { setFilter };
-    });
+    document.addEventListener("keydown", handleKeyDown);
 
-    return (
-      <div className="dark:border-zinc-800 sticky top-14 z-10 flex items-center justify-between gap-2 border-b bg-white py-3 dark:bg-zinc-900 lg:pl-2">
-        <div className="flex-1">
-          <Search
-            className="border-none py-1.5"
-            placeholder={t("common:placeholder.search")}
-            query={filter.search}
-            onChange={(e) => setFilter("search", e)}
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setData("isStick", !entry.isIntersecting);
+      },
+      { threshold: [1] },
+    );
+
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <>
+      <div ref={sentinelRef} className="h-6" />
+      <div
+        ref={containerRef}
+        className={clx(
+          "sticky top-[56px] z-20 col-span-full mx-auto w-full border border-transparent px-4.5 transition-all md:top-16 md:w-[727px] lg:px-0",
+          isStick && "border-otl-gray-200 bg-bg-white md:w-full",
+        )}
+      >
+        <div
+          className={clx(
+            "flex w-full flex-col gap-6",
+            isStick &&
+              "mx-auto max-w-screen-xl justify-between py-3 sm:flex-row md:px-6 xl:px-0",
+          )}
+        >
+          <SearchBar size="large" className="w-full md:w-[727px]">
+            <SearchBarInputContainer className="has-[input:focus]:border-otl-danger-300 has-[input:focus]:ring-otl-danger-200">
+              <SearchBarInput
+                ref={searchRef}
+                placeholder={t("catalogue:placeholder.search")}
+                value={query}
+                onValueChange={(search) => setData("query", search)}
+              />
+              {query && (
+                <SearchBarClearButton onClick={() => setData("query", "")} />
+              )}
+
+              {!(query && focused) && (
+                <SearchBarHint className="hidden lg:flex">
+                  Press <Pill size="small">/</Pill> to start searching
+                </SearchBarHint>
+              )}
+              <SearchBarSearchButton className="border-otl-danger-300 bg-gradient-to-b from-danger-400 to-danger-600" />
+            </SearchBarInputContainer>
+          </SearchBar>
+          <StateDropdown
+            url={routes.DATA_CATALOGUE}
+            anchor="right"
+            width="w-fit self-center"
+            currentState={"mys"}
+            // exclude={["kul", "lbn", "pjy"]}
           />
         </div>
-        {actives.length > 0 &&
-          actives.findIndex((active) => active[0] !== "source") !== -1 && (
-            <Button
-              variant="reset"
-              className="hover:bg-slate-100 dark:hover:bg-zinc-800 text-zinc-500 group block rounded-full p-1 hover:text-zinc-900 dark:hover:text-white xl:hidden"
-              disabled={!actives.length}
-              onClick={reset}
-            >
-              <XMarkIcon className="text-zinc-500 h-5 w-5 group-hover:text-zinc-900 dark:group-hover:text-white" />
-            </Button>
-          )}
-        <div className="hidden gap-2 pr-6 xl:flex">
-          {actives.length > 0 &&
-            actives.findIndex((active) => active[0] !== "source") !== -1 && (
-              <Button
-                className="btn-ghost text-zinc-500 group hover:text-zinc-900 dark:hover:text-white"
-                disabled={!actives.length}
-                onClick={reset}
-              >
-                <XMarkIcon className="text-zinc-500 h-5 w-5 group-hover:text-zinc-900 dark:group-hover:text-white" />
-                {t("common:clear_all")}
-              </Button>
-            )}
-        </div>
       </div>
-    );
-  });
+    </>
+  );
+};
 
 CatalogueFilter.displayName = "CatalogueFilter";
 

@@ -44,6 +44,9 @@ export default function Header() {
         <NavbarMenuItem href={"/trivia"} asChild>
           <Link href={"/trivia"}>{t("common:nav.trivia")}</Link>
         </NavbarMenuItem>
+        <NavbarMenuItem href={"/data-catalogue"} asChild>
+          <Link href={"/data-catalogue"}>{t("common:nav.catalogue")}</Link>
+        </NavbarMenuItem>
         <NavbarMenuItem href={"/map/explorer"} asChild>
           <Link href={"/map/explorer"}>{t("common:nav.map")}</Link>
         </NavbarMenuItem>

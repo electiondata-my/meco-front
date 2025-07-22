@@ -63,7 +63,7 @@ const Hero: FunctionComponent<HeroProps> = ({
         const res = await fetch(url);
         if (!res.ok) throw new Error("Network response was not ok");
         const data = await res.json();
-        setViews(data?.data?.[0]?.hits ?? 0);
+        setViews(data?.data?.[0]?.hits ?? null);
       } catch (e) {
         setViews(null);
       } finally {
@@ -154,7 +154,7 @@ const Hero: FunctionComponent<HeroProps> = ({
                 ? "..."
                 : views !== null
                   ? `${numFormat(views, "standard")} ${t("common:views", { count: views })}`
-                  : "-"}
+                  : "---"}
             </p>
 
             {action}

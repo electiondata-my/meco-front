@@ -8,12 +8,13 @@ export const routes = {
   CANDIDATES: "/candidates",
   PARTIES: "/parties",
   TRIVIA: "/trivia",
-  API_DOCS: "/api-docs"
+  BLOGS: "/blogs",
+  API_DOCS: "/api-docs",
 };
 
 export const static_routes: string[] = (() => {
   let s_routes = Object.values(routes).filter(
-    (route) => !route.startsWith("/data-catalogue")
+    (route) => !route.startsWith("/data-catalogue"),
   );
 
   s_routes.forEach((route) => {
