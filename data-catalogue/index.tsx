@@ -38,12 +38,10 @@ export type Catalogue = {
 };
 
 interface CatalogueIndexProps {
-  query: Record<string, string>;
   collection: Record<string, any>;
 }
 
 const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
-  query,
   collection,
 }) => {
   const { t } = useTranslation(["catalogue", "common"]);
@@ -137,9 +135,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
 /**
  * Catalogue Filter Component
  */
-interface CatalogueFilterProps {
-  // query: Record<string, any>;
-}
+interface CatalogueFilterProps {}
 
 const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
   const { t } = useTranslation(["catalogue", "common"]);
@@ -236,7 +232,6 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
             anchor="right"
             width="w-fit self-center"
             currentState={"mys"}
-            // exclude={["kul", "lbn", "pjy"]}
           />
         </div>
       </div>

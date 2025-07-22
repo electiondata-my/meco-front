@@ -28,10 +28,10 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
 
   return (
     <>
-      <div className="flex w-full flex-row">
+      <div className="flex w-full flex-row gap-8">
         {/* Desktop */}
         <div className="hidden lg:block lg:w-1/4 xl:w-1/5">
-          <ul className="sticky top-36 flex h-[90vh] w-full flex-col gap-6 overflow-x-visible overflow-y-scroll">
+          <ul className="hide-scrollbar sticky top-36 flex h-[90vh] w-full flex-col gap-6 overflow-x-visible overflow-y-scroll">
             <li className="px-1">
               <h5 className={clx(styles.base, "text-body-lg font-semibold")}>
                 {t("category")}

@@ -7,7 +7,6 @@ import { Page } from "@lib/types";
 import { GetServerSideProps, InferGetServerSidePropsType } from "next";
 
 const CatalogueIndex: Page = ({
-  query,
   collection,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
   const { t } = useTranslation(["catalogue", "common"]);
@@ -19,7 +18,7 @@ const CatalogueIndex: Page = ({
         description={t("description")}
         keywords={""}
       />
-      <DataCatalogue query={query} collection={collection} />
+      <DataCatalogue collection={collection} />
     </>
   );
 };
@@ -46,7 +45,7 @@ const recurSort = (
 
 export const getServerSideProps: GetServerSideProps = withi18n(
   "catalogue",
-  async ({ locale, query }) => {
+  async ({}) => {
     try {
       const _collection = {
         Demography: {
@@ -188,7 +187,6 @@ export const getServerSideProps: GetServerSideProps = withi18n(
             id: "catalogue-index",
             type: "misc",
           },
-          query: query ?? {},
           collection,
         },
       };
