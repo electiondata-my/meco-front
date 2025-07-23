@@ -275,7 +275,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
           )}
         >
           <SearchBar size="large" className="w-full md:w-[727px]">
-            <SearchBarInputContainer className="has-[input:focus]:border-otl-danger-300 has-[input:focus]:ring-otl-danger-200">
+            <SearchBarInputContainer className="has-[input:focus]:!border-otl-danger-300 has-[input:focus]:!ring-otl-danger-200">
               <SearchBarInput
                 ref={searchRef}
                 placeholder={t("catalogue:placeholder.search")}
