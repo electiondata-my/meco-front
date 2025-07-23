@@ -200,7 +200,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
   }, [seats]);
 
   return (
-    <SectionGrid className="space-y-12 overflow-scroll py-12">
+    <SectionGrid className="space-y-6 py-8 lg:space-y-12 lg:py-12">
       <div className="flex flex-col gap-6">
         <h4 className="text-center font-heading text-heading-2xs font-bold">
           {t("header_2", { ns: "elections" })}
@@ -269,175 +269,182 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
           </div>
         </div>
       </div>
-      <LeftRightCard
-        leftBg="overflow-hidden lg:max-w-[360px]"
-        left={
-          <div className="relative flex h-fit w-full flex-col overflow-hidden bg-bg-washed px-3 pb-3 md:overflow-y-auto lg:h-[600px] lg:rounded-bl-xl lg:rounded-tl-xl lg:rounded-tr-none lg:pb-6 xl:px-6">
-            <div className="sticky top-0 z-10 border-b border-otl-gray-200 pb-3 pt-6">
-              <ComboBox
-                placeholder={t("home:search_seat")}
-                options={SEAT_OPTIONS}
-                selected={
-                  data.search_seat
-                    ? SEAT_OPTIONS.find((e) => e.value === data.search_seat)
-                    : null
-                }
-                onChange={(selected) => {
-                  if (selected) {
-                    fetchSeatResult(selected.value, seats[0].date);
-                    setData("seat", selected.value);
-                    setData("search_seat", selected.value);
-                    scrollRef.current[selected.value]?.scrollIntoView({
-                      behavior: "smooth",
-                      block: "center",
-                      inline: "end",
-                    });
-                  } else setData("search_seat", "");
-                }}
-              />
-            </div>
-            <Drawer open={open} onOpenChange={setOpen}>
-              {election && (
-                <div className="grid h-[394px] max-w-xs grid-flow-col grid-rows-3 overflow-x-auto rounded-md lg:flex lg:h-full lg:w-full lg:flex-col lg:overflow-y-auto lg:overflow-x-clip">
-                  {filteredSeats.map((_seat) => {
-                    const { seat, name, majority, majority_perc, party } =
-                      _seat;
-                    return (
-                      <div
-                        ref={(ref) => {
-                          scrollRef && (scrollRef.current[seat] = ref);
-                        }}
-                        key={seat}
-                        className="pb-px pl-px pr-3 pt-3 lg:pr-0"
-                      >
+      <div className="max-h-[600px] w-full">
+        <LeftRightCard
+          leftBg="overflow-hidden lg:max-w-[360px] lg:w-full"
+          left={
+            <div className="relative flex h-fit w-full flex-col overflow-hidden bg-bg-washed px-3 pb-3 md:overflow-y-auto lg:h-[600px] lg:rounded-bl-xl lg:rounded-tl-xl lg:rounded-tr-none lg:pb-6 xl:px-6">
+              <div className="sticky top-0 z-10 border-b border-otl-gray-200 pb-3 pt-6">
+                <ComboBox
+                  placeholder={t("home:search_seat")}
+                  options={SEAT_OPTIONS}
+                  selected={
+                    data.search_seat
+                      ? SEAT_OPTIONS.find((e) => e.value === data.search_seat)
+                      : null
+                  }
+                  onChange={(selected) => {
+                    if (selected) {
+                      fetchSeatResult(selected.value, seats[0].date);
+                      setData("seat", selected.value);
+                      setData("search_seat", selected.value);
+                      scrollRef.current[selected.value]?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                        inline: "end",
+                      });
+                    } else setData("search_seat", "");
+                  }}
+                />
+              </div>
+              <Drawer open={open} onOpenChange={setOpen}>
+                {election && (
+                  <div className="hide-scrollbar grid h-[394px] max-w-screen-sm grid-flow-col grid-rows-3 overflow-x-auto rounded-md sm:max-w-screen-md md:max-w-screen-lg lg:flex lg:h-full lg:w-full lg:flex-col lg:overflow-y-auto lg:px-0.5">
+                    {filteredSeats.map((_seat) => {
+                      const { seat, name, majority, majority_perc, party } =
+                        _seat;
+                      return (
                         <div
-                          className={clx(
-                            "flex h-full w-full flex-col gap-2 p-3 text-body-sm max-lg:w-72",
-                            "bg-bg-white lg:active:bg-bg-black-100",
-                            "border border-bg-black-200 lg:hover:border-bg-black-400",
-                            "rounded-xl focus:outline-none",
-                            seat === data.seat &&
-                              "lg:ring-1 lg:ring-primary-600 lg:hover:border-transparent",
-                          )}
-                          onClick={() => {
-                            setData("seat", seat);
-                            setData("search_seat", seat);
-                            fetchSeatResult(seat, seats[0].date);
+                          ref={(ref) => {
+                            scrollRef && (scrollRef.current[seat] = ref);
                           }}
+                          key={seat}
+                          className="pb-px pl-px pr-3 pt-3 lg:pr-0"
                         >
-                          <div className="flex w-full items-center justify-between">
-                            <div className="flex gap-2">
-                              <span className="text-zinc-500 text-sm font-medium">
-                                {seat.slice(0, 5)}
-                              </span>
-                              <span className="truncate">{seat.slice(5)}</span>
+                          <div
+                            className={clx(
+                              "flex h-full w-full flex-col gap-2 p-3 text-body-sm max-lg:w-72",
+                              "bg-bg-white lg:active:bg-bg-black-100",
+                              "border border-bg-black-200 lg:hover:border-bg-black-400",
+                              "rounded-xl focus:outline-none",
+                              seat === data.seat &&
+                                "ring-1 ring-danger-600 lg:hover:border-transparent",
+                            )}
+                            onClick={() => {
+                              setData("seat", seat);
+                              setData("search_seat", seat);
+                              fetchSeatResult(seat, seats[0].date);
+                            }}
+                          >
+                            <div className="flex w-full items-center justify-between">
+                              <div className="flex gap-2">
+                                <span className="text-zinc-500 text-sm font-medium">
+                                  {seat.slice(0, 5)}
+                                </span>
+                                <span className="truncate">
+                                  {seat.slice(5)}
+                                </span>
+                              </div>
+
+                              <DrawerTrigger asChild>
+                                <Button
+                                  type="reset"
+                                  className="text-zinc-500 p-0 lg:hidden"
+                                >
+                                  <ArrowsPointingOutIcon className="h-4 w-4" />
+                                </Button>
+                              </DrawerTrigger>
                             </div>
 
-                            <DrawerTrigger asChild>
-                              <Button
-                                type="reset"
-                                className="text-zinc-500 p-0 lg:hidden"
-                              >
-                                <ArrowsPointingOutIcon className="h-4 w-4" />
-                              </Button>
-                            </DrawerTrigger>
-                          </div>
-
-                          <div className="flex h-8 w-full items-center gap-1.5">
-                            <ImageWithFallback
-                              className="rounded border border-otl-gray-200"
-                              src={`/static/images/parties/${party}.png`}
-                              width={32}
-                              height={18}
-                              alt={t(`${party}`)}
-                              style={{
-                                width: "auto",
-                                maxWidth: "32px",
-                                height: "auto",
-                                maxHeight: "32px",
-                              }}
-                            />
-                            <span className="max-w-full truncate font-medium">{`${name} `}</span>
-                            <span>{`(${party})`}</span>
-                            <Won />
-                          </div>
-
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center justify-between">
-                              <p className="text-body-sm text-txt-black-500">
-                                {t("majority")}
-                              </p>
-                              <span>
-                                {majority === null
-                                  ? `—`
-                                  : numFormat(majority, "standard")}
-                                {majority_perc === null
-                                  ? ` (—)`
-                                  : ` (${numFormat(
-                                      majority_perc,
-                                      "compact",
-                                      1,
-                                    )}%)`}
-                              </span>
+                            <div className="flex h-8 w-full items-center gap-1.5">
+                              <ImageWithFallback
+                                className="rounded border border-otl-gray-200"
+                                src={`/static/images/parties/${party}.png`}
+                                width={32}
+                                height={18}
+                                alt={t(`${party}`)}
+                                style={{
+                                  width: "auto",
+                                  maxWidth: "32px",
+                                  height: "auto",
+                                  maxHeight: "32px",
+                                }}
+                              />
+                              <span className="max-w-full truncate font-medium">{`${name} `}</span>
+                              <span>{`(${party})`}</span>
+                              <Won />
                             </div>
 
-                            <BarPerc
-                              hidden
-                              value={majority_perc}
-                              size="h-[5px] w-[30px] lg:w-[288px]"
-                            />
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <p className="text-body-sm text-txt-black-500">
+                                  {t("majority")}
+                                </p>
+                                <span>
+                                  {majority === null
+                                    ? `—`
+                                    : numFormat(majority, "standard")}
+                                  {majority_perc === null
+                                    ? ` (—)`
+                                    : ` (${numFormat(
+                                        majority_perc,
+                                        "compact",
+                                        1,
+                                      )}%)`}
+                                </span>
+                              </div>
+
+                              <BarPerc
+                                hidden
+                                value={majority_perc}
+                                size="h-[5px] w-[30px] lg:w-[288px]"
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
-                <DrawerHeader className="flex w-full items-start gap-3 px-4 py-3">
-                  <FullResultHeader
-                    date={seats[0].date}
-                    election={election}
-                    seat={data.seat}
+                      );
+                    })}
+                  </div>
+                )}
+                <DrawerContent className="h-full max-h-[calc(100%-96px)] pt-0">
+                  <DrawerHeader className="flex w-full items-start gap-3 px-4 py-3">
+                    <FullResultHeader
+                      date={seats[0].date}
+                      election={election}
+                      seat={data.seat}
+                    />
+                    <DrawerClose>
+                      <XMarkIcon className="h-5 w-5 text-txt-black-500" />
+                    </DrawerClose>
+                  </DrawerHeader>
+                  <FullResultContent
+                    columns={columns}
+                    data={data.results.data}
+                    highlightedRows={[0]}
+                    loading={data.loading}
+                    result="won"
+                    votes={data.results.votes}
                   />
-                  <DrawerClose>
-                    <XMarkIcon className="h-5 w-5 text-txt-black-500" />
-                  </DrawerClose>
-                </DrawerHeader>
-                <FullResultContent
-                  columns={columns}
-                  data={data.results.data}
-                  highlightedRows={[0]}
-                  loading={data.loading}
-                  result="won"
-                  votes={data.results.votes}
-                />
-              </DrawerContent>
-            </Drawer>
-          </div>
-        }
-        right={
-          <div className="h-[600px] w-full space-y-8 overflow-y-auto bg-bg-white p-8 max-lg:hidden">
-            {data.results.data && data.results.data.length > 0 && election && (
-              <>
-                <FullResultHeader
-                  date={seats[0].date}
-                  election={election}
-                  seat={data.seat}
-                />
-                <FullResultContent
-                  columns={columns}
-                  data={data.results.data}
-                  highlightedRows={[0]}
-                  loading={data.loading}
-                  result="won"
-                  votes={data.results.votes}
-                />
-              </>
-            )}
-          </div>
-        }
-      />
+                </DrawerContent>
+              </Drawer>
+            </div>
+          }
+          rightBg="lg:w-full h-[600px] w-full space-y-4.5 bg-bg-white p-6 max-lg:hidden overflow-scroll"
+          right={
+            <div className="space-y-4.5">
+              {data.results.data &&
+                data.results.data.length > 0 &&
+                election && (
+                  <>
+                    <FullResultHeader
+                      date={seats[0].date}
+                      election={election}
+                      seat={data.seat}
+                    />
+                    <FullResultContent
+                      columns={columns}
+                      data={data.results.data}
+                      highlightedRows={[0]}
+                      loading={data.loading}
+                      result="won"
+                      votes={data.results.votes}
+                    />
+                  </>
+                )}
+            </div>
+          }
+        />
+      </div>
     </SectionGrid>
   );
 };

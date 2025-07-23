@@ -32,11 +32,11 @@ const FullResultContent = ({
   const { t } = useTranslation("common");
 
   return (
-    <div className="h-[calc(100%-80px)] space-y-6 text-base max-md:overflow-y-scroll max-md:px-4 max-md:pb-4">
+    <div className="h-full space-y-6 text-body-md max-md:overflow-y-scroll max-md:px-4 max-md:pb-4">
       <div className="space-y-3">
         <div className="font-bold">{t("election_result")}</div>
         <ElectionTable
-          className="w-full overflow-y-auto md:max-h-96"
+          className="w-full overflow-y-auto"
           data={data}
           columns={columns}
           isLoading={loading}

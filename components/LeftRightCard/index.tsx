@@ -20,7 +20,7 @@ const LeftRightCard: FunctionComponent<CardProps> = ({
   left,
   right,
   leftBg = "bg-slate-50 dark:bg-zinc-800",
-  rightBg = "bg-white dark:bg-zinc-900",
+  rightBg = "bg-bg-white",
 }) => {
   return (
     <>
