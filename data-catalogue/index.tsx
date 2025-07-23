@@ -12,6 +12,7 @@ import {
   useContext,
   useEffect,
   useCallback,
+  useState,
 } from "react";
 import {
   SearchBar,
@@ -29,6 +30,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { debounce } from "lodash";
 import { useWatch } from "@hooks/useWatch";
+import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
+import { HamburgerMenuIcon } from "@govtechmy/myds-react/icon";
 
 /**
  * Catalogue Index
@@ -52,6 +55,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
   const scrollRef = useRef<Record<string, HTMLElement | null>>({});
   const { size } = useContext(WindowContext);
   const { query } = useRouter();
+  const [open, setOpen] = useState(false); // for mobile sidebar
 
   const search = typeof query.search === "string" ? query.search : "";
 
@@ -109,7 +113,10 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
         withPattern={true}
       />
 
-      <CatalogueFilter />
+      <CatalogueFilter
+        mobileOpen={open}
+        setMobileOpen={(open) => setOpen(open)}
+      />
       <Container className="min-h-screen">
         <SectionGrid className="py-6 lg:py-16">
           <Sidebar
@@ -121,6 +128,8 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
                 inline: "end",
               })
             }
+            mobileOpen={open}
+            setMobileOpen={(open) => setOpen(open)}
           >
             <Container className="grid-cols-1 gap-0 space-y-8 px-0 md:grid-cols-1 md:gap-0 md:px-0 lg:grid-cols-1 lg:space-y-16">
               {_collection.length > 0 ? (
@@ -167,9 +176,15 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
 /**
  * Catalogue Filter Component
  */
-interface CatalogueFilterProps {}
+interface CatalogueFilterProps {
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+}
 
-const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
+const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
+  mobileOpen,
+  setMobileOpen,
+}) => {
   const { t } = useTranslation(["catalogue", "common"]);
   const searchRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -269,12 +284,18 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
       >
         <div
           className={clx(
-            "flex w-full flex-col gap-6",
+            "flex w-full flex-col items-center gap-6",
             isStick &&
               "mx-auto max-w-screen-xl justify-between py-3 sm:flex-row md:px-6 xl:px-0",
           )}
         >
-          <SearchBar size="large" className="w-full md:w-[727px]">
+          <SearchBar
+            size="large"
+            className={clx(
+              "w-full md:w-[727px]",
+              isStick && "w-full sm:w-[350px] md:w-[500px] lg:w-[727px]",
+            )}
+          >
             <SearchBarInputContainer className="has-[input:focus]:!border-otl-danger-300 has-[input:focus]:!ring-otl-danger-200">
               <SearchBarInput
                 ref={searchRef}
@@ -297,30 +318,42 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
               <SearchBarSearchButton className="border-otl-danger-300 bg-gradient-to-b from-danger-400 to-danger-600" />
             </SearchBarInputContainer>
           </SearchBar>
-          <StateDropdown
-            anchor={
-              size.width < BREAKPOINTS.SM
-                ? "right-1/2 translate-x-1/2"
-                : isStick
-                  ? "right"
-                  : "right-1/2 translate-x-1/2"
-            }
-            width="w-fit self-center"
-            currentState={currentState}
-            onChange={(selected) => {
-              if (selected.value === "mys") {
-                replace(routes.DATA_CATALOGUE, undefined, { scroll: false });
-                return;
+          <div className="flex w-fit items-center justify-center gap-2">
+            <Button
+              variant={"default-outline"}
+              onClick={() => setMobileOpen(true)}
+              className="lg:hidden"
+            >
+              <ButtonIcon>
+                <HamburgerMenuIcon />
+              </ButtonIcon>
+              {t("category")}
+            </Button>
+            <StateDropdown
+              anchor={
+                size.width < BREAKPOINTS.SM
+                  ? "right-1/2 translate-x-1/2"
+                  : isStick
+                    ? "right"
+                    : "right-1/2 translate-x-1/2"
               }
-              replace(
-                `${routes.DATA_CATALOGUE}/state/${selected.value}`,
-                undefined,
-                {
-                  scroll: false,
-                },
-              );
-            }}
-          />
+              width="w-fit self-center"
+              currentState={currentState}
+              onChange={(selected) => {
+                if (selected.value === "mys") {
+                  replace(routes.DATA_CATALOGUE, undefined, { scroll: false });
+                  return;
+                }
+                replace(
+                  `${routes.DATA_CATALOGUE}/state/${selected.value}`,
+                  undefined,
+                  {
+                    scroll: false,
+                  },
+                );
+              }}
+            />
+          </div>
         </div>
       </div>
     </>

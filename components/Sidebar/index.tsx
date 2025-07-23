@@ -1,30 +1,27 @@
 import { FunctionComponent, ReactNode, useState } from "react";
 import { Transition } from "@headlessui/react";
-import { Bars3BottomLeftIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "@hooks/useTranslation";
 import { clx } from "@lib/helpers";
-import { Button } from "@govtechmy/myds-react/button";
+import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
+import { CrossIcon } from "@govtechmy/myds-react/icon";
 
 interface SidebarProps {
   children: ReactNode;
   categories: Array<[category: string, subcategory: string[]]>;
   onSelect: (index: string) => void;
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
 }
 
 const Sidebar: FunctionComponent<SidebarProps> = ({
   children,
   categories,
   onSelect,
+  mobileOpen,
+  setMobileOpen,
 }) => {
   const { t } = useTranslation(["catalogue", "common"]);
   const [selected, setSelected] = useState<string>(categories[0]?.[0] || "");
-  const [show, setShow] = useState<boolean>(false);
-  const styles = {
-    base: "w-full rounded-none text-start leading-tight",
-    active:
-      "text-body-sm border-l-2 border-bg-black-900 bg-bg-danger-50 text-txt-danger font-medium dark:text-white rounded-sm",
-    default: "text-body-sm text-txt-black-500",
-  };
 
   return (
     <>
@@ -106,19 +103,10 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
         {/* Mobile */}
         <div className="relative w-full">
           <>
-            <div className="absolute top-[72px] block lg:hidden">
-              <Button
-                className="btn-default sticky top-36 z-10"
-                icon={<Bars3BottomLeftIcon className="h-4 w-4" />}
-                onClick={() => setShow(true)}
-              >
-                {t("category")}
-              </Button>
-            </div>
             <Transition
-              show={show}
+              show={mobileOpen}
               as="div"
-              className="dark:border-zinc-800 shadow-floating dark:bg-zinc-900 fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r bg-white sm:w-1/3"
+              className="shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r border-otl-gray-200 bg-bg-white p-4 shadow-context-menu sm:w-1/3"
               enter="transition-opacity duration-75"
               enterFrom="opacity-0"
               enterTo="opacity-100"
@@ -127,48 +115,70 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
               leaveTo="opacity-0"
             >
               <ul className="flex flex-col gap-1 overflow-auto pt-2">
-                <li className="flex items-baseline justify-between">
-                  <h5 className={styles.base}>{t("category")}</h5>
+                <li className="flex items-center justify-between">
+                  <h5
+                    className={clx(
+                      "w-full rounded-none text-start text-body-lg font-semibold leading-tight",
+                    )}
+                  >
+                    {t("category")}
+                  </h5>
 
                   <Button
-                    className="hover:bg-slate-100 dark:hover:bg-zinc-800 group absolute right-2 top-2 flex h-8 w-8 items-center rounded-full"
-                    onClick={() => setShow(false)}
+                    variant={"default-ghost"}
+                    onClick={() => setMobileOpen(false)}
                   >
-                    <XMarkIcon className="text-zinc-500 group-hover:text-zinc-900 absolute right-1.5 h-5 w-5 dark:group-hover:text-white" />
+                    <ButtonIcon>
+                      <CrossIcon />
+                    </ButtonIcon>
                   </Button>
                 </li>
 
                 {categories.length > 0 ? (
                   categories.map(([category, subcategory]) => (
-                    <li key={`${category}: ${subcategory[0]}`} title={category}>
+                    <li
+                      key={`${category}: ${subcategory[0]}`}
+                      title={category}
+                      className="space-y-1 px-1"
+                    >
                       <Button
-                        className={[
-                          styles.base,
+                        variant={
                           selected === category
-                            ? styles.active
-                            : styles.default,
-                        ].join(" ")}
+                            ? "danger-ghost"
+                            : "default-ghost"
+                        }
+                        className={clx(
+                          "w-full",
+                          selected === category &&
+                            "bg-[#FEF2F2] bg-opacity-100 focus:ring-0",
+                        )}
                         onClick={() => {
                           setSelected(category);
                           onSelect(`${category}: ${subcategory[0]}`);
+                          setMobileOpen(false);
                         }}
                       >
                         {category}
                       </Button>
-                      <ul className="ml-4">
+                      <ul className="space-y-1 px-1 pl-6">
                         {subcategory.length &&
                           subcategory.map((title) => (
-                            <li key={title}>
+                            <li key={title} title={title}>
                               <Button
-                                className={[
-                                  styles.base,
+                                variant={
                                   selected === title
-                                    ? styles.active
-                                    : styles.default,
-                                ].join(" ")}
+                                    ? "danger-ghost"
+                                    : "default-ghost"
+                                }
+                                className={clx(
+                                  "w-full text-start",
+                                  selected === title &&
+                                    "bg-[#FEF2F2] bg-opacity-100 focus:ring-0",
+                                )}
                                 onClick={() => {
                                   setSelected(title);
                                   onSelect(`${category}: ${title}`);
+                                  setMobileOpen(false);
                                 }}
                               >
                                 {title}
