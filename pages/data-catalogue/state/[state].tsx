@@ -199,6 +199,7 @@ export const getStaticProps: GetStaticProps = withi18n(
       const collection = recurSort(_collection);
 
       return {
+        notFound: process.env.APP_ENV === "production" ? true : false,
         props: {
           meta: {
             id: "catalogue-index",
