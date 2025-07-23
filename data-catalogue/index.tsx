@@ -28,6 +28,7 @@ import { clx } from "@lib/helpers";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { debounce } from "lodash";
+import { useWatch } from "@hooks/useWatch";
 
 /**
  * Catalogue Index
@@ -58,7 +59,6 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
     const resultCollection: Array<[string, Catalogue[]]> = [];
 
     Object.entries(collection).forEach(([category, subcategories]) => {
-      // Track how many subcategories have matches
       const subResults: Array<[string, Catalogue[]]> = [];
 
       Object.entries(subcategories).forEach(([subcategoryTitle, datasets]) => {
@@ -74,7 +74,6 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
         }
       });
 
-      // Only push subcategories if at least one matched
       if (subResults.length > 0) {
         resultCollection.push(...subResults);
       }
@@ -176,7 +175,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const { focused } = useFocus(searchRef);
-  const { query, replace, pathname } = useRouter();
+  const { query, replace, pathname, isReady } = useRouter();
   const { size } = useContext(WindowContext);
 
   const search = typeof query.search === "string" ? query.search : "";
@@ -227,6 +226,10 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
 
     return () => observer.disconnect();
   }, []);
+
+  useWatch(() => {
+    setData("input", search);
+  }, [isReady]);
 
   const updateURL = useCallback(
     debounce((search: string) => {
