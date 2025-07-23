@@ -1,11 +1,7 @@
-import Layout from "@components/Layout";
 import Metadata from "@components/Metadata";
-import StateDropdown from "@components/Dropdown/StateDropdown";
-import StateModal from "@components/Modal/StateModal";
 import ElectionTriviaDashboard from "@dashboards/trivia";
 import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { useTranslation } from "@hooks/useTranslation";
-import { WindowProvider } from "@lib/contexts/window";
 import { get } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
 import { withi18n } from "@lib/decorators";

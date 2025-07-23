@@ -56,9 +56,8 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
     results: {},
     filter_result: t("contested_by", { ns: "elections" }),
     filter_party: "",
+    open: false,
   });
-
-  const [open, setOpen] = useState<boolean>(false);
 
   const filteredSeats = seats.filter((seat) => {
     const partyLost = seat.party_lost || [];
@@ -297,7 +296,10 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                   }}
                 />
               </div>
-              <Drawer open={open} onOpenChange={setOpen}>
+              <Drawer
+                open={data.open}
+                onOpenChange={(open) => setData("open", open)}
+              >
                 {election && (
                   <div className="hide-scrollbar grid h-[394px] max-w-screen-sm grid-flow-col grid-rows-3 overflow-x-auto rounded-md sm:max-w-screen-md md:max-w-screen-lg lg:flex lg:h-full lg:w-full lg:flex-col lg:overflow-y-auto lg:px-0.5">
                     {filteredSeats.map((_seat) => {

@@ -17,7 +17,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
   onSelect,
 }) => {
   const { t } = useTranslation(["catalogue", "common"]);
-  const [selected, setSelected] = useState<string>(categories[0][0]);
+  const [selected, setSelected] = useState<string>(categories[0]?.[0] || "");
   const [show, setShow] = useState<boolean>(false);
   const styles = {
     base: "w-full rounded-none text-start leading-tight",
@@ -33,7 +33,11 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
         <div className="hidden lg:block lg:w-1/4 xl:w-1/5">
           <ul className="hide-scrollbar sticky top-36 flex h-[90vh] w-full flex-col gap-6 overflow-x-visible overflow-y-scroll">
             <li className="px-1">
-              <h5 className={clx(styles.base, "text-body-lg font-semibold")}>
+              <h5
+                className={clx(
+                  "w-full rounded-none text-start text-body-lg font-semibold leading-tight",
+                )}
+              >
                 {t("category")}
               </h5>
             </li>
@@ -89,9 +93,9 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
               ))
             ) : (
               <p
-                className={[styles.base, "text-zinc-500 text-sm italic"].join(
-                  " ",
-                )}
+                className={
+                  "w-full rounded-none text-start text-sm italic leading-tight text-txt-black-500"
+                }
               >
                 {t("common:no_entries")}
               </p>
@@ -176,10 +180,9 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                   ))
                 ) : (
                   <p
-                    className={[
-                      styles.base,
-                      "text-zinc-500 text-sm italic",
-                    ].join(" ")}
+                    className={
+                      "w-full rounded-none text-start text-sm italic leading-tight text-txt-black-500"
+                    }
                   >
                     {t("common:no_entries")}
                   </p>

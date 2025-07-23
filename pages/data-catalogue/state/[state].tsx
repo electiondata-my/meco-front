@@ -4,7 +4,7 @@ import { withi18n } from "@lib/decorators";
 import { sortAlpha } from "@lib/helpers";
 import { useTranslation } from "@hooks/useTranslation";
 import { Page } from "@lib/types";
-import { GetStaticProps, InferGetStaticPropsType } from "next";
+import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { WindowProvider } from "@lib/contexts/window";
 
 const CatalogueIndex: Page = ({
@@ -46,11 +46,18 @@ const recurSort = (
   );
 };
 
+export const getStaticPaths: GetStaticPaths = () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
+
 export const getStaticProps: GetStaticProps = withi18n(
   ["catalogue"],
   async ({ locale, params }) => {
-    const state = "mys";
     try {
+      const state = params?.state;
       const _collection = {
         Demography: {
           Population: [
@@ -183,8 +190,7 @@ export const getStaticProps: GetStaticProps = withi18n(
         },
       };
 
-      // const collection = recurSort(_collection);
-      const collection = _collection;
+      const collection = recurSort(_collection);
 
       return {
         props: {

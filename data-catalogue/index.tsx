@@ -11,6 +11,7 @@ import {
   useRef,
   useContext,
   useEffect,
+  useCallback,
 } from "react";
 import {
   SearchBar,
@@ -25,6 +26,8 @@ import { useData } from "@hooks/useData";
 import useFocus from "@hooks/useFocus";
 import { clx } from "@lib/helpers";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { debounce } from "lodash";
 
 /**
  * Catalogue Index
@@ -47,20 +50,54 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
   const { t } = useTranslation(["catalogue", "common"]);
   const scrollRef = useRef<Record<string, HTMLElement | null>>({});
   const { size } = useContext(WindowContext);
+  const { query } = useRouter();
 
-  const _collection = useMemo<Array<[string, any]>>(() => {
+  const search = typeof query.search === "string" ? query.search : "";
+
+  const _collection = useMemo<Array<[string, Catalogue[]]>>(() => {
     const resultCollection: Array<[string, Catalogue[]]> = [];
-    Object.entries(collection).forEach(([category, subcategory]) => {
-      Object.entries(subcategory).forEach(([subcategory_title, datasets]) => {
-        resultCollection.push([
-          `${category}: ${subcategory_title}`,
-          datasets as Catalogue[],
-        ]);
+
+    Object.entries(collection).forEach(([category, subcategories]) => {
+      // Track how many subcategories have matches
+      const subResults: Array<[string, Catalogue[]]> = [];
+
+      Object.entries(subcategories).forEach(([subcategoryTitle, datasets]) => {
+        const filteredDatasets = (datasets as Catalogue[]).filter((item) =>
+          item.title.toLowerCase().includes(search),
+        );
+
+        if (filteredDatasets.length > 0) {
+          subResults.push([
+            `${category}: ${subcategoryTitle}`,
+            filteredDatasets,
+          ]);
+        }
       });
+
+      // Only push subcategories if at least one matched
+      if (subResults.length > 0) {
+        resultCollection.push(...subResults);
+      }
     });
 
     return resultCollection;
-  }, [collection]);
+  }, [collection, search]);
+
+  const groupedSubcategories = useMemo(() => {
+    const map = new Map<string, string[]>();
+
+    _collection.forEach(([fullKey]) => {
+      const [category, subcategory] = fullKey.split(": ").map((s) => s.trim());
+
+      if (!map.has(category)) {
+        map.set(category, []);
+      }
+
+      map.get(category)!.push(subcategory);
+    });
+
+    return Array.from(map.entries());
+  }, [_collection]);
 
   return (
     <>
@@ -77,9 +114,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
       <Container className="min-h-screen">
         <SectionGrid className="py-6 lg:py-16">
           <Sidebar
-            categories={Object.entries(collection).map(
-              ([category, subcategory]) => [category, Object.keys(subcategory)],
-            )}
+            categories={groupedSubcategories}
             onSelect={(selected) =>
               scrollRef.current[selected]?.scrollIntoView({
                 behavior: "smooth",
@@ -120,9 +155,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
                   );
                 })
               ) : (
-                <p className="p-2 pt-16 text-txt-black-500 lg:p-8">
-                  {t("common:no_entries")}.
-                </p>
+                <p className="text-txt-black-500">{t("common:no_entries")}.</p>
               )}
             </Container>
           </Sidebar>
@@ -143,12 +176,17 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const { focused } = useFocus(searchRef);
+  const { query, replace, pathname } = useRouter();
+  const { size } = useContext(WindowContext);
+
+  const search = typeof query.search === "string" ? query.search : "";
   const { data, setData } = useData({
-    query: "",
+    input: search,
     isStick: false,
   });
 
-  const { query, isStick } = data;
+  const { isStick, input } = data;
+  const currentState = (query?.state as string) || "mys";
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -190,6 +228,32 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
     return () => observer.disconnect();
   }, []);
 
+  const updateURL = useCallback(
+    debounce((search: string) => {
+      const params = new URLSearchParams(query as Record<string, string>);
+      if (search) {
+        params.set("search", search);
+      } else {
+        params.delete("search");
+      }
+
+      replace(
+        `${pathname}${params.toString() ? `?${params.toString()}` : ""}`,
+        undefined,
+        {
+          shallow: true,
+          scroll: false,
+        },
+      );
+    }, 400),
+    [query, pathname],
+  );
+
+  const handleChange = (search: string) => {
+    setData("input", search);
+    updateURL(search);
+  };
+
   return (
     <>
       <div ref={sentinelRef} className="h-6" />
@@ -212,26 +276,47 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({}) => {
               <SearchBarInput
                 ref={searchRef}
                 placeholder={t("catalogue:placeholder.search")}
-                value={query}
-                onValueChange={(search) => setData("query", search)}
+                value={input}
+                onValueChange={handleChange}
               />
-              {query && (
-                <SearchBarClearButton onClick={() => setData("query", "")} />
+              {input && (
+                <SearchBarClearButton
+                  onClick={() => {
+                    handleChange("");
+                  }}
+                />
               )}
 
-              {!(query && focused) && (
-                <SearchBarHint className="hidden lg:flex">
-                  Press <Pill size="small">/</Pill> to start searching
-                </SearchBarHint>
-              )}
+              <SearchBarHint className="hidden lg:flex">
+                Press <Pill size="small">/</Pill> to start searching
+              </SearchBarHint>
+
               <SearchBarSearchButton className="border-otl-danger-300 bg-gradient-to-b from-danger-400 to-danger-600" />
             </SearchBarInputContainer>
           </SearchBar>
           <StateDropdown
-            url={routes.DATA_CATALOGUE}
-            anchor="right"
+            anchor={
+              size.width < BREAKPOINTS.SM
+                ? "right-1/2 translate-x-1/2"
+                : isStick
+                  ? "right"
+                  : "right-1/2 translate-x-1/2"
+            }
             width="w-fit self-center"
-            currentState={"mys"}
+            currentState={currentState}
+            onChange={(selected) => {
+              if (selected.value === "mys") {
+                replace(routes.DATA_CATALOGUE, undefined, { scroll: false });
+                return;
+              }
+              replace(
+                `${routes.DATA_CATALOGUE}/state/${selected.value}`,
+                undefined,
+                {
+                  scroll: false,
+                },
+              );
+            }}
           />
         </div>
       </div>
