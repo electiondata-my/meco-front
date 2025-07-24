@@ -32,7 +32,7 @@ const Navbar: FunctionComponent<NavbarProps> = ({
       <header
         id="navbar"
         className={clx(
-          "sticky top-0 z-50 h-16 w-full border-b border-otl-gray-200 bg-bg-white shadow-button max-md:h-14 print:hidden",
+          "sticky top-0 z-50 h-16 w-full border-b border-otl-gray-200 bg-bg-white shadow-button max-md:h-14 2xl:px-6 print:hidden",
           className,
         )}
         data-nosnippet
@@ -40,7 +40,7 @@ const Navbar: FunctionComponent<NavbarProps> = ({
       >
         <div
           className={clx(
-            "relative mx-auto flex h-16 max-w-screen-xl items-center justify-between gap-4 px-6 max-md:h-14 xl:px-0",
+            "relative mx-auto flex h-16 max-w-screen-xl items-center justify-between gap-4 px-4.5 max-md:h-14 md:px-6 2xl:px-0",
             innerclassName,
           )}
         >

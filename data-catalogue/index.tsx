@@ -285,15 +285,15 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
       <div
         ref={containerRef}
         className={clx(
-          "sticky top-[56px] z-20 col-span-full mx-auto w-full border border-transparent px-4.5 transition-all md:top-16 md:w-[727px] lg:px-0",
-          isStick && "border-otl-gray-200 bg-bg-white md:w-full",
+          "sticky top-[56px] z-20 col-span-full mx-auto w-full border border-transparent transition-all md:top-16 md:w-[727px]",
+          isStick && "border-otl-gray-200 bg-bg-white md:w-full 2xl:px-6",
         )}
       >
         <div
           className={clx(
-            "flex w-full flex-col items-center gap-6",
+            "flex w-full flex-col items-center gap-6 px-4.5 md:px-0",
             isStick &&
-              "mx-auto max-w-screen-2xl justify-between gap-3 py-3 sm:flex-row sm:py-0 lg:px-6 xl:px-0",
+              "mx-auto max-w-screen-2xl flex-row justify-between gap-3 px-4.5 py-0 md:px-6 2xl:px-0",
           )}
         >
           <SearchBar
@@ -306,13 +306,13 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
             <SearchBarInputContainer
               className={clx(
                 "has-[input:focus]:!border-otl-danger-300 has-[input:focus]:!ring-otl-danger-200",
-                isStick && "sm:border-none sm:pl-0 sm:has-[input:focus]:ring-0",
+                isStick && "border-none pl-0 has-[input:focus]:ring-0",
               )}
             >
               <SearchBarSearchButton
                 className={clx(
                   "hidden border-otl-danger-300 bg-gradient-to-b from-danger-400 to-danger-600",
-                  isStick && "hidden sm:block",
+                  isStick && "block",
                 )}
               />
               <SearchBarInput
@@ -320,7 +320,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
                 placeholder={t("catalogue:placeholder.search")}
                 value={input}
                 onValueChange={handleChange}
-                className={clx(isStick && "sm:py-3")}
+                className={clx(isStick && "w-full py-3")}
               />
               {input && (
                 <SearchBarClearButton
@@ -337,13 +337,13 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
               <SearchBarSearchButton
                 className={clx(
                   "border-otl-danger-300 bg-gradient-to-b from-danger-400 to-danger-600",
-                  isStick && "block sm:hidden",
+                  isStick && "hidden",
                 )}
               />
             </SearchBarInputContainer>
           </SearchBar>
           <div className="flex w-fit items-center justify-center gap-2">
-            <Button
+            {/* <Button
               variant={"default-outline"}
               onClick={() => setMobileOpen(true)}
               className="lg:hidden"
@@ -352,15 +352,9 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
                 <HamburgerMenuIcon />
               </ButtonIcon>
               {t("category")}
-            </Button>
+            </Button> */}
             <StateDropdown
-              anchor={
-                size.width < BREAKPOINTS.SM
-                  ? "right-1/2 translate-x-1/2"
-                  : isStick
-                    ? "right"
-                    : "right-1/2 translate-x-1/2"
-              }
+              anchor={isStick ? "right" : "right-1/2 translate-x-1/2"}
               width="w-fit self-center"
               currentState={currentState}
               onChange={(selected) => {
