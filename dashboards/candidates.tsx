@@ -223,15 +223,14 @@ const ElectionCandidatesDashboard: FunctionComponent<
                   <span className="text-txt-danger">
                     {CANDIDATE_OPTION?.label}
                   </span>
-                  <Tooltip>
+                  {/* <Tooltip>
                     <TooltipTrigger className="inline-flex h-6 w-6 items-center justify-center">
                       <QuestionCircleIcon className="h-4 w-4 text-txt-black-500" />
                     </TooltipTrigger>
-                    {/* TODO: to pass this data */}
                     <TooltipContent>
                       Malay male, born 8 Feb 1903 - died 6 Dec 1990 (age 87)
                     </TooltipContent>
-                  </Tooltip>
+                  </Tooltip> */}
                 </p>
               }
               current={data.tab_index}
