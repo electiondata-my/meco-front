@@ -53,7 +53,7 @@ export default function Header() {
         <NavbarMenuItem href={"/trivia"} asChild>
           <Link href={"/trivia"}>{t("common:nav.trivia")}</Link>
         </NavbarMenuItem>
-        {process.env.APP_ENV !== "production" && (
+        {process.env.NEXT_PUBLIC_APP_ENV !== "production" && (
           <NavbarMenuItem href={"/data-catalogue"} asChild>
             <Link href={"/data-catalogue"}>{t("common:nav.catalogue")}</Link>
           </NavbarMenuItem>
