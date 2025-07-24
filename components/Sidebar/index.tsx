@@ -27,7 +27,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
     <>
       <div className="flex w-full flex-row gap-8">
         {/* Desktop */}
-        <div className="hidden lg:block lg:w-1/4 xl:w-1/5">
+        <div className="xl:1/5 hidden lg:block lg:w-1/5">
           <ul className="hide-scrollbar sticky top-36 flex h-[90vh] w-full flex-col gap-6 overflow-x-visible overflow-y-scroll">
             <li className="px-1">
               <h5
@@ -52,7 +52,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                     className={clx(
                       "w-full",
                       selected === category &&
-                        "bg-[#FEF2F2] bg-opacity-100 focus:ring-0",
+                        "bg-bg-danger-50 bg-opacity-100 focus:ring-0",
                     )}
                     onClick={() => {
                       setSelected(category);
@@ -74,7 +74,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                             className={clx(
                               "w-full text-start",
                               selected === title &&
-                                "bg-[#FEF2F2] bg-opacity-100 focus:ring-0",
+                                "bg-bg-danger-50 bg-opacity-100 focus:ring-0",
                             )}
                             onClick={() => {
                               setSelected(title);
@@ -101,7 +101,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
         </div>
 
         {/* Mobile */}
-        <div className="relative w-full">
+        <div className="relative w-full lg:w-4/5 xl:w-4/5">
           <>
             <Transition
               show={mobileOpen}
@@ -150,7 +150,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                         className={clx(
                           "w-full",
                           selected === category &&
-                            "bg-[#FEF2F2] bg-opacity-100 focus:ring-0",
+                            "bg-bg-danger-50 bg-opacity-100 focus:ring-0",
                         )}
                         onClick={() => {
                           setSelected(category);
@@ -173,7 +173,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                                 className={clx(
                                   "w-full text-start",
                                   selected === title &&
-                                    "bg-[#FEF2F2] bg-opacity-100 focus:ring-0",
+                                    "bg-bg-danger-50 bg-opacity-100 focus:ring-0",
                                 )}
                                 onClick={() => {
                                   setSelected(title);

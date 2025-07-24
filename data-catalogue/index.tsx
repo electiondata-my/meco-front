@@ -25,24 +25,19 @@ import {
 import { Pill } from "@govtechmy/myds-react/pill";
 import { useData } from "@hooks/useData";
 import useFocus from "@hooks/useFocus";
-import { clx } from "@lib/helpers";
+import { clx, toDate } from "@lib/helpers";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { debounce } from "lodash";
 import { useWatch } from "@hooks/useWatch";
 import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
 import { HamburgerMenuIcon } from "@govtechmy/myds-react/icon";
+import { Catalogue } from "@lib/types";
 
 /**
  * Catalogue Index
  * @overview Status: Live
  */
-
-export type Catalogue = {
-  id: string;
-  title: string;
-  description?: string;
-};
 
 interface CatalogueIndexProps {
   collection: Record<string, any>;
@@ -51,7 +46,7 @@ interface CatalogueIndexProps {
 const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
   collection,
 }) => {
-  const { t } = useTranslation(["catalogue", "common"]);
+  const { t, i18n } = useTranslation(["catalogue", "common"]);
   const scrollRef = useRef<Record<string, HTMLElement | null>>({});
   const { size } = useContext(WindowContext);
   const { query } = useRouter();
@@ -110,7 +105,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
         header={[t("header")]}
         description={[<Trans>{t("description")}</Trans>]}
         pageId={routes.DATA_CATALOGUE}
-        withPattern={true}
+        sectionGridClassName="max-w-screen-2xl"
       />
 
       <CatalogueFilter
@@ -118,7 +113,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
         setMobileOpen={(open) => setOpen(open)}
       />
       <Container className="min-h-screen">
-        <SectionGrid className="py-6 lg:py-16">
+        <SectionGrid className="max-w-screen-2xl py-6 lg:py-16">
           <Sidebar
             categories={groupedSubcategories}
             onSelect={(selected) =>
@@ -153,8 +148,20 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
                             <p className="text-body-lg font-semibold">
                               {item.title}
                             </p>
-                            <p className="line-clamp-2 text-body-sm text-txt-black-500">
+                            <p className="line-clamp-2 flex-1 text-body-sm text-txt-black-500">
                               {item.description}
+                            </p>
+                            <p className="text-body-xs text-txt-black-500">
+                              {t("data_of", {
+                                date: toDate(
+                                  item.data_as_of
+                                    ? item.data_as_of
+                                    : new Date().toISOString(),
+                                  "dd MMM yyyy, HH:mm",
+                                  i18n.language,
+                                ),
+                                ns: "common",
+                              })}
                             </p>
                           </Link>
                         ))}
@@ -286,22 +293,34 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
           className={clx(
             "flex w-full flex-col items-center gap-6",
             isStick &&
-              "mx-auto max-w-screen-xl justify-between py-3 sm:flex-row md:px-6 xl:px-0",
+              "mx-auto max-w-screen-2xl justify-between gap-3 py-3 sm:flex-row sm:py-0 lg:px-6 xl:px-0",
           )}
         >
           <SearchBar
             size="large"
             className={clx(
-              "w-full md:w-[727px]",
-              isStick && "w-full sm:w-[350px] md:w-[500px] lg:w-[727px]",
+              "w-full md:max-w-[727px]",
+              isStick && "w-full flex-1 md:max-w-none",
             )}
           >
-            <SearchBarInputContainer className="has-[input:focus]:!border-otl-danger-300 has-[input:focus]:!ring-otl-danger-200">
+            <SearchBarInputContainer
+              className={clx(
+                "has-[input:focus]:!border-otl-danger-300 has-[input:focus]:!ring-otl-danger-200",
+                isStick && "sm:border-none sm:pl-0 sm:has-[input:focus]:ring-0",
+              )}
+            >
+              <SearchBarSearchButton
+                className={clx(
+                  "hidden border-otl-danger-300 bg-gradient-to-b from-danger-400 to-danger-600",
+                  isStick && "hidden sm:block",
+                )}
+              />
               <SearchBarInput
                 ref={searchRef}
                 placeholder={t("catalogue:placeholder.search")}
                 value={input}
                 onValueChange={handleChange}
+                className={clx(isStick && "sm:py-3")}
               />
               {input && (
                 <SearchBarClearButton
@@ -311,11 +330,16 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
                 />
               )}
 
-              <SearchBarHint className="hidden lg:flex">
+              <SearchBarHint className={clx("hidden lg:flex")}>
                 Press <Pill size="small">/</Pill> to start searching
               </SearchBarHint>
 
-              <SearchBarSearchButton className="border-otl-danger-300 bg-gradient-to-b from-danger-400 to-danger-600" />
+              <SearchBarSearchButton
+                className={clx(
+                  "border-otl-danger-300 bg-gradient-to-b from-danger-400 to-danger-600",
+                  isStick && "block sm:hidden",
+                )}
+              />
             </SearchBarInputContainer>
           </SearchBar>
           <div className="flex w-fit items-center justify-center gap-2">

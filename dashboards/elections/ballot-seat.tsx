@@ -268,11 +268,11 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
           </div>
         </div>
       </div>
-      <div className="max-h-[600px] w-full">
+      <div className="max-h-[650px] w-full">
         <LeftRightCard
           leftBg="overflow-hidden lg:max-w-[360px] lg:w-full"
           left={
-            <div className="relative flex h-fit w-full flex-col overflow-hidden bg-bg-washed px-3 pb-3 md:overflow-y-auto lg:h-[600px] lg:rounded-bl-xl lg:rounded-tl-xl lg:rounded-tr-none lg:pb-6 xl:px-6">
+            <div className="relative flex h-fit w-full flex-col overflow-hidden bg-bg-washed px-3 pb-3 md:overflow-y-auto lg:h-[650px] lg:rounded-bl-xl lg:rounded-tl-xl lg:rounded-tr-none lg:pb-8 xl:px-6">
               <div className="sticky top-0 z-10 border-b border-otl-gray-200 pb-3 pt-6">
                 <ComboBox
                   placeholder={t("home:search_seat")}
@@ -421,7 +421,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
               </Drawer>
             </div>
           }
-          rightBg="lg:w-full h-[600px] w-full space-y-4.5 bg-bg-white p-6 max-lg:hidden overflow-scroll"
+          rightBg="lg:w-full h-[650px] w-full space-y-4.5 bg-bg-white p-6 pb-8 max-lg:hidden overflow-scroll"
           right={
             <div className="space-y-4.5">
               {data.results.data &&

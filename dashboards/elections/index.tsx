@@ -144,7 +144,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
         header={[t("hero.header", { ns: "elections" })]}
         description={[t("hero.description", { ns: "elections" })]}
         pageId="/elections"
-        withPattern={true}
       />
       <Container>
         {/* Explore any election from Merdeka to the present! */}

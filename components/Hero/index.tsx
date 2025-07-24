@@ -36,6 +36,7 @@ type HeroProps = {
   background?: "gray" | "blue" | "red" | "purple" | "green" | "orange" | string;
   className?: string;
   pageId?: string;
+  sectionGridClassName?: string;
 } & ConditionalHeroProps;
 
 const Hero: FunctionComponent<HeroProps> = ({
@@ -48,6 +49,7 @@ const Hero: FunctionComponent<HeroProps> = ({
   action,
   pageId = "sitewide",
   withPattern,
+  sectionGridClassName,
 }) => {
   const { t } = useTranslation();
 
@@ -106,7 +108,7 @@ const Hero: FunctionComponent<HeroProps> = ({
       {children ? (
         children
       ) : (
-        <SectionGrid>
+        <SectionGrid className={clx(sectionGridClassName)}>
           <div className="flex max-w-[727px] flex-col items-center justify-center space-y-6 pt-16">
             {category && (
               <h3

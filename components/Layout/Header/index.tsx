@@ -1,5 +1,4 @@
 import {
-  Navbar,
   NavbarMenu,
   NavbarMenuItem,
   NavbarAction,
@@ -10,12 +9,23 @@ import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
 import LocaleSwitch from "./locale-switch";
 import { useTranslation } from "@hooks/useTranslation";
+import Navbar from "../Navbar";
+import { useRouter } from "next/router";
+import { routes } from "@lib/routes";
 
 export default function Header() {
   const { t } = useTranslation([]);
+  const router = useRouter();
+  console.log(router.pathname);
 
   return (
-    <Navbar>
+    <Navbar
+      innerclassName={
+        router.pathname.includes(routes.DATA_CATALOGUE)
+          ? "max-w-screen-2xl"
+          : ""
+      }
+    >
       <Link href={"/"} className="flex items-center gap-2.5 no-underline">
         <Image
           src="/static/images/icons/icon-512.png"

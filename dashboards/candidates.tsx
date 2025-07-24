@@ -178,7 +178,6 @@ const ElectionCandidatesDashboard: FunctionComponent<
         header={[t("hero.header", { ns: "candidates" })]}
         description={[t("hero.description", { ns: "candidates" })]}
         pageId="/candidates"
-        withPattern={true}
       />
       <Container>
         <SectionGrid className="space-y-6 py-6 lg:space-y-16 lg:pb-16">
