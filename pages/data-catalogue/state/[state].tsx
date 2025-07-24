@@ -209,7 +209,8 @@ export const getStaticProps: GetStaticProps = withi18n(
         },
       };
 
-      const collection = recurSort(_collection);
+      // const collection = recurSort(_collection);
+      const collection = _collection;
 
       return {
         notFound: process.env.APP_ENV === "production" ? true : false,

@@ -16,7 +16,6 @@ import { routes } from "@lib/routes";
 export default function Header() {
   const { t } = useTranslation([]);
   const router = useRouter();
-  console.log(router.pathname);
 
   return (
     <Navbar

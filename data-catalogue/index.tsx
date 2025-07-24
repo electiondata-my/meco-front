@@ -305,7 +305,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
               className={clx(
                 "has-[input:focus]:!border-otl-danger-300 has-[input:focus]:!ring-otl-danger-200",
                 isStick &&
-                  "rounded-none border-none pl-0 shadow-inherit has-[input:focus]:ring-0",
+                  "rounded-none border-none !pl-0 shadow-inherit has-[input:focus]:ring-0",
               )}
             >
               <SearchBarSearchButton
