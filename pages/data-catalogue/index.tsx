@@ -6,17 +6,11 @@ import { useTranslation } from "@hooks/useTranslation";
 import { Catalogue, Page } from "@lib/types";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { WindowProvider } from "@lib/contexts/window";
-import { useRouter } from "next/router";
 
 const CatalogueIndex: Page = ({
   collection,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { t } = useTranslation(["catalogue", "common"]);
-  const { isReady } = useRouter();
-
-  if (!isReady) {
-    return null;
-  }
 
   return (
     <>
@@ -225,9 +219,6 @@ export const getStaticProps: GetStaticProps = withi18n(
       console.error(error);
       return { notFound: true };
     }
-  },
-  {
-    cache_expiry: 600, // 10 min
   },
 );
 

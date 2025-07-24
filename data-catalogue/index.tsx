@@ -30,8 +30,6 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { debounce } from "lodash";
 import { useWatch } from "@hooks/useWatch";
-import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
-import { HamburgerMenuIcon } from "@govtechmy/myds-react/icon";
 import { Catalogue } from "@lib/types";
 
 /**
@@ -62,7 +60,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
 
       Object.entries(subcategories).forEach(([subcategoryTitle, datasets]) => {
         const filteredDatasets = (datasets as Catalogue[]).filter((item) =>
-          item.title.toLowerCase().includes(search),
+          item.title.toLowerCase().includes(search.toLowerCase()),
         );
 
         if (filteredDatasets.length > 0) {
@@ -112,8 +110,8 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
         mobileOpen={open}
         setMobileOpen={(open) => setOpen(open)}
       />
-      <Container className="min-h-screen">
-        <SectionGrid className="max-w-screen-2xl py-6 lg:py-16">
+      <Container>
+        <SectionGrid className="max-w-screen-2xl justify-start py-6 lg:py-16">
           <Sidebar
             categories={groupedSubcategories}
             onSelect={(selected) =>
@@ -126,7 +124,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
             mobileOpen={open}
             setMobileOpen={(open) => setOpen(open)}
           >
-            <Container className="grid-cols-1 gap-0 space-y-8 px-0 md:grid-cols-1 md:gap-0 md:px-0 lg:grid-cols-1 lg:space-y-16">
+            <Container className="grid-cols-1 gap-0 space-y-8 px-0 pt-16 md:grid-cols-1 md:gap-0 md:px-0 lg:grid-cols-1 lg:space-y-16 lg:pt-0">
               {_collection.length > 0 ? (
                 _collection.map(([title, datasets]) => {
                   return (
@@ -306,7 +304,8 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
             <SearchBarInputContainer
               className={clx(
                 "has-[input:focus]:!border-otl-danger-300 has-[input:focus]:!ring-otl-danger-200",
-                isStick && "border-none pl-0 has-[input:focus]:ring-0",
+                isStick &&
+                  "rounded-none border-none pl-0 shadow-inherit has-[input:focus]:ring-0",
               )}
             >
               <SearchBarSearchButton
@@ -320,7 +319,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
                 placeholder={t("catalogue:placeholder.search")}
                 value={input}
                 onValueChange={handleChange}
-                className={clx(isStick && "w-full py-3")}
+                className={clx("text-body-md", isStick && "w-full py-3")}
               />
               {input && (
                 <SearchBarClearButton

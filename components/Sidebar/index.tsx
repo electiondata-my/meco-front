@@ -3,7 +3,7 @@ import { Transition } from "@headlessui/react";
 import { useTranslation } from "@hooks/useTranslation";
 import { clx } from "@lib/helpers";
 import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
-import { CrossIcon } from "@govtechmy/myds-react/icon";
+import { CrossIcon, HamburgerMenuIcon } from "@govtechmy/myds-react/icon";
 
 interface SidebarProps {
   children: ReactNode;
@@ -101,8 +101,20 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
         </div>
 
         {/* Mobile */}
-        <div className="relative w-full lg:w-4/5 xl:w-4/5">
+        <div className="relative h-full w-full lg:w-4/5 xl:w-4/5">
           <>
+            <div className={clx("absolute block lg:hidden")}>
+              <Button
+                variant={"default-outline"}
+                onClick={() => setMobileOpen(true)}
+                className="lg:hidden"
+              >
+                <ButtonIcon>
+                  <HamburgerMenuIcon />
+                </ButtonIcon>
+                {t("category")}
+              </Button>
+            </div>
             <Transition
               show={mobileOpen}
               as="div"
