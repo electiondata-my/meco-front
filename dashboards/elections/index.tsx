@@ -1,20 +1,17 @@
 import ElectionAnalysis from "./analysis";
 import BallotSeat from "./ballot-seat";
-import ElectionFilter from "./filter";
+import ElectionFilterTrigger from "./filter";
 import { ElectionEnum, OverallSeat, PartyResult } from "../types";
 import { BuildingLibraryIcon, FlagIcon } from "@heroicons/react/24/solid";
 import {
-  Button,
   Container,
   Dropdown,
   Hero,
   Label,
   List,
-  Modal,
   StateDropdown,
 } from "@components/index";
 import { CountryAndStates } from "@lib/constants";
-import { WindowProvider } from "@lib/contexts/window";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { useScrollIntersect } from "@hooks/useScrollIntersect";
@@ -25,10 +22,21 @@ import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import { toDate } from "@lib/helpers";
 import SectionGrid from "@components/Section/section-grid";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerClose,
+  DrawerHeader,
+  DrawerTrigger,
+  DrawerFooter,
+  DrawerTitle,
+} from "@components/drawer";
+import { CrossIcon, FilterIcon } from "@govtechmy/myds-react/icon";
+import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
 
 /**
  * Election Explorer Dashboard
- * @overview Status: In-development
+ * @overview Status: Completed
  */
 
 interface ElectionExplorerProps {
@@ -84,6 +92,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
     election_acronym: ELECTION_ACRONYM,
     state: CURRENT_STATE,
     showFullTable: false,
+    open_filter: false,
   });
 
   const TOGGLE_IS_DUN = data.toggle_index === ElectionEnum.Dun;
@@ -135,7 +144,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
         header={[t("hero.header", { ns: "elections" })]}
         description={[t("hero.description", { ns: "elections" })]}
         pageId="/elections"
-        withPattern={true}
       />
       <Container>
         {/* Explore any election from Merdeka to the present! */}
@@ -144,94 +152,106 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
             {t("header_1", { ns: "elections" })}
           </h4> */}
           {/* Mobile */}
-          <Modal
-            trigger={(open) => (
-              <WindowProvider>
-                <ElectionFilter onClick={open} />
-              </WindowProvider>
-            )}
-            title={
-              <Label label={t("filters") + ":"} className="text-sm font-bold" />
-            }
+          <Drawer
+            open={data.open_filter}
+            onOpenChange={(open) => setData("open_filter", open)}
           >
-            {(close) => (
+            <DrawerTrigger asChild>
+              <ElectionFilterTrigger />
+            </DrawerTrigger>
+            <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
+              <DrawerHeader className="flex w-full items-center justify-between px-4 py-3 uppercase">
+                <DrawerTitle className="text-body-md font-bold">
+                  {t("filters")}
+                </DrawerTitle>
+                <DrawerClose>
+                  <CrossIcon className="h-5 w-5 text-txt-black-500" />
+                </DrawerClose>
+              </DrawerHeader>
               <div className="flex flex-col">
-                <div className="dark:bg-zinc-900 bg-white">
-                  <div className="dark:divide-washed-dark divide-y px-3 pb-3">
-                    <div className="space-y-2 py-3">
-                      <Label
-                        label={t("election", { ns: "elections" }) + ":"}
-                        className="text-sm"
-                      />
-                      <div className="border-slate-200 dark:border-zinc-800 dark:bg-zinc-900 max-w-fit rounded-full border bg-white p-1">
-                        <List
-                          options={PANELS.map((item) => item.name)}
-                          icons={PANELS.map((item) => item.icon)}
-                          current={data.toggle_index}
-                          onChange={handleElectionTab}
-                        />
-                      </div>
-                    </div>
-                    <div className="dark:border-zinc-700 grid grid-cols-2 gap-2 border-y py-3">
-                      <Label label={t("state") + ":"} className="text-sm" />
-                      <Label
-                        label={t("election_year", { ns: "elections" }) + ":"}
-                        className="text-sm"
-                      />
-                      <StateDropdown
-                        currentState={data.state}
-                        onChange={(selected) => {
-                          setData("state", selected.value);
-                          TOGGLE_IS_DUN && setData("election_acronym", null);
-                        }}
-                        exclude={TOGGLE_IS_DUN ? NON_SE_STATE : []}
-                        width="w-full"
-                        anchor="bottom-10"
-                      />
-                      <Dropdown
-                        width="w-full"
-                        anchor="right-0 bottom-10"
-                        placeholder={t("select_election", { ns: "elections" })}
-                        options={TOGGLE_IS_PARLIMEN ? GE_OPTIONS : SE_OPTIONS}
-                        selected={
-                          TOGGLE_IS_PARLIMEN
-                            ? GE_OPTIONS.find(
-                                (e) => e.value === data.election_acronym,
-                              )
-                            : SE_OPTIONS.find(
-                                (e) => e.value === data.election_acronym,
-                              )
-                        }
-                        disabled={!data.state}
-                        onChange={(selected) =>
-                          setData("election_acronym", selected.value)
-                        }
+                <div className="divide-y divide-otl-divider px-4">
+                  <div className="space-y-3 py-3">
+                    <Label
+                      label={t("election", { ns: "elections" }) + ":"}
+                      className="text-body-sm"
+                    />
+                    <div className="max-w-fit rounded-full border border-otl-gray-200 bg-bg-white p-1">
+                      <List
+                        options={PANELS.map((item) => item.name)}
+                        icons={PANELS.map((item) => item.icon)}
+                        current={data.toggle_index}
+                        onChange={handleElectionTab}
+                        className="text-body-sm"
                       />
                     </div>
                   </div>
-                  <div className="dark:border-washed-dark dark:bg-black flex w-full flex-col gap-2 border-t bg-white p-3">
-                    <Button
-                      className="btn-primary w-full justify-center"
-                      onClick={() => {
-                        setData("loading", true);
-                        push(
-                          `${routes.ELECTIONS}/${data.state}/${data.election_acronym}`,
-                        );
+                  <div className="grid grid-cols-2 gap-2 py-3">
+                    <Label label={t("state") + ":"} className="text-sm" />
+                    <Label
+                      label={t("election_year", { ns: "elections" }) + ":"}
+                      className="text-sm"
+                    />
+                    <StateDropdown
+                      currentState={data.state}
+                      onChange={(selected) => {
+                        setData("state", selected.value);
+                        TOGGLE_IS_DUN && setData("election_acronym", null);
                       }}
-                    >
-                      {t("filter")}
-                    </Button>
-                    <Button
-                      className="btn w-full justify-center px-3 py-1.5"
-                      onClick={close}
-                    >
-                      {t("close")}
-                    </Button>
+                      exclude={TOGGLE_IS_DUN ? NON_SE_STATE : []}
+                      width="w-full"
+                      anchor="bottom-10"
+                    />
+                    <Dropdown
+                      width="w-full"
+                      anchor="right-0 bottom-10"
+                      placeholder={t("select_election", { ns: "elections" })}
+                      options={TOGGLE_IS_PARLIMEN ? GE_OPTIONS : SE_OPTIONS}
+                      selected={
+                        TOGGLE_IS_PARLIMEN
+                          ? GE_OPTIONS.find(
+                              (e) => e.value === data.election_acronym,
+                            )
+                          : SE_OPTIONS.find(
+                              (e) => e.value === data.election_acronym,
+                            )
+                      }
+                      disabled={!data.state}
+                      onChange={(selected) =>
+                        setData("election_acronym", selected.value)
+                      }
+                    />
                   </div>
                 </div>
               </div>
-            )}
-          </Modal>
+              <DrawerFooter className="flex-row gap-3">
+                <Button
+                  variant={"default-outline"}
+                  className="w-full justify-center"
+                  onClick={() => setData("open_filter", false)}
+                >
+                  {t("close")}
+                  <ButtonIcon>
+                    <CrossIcon />
+                  </ButtonIcon>
+                </Button>
+                <Button
+                  variant={"primary-fill"}
+                  className="w-full justify-center"
+                  onClick={() => {
+                    push(
+                      `${routes.ELECTIONS}/${data.state}/${data.election_acronym}`,
+                    );
+                    setData("open_filter", false);
+                  }}
+                >
+                  {t("filter")}
+                  <ButtonIcon>
+                    <FilterIcon />
+                  </ButtonIcon>
+                </Button>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
           {/* Desktop */}
           <div
             ref={divRef}
@@ -249,7 +269,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
               currentState={data.state}
               onChange={(selected) => {
                 if (TOGGLE_IS_PARLIMEN && data.election_acronym) {
-                  setData("loading", true);
                   push(
                     `${routes.ELECTIONS}/${selected.value}/${data.election_acronym}`,
                   );
@@ -271,7 +290,6 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
               }
               onChange={(selected) => {
                 setData("election_acronym", selected.value);
-                setData("loading", true);
                 push(`${routes.ELECTIONS}/${data.state}/${selected.value}`);
               }}
               disabled={!data.state}

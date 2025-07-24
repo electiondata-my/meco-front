@@ -19,7 +19,7 @@ export type I18nConfig = UserConfig & { autoloadNs: string[] };
 
 export type defineConfig = (
   namespace: string[],
-  autoloadNs: string[]
+  autoloadNs: string[],
 ) => I18nConfig;
 
 // CHART INTERFACE
@@ -121,6 +121,14 @@ export type DCFilter = FilterDefault | FilterDate;
 export type Precision = {
   default: number;
   columns?: Record<string, number>;
+};
+
+// DC Catalogue
+export type Catalogue = {
+  id: string;
+  title: string;
+  description?: string;
+  data_as_of?: string;
 };
 
 // Usage

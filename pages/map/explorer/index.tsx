@@ -1,7 +1,7 @@
 /**
  * Full Screen Map
  * Map Explorer by Delimitation Years
- * @overview Status: Development
+ * @overview Status: Live
  */
 
 import Metadata from "@components/Metadata";

@@ -103,7 +103,7 @@ const Overview: FunctionComponent<OverviewProps> = ({
   });
 
   return (
-    <SectionGrid className="space-y-12 py-6" as="div">
+    <SectionGrid className="pb-8 pt-2 lg:space-y-12">
       <Tabs
         hidden
         current={data.toggle_index}
@@ -119,11 +119,11 @@ const Overview: FunctionComponent<OverviewProps> = ({
                     ? "parlimen"
                     : "dun",
                 })}
-                <span className="text-primary-600">
+                <span className="text-danger-600">
                   {CountryAndStates[params.state ?? "mys"]}
                 </span>
                 <span>: </span>
-                <span className="text-primary-600">
+                <span className="text-danger-600">
                   {t(params.election ?? "GE-15", { ns: "election" })}
                 </span>
               </h5>

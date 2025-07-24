@@ -4,7 +4,7 @@ import { withi18n } from "@lib/decorators";
 import { sortAlpha } from "@lib/helpers";
 import { useTranslation } from "@hooks/useTranslation";
 import { Catalogue, Page } from "@lib/types";
-import { GetStaticProps, InferGetStaticPropsType } from "next";
+import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { WindowProvider } from "@lib/contexts/window";
 import { SHORT_LANG } from "@lib/constants";
 import { get } from "@lib/api";
@@ -48,10 +48,17 @@ const recurSort = (
   );
 };
 
+export const getStaticPaths: GetStaticPaths = () => {
+  return {
+    paths: [],
+    fallback: "blocking",
+  };
+};
+
 export const getStaticProps: GetStaticProps = withi18n(
   ["catalogue"],
   async ({ locale, params }) => {
-    const state = "mys";
+    const state = params!.state;
     const lang = SHORT_LANG[locale! as keyof typeof SHORT_LANG];
     try {
       const response = await get(`/catalogue/index-${state}-${lang}.json`);

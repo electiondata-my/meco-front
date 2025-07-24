@@ -191,7 +191,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         header={[t("hero.header", { ns: "parties" })]}
         description={[t("hero.description", { ns: "parties" })]}
         pageId="/parties"
-        withPattern={true}
       />
       <Container>
         <SectionGrid className="space-y-6 py-6 lg:space-y-16 lg:pb-16">
@@ -276,16 +275,16 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                       anchor="left"
                     />
                   </span>
-                  <Tooltip>
+                  {/* <Tooltip>
                     <TooltipTrigger className="h-6 w-6">
                       <QuestionCircleIcon className="h-4 w-4 text-txt-black-500" />
                     </TooltipTrigger>
-                    {/* TODO: to pass this data */}
+                
                     <TooltipContent>
                       Founded in 1952 by Tunku Abdul Rahman Putra al-Haj, Tan
                       Cheng Lock, V. T. Sambanthan and still active until today
                     </TooltipContent>
-                  </Tooltip>
+                  </Tooltip> */}
                 </div>
               }
               current={data.tab_index}

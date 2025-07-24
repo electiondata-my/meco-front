@@ -36,6 +36,7 @@ type HeroProps = {
   background?: "gray" | "blue" | "red" | "purple" | "green" | "orange" | string;
   className?: string;
   pageId?: string;
+  sectionGridClassName?: string;
 } & ConditionalHeroProps;
 
 const Hero: FunctionComponent<HeroProps> = ({
@@ -48,6 +49,7 @@ const Hero: FunctionComponent<HeroProps> = ({
   action,
   pageId = "sitewide",
   withPattern,
+  sectionGridClassName,
 }) => {
   const { t } = useTranslation();
 
@@ -63,7 +65,7 @@ const Hero: FunctionComponent<HeroProps> = ({
         const res = await fetch(url);
         if (!res.ok) throw new Error("Network response was not ok");
         const data = await res.json();
-        setViews(data?.data?.[0]?.hits ?? 0);
+        setViews(data?.data?.[0]?.hits ?? null);
       } catch (e) {
         setViews(null);
       } finally {
@@ -106,7 +108,7 @@ const Hero: FunctionComponent<HeroProps> = ({
       {children ? (
         children
       ) : (
-        <SectionGrid>
+        <SectionGrid className={clx(sectionGridClassName)}>
           <div className="flex max-w-[727px] flex-col items-center justify-center space-y-6 pt-16">
             {category && (
               <h3
@@ -154,7 +156,7 @@ const Hero: FunctionComponent<HeroProps> = ({
                 ? "..."
                 : views !== null
                   ? `${numFormat(views, "standard")} ${t("common:views", { count: views })}`
-                  : "-"}
+                  : "---"}
             </p>
 
             {action}
