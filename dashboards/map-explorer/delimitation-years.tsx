@@ -403,7 +403,7 @@ const MapDrawer: FunctionComponent<MapDrawerProps> = ({
           </ButtonIcon>
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="h-screen max-h-screen w-4/5 bg-bg-white px-4 py-2 font-body text-body-md lg:w-1/5">
+      <DrawerContent className="h-screen max-h-screen w-4/5 rounded-tl-none bg-bg-white px-4 py-2 font-body text-body-md lg:w-1/5">
         <DrawerHeader className="flex items-center px-0">
           <DialogTitle className="flex-1">{type}</DialogTitle>
           <DrawerDescription></DrawerDescription>

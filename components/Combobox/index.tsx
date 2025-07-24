@@ -106,14 +106,45 @@ const ComboBox = <T extends unknown>({
     [role, dismiss, listNav],
   );
 
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "/") {
+        event.preventDefault();
+        searchRef.current?.focus();
+        setTimeout(() => searchRef.current?.select(), 0);
+        setOpen(true);
+      }
+      // Check if 'CMD + K' or 'Ctrl + K' key combination is pressed
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+        setTimeout(() => searchRef.current?.select(), 0);
+        setOpen(true);
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        searchRef.current?.blur();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
   return (
     <div
       ref={refs.setReference}
       onClick={() => setOpen(!open)}
-      className="relative flex w-full select-none overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button hover:border-bg-black-400 focus:outline-none focus-visible:ring-0"
+      className="relative flex w-full select-none overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button hover:border-bg-black-400 focus:outline-none focus-visible:ring-0 has-[input:focus]:border-otl-danger-300 has-[input:focus]:ring has-[input:focus]:ring-otl-danger-200"
     >
       <input
         id="combobox-input"
+        ref={searchRef}
         className={clx(
           "w-full truncate border-none bg-bg-white py-2.5 pl-4.5 pr-10 text-body-md focus:outline-none focus:ring-0",
         )}

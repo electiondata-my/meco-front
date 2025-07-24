@@ -148,7 +148,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
             {t("common:previous")}
           </Button>
 
-          <span className="flex items-center gap-1 text-center text-sm">
+          <span className="flex items-center gap-1 text-center text-sm text-txt-black-900">
             {`${data.index + 1} of ${options.length}`}
           </span>
 

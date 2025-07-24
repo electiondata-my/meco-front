@@ -1,5 +1,4 @@
 import {
-  Navbar,
   NavbarMenu,
   NavbarMenuItem,
   NavbarAction,
@@ -10,12 +9,22 @@ import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
 import LocaleSwitch from "./locale-switch";
 import { useTranslation } from "@hooks/useTranslation";
+import Navbar from "../Navbar";
+import { useRouter } from "next/router";
+import { routes } from "@lib/routes";
 
 export default function Header() {
   const { t } = useTranslation([]);
+  const router = useRouter();
 
   return (
-    <Navbar>
+    <Navbar
+      innerclassName={
+        router.pathname.includes(routes.DATA_CATALOGUE)
+          ? "max-w-screen-2xl"
+          : ""
+      }
+    >
       <Link href={"/"} className="flex items-center gap-2.5 no-underline">
         <Image
           src="/static/images/icons/icon-512.png"
@@ -44,6 +53,11 @@ export default function Header() {
         <NavbarMenuItem href={"/trivia"} asChild>
           <Link href={"/trivia"}>{t("common:nav.trivia")}</Link>
         </NavbarMenuItem>
+        {process.env.APP_ENV !== "production" && (
+          <NavbarMenuItem href={"/data-catalogue"} asChild>
+            <Link href={"/data-catalogue"}>{t("common:nav.catalogue")}</Link>
+          </NavbarMenuItem>
+        )}
         <NavbarMenuItem href={"/map/explorer"} asChild>
           <Link href={"/map/explorer"}>{t("common:nav.map")}</Link>
         </NavbarMenuItem>

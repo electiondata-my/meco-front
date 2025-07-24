@@ -1,19 +1,22 @@
 export const routes = {
   HOME: "/",
   DATA_CATALOGUE: "/data-catalogue",
-  DATA_GPT: "/data-catalogue/datagpt",
   PARLIMEN_SEATS: "/parlimen",
   DUN_SEATS: "/dun",
   ELECTIONS: "/elections",
   CANDIDATES: "/candidates",
   PARTIES: "/parties",
   TRIVIA: "/trivia",
-  API_DOCS: "/api-docs"
+  BLOGS: "/blogs",
+  API_DOCS: "/api-docs",
 };
 
 export const static_routes: string[] = (() => {
   let s_routes = Object.values(routes).filter(
-    (route) => !route.startsWith("/data-catalogue")
+    (route) => ![""].includes(route),
+    // !["/data-catalogue", "/data_request", "/community-products"].includes(
+    //   route,
+    // ),
   );
 
   s_routes.forEach((route) => {

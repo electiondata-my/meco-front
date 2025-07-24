@@ -1,20 +1,19 @@
 import { clx } from "@lib/helpers";
+import { ForwardedRef, forwardRef, FunctionComponent } from "react";
 
-type SectionGrid<T extends React.ElementType> = {
-  as?: T;
+type SectionGridProps = {
   className?: string;
   children?: React.ReactNode;
-} & Omit<React.ComponentPropsWithoutRef<T>, "as" | "children">;
+  ref?: ForwardedRef<HTMLElement> | undefined;
+};
 
-const SectionGrid = <T extends React.ElementType = "section">({
-  as,
-  children,
-  className,
-  ...rest
-}: SectionGrid<T>) => {
-  const Component = as || "section";
+const SectionGrid: FunctionComponent<SectionGridProps> = forwardRef<
+  HTMLElement,
+  SectionGridProps
+>(({ children, className, ...rest }, ref) => {
   return (
-    <Component
+    <section
+      ref={ref}
       className={clx(
         "col-span-full mx-auto flex w-full max-w-screen-xl flex-col items-center justify-center xl:w-full",
         className,
@@ -22,8 +21,10 @@ const SectionGrid = <T extends React.ElementType = "section">({
       {...rest}
     >
       {children}
-    </Component>
+    </section>
   );
-};
+});
+
+SectionGrid.displayName = "SectionGrid";
 
 export default SectionGrid;

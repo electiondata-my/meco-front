@@ -193,7 +193,6 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
         header={[t("hero.header", { ns: "trivia" })]}
         description={[t("hero.description", { ns: "trivia" })]}
         pageId="/trivia"
-        withPattern={true}
       />
       <Container>
         <SectionGrid className="space-y-6 py-6 lg:space-y-12 lg:pb-16">
