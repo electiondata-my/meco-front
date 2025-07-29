@@ -278,7 +278,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           />
         </div>
         <SectionGrid className="space-y-8 lg:space-y-10">
-          <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
+          <h2 className="max-w-[727px] text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
             {language === "en-GB"
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
@@ -299,7 +299,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         <SectionGrid className="space-y-6 lg:space-y-10">
           <ElectionTable
             title={
-              <h2 className="text-center font-heading text-heading-2xs font-semibold">
+              <h2 className="text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
                 {t("title", { ns: "home" })}
                 <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
               </h2>
@@ -312,7 +312,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         </SectionGrid>
 
         <SectionGrid className="space-y-6 lg:space-y-10">
-          <h2 className="text-center font-heading text-heading-2xs font-semibold">
+          <h2 className="text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
             {t("breakdown_voters", {
               ns: "home",
               number: voters_total && numFormat(voters_total, "standard"),
@@ -325,7 +325,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               {pyramid && (
                 <Pyramid
                   title={
-                    <h6 className="text-body-lg font-semibold">
+                    <h6 className="text-body-md font-semibold lg:text-body-lg">
                       {t("gender_age_distr", { ns: "home" })}
                     </h6>
                   }
@@ -358,7 +358,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 />
               )}
             </div>
-            <div className="flex w-full flex-1 flex-row flex-wrap gap-6 xl:flex-1">
+            <div className="flex w-full flex-1 flex-row flex-wrap gap-6 pt-8 lg:pt-0 xl:flex-1">
               {barmeter_data.map(([type, data]) => (
                 <div
                   key={type as string}
@@ -368,7 +368,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                     layout="horizontal"
                     tooltipVariable="abs"
                     title={
-                      <h6 className="text-body-lg font-semibold">
+                      <h6 className="text-body-md font-semibold lg:text-body-lg">
                         {t(`${type as string}`, { ns: "home" })}
                       </h6>
                     }

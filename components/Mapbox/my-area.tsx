@@ -71,12 +71,12 @@ const MapboxMyArea: FC<MapboxProps> = ({
     else setStyleUrl(LIGHT_STYLE);
   }, [resolvedTheme]);
 
-  if (type === "static") {
-    const fullURl = `https://api.mapbox.com/styles/v1/mapbox/${resolvedTheme === "dark" ? "dark-v11" : "light-v11"}/static/${seatGeoJson}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
-    return (
-      <img src={fullURl} alt="mapbox-static-image" width={846} height={400} />
-    );
-  }
+  // if (type === "static") {
+  //   const fullURl = `https://api.mapbox.com/styles/v1/mapbox/${resolvedTheme === "dark" ? "dark-v11" : "light-v11"}/static/${seatGeoJson}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
+  //   return (
+  //     <img src={fullURl} alt="mapbox-static-image" width={846} height={400} />
+  //   );
+  // }
 
   const mapRef = useRef<MapRef | null>(null);
 
@@ -150,68 +150,71 @@ const MapboxMyArea: FC<MapboxProps> = ({
         </Fragment>
       ))}
 
-      <div className="absolute bottom-10 right-1/2 flex h-fit w-[330px] translate-x-1/2 flex-col rounded-md border border-otl-gray-200 bg-bg-dialog px-3 pb-2 pt-3 shadow-context-menu lg:right-4 lg:top-4 lg:w-40 lg:translate-x-0 lg:p-[5px]">
-        <p className="px-2.5 py-1.5 text-center text-body-2xs font-medium text-txt-black-500 lg:text-start">
-          {t("home:boundaries_years")}
-        </p>
-        <div className="flex h-[120px] flex-col flex-wrap gap-x-4 lg:h-full">
-          {boundData.map(([year, hdata], index) => (
-            <div
-              key={year}
-              className="flex items-center gap-2 py-1.5 text-body-xs font-medium text-txt-black-700 lg:px-2.5"
-            >
+      <div className="absolute bottom-10 right-1/2 h-fit translate-x-1/2 lg:right-4 lg:top-4 lg:translate-x-0">
+        <div className="flex h-fit w-[330px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog px-3 pb-2 pt-3 shadow-context-menu lg:w-40 lg:p-[5px]">
+          <p className="px-2.5 py-1.5 text-center text-body-2xs font-medium text-txt-black-500 lg:text-start">
+            {t("home:boundaries_years")}
+          </p>
+          <div className="flex h-[120px] flex-col flex-wrap gap-x-4 lg:h-full">
+            {boundData.map(([year, hdata], index) => (
               <div
-                className="h-2 w-2 rounded-full"
-                style={{ backgroundColor: COLOR_INDEX[index]?.[0] }}
-              />
-              <p className="flex-1">{year}</p>
-              <Checkbox
-                checked={Boolean(
-                  selectedBounds.find((bound) => bound === hdata[0]),
-                )}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    // const filter = [
-                    //   ...selectedBounds.map(
-                    //     (selected) => selected.split("_")[1],
-                    //   ),
-                    //   year,
-                    // ];
+                key={year}
+                className="flex items-center gap-2 py-1.5 text-body-xs font-medium text-txt-black-700 lg:px-2.5"
+              >
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: COLOR_INDEX[index]?.[0] }}
+                />
+                <p className="flex-1">{year}</p>
+                <Checkbox
+                  checked={Boolean(
+                    selectedBounds.find((bound) => bound === hdata[0]),
+                  )}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      // const filter = [
+                      //   ...selectedBounds.map(
+                      //     (selected) => selected.split("_")[1],
+                      //   ),
+                      //   year,
+                      // ];
 
-                    setSelectedBounds((prev) => [...prev, hdata[0]]);
-                    // replace(
-                    //   `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
-                    //   undefined,
-                    //   {
-                    //     scroll: false,
-                    //     shallow: true,
-                    //   },
-                    // );
-                  } else {
-                    // const filter = selectedBounds
-                    //   .filter((bound) => bound !== hdata[0])
-                    //   .map((selected) => selected.split("_")[1]);
+                      setSelectedBounds((prev) => [...prev, hdata[0]]);
+                      // replace(
+                      //   `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
+                      //   undefined,
+                      //   {
+                      //     scroll: false,
+                      //     shallow: true,
+                      //   },
+                      // );
+                    } else {
+                      // const filter = selectedBounds
+                      //   .filter((bound) => bound !== hdata[0])
+                      //   .map((selected) => selected.split("_")[1]);
 
-                    setSelectedBounds((prev) =>
-                      prev.filter((bound) => bound !== hdata[0]),
-                    );
+                      setSelectedBounds((prev) =>
+                        prev.filter((bound) => bound !== hdata[0]),
+                      );
 
-                    // replace(
-                    //   `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
-                    //   undefined,
-                    //   {
-                    //     scroll: false,
-                    //     shallow: true,
-                    //   },
-                    // );
+                      // replace(
+                      //   `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
+                      //   undefined,
+                      //   {
+                      //     scroll: false,
+                      //     shallow: true,
+                      //   },
+                      // );
+                    }
+                  }}
+                  disabled={
+                    selectedBounds.length === 1 &&
+                    selectedBounds[0] === hdata[0]
                   }
-                }}
-                disabled={
-                  selectedBounds.length === 1 && selectedBounds[0] === hdata[0]
-                }
-              />
-            </div>
-          ))}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </Map>
