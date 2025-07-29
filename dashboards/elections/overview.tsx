@@ -112,7 +112,7 @@ const Overview: FunctionComponent<OverviewProps> = ({
         {PANELS.map((panel, index) => (
           <Tabs.Panel name={panel.name as string} icon={panel.icon} key={index}>
             <div className="flex flex-col items-baseline justify-between gap-y-3 sm:flex-row md:gap-y-0">
-              <h5 className="w-fit text-body-lg font-bold">
+              <h5 className="w-fit text-body-md font-bold lg:text-body-xl">
                 {t("election_of", {
                   ns: "elections",
                   context: (params.election ?? "GE-15").startsWith("G")

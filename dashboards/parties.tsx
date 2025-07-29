@@ -241,7 +241,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
             <Tabs
               title={
                 <div className="flex items-center gap-1.5">
-                  <span className="text-body-lg leading-[28px]">
+                  <span className="text-body-md lg:text-heading-2xs">
                     <ImageWithFallback
                       className="mr-2 inline-block rounded border border-otl-gray-200"
                       src={`/static/images/parties/${

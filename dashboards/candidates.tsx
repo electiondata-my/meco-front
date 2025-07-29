@@ -218,7 +218,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
           <div className="w-full space-y-6">
             <Tabs
               title={
-                <p className="text-body-lg font-bold">
+                <p className="text-body-md font-bold lg:text-heading-2xs">
                   {t("title", { ns: "candidates" })}
                   <span className="text-txt-danger">
                     {CANDIDATE_OPTION?.label}
