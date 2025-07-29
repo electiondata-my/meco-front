@@ -189,7 +189,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
         <DialogTrigger asChild>
           <Trigger />
         </DialogTrigger>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="h-full max-h-[calc(100%-96px)] max-w-4xl">
           <DialogHeader className="pr-8 uppercase">
             <div className="flex w-full items-center justify-between">
               <div className="flex flex-wrap gap-x-2 text-lg">

@@ -109,11 +109,11 @@ const Hero: FunctionComponent<HeroProps> = ({
         children
       ) : (
         <SectionGrid className={clx(sectionGridClassName)}>
-          <div className="flex max-w-[727px] flex-col items-center justify-center space-y-6 pt-16">
+          <div className="flex max-w-[727px] flex-col items-center justify-center space-y-4 pt-16 lg:space-y-6">
             {category && (
               <h3
                 className={clx(
-                  "text-center text-body-lg font-semibold uppercase leading-5 tracking-[0.2em] lg:text-start",
+                  "text-center text-body-xs font-semibold uppercase leading-5 tracking-[0.2em] lg:text-start lg:text-body-lg",
                   category[1],
                 )}
                 data-testid="hero-category"
@@ -125,7 +125,7 @@ const Hero: FunctionComponent<HeroProps> = ({
             {header && (
               <h1
                 className={clx(
-                  "text-center font-heading text-heading-md font-semibold text-txt-black-900 lg:text-start",
+                  "text-center font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-start lg:text-heading-md",
                   header[1],
                 )}
                 data-testid="hero-header"
@@ -137,7 +137,7 @@ const Hero: FunctionComponent<HeroProps> = ({
             {description && Array.isArray(description) ? (
               <p
                 className={clx(
-                  "w-full text-center text-body-md text-txt-black-700",
+                  "w-full text-center text-body-sm text-txt-black-700 lg:text-body-md",
                   description[1],
                 )}
                 data-testid="hero-description"

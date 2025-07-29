@@ -34,20 +34,14 @@ const ErrorStatus: FunctionComponent<ErrorStatusProps> = ({
           <p className="pb-2 text-sm font-bold uppercase text-txt-black-500">
             {t("output")}
           </p>
-          <div className="rounded-xl">
-            <div className="p-4.5 font-mono text-sm text-txt-black-900">
-              <span className="font-bold text-txt-success">
-                {APP_NAME}:~/ $
-              </span>{" "}
-              cat {code}
-              -error.log
-              <br />
-              {reason}
-              <br />
-              <span className="font-bold text-txt-success">
-                {APP_NAME}:~/ $
-              </span>
-            </div>
+          <div className="rounded-xl bg-bg-washed p-4.5 font-mono text-sm text-txt-black-900">
+            <span className="font-bold text-txt-success">{APP_NAME}:~/ $</span>{" "}
+            cat {code}
+            -error.log
+            <br />
+            {reason}
+            <br />
+            <span className="font-bold text-txt-success">{APP_NAME}:~/ $</span>
           </div>
 
           <small className="text-xs text-txt-black-500">

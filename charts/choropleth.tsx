@@ -7,7 +7,7 @@ import {
 } from "chartjs-chart-geo";
 import { ChartHeaderProps, default as ChartHeader } from "./chart-header";
 // import { ArrowPathIcon, MinusSmallIcon, PlusSmallIcon } from "@heroicons/react/24/outline";
-// import { FeatureCollection } from "geojson";
+import { FeatureCollection } from "geojson";
 import { Color } from "@hooks/useColor";
 import { clx, numFormat } from "@lib/helpers";
 import { ChartCrosshairOption, Geotype } from "@lib/types";
@@ -57,8 +57,12 @@ const Choropleth: FunctionComponent<ChoroplethProps> = ({
   onReady,
   _ref,
 }) => {
-  const [desktopMap, setDesktopMap] = useState<any | undefined>(undefined);
-  const [mobileMap, setMobileMap] = useState<any | undefined>(undefined);
+  const [desktopMap, setDesktopMap] = useState<FeatureCollection | undefined>(
+    undefined,
+  );
+  const [mobileMap, setMobileMap] = useState<FeatureCollection | undefined>(
+    undefined,
+  );
   ChartJS.register(
     ChoroplethController,
     ProjectionScale,
@@ -74,8 +78,8 @@ const Choropleth: FunctionComponent<ChoroplethProps> = ({
         import(`@lib/geojson/${type}/_mobile`),
       ]);
 
-      setDesktopMap(desktop.default as any);
-      setMobileMap(mobile.default as any);
+      setDesktopMap(desktop.default as FeatureCollection);
+      setMobileMap(mobile.default as FeatureCollection);
       if (onReady) onReady(true);
     };
 

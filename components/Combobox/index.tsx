@@ -204,7 +204,7 @@ const ComboBox = <T extends unknown>({
           {image(selected.value)}
         </span>
       ) : (
-        <span className="mr-4 flex h-8 max-h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-otl-danger-300 bg-gray-400 bg-gradient-to-b from-danger-400 to-danger-600">
+        <span className="mr-2 flex h-8 max-h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-otl-danger-300 bg-gray-400 bg-gradient-to-b from-danger-400 to-danger-600">
           <MagnifyingGlassIcon className="h-5 w-5 text-txt-white" />
         </span>
       )}

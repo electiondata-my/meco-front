@@ -304,7 +304,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       <tr>
         <td
           colSpan={100}
-          className="border-b border-otl-gray-200 bg-bg-washed py-2 text-center text-body-sm italic text-txt-black-700"
+          className="border-b border-otl-gray-200 bg-bg-washed p-3 text-center text-body-sm italic text-txt-black-700"
         >
           {isMalay && change_ms ? change_ms : change_en}
         </td>
@@ -407,7 +407,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             return (
               <div
                 key={"explanation-mobile-" + idx}
-                className="border-b border-otl-gray-200 bg-bg-washed py-2 text-center text-body-sm italic text-txt-black-700 md:hidden"
+                className="border-b border-otl-gray-200 bg-bg-washed p-3 text-center text-body-sm italic text-txt-black-700 md:hidden"
               >
                 {isMalay && row.change_ms ? row.change_ms : row.change_en}
               </div>
