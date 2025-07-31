@@ -29,6 +29,8 @@ type ComboBoxProps<T> = {
   config?: MatchSorterOptions;
   image?: (value: string) => ReactNode;
   format?: (option: ComboOptionProp<T>) => ReactNode;
+  borderless?: boolean;
+  leftSearchButton?: boolean;
 };
 
 const ComboBox = <T extends unknown>({
@@ -41,6 +43,8 @@ const ComboBox = <T extends unknown>({
   image,
   loading = false,
   config = { keys: ["label"] },
+  borderless,
+  leftSearchButton,
 }: ComboBoxProps<T>) => {
   const { t } = useTranslation();
   const [query, setQuery] = useState<string>(selected ? selected.label : "");
@@ -140,13 +144,19 @@ const ComboBox = <T extends unknown>({
     <div
       ref={refs.setReference}
       onClick={() => setOpen(!open)}
-      className="relative flex w-full select-none overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button hover:border-bg-black-400 focus:outline-none focus-visible:ring-0 has-[input:focus]:border-otl-danger-300 has-[input:focus]:ring has-[input:focus]:ring-otl-danger-200"
+      className={clx(
+        "relative flex w-full select-none overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button hover:border-bg-black-400 focus:outline-none focus-visible:ring-0 has-[input:focus]:border-otl-danger-300 has-[input:focus]:ring has-[input:focus]:ring-otl-danger-200",
+        borderless &&
+          "rounded-none border-none shadow-inherit has-[input:focus]:ring-0",
+        leftSearchButton && "flex-row-reverse",
+      )}
     >
       <input
         id="combobox-input"
         ref={searchRef}
         className={clx(
           "w-full truncate border-none bg-bg-white py-2.5 pl-4.5 pr-10 text-body-md focus:outline-none focus:ring-0",
+          leftSearchButton && "pl-2",
         )}
         spellCheck={false}
         {...getReferenceProps({
@@ -187,7 +197,10 @@ const ComboBox = <T extends unknown>({
 
       {(query.length > 0 || selected) && (
         <Button
-          className="group absolute right-14 top-2 flex h-8 w-8 items-center rounded-full hover:bg-bg-black-100"
+          className={clx(
+            "group absolute right-14 top-2 flex h-8 w-8 items-center rounded-full hover:bg-bg-black-100",
+            leftSearchButton && "right-0",
+          )}
           onClick={() => {
             setQuery("");
             setOpen(true);

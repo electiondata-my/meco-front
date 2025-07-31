@@ -1,15 +1,10 @@
-import {
-  NavbarMenu,
-  NavbarMenuItem,
-  NavbarAction,
-} from "@govtechmy/myds-react/navbar";
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ThemeToggle from "./theme-toggle";
 import LocaleSwitch from "./locale-switch";
 import { useTranslation } from "@hooks/useTranslation";
-import Navbar from "../Navbar";
+import Navbar, { Nav } from "../Navbar";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 
@@ -37,38 +32,65 @@ export default function Header() {
           ElectionData.MY
         </h1>
       </Link>
-      <NavbarMenu>
-        <NavbarMenuItem href={"/"} asChild>
-          <Link href={"/"}>{t("common:nav.home")}</Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem href={"/elections"} asChild>
-          <Link href={"/elections"}>{t("common:nav.elections")}</Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem href={"/candidates"} asChild>
-          <Link href={"/candidates"}>{t("common:nav.candidates")}</Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem href={"/parties"} asChild>
-          <Link href={"/parties"}>{t("common:nav.parties")}</Link>
-        </NavbarMenuItem>
-        <NavbarMenuItem href={"/trivia"} asChild>
-          <Link href={"/trivia"}>{t("common:nav.trivia")}</Link>
-        </NavbarMenuItem>
-        {process.env.NEXT_PUBLIC_APP_ENV !== "production" && (
-          <NavbarMenuItem href={"/data-catalogue"} asChild>
-            <Link href={"/data-catalogue"}>{t("common:nav.catalogue")}</Link>
-          </NavbarMenuItem>
+      <Nav
+        action={
+          <Nav.Action>
+            <Suspense>
+              <ThemeToggle />
+              <LocaleSwitch />
+            </Suspense>
+          </Nav.Action>
+        }
+      >
+        {(close) => (
+          <>
+            <Nav.Item
+              key={"/"}
+              title={t("common:nav.home")}
+              link="/"
+              onClick={close}
+            />
+            <Nav.Item
+              key={"/elections"}
+              title={t("common:nav.elections")}
+              link="/elections"
+              onClick={close}
+            />
+            <Nav.Item
+              key={"/candidates"}
+              title={t("common:nav.candidates")}
+              link="/candidates"
+              onClick={close}
+            />
+            <Nav.Item
+              key={"/parties"}
+              title={t("common:nav.parties")}
+              link="/parties"
+              onClick={close}
+            />
+            <Nav.Item
+              key={"/trivia"}
+              title={t("common:nav.trivia")}
+              link="/trivia"
+              onClick={close}
+            />
+            {process.env.NEXT_PUBLIC_APP_ENV !== "production" && (
+              <Nav.Item
+                key={"/data-catalogue"}
+                title={t("common:nav.catalogue")}
+                link="/data-catalogue"
+                onClick={close}
+              />
+            )}
+            <Nav.Item
+              key={"/map/explorer"}
+              title={t("common:nav.map")}
+              link="/map/explorer"
+              onClick={close}
+            />
+          </>
         )}
-        <NavbarMenuItem href={"/map/explorer"} asChild>
-          <Link href={"/map/explorer"}>{t("common:nav.map")}</Link>
-        </NavbarMenuItem>
-      </NavbarMenu>
-
-      <NavbarAction>
-        <Suspense>
-          <ThemeToggle />
-          <LocaleSwitch />
-        </Suspense>
-      </NavbarAction>
+      </Nav>
     </Navbar>
   );
 }
