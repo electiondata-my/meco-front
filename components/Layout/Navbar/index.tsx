@@ -3,8 +3,14 @@ import {
   useState,
   createContext,
   ComponentProps,
+  ReactNode,
+  useContext,
 } from "react";
 import { clx } from "@lib/helpers";
+import { useRouter } from "next/router";
+import { Link as BaseLink } from "@govtechmy/myds-react/link";
+import Link from "next/link";
+import { CrossIcon, HamburgerMenuIcon } from "@govtechmy/myds-react/icon";
 
 interface NavbarProps extends ComponentProps<"header"> {
   innerclassName?: string;
@@ -53,4 +59,106 @@ const Navbar: FunctionComponent<NavbarProps> = ({
 
 Navbar.displayName = "Navbar";
 
-export default Navbar;
+type NavRootProps = {
+  children: (close: () => void) => ReactNode;
+  action: ReactNode;
+};
+
+type NavItemProps = {
+  icon?: ReactNode;
+  title: string;
+  link: string;
+  onClick: () => void;
+  className?: string;
+};
+
+type NavFunctionComponent = FunctionComponent<NavRootProps> & {
+  Item: typeof Item;
+  Action: typeof Action;
+};
+
+const Item: FunctionComponent<NavItemProps> = ({
+  link,
+  onClick,
+  className,
+  icon,
+  title,
+}) => {
+  const { pathname } = useRouter();
+  return (
+    <BaseLink
+      underline={"none"}
+      asChild
+      className={clx(
+        "px-2.5 py-1.5 font-medium text-txt-black-700",
+        pathname.startsWith(link) && link !== "/"
+          ? "rounded-md bg-bg-washed-active"
+          : "",
+        className,
+      )}
+    >
+      <Link href={link} scroll={false} onClick={onClick}>
+        {icon}
+        {title}
+      </Link>
+    </BaseLink>
+  );
+};
+
+type NavActionProps = {
+  children: ReactNode;
+  className?: string;
+};
+
+const Action: FunctionComponent<NavActionProps> = ({ children, className }) => {
+  const { show, setShow } = useContext(NavbarContext);
+
+  const close = () => setShow(false);
+  const open = () => setShow(true);
+
+  return (
+    <>
+      {/* Desktop */}
+      <div className="hidden w-fit gap-4 lg:flex">{children}</div>
+      <div className="flex w-full items-center justify-end gap-3 lg:hidden">
+        {children}
+        {show ? (
+          <CrossIcon
+            className="box-content block h-5 w-5 text-txt-black-900 lg:hidden"
+            onClick={close}
+          />
+        ) : (
+          <HamburgerMenuIcon
+            className="box-content block h-5 w-5 text-txt-black-900 lg:hidden"
+            onClick={open}
+          />
+        )}
+      </div>
+    </>
+  );
+};
+
+const Nav: NavFunctionComponent = ({ children, action }) => {
+  const { show, setShow } = useContext(NavbarContext);
+  const close = () => setShow(false);
+
+  return (
+    <div className="flex w-full flex-1 items-center justify-end lg:justify-between">
+      <div className="hidden w-fit lg:flex">{children(close)}</div>
+      {action}
+      <div
+        className={clx(
+          "fixed left-0 top-16 flex w-full flex-col gap-0 bg-bg-white px-4 py-2 shadow-context-menu max-md:top-14 lg:hidden lg:gap-1 lg:p-1",
+          show ? "flex" : "hidden",
+        )}
+      >
+        {children(close)}
+      </div>
+    </div>
+  );
+};
+
+Nav.Item = Item;
+Nav.Action = Action;
+
+export { Navbar as default, Nav };
