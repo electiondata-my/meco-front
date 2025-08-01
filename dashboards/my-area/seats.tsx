@@ -3,9 +3,10 @@ import {
   Boundaries,
   ElectionResource,
   ElectionType,
+  Lineage,
   Seat,
   SeatOptions,
-} from "./types";
+} from "../types";
 import FullResults, { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
@@ -16,10 +17,10 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
-import { FunctionComponent } from "react";
+import { FunctionComponent, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { useLanguage } from "@hooks/useLanguage";
-import { numFormat } from "@lib/helpers";
+import { clx, numFormat } from "@lib/helpers";
 import { Chart, TooltipModel } from "chart.js";
 import { useToast } from "@govtechmy/myds-react/hooks";
 
@@ -36,7 +37,7 @@ const ElectionTable = dynamic(
 );
 const Pyramid = dynamic(() => import("@charts/pyramid"), { ssr: false });
 const BarMeter = dynamic(() => import("@charts/bar-meter"), { ssr: false });
-const Mapbox = dynamic(() => import("@components/Mapbox/my-area"), {
+const Mapbox = dynamic(() => import("@dashboards/my-area/mapbox"), {
   ssr: false,
 });
 
@@ -69,6 +70,7 @@ interface ElectionSeatsProps extends ElectionResource<Seat> {
   desc_ms: string;
   barmeter: MyAreaBarmeter;
   boundaries: Boundaries;
+  lineage: Lineage;
 }
 
 type SeatOption = {
@@ -87,12 +89,15 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   voters_total,
   barmeter,
   boundaries,
+  lineage,
 }) => {
   const { t } = useTranslation(["common", "home"]);
   const { cache } = useCache();
   const { language } = useLanguage();
   const { toast } = useToast();
   const { push } = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const SEAT_OPTIONS: Array<
     Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption
@@ -112,7 +117,24 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   const { data, setData } = useData({
     seat_value: CURRENT_SEAT,
     loading: false,
+    isStick: false,
   });
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setData("isStick", !entry.isIntersecting);
+      },
+      { threshold: [1] },
+    );
+
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   const fetchFullResult = async (
     election: string,
@@ -232,9 +254,25 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         description={[t("hero.description", { ns: "home" })]}
         pageId="sitewide"
       />
-      <Container className="gap-8 pb-8 lg:gap-16 lg:pb-16">
-        <div className="sticky top-16 z-20 col-span-full mx-auto mt-6 w-full py-3 md:w-[727px]">
+      <div ref={sentinelRef} className="-mt-10 h-16" />
+      <div
+        ref={containerRef}
+        className={clx(
+          "sticky top-16 z-20 col-span-full mx-auto w-full border border-transparent px-4.5 py-3 transition-all duration-300 md:w-[727px] md:px-0",
+          data.isStick &&
+            "border-otl-gray-200 bg-bg-white py-0 max-md:top-14 md:w-full md:px-6",
+        )}
+      >
+        <div
+          className={clx(
+            "flex w-full flex-col items-center gap-6",
+            data.isStick &&
+              "mx-auto max-w-screen-xl flex-row justify-between gap-3 py-1",
+          )}
+        >
           <ComboBox<SeatOption>
+            borderless={data.isStick}
+            leftSearchButton={data.isStick}
             placeholder={t("search_seat", { ns: "home" })}
             options={SEAT_OPTIONS}
             config={{
@@ -277,6 +315,8 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             }}
           />
         </div>
+      </div>
+      <Container className="gap-8 py-8 lg:gap-16 lg:py-16">
         <SectionGrid className="space-y-8 lg:space-y-10">
           <h2 className="max-w-[727px] text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
@@ -290,6 +330,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 type="map"
                 boundaries={boundaries}
                 seat_info={SELECTED_SEATS}
+                lineage={lineage}
               />
             ) : (
               <p>{t("common:toast.request_failure")}</p>

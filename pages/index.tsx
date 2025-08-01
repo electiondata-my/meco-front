@@ -1,5 +1,5 @@
 import Metadata from "@components/Metadata";
-import ElectionSeatsDashboard from "@dashboards/seats";
+import ElectionSeatsDashboard from "@dashboards/my-area/seats";
 import { get } from "@lib/api";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
@@ -28,6 +28,7 @@ const Home: Page = ({
         pyramid={seat.pyramid}
         barmeter={seat.barmeter}
         boundaries={seat.boundaries}
+        lineage={{ type: "parlimen", data: seat.lineage }}
       />
     </>
   );
