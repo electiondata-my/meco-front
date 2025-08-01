@@ -20,6 +20,8 @@ import {
 
 export interface ElectionTableProps {
   className?: string;
+  fullBorder?: boolean;
+  alternateTextColor?: boolean;
   title?: string | ReactNode;
   empty?: string | ReactNode;
   data?: any;
@@ -44,6 +46,8 @@ type TableIds =
 
 const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   className = "",
+  fullBorder,
+  alternateTextColor,
   title,
   empty,
   data = dummyData,
@@ -333,7 +337,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="whitespace-nowrap border-b-2 border-otl-gray-200 px-2 py-3 font-medium"
+                    className={clx(
+                      "whitespace-nowrap border-b-2 border-otl-gray-200 py-3 pr-3 font-medium",
+                      fullBorder && "border border-b-2 text-body-xs",
+                      alternateTextColor && "text-txt-black-500",
+                    )}
                   >
                     {header.isPlaceholder
                       ? null
@@ -367,7 +375,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                 <tr
                   key={tableRow.id}
                   className={clx(
-                    highlight ? "bg-bg-black-50" : "bg-inherit",
+                    highlight ? "bg-bg-washed" : "bg-inherit",
                     "border-b border-otl-gray-200",
                   )}
                 >
@@ -380,7 +388,8 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                           highlight && colIndex === 0
                             ? "font-medium"
                             : "font-normal",
-                          "px-2 py-[11px]",
+                          "py-[11px] pr-3",
+                          fullBorder && "border",
                         )}
                       >
                         {isLoading ? (

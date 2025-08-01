@@ -283,7 +283,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
       <div
         ref={containerRef}
         className={clx(
-          "sticky top-[56px] z-20 col-span-full mx-auto w-full border border-transparent transition-all md:top-16 md:w-[727px]",
+          "sticky top-[56px] z-20 col-span-full mx-auto w-full border border-transparent transition-all duration-300 md:top-16 md:w-[727px]",
           isStick && "border-otl-gray-200 bg-bg-white md:w-full 2xl:px-6",
         )}
       >

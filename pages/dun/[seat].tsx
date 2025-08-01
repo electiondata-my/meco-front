@@ -1,5 +1,5 @@
 import Metadata from "@components/Metadata";
-import ElectionSeatsDashboard from "@dashboards/seats";
+import ElectionSeatsDashboard from "@dashboards/my-area/seats";
 import { get } from "@lib/api";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
@@ -37,6 +37,7 @@ const DUNSeat: Page = ({
         voters_total={seat.voters_total}
         pyramid={seat.pyramid}
         barmeter={seat.barmeter}
+        lineage={{ type: "dun", data: seat.lineage }}
       />
     </>
   );

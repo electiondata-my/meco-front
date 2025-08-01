@@ -1,13 +1,21 @@
 import { FC, Fragment, useEffect, useRef, useState } from "react";
-import Map, { Layer, MapRef, Source } from "react-map-gl/mapbox";
+import Map, { Layer, MapRef, Popup, Source } from "react-map-gl/mapbox";
 import { useTheme } from "next-themes";
-import { Boundaries, ElectionType } from "@dashboards/types";
+import { Boundaries, ElectionType, Lineage } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { Checkbox } from "@govtechmy/myds-react/checkbox";
 import { useRouter } from "next/router";
 import { OptionType } from "@lib/types";
 import { useSearchParams } from "next/navigation";
 import { MapboxMapStyle } from "@lib/constants";
+import useConfig from "next/config";
+import LineageTable from "./lineage-table";
+import { GeoJSONFeature } from "mapbox-gl";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@govtechmy/myds-react/tooltip";
 
 type SeatOption = {
   state: string;
@@ -30,6 +38,7 @@ type ConditionalMapboxProps =
 type MapboxProps = {
   boundaries: Boundaries;
   seat_info?: Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption;
+  lineage?: Lineage;
 } & ConditionalMapboxProps;
 
 const COLOR_INDEX = [
@@ -47,11 +56,21 @@ const MapboxMyArea: FC<MapboxProps> = ({
   seatGeoJson,
   boundaries,
   seat_info,
+  lineage,
 }) => {
   const { LIGHT_STYLE, DARK_STYLE } = MapboxMapStyle;
   const { resolvedTheme } = useTheme();
   const [styleUrl, setStyleUrl] = useState(LIGHT_STYLE);
   const { t } = useTranslation(["common", "home"]);
+  const {
+    publicRuntimeConfig: { APP_NAME },
+  } = useConfig();
+  const [popupInfo, setPopupInfo] = useState<{
+    feature: GeoJSONFeature;
+    longitude: number;
+    latitude: number;
+    year?: number;
+  } | null>(null);
 
   const { replace } = useRouter();
 
@@ -88,6 +107,27 @@ const MapboxMyArea: FC<MapboxProps> = ({
 
   const [seat_type, seat] = seat_info ? seat_info.value.split("_") : ["", ""];
 
+  const handleMouseMove = (e: mapboxgl.MapMouseEvent) => {
+    const features = mapRef.current?.queryRenderedFeatures(e.point, {
+      layers: selectedBounds.map((selected) => `${selected}-fill`),
+    });
+
+    if (features && features.length > 0) {
+      setPopupInfo({
+        feature: features[features.length - 1],
+        longitude: e.lngLat.lng,
+        latitude: e.lngLat.lat,
+        year: Number(
+          features[features.length - 1].source
+            ?.split("_")
+            .find((part) => /^\d{4}$/.test(part)),
+        ),
+      });
+    } else {
+      setPopupInfo(null);
+    }
+  };
+
   return (
     <Map
       id="myarea-map"
@@ -101,7 +141,9 @@ const MapboxMyArea: FC<MapboxProps> = ({
       }}
       style={{ width: "100%", height: "100%" }}
       mapStyle={styleUrl}
+      customAttribution={APP_NAME}
       interactiveLayerIds={boundData.map(([years, hdata]) => hdata[0])}
+      onMouseMove={handleMouseMove}
     >
       {boundData.map(([year, [id, seats]], index) => (
         <Fragment key={year}>
@@ -117,8 +159,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
                 type="line"
                 source-layer={id}
                 paint={{
-                  "line-color":
-                    COLOR_INDEX[index]?.[0] ?? "rgba(220, 38, 38, 1)",
+                  "line-color": COLOR_INDEX[index]?.[0] ?? "transparent",
                   "line-width": 2,
                   "line-opacity": 1,
                 }}
@@ -128,23 +169,24 @@ const MapboxMyArea: FC<MapboxProps> = ({
                   ...seats,
                 ]}
               />
-              {selectedBounds.length <= 2 && (
-                <Layer
-                  id={`${id}-fill`}
-                  type="fill"
-                  source-layer={id}
-                  source={id}
-                  paint={{
-                    "fill-color":
-                      COLOR_INDEX[index]?.[1] ?? "rgba(220, 38, 38, 1)",
-                  }}
-                  filter={[
-                    "in",
-                    seat_type === "parlimen" ? "parlimen" : "dun",
-                    ...seats,
-                  ]}
-                />
-              )}
+
+              <Layer
+                id={`${id}-fill`}
+                type="fill"
+                source-layer={id}
+                source={id}
+                paint={{
+                  "fill-color":
+                    selectedBounds.length <= 2
+                      ? COLOR_INDEX[index]?.[1]
+                      : "transparent",
+                }}
+                filter={[
+                  "in",
+                  seat_type === "parlimen" ? "parlimen" : "dun",
+                  ...seats,
+                ]}
+              />
             </Source>
           )}
         </Fragment>
@@ -217,6 +259,26 @@ const MapboxMyArea: FC<MapboxProps> = ({
           </div>
         </div>
       </div>
+      {popupInfo && (
+        <Popup
+          longitude={popupInfo.longitude}
+          latitude={popupInfo.latitude}
+          closeButton={false}
+          closeOnClick={false}
+          anchor="bottom"
+        >
+          <p className="px-3 py-2 font-body text-body-xs text-txt-white">
+            {popupInfo.feature.properties?.["parlimen"] ||
+              popupInfo.feature.properties?.["dun"]}{" "}
+            ({popupInfo.year})
+          </p>
+        </Popup>
+      )}
+      {lineage && (
+        <div className="absolute left-4 top-4 h-fit">
+          <LineageTable lineage={lineage} />
+        </div>
+      )}
     </Map>
   );
 };

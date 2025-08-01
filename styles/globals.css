@@ -34,6 +34,22 @@
   scrollbar-width: none;
 }
 
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  border-top-color: #18181b;
+}
+
+.dark .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  border-top-color: rgb(255, 255,255);
+}
+.mapboxgl-popup-content {
+  background: #18181b;
+  padding: 0;
+}
+
+.dark .mapboxgl-popup-content {
+  background: rgb(255, 255,255);
+}
+
 /* Hides outline for GeoChoropleth onclick */
 /* g:focus {
   outline: none;

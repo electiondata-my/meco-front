@@ -127,3 +127,29 @@ export interface Boundaries {
   center: [number, number];
   polygons: Record<number, [string, string[]]>;
 }
+
+type LineageParlimen = {
+  year: number;
+  parlimen: string;
+  area: number;
+  overlap_pct: number;
+  n_duns: number;
+  duns: string;
+};
+type LineageDun = {
+  year: number;
+  dun: string;
+  area: number;
+  overlap_pct: number;
+  parlimen: string;
+};
+
+export type Lineage =
+  | {
+      type: "parlimen";
+      data: LineageParlimen[];
+    }
+  | {
+      type: "dun";
+      data: LineageDun[];
+    };
