@@ -40,11 +40,9 @@ export default async function handler(
 
     await Promise.all(
       routes.map(async (route) =>
-        validate(route)
-          .then((valid_route) => rebuild(res, valid_route, routes))
-          .catch((e) => {
-            throw new Error(e);
-          }),
+        rebuild(res, route, routes).catch((e) => {
+          throw new Error(e);
+        }),
       ),
     );
 

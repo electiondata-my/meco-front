@@ -116,7 +116,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
     seat: string,
     date: string,
   ): Promise<Result<BaseResult[]>> => {
-    const identifier = `${election}_${seat}`;
+    const identifier = `${election}_${seat}_${params.candidate}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
       try {

@@ -83,6 +83,9 @@ const LineageTable: FunctionComponent<LineageTableProps> = ({ lineage }) => {
           key: "year",
           id: "year",
           header: t("lineage.year"),
+          cell: ({ getValue }) => {
+            return <p className="text-center">{getValue()}</p>;
+          },
         },
         { key: "dun", id: "dun", header: t("lineage.dun") },
         { key: "parlimen", id: "parlimen", header: t("lineage.parlimen") },
@@ -90,6 +93,9 @@ const LineageTable: FunctionComponent<LineageTableProps> = ({ lineage }) => {
           key: "overlap_pct",
           id: "overlap_pct",
           header: t("lineage.overlap_pct"),
+          cell: ({ getValue }) => {
+            return <p className="text-center">{getValue()}</p>;
+          },
         },
       ]);
     }

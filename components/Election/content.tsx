@@ -53,6 +53,7 @@ const FullResultContent = ({
             {votes.map(({ x, abs, perc }, i: number) =>
               loading ? (
                 <Skeleton
+                  key={i}
                   className={clx(
                     votes.length > 2
                       ? { 0: "w-48", 1: "w-64", 2: "w-56" }[i]
@@ -82,7 +83,10 @@ const FullResultContent = ({
             {Array(3)
               .fill(null)
               .map((_, i) => (
-                <Skeleton className={{ 0: "w-48", 1: "w-64", 2: "w-56" }[i]} />
+                <Skeleton
+                  key={i}
+                  className={{ 0: "w-48", 1: "w-64", 2: "w-56" }[i]}
+                />
               ))}
           </div>
         )}

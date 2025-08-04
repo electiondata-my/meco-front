@@ -11,11 +11,6 @@ import { MapboxMapStyle } from "@lib/constants";
 import useConfig from "next/config";
 import LineageTable from "./lineage-table";
 import { GeoJSONFeature } from "mapbox-gl";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@govtechmy/myds-react/tooltip";
 
 type SeatOption = {
   state: string;
@@ -174,7 +169,6 @@ const MapboxMyArea: FC<MapboxProps> = ({
                 id={`${id}-fill`}
                 type="fill"
                 source-layer={id}
-                source={id}
                 paint={{
                   "fill-color":
                     selectedBounds.length <= 2
@@ -222,6 +216,23 @@ const MapboxMyArea: FC<MapboxProps> = ({
                       // ];
 
                       setSelectedBounds((prev) => [...prev, hdata[0]]);
+                      if (
+                        hdata[0] === boundData[0][1][0] ||
+                        selectedBounds.find((b) => b === boundData[0][1][0])
+                      ) {
+                        // Let the new source to load first. A bit hacky
+                        setTimeout(() => {
+                          try {
+                            mapRef.current?.moveLayer(
+                              `${boundData[0][1][0]}-fill`,
+                            );
+                            mapRef.current?.moveLayer(
+                              `${boundData[0][1][0]}-line`,
+                            );
+                          } catch (e) {}
+                        }, 50);
+                      }
+
                       // replace(
                       //   `/${seat_type}/${seat}?bound_years=${filter.toString()}`,
                       //   undefined,
