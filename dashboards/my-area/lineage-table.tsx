@@ -135,7 +135,7 @@ const LineageTable: FunctionComponent<LineageTableProps> = ({ lineage }) => {
         <DialogTrigger asChild>
           <Trigger />
         </DialogTrigger>
-        <DialogContent className="hide-scrollbar h-fit max-h-[calc(100%-96px)] max-w-[800px] gap-0 overflow-x-hidden overflow-y-scroll pb-0">
+        <DialogContent className="flex max-h-[calc(100%-40px)] max-w-[800px] flex-col gap-0 overflow-x-hidden overflow-y-scroll pb-0">
           <DialogHeader className="pb-6 pr-8">
             <DialogTitle asChild>
               <h6 className="flex items-center gap-3 text-body-lg font-semibold">
@@ -145,7 +145,7 @@ const LineageTable: FunctionComponent<LineageTableProps> = ({ lineage }) => {
             </DialogTitle>
           </DialogHeader>
           <DialogDescription />
-          <div className="scroll hide-scrollbar h-full flex-1 overflow-y-scroll pb-4 text-body-md max-md:px-4">
+          <div className="hide-scrollbar h-full flex-1 overflow-y-scroll pb-4 text-body-md max-md:px-4">
             <ElectionTable
               data={lineage.data}
               columns={t_schema}
