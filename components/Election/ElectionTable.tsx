@@ -439,7 +439,10 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             );
           });
           return isLoading ? (
-            <div className="flex flex-col gap-2 border-b border-otl-gray-200 p-3 first-of-type:border-t-2 md:hidden">
+            <div
+              key={idx}
+              className="flex flex-col gap-2 border-b border-otl-gray-200 p-3 first-of-type:border-t-2 md:hidden"
+            >
               <Skeleton className="w-full" />
               <div className="grid grid-cols-2 gap-3">
                 <Skeleton className="w-24" />

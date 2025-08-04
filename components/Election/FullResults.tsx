@@ -10,7 +10,9 @@ import type {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@components/dialog";
 import {
@@ -193,14 +195,14 @@ const FullResults = <T extends Candidate | Party | Seat>({
           <DialogHeader className="pr-8 uppercase">
             <div className="flex w-full items-center justify-between">
               <div className="flex flex-wrap gap-x-2 text-lg">
-                <h5 className="text-body-lg font-semibold">
+                <DialogTitle className="text-body-lg font-semibold">
                   {isParty
                     ? t(data.election_name, { ns: "election" })
                     : data.area}
-                </h5>
-                <span className="font-normal text-txt-black-500">
+                </DialogTitle>
+                <DialogDescription className="font-normal text-txt-black-500">
                   {isParty ? data.date : data.state}
-                </span>
+                </DialogDescription>
               </div>
 
               {isCandidate && <ResultBadge value={data.badge} />}
