@@ -56,7 +56,7 @@ const LayoutFooter = () => {
         </SiteLinkGroup>
         <SiteLinkGroup groupTitle={t("footer.open_data")}>
           <SiteLink asChild className="w-fit">
-            <Link target="_blank" href={"#"}>
+            <Link target="_blank" href={"https://doi.org/10.7910/DVN/O4CRXK"}>
               {t("footer.download")}
             </Link>
           </SiteLink>
