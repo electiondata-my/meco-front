@@ -88,6 +88,12 @@ export default function Header() {
               link="/map/explorer"
               onClick={close}
             />
+            <Nav.Item
+              key={"/redelineation"}
+              title={t("common:nav.redelineation")}
+              link="/redelineation"
+              onClick={close}
+            />
           </>
         )}
       </Nav>
