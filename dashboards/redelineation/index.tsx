@@ -25,7 +25,7 @@ import {
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 
 /**
- * Geo History
+ * Redelineation Dashboard
  * @overview Status: Live
  */
 
@@ -37,11 +37,11 @@ type Bar = {
   new: number[];
 };
 
-interface GeoHistoryProps {
+interface RedelineationProps {
   bar_data: Bar;
 }
 
-const GeoHistoryDashboard: FunctionComponent<GeoHistoryProps> = ({
+const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   bar_data,
 }) => {
   const { t } = useTranslation(["redelineation"]);
@@ -254,4 +254,4 @@ const GeoHistoryDashboard: FunctionComponent<GeoHistoryProps> = ({
   );
 };
 
-export default GeoHistoryDashboard;
+export default RedelineationDashboard;

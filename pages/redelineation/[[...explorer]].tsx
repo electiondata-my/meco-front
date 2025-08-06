@@ -1,12 +1,12 @@
 import Metadata from "@components/Metadata";
-import GeoHistoryDashboard from "@dashboards/redelineation";
+import RedelineationDashboard from "@dashboards/redelineation";
 import { useTranslation } from "@hooks/useTranslation";
 import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 
-const GeoHistoryIndex: Page = ({
+const RedelineationIndex: Page = ({
   meta,
   bar,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
@@ -19,7 +19,7 @@ const GeoHistoryIndex: Page = ({
         description={t("hero.description", { ns: "redelineation" })}
         keywords=""
       />
-      <GeoHistoryDashboard bar_data={bar} />
+      <RedelineationDashboard bar_data={bar} />
     </AnalyticsProvider>
   );
 };
@@ -77,4 +77,4 @@ export const getStaticProps: GetStaticProps = withi18n(
   },
 );
 
-export default GeoHistoryIndex;
+export default RedelineationIndex;
