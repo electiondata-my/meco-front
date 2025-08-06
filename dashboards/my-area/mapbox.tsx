@@ -279,8 +279,8 @@ const MapboxMyArea: FC<MapboxProps> = ({
           anchor="bottom"
         >
           <p className="px-3 py-2 font-body text-body-xs text-txt-white">
-            {popupInfo.feature.properties?.["parlimen"] ||
-              popupInfo.feature.properties?.["dun"]}{" "}
+            {popupInfo.feature.properties?.["dun"] ||
+              popupInfo.feature.properties?.["parlimen"]}{" "}
             ({popupInfo.year})
           </p>
         </Popup>

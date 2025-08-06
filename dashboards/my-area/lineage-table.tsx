@@ -72,7 +72,11 @@ const LineageTable: FunctionComponent<LineageTableProps> = ({ lineage }) => {
           id: "overlap_pct",
           header: t("lineage.overlap_pct"),
           cell: ({ getValue }) => {
-            return <p className="text-center tabular-nums">{getValue()}</p>;
+            return (
+              <p className="text-right font-mono tabular-nums">
+                {Number(getValue()).toFixed(2)}
+              </p>
+            );
           },
         },
       ]);
@@ -94,7 +98,11 @@ const LineageTable: FunctionComponent<LineageTableProps> = ({ lineage }) => {
           id: "overlap_pct",
           header: t("lineage.overlap_pct"),
           cell: ({ getValue }) => {
-            return <p className="text-center">{getValue()}</p>;
+            return (
+              <p className="text-right font-mono tabular-nums">
+                {Number(getValue()).toFixed(2)}
+              </p>
+            );
           },
         },
       ]);
@@ -158,6 +166,7 @@ const LineageTable: FunctionComponent<LineageTableProps> = ({ lineage }) => {
               isLoading={false}
               alternateTextColor={true}
               highlightedRows={indexes}
+              headerClassName="first-of-type:pl-3 last-of-type:text-right"
             />
           </div>
         </DialogContent>
