@@ -30,6 +30,7 @@ export interface ElectionTableProps {
   highlighted?: string;
   result?: ElectionResult;
   isLoading: boolean;
+  headerClassName?: string;
 }
 
 type TableIds =
@@ -55,6 +56,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   highlightedRows,
   highlighted,
   isLoading = false,
+  headerClassName,
 }) => {
   const { t, i18n } = useTranslation(["common", "election", "party"]);
 
@@ -341,6 +343,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                       "whitespace-nowrap border-b-2 border-otl-gray-200 py-3 pr-3 font-medium",
                       fullBorder && "border border-b-2 text-body-xs",
                       alternateTextColor && "text-txt-black-500",
+                      headerClassName,
                     )}
                   >
                     {header.isPlaceholder
