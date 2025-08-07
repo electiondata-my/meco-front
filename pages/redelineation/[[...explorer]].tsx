@@ -1,14 +1,18 @@
 import Metadata from "@components/Metadata";
 import RedelineationDashboard from "@dashboards/redelineation";
 import { useTranslation } from "@hooks/useTranslation";
+import { get } from "@lib/api";
 import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
+import { MapProvider } from "react-map-gl/mapbox";
 
 const RedelineationIndex: Page = ({
   meta,
   bar,
+  dropdown,
+  params,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { t } = useTranslation(["redelineation"]);
 
@@ -19,7 +23,13 @@ const RedelineationIndex: Page = ({
         description={t("hero.description", { ns: "redelineation" })}
         keywords=""
       />
-      <RedelineationDashboard bar_data={bar} />
+      <MapProvider>
+        <RedelineationDashboard
+          bar_data={bar}
+          dropdown_data={dropdown}
+          params={params}
+        />
+      </MapProvider>
     </AnalyticsProvider>
   );
 };
@@ -40,6 +50,12 @@ export const getStaticProps: GetStaticProps = withi18n(
         : ["peninsular", "2018", "parlimen"];
 
       if (!type || !year || !election_type) return { notFound: true };
+
+      const { data: dropdown } = await get(
+        `/map/dropdown_${type}_${year}_${election_type}.json`,
+      ).catch((e) => {
+        throw new Error(e);
+      });
 
       const bar = {
         state: [
@@ -68,7 +84,9 @@ export const getStaticProps: GetStaticProps = withi18n(
             id: "redelineation",
             type: "dashboard",
           },
+          params,
           bar,
+          dropdown: dropdown.data,
         },
       };
     } catch (error) {

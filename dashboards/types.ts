@@ -153,3 +153,24 @@ export type Lineage =
       type: "dun";
       data: LineageDun[];
     };
+
+type RedelineationTableNew = {
+  new_name: string;
+  seat_transferred: string;
+  pct_transferred: number;
+};
+type RedelineationTableOld = {
+  old_name: string;
+  seat_transferred: string;
+  pct_transferred: number;
+};
+
+export type RedelineationTable =
+  | {
+      type: "new";
+      data: RedelineationTableNew[];
+    }
+  | {
+      type: "old";
+      data: RedelineationTableOld[];
+    };

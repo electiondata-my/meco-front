@@ -13,16 +13,20 @@ import { useTranslation } from "@hooks/useTranslation";
 import { clx } from "@lib/helpers";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/router";
-import { FunctionComponent, useRef } from "react";
+import { FunctionComponent, useEffect, useRef } from "react";
 import {
   Tabs,
   TabsList,
   TabsTrigger,
   TabsContent,
-  TabsCounter,
 } from "@govtechmy/myds-react/tabs";
+import { useMap } from "react-map-gl/mapbox";
+import GeohistoryTable from "./geohistory-table";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
+const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
+  ssr: false,
+});
 
 /**
  * Redelineation Dashboard
@@ -38,22 +42,61 @@ type Bar = {
 };
 
 interface RedelineationProps {
+  params: {
+    type: string;
+    year: string;
+    election_type: string;
+  };
   bar_data: Bar;
+  dropdown_data: {
+    parlimen: string;
+    code_parlimen: string;
+    center: [number, number];
+    zoom: number;
+    dun: string;
+    code_dun: string;
+  }[];
 }
 
 const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   bar_data,
+  dropdown_data,
+  params,
 }) => {
   const { t } = useTranslation(["redelineation"]);
   const { push } = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const {
+    type = "peninsular",
+    year = "2018",
+    election_type = "parlimen",
+  } = params;
+
   const { data, setData } = useData({
     loading: false,
     isStick: false,
+    seat_value: dropdown_data[0].dun || dropdown_data[0].parlimen,
+    dropdown: dropdown_data.map(
+      (
+        d: any,
+      ): {
+        value: string;
+        label: string;
+        code: string;
+        center: [number, number];
+        zoom: number;
+      } => ({
+        value: d["dun"] || d["parlimen"],
+        label: d["dun"] || d["parlimen"],
+        code: d["code_dun"] || d["code_parlimen"],
+        center: d.center,
+        zoom: d.zoom,
+      }),
+    ),
   });
 
-  const { loading, isStick } = data;
+  const { loading, isStick, dropdown, seat_value } = data;
 
   const STATUS_COLOR_MAP = {
     unchanged: "#E4E4E7",
@@ -61,6 +104,24 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
     smaller: "#FFBA6C",
     new: "#FC6B6B",
   };
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setData("isStick", !entry.isIntersecting);
+      },
+      { threshold: [1] },
+    );
+
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const { redelineation_map } = useMap();
 
   return (
     <>
@@ -104,7 +165,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
           <div className="flex max-w-[842px] flex-col items-center gap-2">
             <div className="mb-4 flex w-full justify-center gap-8">
               {Object.entries(STATUS_COLOR_MAP).map(([key, value]) => (
-                <div className="flex flex-col gap-1">
+                <div key={key} className="flex flex-col gap-1">
                   <p className="text-body-xs text-txt-black-500">
                     {t(`status.${key}.title`)}
                   </p>
@@ -114,7 +175,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             </div>
             <div className="flex w-fit items-center gap-4.5 rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5">
               {Object.entries(STATUS_COLOR_MAP).map(([key, value]) => (
-                <div className="flex items-center gap-2">
+                <div key={key} className="flex items-center gap-2">
                   <div
                     className="size-2 rounded-full"
                     style={{ background: value }}
@@ -128,7 +189,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 </TooltipTrigger>
                 <TooltipContent className="flex flex-col text-body-xs">
                   {Object.entries(STATUS_COLOR_MAP).map(([key, value]) => (
-                    <p>
+                    <p key={key}>
                       <strong>{t(`status.${key}.title`)}:</strong>{" "}
                       {t(`status.${key}.description`)}
                     </p>
@@ -152,7 +213,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                       data: value,
                       fill: true,
                       borderRadius: 4,
-                      barThickness: 22,
+                      barThickness: 24,
                       backgroundColor:
                         STATUS_COLOR_MAP[key as keyof typeof STATUS_COLOR_MAP],
                     };
@@ -167,53 +228,39 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               {t("constituency_redistribution")}
             </h2>
             <div className="mx-auto w-full max-w-[727px] text-center">
-              <ComboBox
+              <ComboBox<{
+                value: string;
+                code: string;
+                center: [number, number];
+                zoom: number;
+              }>
                 placeholder={t("search_seat", { ns: "home" })}
-                options={[]}
+                options={dropdown}
                 config={{
-                  baseSort: (a: any, b: any) => {
-                    if (a.item.type === b.item.type) {
-                      return String(a.item.seat).localeCompare(
-                        String(b.item.seat),
-                      );
-                    }
-                    return a.item.type === "parlimen" ? -1 : 1;
-                  },
-                  keys: ["label", "seat", "state", "type"],
+                  keys: ["label"],
                 }}
-                // format={(option) => (
-                //   <>
-                //     <span>{`${option.seat}, ${option.state} `}</span>
-                //     <span className="text-body-sm text-txt-black-500">
-                //       {"(" + t(option.type) + ")"}
-                //     </span>
-                //   </>
-                // )}
-                // selected={
-                //   data.seat_value
-                //     ? SEAT_OPTIONS.find((e) => e.value === data.seat_value)
-                //     : null
-                // }
-                selected={null}
-                onChange={(option) => undefined}
-                // onChange={(selected) => {
-                //   if (selected) {
-                //     setData("loading", true);
-                //     setData("seat_value", selected.value);
-                //     const [type, seat] = selected.value.split("_");
-                //     push(`/${type}/${seat}`, `/${type}/${seat}`, {
-                //       scroll: false,
-                //     })
-                //       .catch((e) => {
-                //         toast({
-                //           variant: "error",
-                //           title: t("toast.request_failure"),
-                //           description: t("toast.try_again"),
-                //         });
-                //       })
-                //       .finally(() => setData("loading", false));
-                //   } else setData("seat_value", "");
-                // }}
+                format={(option) => (
+                  <>
+                    <span className="text-body-sm">{`${option.label} `}</span>
+                  </>
+                )}
+                selected={
+                  seat_value
+                    ? dropdown.find((e) => e.value === seat_value)
+                    : null
+                }
+                onChange={(selected) => {
+                  if (selected) {
+                    setData("seat_value", selected.value);
+                    if (!redelineation_map) return;
+
+                    redelineation_map.flyTo({
+                      center: selected.center,
+                      zoom: selected.zoom,
+                      duration: 1500,
+                    });
+                  } else setData("seat_value", "");
+                }}
               />
             </div>
 
@@ -231,20 +278,51 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   {t("old_constituency", { ns: "common" })}
                 </TabsTrigger>
               </TabsList>
-              <div className="mx-auto flex h-[400px] w-[846px] items-center justify-center bg-bg-washed-active">
-                mapbox here
+              <div className="relative mx-auto flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[846px]">
+                <Mapbox
+                  params_source={`${type}_${year}_${election_type}`}
+                  initialState={{
+                    longitude: dropdown_data[0].center[0],
+                    latitude: dropdown_data[0].center[1],
+                    zoom: dropdown_data[0].zoom,
+                  }}
+                />
               </div>
               <TabsContent
                 className="mx-auto max-w-[626px]"
                 value="new_constituency"
               >
-                last table here
+                <GeohistoryTable
+                  type="new"
+                  table={{
+                    type: "new",
+                    data: [
+                      {
+                        new_name: "P.138 Kota Melaka",
+                        seat_transferred: "P.138 Bandar Malacca",
+                        pct_transferred: 79.2,
+                      },
+                    ],
+                  }}
+                />
               </TabsContent>
               <TabsContent
                 className="mx-auto max-w-[626px]"
                 value="old_constituency"
               >
-                last table here 2
+                <GeohistoryTable
+                  type="old"
+                  table={{
+                    type: "old",
+                    data: [
+                      {
+                        old_name: "P.138 Bandar Malacca",
+                        seat_transferred: "P.138 Kota Melaka",
+                        pct_transferred: 79.2,
+                      },
+                    ],
+                  }}
+                />
               </TabsContent>
             </Tabs>
           </div>
