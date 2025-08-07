@@ -197,6 +197,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               <Bar
                 layout="horizontal"
                 enableStack={true}
+                enableGridY={false}
                 className={clx(
                   "mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[400px] lg:w-[842px]",
                   bar_data["state"].length === 1 &&
