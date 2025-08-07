@@ -52,9 +52,9 @@ const MapboxRedelineation: FC<Props> = ({ params_source, initialState }) => {
       mapStyle={styleUrl}
       customAttribution={APP_NAME}
     >
-      <div className="absolute bottom-10 right-1/2 h-fit translate-x-1/2 lg:right-4 lg:top-4 lg:translate-x-0">
-        <div className="flex h-fit w-[330px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog px-3 pb-2 pt-3 shadow-context-menu lg:w-[120px] lg:p-[5px]">
-          <p className="px-2.5 py-1.5 text-center text-body-2xs font-medium text-txt-black-500 lg:text-start">
+      <div className="absolute right-4 top-4">
+        <div className="flex w-[120px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog p-[5px] shadow-context-menu">
+          <p className="px-2.5 py-1.5 text-start text-body-2xs font-medium text-txt-black-500">
             {t("common:constituency")}
           </p>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">

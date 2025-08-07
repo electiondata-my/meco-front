@@ -22,6 +22,7 @@ import {
 } from "@govtechmy/myds-react/tabs";
 import { useMap } from "react-map-gl/mapbox";
 import GeohistoryTable from "./geohistory-table";
+import { useMediaQuery } from "@hooks/useMediaQuery";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
@@ -67,6 +68,8 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   const { push } = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
   const {
     type = "peninsular",
     year = "2018",
@@ -135,11 +138,11 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         description={[t("hero.description", { ns: "redelineation" })]}
         pageId="geo-history"
       />
-      <div ref={sentinelRef} className="-mt-10 h-16" />
+      <div ref={sentinelRef} className="-mt-10 hidden h-16 md:block" />
       <div
         ref={containerRef}
         className={clx(
-          "sticky top-16 z-20 col-span-full mx-auto w-full border border-transparent px-4.5 py-3 transition-all duration-300 md:w-[727px] md:px-0",
+          "sticky top-16 z-20 col-span-full mx-auto hidden w-full border border-transparent px-4.5 py-3 transition-all duration-300 md:block md:w-[727px] md:px-0",
           isStick &&
             "border-otl-gray-200 bg-bg-white py-0 max-md:top-14 md:w-full md:px-6",
         )}
@@ -162,8 +165,8 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             <span className="text-txt-danger">{t("by_state")}</span>
           </h2>
 
-          <div className="flex max-w-[842px] flex-col items-center gap-2">
-            <div className="mb-4 flex w-full justify-center gap-8">
+          <div className="flex w-full flex-col items-center gap-2 lg:max-w-[842px]">
+            <div className="mb-4 flex w-full gap-8 overflow-scroll sm:justify-center">
               {Object.entries(STATUS_COLOR_MAP).map(([key, value]) => (
                 <div key={key} className="flex flex-col gap-1">
                   <p className="text-body-xs text-txt-black-500">
@@ -173,7 +176,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 </div>
               ))}
             </div>
-            <div className="flex w-fit items-center gap-4.5 rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5">
+            <div className="flex w-full items-center gap-4.5 overflow-scroll rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5 md:w-fit">
               {Object.entries(STATUS_COLOR_MAP).map(([key, value]) => (
                 <div key={key} className="flex items-center gap-2">
                   <div
@@ -198,28 +201,32 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               </Tooltip>
             </div>
 
-            <Bar
-              layout="horizontal"
-              enableStack={true}
-              className="h-[400px] w-[842px]"
-              type="category"
-              data={{
-                labels: bar_data["state"],
-                datasets: Object.entries(bar_data)
-                  .filter(([key]) => key !== "state")
-                  .map(([key, value]) => {
-                    return {
-                      label: t(`status.${key}.title`),
-                      data: value,
-                      fill: true,
-                      borderRadius: 4,
-                      barThickness: 24,
-                      backgroundColor:
-                        STATUS_COLOR_MAP[key as keyof typeof STATUS_COLOR_MAP],
-                    };
-                  }),
-              }}
-            />
+            <div className="w-full">
+              <Bar
+                layout="horizontal"
+                enableStack={true}
+                className="mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[400px] lg:w-[842px]"
+                type="category"
+                data={{
+                  labels: bar_data["state"],
+                  datasets: Object.entries(bar_data)
+                    .filter(([key]) => key !== "state")
+                    .map(([key, value]) => {
+                      return {
+                        label: t(`status.${key}.title`),
+                        data: value,
+                        fill: true,
+                        borderRadius: 4,
+                        barThickness: isDesktop ? 24 : 16,
+                        backgroundColor:
+                          STATUS_COLOR_MAP[
+                            key as keyof typeof STATUS_COLOR_MAP
+                          ],
+                      };
+                    }),
+                }}
+              />
+            </div>
           </div>
         </SectionGrid>
         <SectionGrid>
@@ -268,7 +275,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               defaultValue="new_constituency"
               size="small"
               variant="enclosed"
-              className="space-y-8"
+              className="space-y-6 lg:space-y-8"
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new_constituency" className="">
@@ -278,7 +285,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   {t("old_constituency", { ns: "common" })}
                 </TabsTrigger>
               </TabsList>
-              <div className="relative mx-auto flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[846px]">
+              <div className="relative mx-auto flex h-[400px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[846px]">
                 <Mapbox
                   params_source={`${type}_${year}_${election_type}`}
                   initialState={{

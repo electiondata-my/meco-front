@@ -90,7 +90,7 @@ const Item: FunctionComponent<NavItemProps> = ({
       underline={"none"}
       asChild
       className={clx(
-        "px-2.5 py-1.5 font-medium text-txt-black-700",
+        "flex items-center px-2.5 py-1.5 font-medium text-txt-black-700",
         pathname.startsWith(link) && link !== "/"
           ? "rounded-md bg-bg-washed-active"
           : "",

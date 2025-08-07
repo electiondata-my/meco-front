@@ -4,6 +4,7 @@ import { useMediaQuery } from "@hooks/useMediaQuery";
 import { useTranslation } from "@hooks/useTranslation";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { FunctionComponent, useMemo } from "react";
+import BarPerc from "@charts/bar-perc";
 
 interface GeohistoryTableProps {
   type: "old" | "new";
@@ -31,7 +32,7 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
         {
           key: "seat_transferred",
           id: "seat_transferred",
-          header: t("table.seat_transferred"),
+          header: t("table.seat_transferred_from"),
         },
         {
           key: "pct_transferred",
@@ -60,7 +61,7 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
         {
           key: "seat_transferred",
           id: "seat_transferred",
-          header: t("table.seat_transferred"),
+          header: t("table.seat_transferred_from"),
         },
         {
           key: "pct_transferred",
@@ -94,9 +95,25 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
   }
 
   return (
-    <div>
-      mobile
-      <p>ssdsd</p>
+    <div className="flex w-full flex-col gap-3 rounded-md border border-otl-gray-200 bg-bg-white p-3">
+      <p className="text-body-sm">
+        <span className="font-semibold">
+          {t("new_constituency")} (P.138 Kota Melaka)
+        </span>{" "}
+        {t("table.seat_transferred_from_to")} (P.138 Bandar Malacca)
+      </p>
+      <div className="flex w-full flex-col gap-2">
+        <div className="flex items-center justify-between text-body-sm">
+          <p className="text-txt-black-500">{t("table.seat_transferred")}</p>
+          <p>79.20%</p>
+        </div>
+        <BarPerc
+          className="w-full"
+          hidden
+          value={79.2}
+          size={"h-[4px] w-full"}
+        />
+      </div>
     </div>
   );
 };
