@@ -426,21 +426,14 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
                   size="small"
                   variant="enclosed"
                 >
-                  <TabsList className="space-x-0 !pb-3.5">
-                    <TabsTrigger
-                      // disabled={data.type_value !== params.type}
-                      value="parlimen"
-                      className=""
-                    >
+                  <TabsList className="space-x-0 !py-0">
+                    <TabsTrigger value="parlimen" className="">
                       <TabsIcon>
                         <GovtOfficeIcon />
                       </TabsIcon>
                       {t("parlimen", { ns: "common" })}
                     </TabsTrigger>
-                    <TabsTrigger
-                      // disabled={data.type_value !== params.type}
-                      value="dun"
-                    >
+                    <TabsTrigger value="dun">
                       <TabsIcon>
                         <FlagIcon />
                       </TabsIcon>
