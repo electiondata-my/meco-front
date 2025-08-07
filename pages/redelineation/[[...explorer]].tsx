@@ -27,7 +27,11 @@ const RedelineationIndex: Page = ({
         <RedelineationDashboard
           bar_data={bar}
           dropdown_data={dropdown}
-          params={params}
+          params={{
+            type: params.explorer?.[0] || "peninsular",
+            year: params.explorer?.[1] || "2018",
+            election_type: params.explorer?.[2] || "parlimen",
+          }}
         />
       </MapProvider>
     </AnalyticsProvider>
@@ -57,7 +61,7 @@ export const getStaticProps: GetStaticProps = withi18n(
         throw new Error(e);
       });
 
-      const bar = {
+      const bar_peninsular = {
         state: [
           "Johor",
           "Perak",
@@ -78,6 +82,22 @@ export const getStaticProps: GetStaticProps = withi18n(
         smaller: [13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
         new: [1, 4, 6, 1, 3, 2, 7, 4, 2, 1, 2, 4, 4],
       };
+
+      const bar_sabah = {
+        state: ["Sabah"],
+        unchanged: [10],
+        bigger: [1],
+        smaller: [5],
+        new: [1],
+      };
+
+      const bar_sarawak = {
+        state: ["Sarawak"],
+        unchanged: [1],
+        bigger: [3],
+        smaller: [5],
+        new: [3],
+      };
       return {
         props: {
           meta: {
@@ -85,7 +105,12 @@ export const getStaticProps: GetStaticProps = withi18n(
             type: "dashboard",
           },
           params,
-          bar,
+          bar:
+            type === "peninsular"
+              ? bar_peninsular
+              : type === "sabah"
+                ? bar_sabah
+                : bar_sarawak,
           dropdown: dropdown.data,
         },
       };

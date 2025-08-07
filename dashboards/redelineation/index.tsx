@@ -12,7 +12,6 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { clx } from "@lib/helpers";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/router";
 import { FunctionComponent, useEffect, useRef } from "react";
 import {
   Tabs,
@@ -23,6 +22,8 @@ import {
 import { useMap } from "react-map-gl/mapbox";
 import GeohistoryTable from "./geohistory-table";
 import { useMediaQuery } from "@hooks/useMediaQuery";
+import RedelineationFilters from "./filters";
+import { useWatch } from "@hooks/useWatch";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
@@ -65,20 +66,11 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   params,
 }) => {
   const { t } = useTranslation(["redelineation"]);
-  const { push } = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
-  const {
-    type = "peninsular",
-    year = "2018",
-    election_type = "parlimen",
-  } = params;
+  const { type, year, election_type } = params;
 
   const { data, setData } = useData({
-    loading: false,
-    isStick: false,
     seat_value: dropdown_data[0].dun || dropdown_data[0].parlimen,
     dropdown: dropdown_data.map(
       (
@@ -99,7 +91,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
     ),
   });
 
-  const { loading, isStick, dropdown, seat_value } = data;
+  const { dropdown, seat_value } = data;
 
   const STATUS_COLOR_MAP = {
     unchanged: "#E4E4E7",
@@ -108,23 +100,40 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
     new: "#FC6B6B",
   };
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setData("isStick", !entry.isIntersecting);
-      },
-      { threshold: [1] },
+  const { redelineation_map } = useMap();
+
+  useWatch(() => {
+    setData("seat_value", dropdown_data[0].dun || dropdown_data[0].parlimen);
+
+    setData(
+      "dropdown",
+      dropdown_data.map(
+        (
+          d: any,
+        ): {
+          value: string;
+          label: string;
+          code: string;
+          center: [number, number];
+          zoom: number;
+        } => ({
+          value: d["dun"] || d["parlimen"],
+          label: d["dun"] || d["parlimen"],
+          code: d["code_dun"] || d["code_parlimen"],
+          center: d.center,
+          zoom: d.zoom,
+        }),
+      ),
     );
 
-    if (sentinel) {
-      observer.observe(sentinel);
+    if (redelineation_map) {
+      redelineation_map.flyTo({
+        center: dropdown_data[0].center,
+        zoom: dropdown_data[0].zoom,
+        duration: 2000,
+      });
     }
-
-    return () => observer.disconnect();
-  }, []);
-
-  const { redelineation_map } = useMap();
+  }, [params]);
 
   return (
     <>
@@ -138,27 +147,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         description={[t("hero.description", { ns: "redelineation" })]}
         pageId="geo-history"
       />
-      <div ref={sentinelRef} className="-mt-10 hidden h-16 md:block" />
-      <div
-        ref={containerRef}
-        className={clx(
-          "sticky top-16 z-20 col-span-full mx-auto hidden w-full border border-transparent px-4.5 py-3 transition-all duration-300 md:block md:w-[727px] md:px-0",
-          isStick &&
-            "border-otl-gray-200 bg-bg-white py-0 max-md:top-14 md:w-full md:px-6",
-        )}
-      >
-        <div
-          className={clx(
-            "flex w-full flex-col items-center gap-6",
-            isStick &&
-              "mx-auto max-w-screen-xl flex-row justify-between gap-3 py-1",
-          )}
-        >
-          <p>filters here</p>
-        </div>
-      </div>
 
-      <Container className="gap-8 py-8 lg:gap-16 lg:py-16">
+      <RedelineationFilters params={{ election_type, type, year }} />
+
+      <Container className="gap-8 py-8 lg:gap-16 lg:pb-16">
         <SectionGrid className="space-y-8">
           <h2 className="max-w-[727px] text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
             {t("impact_change")}{" "}
@@ -205,7 +197,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               <Bar
                 layout="horizontal"
                 enableStack={true}
-                className="mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[400px] lg:w-[842px]"
+                className={clx(
+                  "mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[400px] lg:w-[842px]",
+                  bar_data["state"].length === 1 && "min-h-[80px] lg:h-[60px]",
+                )}
                 type="category"
                 data={{
                   labels: bar_data["state"],

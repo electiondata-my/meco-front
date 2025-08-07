@@ -9,6 +9,8 @@ export const routes = {
   TRIVIA: "/trivia",
   BLOGS: "/blogs",
   API_DOCS: "/api-docs",
+  MAP_EXPLORER: "/map/explorer",
+  REDELINEATION: "/redelineation",
 };
 
 export const static_routes: string[] = (() => {
