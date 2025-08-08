@@ -146,15 +146,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
       <Container className="gap-8 py-8 lg:gap-16 lg:pb-16">
         <SectionGrid className="space-y-8">
           <h2 className="max-w-[727px] text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
-            {t("impact_change")}{" "}
-            <span className="text-txt-danger">{t("by_state")}</span>
+            {t(`where_seats_${toggle_state}`)}
           </h2>
 
           <div className="flex w-full flex-col items-center gap-6 lg:max-w-[842px]">
-            <h4 className="max-w-[727px] text-center font-heading text-body-sm font-semibold lg:text-body-lg">
-              {t(`where_seats_${toggle_state}`)}
-            </h4>
-
             <Tabs
               size="small"
               variant="enclosed"
@@ -226,7 +221,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 className={clx(
                   "mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[400px] lg:w-[842px]",
                   bar_data["state"].length === 1 &&
-                    "h-[60px] min-h-0 lg:h-[60px]",
+                    "h-[80px] min-h-0 lg:h-[100px]",
                 )}
                 type="category"
                 data={{
@@ -256,41 +251,6 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             <h2 className="mx-auto max-w-[727px] text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
               {t("constituency_redistribution")}
             </h2>
-            <div className="mx-auto w-full max-w-[727px] text-center">
-              <ComboBox<{
-                value: string;
-                center: [number, number];
-                zoom: number;
-              }>
-                placeholder={t("search_seat", { ns: "home" })}
-                options={dropdown}
-                config={{
-                  keys: ["label"],
-                }}
-                format={(option) => (
-                  <>
-                    <span className="text-body-sm">{`${option.label} `}</span>
-                  </>
-                )}
-                selected={
-                  seat_value
-                    ? dropdown.find((e) => e.value === seat_value)
-                    : null
-                }
-                onChange={(selected) => {
-                  if (selected) {
-                    setData("seat_value", selected.value);
-                    if (!redelineation_map) return;
-
-                    redelineation_map.flyTo({
-                      center: selected.center,
-                      zoom: selected.zoom,
-                      duration: 1500,
-                    });
-                  } else setData("seat_value", "");
-                }}
-              />
-            </div>
 
             <Tabs
               size="small"
@@ -309,6 +269,41 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   {t("old_constituency", { ns: "common" })}
                 </TabsTrigger>
               </TabsList>
+              <div className="mx-auto w-full max-w-[727px] text-center">
+                <ComboBox<{
+                  value: string;
+                  center: [number, number];
+                  zoom: number;
+                }>
+                  placeholder={t("search_seat", { ns: "home" })}
+                  options={dropdown}
+                  config={{
+                    keys: ["label"],
+                  }}
+                  format={(option) => (
+                    <>
+                      <span className="text-body-sm">{`${option.label} `}</span>
+                    </>
+                  )}
+                  selected={
+                    seat_value
+                      ? dropdown.find((e) => e.value === seat_value)
+                      : null
+                  }
+                  onChange={(selected) => {
+                    if (selected) {
+                      setData("seat_value", selected.value);
+                      if (!redelineation_map) return;
+
+                      redelineation_map.flyTo({
+                        center: selected.center,
+                        zoom: selected.zoom,
+                        duration: 1500,
+                      });
+                    } else setData("seat_value", "");
+                  }}
+                />
+              </div>
               <div className="relative mx-auto flex h-[400px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[846px]">
                 <Mapbox
                   params_source={`${type}_${year}_${election_type}`}
