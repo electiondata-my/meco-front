@@ -30,27 +30,31 @@ import {
 import ElectionFilterTrigger from "@dashboards/elections/filter";
 import { Button, ButtonIcon } from "@govtechmy/myds-react/button";
 import Label from "@components/Label";
+import { yearOptions } from ".";
+import { ElectionType, Region } from "@dashboards/types";
 
 interface RedelineationFiltersProps {
   params: {
     type: string;
     year: string;
-    election_type: string;
+    election_type: ElectionType;
   };
+  yearOptions: yearOptions;
 }
 
 const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
   params,
+  yearOptions,
 }) => {
   const { t } = useTranslation(["redelineation"]);
   const { data, setData } = useData({
     isStick: false,
     open_filter: false,
-    type_value: params.type,
+    type_value: params.type as Region,
 
-    mobile_type: params.type,
+    mobile_type: params.type as Region,
     mobile_year: params.year,
-    mobile_election_type: params.election_type,
+    mobile_election_type: params.election_type as ElectionType,
   });
   const { push } = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -71,193 +75,18 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
     },
   ];
 
-  const YEAR_OPTIONS: OptionType[] = useMemo(() => {
-    if (data.type_value === "peninsular") {
-      return [
-        {
-          label: "2018",
-          value: "2018",
-        },
-        {
-          label: "2003",
-          value: "2003",
-        },
-        {
-          label: "1994",
-          value: "1994",
-        },
-        {
-          label: "1984",
-          value: "1984",
-        },
-        {
-          label: "1974",
-          value: "1974",
-        },
-        {
-          label: "1959",
-          value: "1959",
-        },
-        params.election_type === "parlimen"
-          ? {
-              label: "1955",
-              value: "1955",
-            }
-          : {
-              label: "",
-              value: "",
-            },
-      ];
-    } else if (data.type_value === "sabah") {
-      return [
-        {
-          label: "2019",
-          value: "2019",
-        },
-        {
-          label: "2003",
-          value: "2003",
-        },
-        {
-          label: "1994",
-          value: "1994",
-        },
-        {
-          label: "1984",
-          value: "1984",
-        },
-        {
-          label: "1974",
-          value: "1974",
-        },
-        {
-          label: "1966",
-          value: "1966",
-        },
-      ];
-    } else {
-      return [
-        {
-          label: "2015",
-          value: "2015",
-        },
-        {
-          label: "2005",
-          value: "2005",
-        },
-        {
-          label: "1996",
-          value: "1996",
-        },
-        {
-          label: "1987",
-          value: "1987",
-        },
-        {
-          label: "1977",
-          value: "1977",
-        },
-        {
-          label: "1968",
-          value: "1968",
-        },
-      ];
-    }
-  }, [data.type_value, params.election_type]);
-
-  const YEAR_OPTIONS_MOBILE: OptionType[] = useMemo(() => {
-    if (data.mobile_type === "peninsular") {
-      return [
-        {
-          label: "2018",
-          value: "2018",
-        },
-        {
-          label: "2003",
-          value: "2003",
-        },
-        {
-          label: "1994",
-          value: "1994",
-        },
-        {
-          label: "1984",
-          value: "1984",
-        },
-        {
-          label: "1974",
-          value: "1974",
-        },
-        {
-          label: "1959",
-          value: "1959",
-        },
-        data.mobile_election_type === "parlimen"
-          ? {
-              label: "1955",
-              value: "1955",
-            }
-          : {
-              label: "",
-              value: "",
-            },
-      ];
-    } else if (data.mobile_type === "sabah") {
-      return [
-        {
-          label: "2019",
-          value: "2019",
-        },
-        {
-          label: "2003",
-          value: "2003",
-        },
-        {
-          label: "1994",
-          value: "1994",
-        },
-        {
-          label: "1984",
-          value: "1984",
-        },
-        {
-          label: "1974",
-          value: "1974",
-        },
-        {
-          label: "1966",
-          value: "1966",
-        },
-      ];
-    } else {
-      return [
-        {
-          label: "2015",
-          value: "2015",
-        },
-        {
-          label: "2005",
-          value: "2005",
-        },
-        {
-          label: "1996",
-          value: "1996",
-        },
-        {
-          label: "1987",
-          value: "1987",
-        },
-        {
-          label: "1977",
-          value: "1977",
-        },
-        {
-          label: "1968",
-          value: "1968",
-        },
-      ];
-    }
-  }, [data.mobile_type, data.mobile_election_type]);
+  const YEAR_OPTIONS: OptionType[] = yearOptions[
+    `${data.type_value}_${params.election_type}`
+  ].map((y) => ({
+    value: y,
+    label: y,
+  }));
+  const YEAR_OPTIONS_MOBILE: OptionType[] = yearOptions[
+    `${data.mobile_type}_${data.mobile_election_type}`
+  ].map((y) => ({
+    value: y,
+    label: y,
+  }));
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -304,7 +133,7 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
           <Dropdown
             anchor="left"
             width="max-sm:w-full"
-            options={YEAR_OPTIONS.filter((opt) => Boolean(opt.value))}
+            options={YEAR_OPTIONS}
             selected={YEAR_OPTIONS.find((opt) => opt.value === params.year)}
             onChange={(selected) => {
               push(
@@ -400,9 +229,7 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
                 />
                 <Dropdown
                   anchor="left-0 max-h-36"
-                  options={YEAR_OPTIONS_MOBILE.filter((opt) =>
-                    Boolean(opt.value),
-                  )}
+                  options={YEAR_OPTIONS_MOBILE}
                   selected={YEAR_OPTIONS_MOBILE.find(
                     (opt) => opt.value === data.mobile_year,
                   )}
@@ -421,7 +248,7 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
                 <Tabs
                   value={data.mobile_election_type}
                   onValueChange={(value) => {
-                    setData("mobile_election_type", value);
+                    setData("mobile_election_type", value as ElectionType);
                   }}
                   size="small"
                   variant="enclosed"

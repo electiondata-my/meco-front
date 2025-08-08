@@ -1,4 +1,5 @@
 export type ElectionType = "parlimen" | "dun";
+export type Region = "peninsular" | "sabah" | "sarawak";
 export enum ElectionEnum {
   Parlimen = 0,
   Dun = 1,

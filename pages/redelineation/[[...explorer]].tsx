@@ -13,6 +13,7 @@ const RedelineationIndex: Page = ({
   bar,
   dropdown,
   params,
+  yearOptions,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { t } = useTranslation(["redelineation"]);
 
@@ -32,6 +33,7 @@ const RedelineationIndex: Page = ({
             year: params.explorer?.[1] || "2018",
             election_type: params.explorer?.[2] || "parlimen",
           }}
+          yearOptions={yearOptions}
         />
       </MapProvider>
     </AnalyticsProvider>
@@ -55,10 +57,14 @@ export const getStaticProps: GetStaticProps = withi18n(
 
       if (!type || !year || !election_type) return { notFound: true };
 
-      const { data: dropdown } = await get(
-        `/map/dropdown_${type}_${year}_${election_type}.json`,
-      ).catch((e) => {
-        throw new Error(e);
+      const results = await Promise.allSettled([
+        get(`/map/dropdown_${type}_${year}_${election_type}.json`),
+        get(`/redelineation/filter.json`),
+      ]);
+
+      const [dropdown, yearOptions] = results.map((e) => {
+        if (e.status === "rejected") return null;
+        else return e.value.data;
       });
 
       const bar_peninsular = {
@@ -112,6 +118,7 @@ export const getStaticProps: GetStaticProps = withi18n(
                 ? bar_sabah
                 : bar_sarawak,
           dropdown: dropdown.data,
+          yearOptions,
         },
       };
     } catch (error) {

@@ -12,7 +12,7 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { clx } from "@lib/helpers";
 import dynamic from "next/dynamic";
-import { FunctionComponent, useEffect, useRef } from "react";
+import { FunctionComponent } from "react";
 import {
   Tabs,
   TabsList,
@@ -24,6 +24,7 @@ import GeohistoryTable from "./geohistory-table";
 import { useMediaQuery } from "@hooks/useMediaQuery";
 import RedelineationFilters from "./filters";
 import { useWatch } from "@hooks/useWatch";
+import { ElectionType, Region } from "@dashboards/types";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
@@ -43,11 +44,15 @@ type Bar = {
   new: number[];
 };
 
+export type yearOptions = {
+  [K in `${Region}_${ElectionType}`]: string[];
+};
+
 interface RedelineationProps {
   params: {
     type: string;
     year: string;
-    election_type: string;
+    election_type: ElectionType;
   };
   bar_data: Bar;
   dropdown_data: {
@@ -58,12 +63,14 @@ interface RedelineationProps {
     dun: string;
     code_dun: string;
   }[];
+  yearOptions: yearOptions;
 }
 
 const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   bar_data,
   dropdown_data,
   params,
+  yearOptions,
 }) => {
   const { t } = useTranslation(["redelineation"]);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
@@ -148,7 +155,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         pageId="geo-history"
       />
 
-      <RedelineationFilters params={{ election_type, type, year }} />
+      <RedelineationFilters
+        params={{ election_type, type, year }}
+        yearOptions={yearOptions}
+      />
 
       <Container className="gap-8 py-8 lg:gap-16 lg:pb-16">
         <SectionGrid className="space-y-8">
