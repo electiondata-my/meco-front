@@ -12,7 +12,7 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { clx } from "@lib/helpers";
 import dynamic from "next/dynamic";
-import { FunctionComponent } from "react";
+import { FunctionComponent, useEffect } from "react";
 import {
   Tabs,
   TabsList,
@@ -24,7 +24,13 @@ import GeohistoryTable from "./geohistory-table";
 import { useMediaQuery } from "@hooks/useMediaQuery";
 import RedelineationFilters from "./filters";
 import { useWatch } from "@hooks/useWatch";
-import { ElectionType, Region } from "@dashboards/types";
+import {
+  ElectionType,
+  RedelineationData,
+  RedelineationTableNew,
+  RedelineationTableOld,
+  Region,
+} from "@dashboards/types";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
@@ -36,14 +42,6 @@ const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
  * @overview Status: Live
  */
 
-type Bar = {
-  state: string[];
-  unchanged: number[];
-  bigger: number[];
-  smaller: number[];
-  new: number[];
-};
-
 export type yearOptions = {
   [K in `${Region}_${ElectionType}`]: string[];
 };
@@ -54,7 +52,6 @@ interface RedelineationProps {
     year: string;
     election_type: ElectionType;
   };
-  bar_data: Bar;
   dropdown_data: {
     parlimen: string;
     code_parlimen: string;
@@ -64,83 +61,69 @@ interface RedelineationProps {
     code_dun: string;
   }[];
   yearOptions: yearOptions;
+  data: RedelineationData;
 }
 
 const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
-  bar_data,
   dropdown_data,
   params,
   yearOptions,
+  data,
 }) => {
   const { t } = useTranslation(["redelineation"]);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const { type, year, election_type } = params;
 
-  const { data, setData } = useData({
-    seat_value: dropdown_data[0].dun || dropdown_data[0].parlimen,
-    dropdown: dropdown_data.map(
-      (
-        d: any,
-      ): {
-        value: string;
-        label: string;
-        code: string;
-        center: [number, number];
-        zoom: number;
-      } => ({
-        value: d["dun"] || d["parlimen"],
-        label: d["dun"] || d["parlimen"],
-        code: d["code_dun"] || d["code_parlimen"],
-        center: d.center,
-        zoom: d.zoom,
-      }),
-    ),
+  const { data: _data, setData } = useData({
+    seat_value: "",
+    toggle_state: "new" as "new" | "old",
   });
 
-  const { dropdown, seat_value } = data;
+  const { seat_value, toggle_state } = _data;
+
+  const bar_data = data[`bar_${toggle_state}`];
+  const callout_data = data[`callout_${toggle_state}`];
+  const dropdown = data[toggle_state].map(
+    (
+      d,
+    ): {
+      value: string;
+      label: string;
+      center: [number, number];
+      zoom: number;
+    } => ({
+      value: d[`seat_${toggle_state}`] as string,
+      label: d[`seat_${toggle_state}`] as string,
+      center: d.center,
+      zoom: d.zoom,
+    }),
+  );
+
+  const current_seat =
+    data[toggle_state].find((d) => d[`seat_${toggle_state}`] === seat_value) ||
+    data[toggle_state][0];
 
   const STATUS_COLOR_MAP = {
     unchanged: "#E4E4E7",
-    bigger: "#8BCBFF",
-    smaller: "#FFBA6C",
-    new: "#FC6B6B",
-  };
+    changed: "#FFBA6C",
+    new: "#8BCBFF",
+    abolished: "#FC6B6B",
+  } as const;
 
   const { redelineation_map } = useMap();
 
-  useWatch(() => {
-    setData("seat_value", dropdown_data[0].dun || dropdown_data[0].parlimen);
-
-    setData(
-      "dropdown",
-      dropdown_data.map(
-        (
-          d: any,
-        ): {
-          value: string;
-          label: string;
-          code: string;
-          center: [number, number];
-          zoom: number;
-        } => ({
-          value: d["dun"] || d["parlimen"],
-          label: d["dun"] || d["parlimen"],
-          code: d["code_dun"] || d["code_parlimen"],
-          center: d.center,
-          zoom: d.zoom,
-        }),
-      ),
-    );
+  useEffect(() => {
+    setData("seat_value", current_seat[`seat_${toggle_state}`] as string);
 
     if (redelineation_map) {
       redelineation_map.flyTo({
-        center: dropdown_data[0].center,
-        zoom: dropdown_data[0].zoom,
+        center: current_seat.center,
+        zoom: current_seat.zoom,
         duration: 2000,
       });
     }
-  }, [params]);
+  }, [params, toggle_state]);
 
   return (
     <>
@@ -167,43 +150,75 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             <span className="text-txt-danger">{t("by_state")}</span>
           </h2>
 
-          <div className="flex w-full flex-col items-center gap-2 lg:max-w-[842px]">
-            <div className="mb-4 flex w-full gap-8 overflow-scroll sm:justify-center">
-              {Object.entries(STATUS_COLOR_MAP).map(([key, value]) => (
-                <div key={key} className="flex flex-col gap-1">
-                  <p className="text-body-xs text-txt-black-500">
-                    {t(`status.${key}.title`)}
-                  </p>
-                  <p className="text-body-md font-semibold">155/222</p>
-                </div>
-              ))}
+          <div className="flex w-full flex-col items-center gap-6 lg:max-w-[842px]">
+            <h4 className="max-w-[727px] text-center font-heading text-body-sm font-semibold lg:text-body-lg">
+              {t(`where_seats_${toggle_state}`)}
+            </h4>
+
+            <Tabs
+              size="small"
+              variant="enclosed"
+              className="space-y-6 lg:space-y-8"
+              value={toggle_state}
+              onValueChange={(value) =>
+                setData("toggle_state", value as "new" | "old")
+              }
+            >
+              <TabsList className="mx-auto space-x-0 !py-0">
+                <TabsTrigger value="new" className="">
+                  {t("new_constituency", { ns: "common" })}
+                </TabsTrigger>
+                <TabsTrigger value="old">
+                  {t("old_constituency", { ns: "common" })}
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex w-full gap-8 overflow-scroll sm:justify-center">
+              {Object.entries(callout_data).map(([key, value]) =>
+                key === "total" ? null : (
+                  <div key={key} className="flex flex-col gap-1">
+                    <p className="text-body-xs text-txt-black-500">
+                      {t(`status.${key}.title`)}
+                    </p>
+                    <p className="text-body-md font-semibold">
+                      {value}/{callout_data["total"]}
+                    </p>
+                  </div>
+                ),
+              )}
             </div>
             <div className="flex w-full items-center gap-4.5 overflow-scroll rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5 md:w-fit">
-              {Object.entries(STATUS_COLOR_MAP).map(([key, value]) => (
-                <div key={key} className="flex items-center gap-2">
-                  <div
-                    className="size-2 rounded-full"
-                    style={{ background: value }}
-                  />
-                  <p>{t(`status.${key}.title`)}</p>
-                </div>
-              ))}
+              {Object.entries(callout_data).map(([key, value]) =>
+                key === "total" ? null : (
+                  <div key={key} className="flex items-center gap-2">
+                    <div
+                      className="size-2 rounded-full"
+                      style={{
+                        background: STATUS_COLOR_MAP[key as "unchanged"],
+                      }}
+                    />
+                    <p>{t(`status.${key}.title`)}</p>
+                  </div>
+                ),
+              )}
               <Tooltip>
                 <TooltipTrigger>
                   <QuestionCircleIcon className="size-4.5" />
                 </TooltipTrigger>
                 <TooltipContent className="flex flex-col text-body-xs">
-                  {Object.entries(STATUS_COLOR_MAP).map(([key, value]) => (
-                    <p key={key}>
-                      <strong>{t(`status.${key}.title`)}:</strong>{" "}
-                      {t(`status.${key}.description`)}
-                    </p>
-                  ))}
+                  {Object.entries(callout_data).map(([key, value]) =>
+                    key === "total" ? null : (
+                      <p key={key}>
+                        <strong>{t(`status.${key}.title`)}:</strong>{" "}
+                        {t(`status.${key}.description`)}
+                      </p>
+                    ),
+                  )}
                 </TooltipContent>
               </Tooltip>
             </div>
 
-            <div className="w-full">
+            <div className="-mt-4 w-full">
               <Bar
                 layout="horizontal"
                 enableStack={true}
@@ -244,7 +259,6 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             <div className="mx-auto w-full max-w-[727px] text-center">
               <ComboBox<{
                 value: string;
-                code: string;
                 center: [number, number];
                 zoom: number;
               }>
@@ -279,16 +293,19 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             </div>
 
             <Tabs
-              defaultValue="new_constituency"
               size="small"
               variant="enclosed"
               className="space-y-6 lg:space-y-8"
+              value={toggle_state}
+              onValueChange={(value) =>
+                setData("toggle_state", value as "new" | "old")
+              }
             >
               <TabsList className="mx-auto space-x-0 !py-0">
-                <TabsTrigger value="new_constituency" className="">
+                <TabsTrigger value="new" className="">
                   {t("new_constituency", { ns: "common" })}
                 </TabsTrigger>
-                <TabsTrigger value="old_constituency">
+                <TabsTrigger value="old">
                   {t("old_constituency", { ns: "common" })}
                 </TabsTrigger>
               </TabsList>
@@ -300,43 +317,27 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                     latitude: dropdown_data[0].center[1],
                     zoom: dropdown_data[0].zoom,
                   }}
+                  sources={[data["map_new"], data["map_old"]]}
+                  election_type={election_type}
+                  seat_new={current_seat[`seat_new`]}
+                  seat_old={current_seat[`seat_old`]}
                 />
               </div>
-              <TabsContent
-                className="mx-auto max-w-[626px]"
-                value="new_constituency"
-              >
-                <GeohistoryTable
-                  type="new"
-                  table={{
-                    type: "new",
-                    data: [
-                      {
-                        new_name: "P.138 Kota Melaka",
-                        seat_transferred: "P.138 Bandar Malacca",
-                        pct_transferred: 79.2,
-                      },
-                    ],
-                  }}
-                />
+              <TabsContent className="mx-auto max-w-[626px]" value="new">
+                {current_seat && (
+                  <GeohistoryTable
+                    type="new"
+                    table={current_seat.lineage as RedelineationTableNew[]}
+                  />
+                )}
               </TabsContent>
-              <TabsContent
-                className="mx-auto max-w-[626px]"
-                value="old_constituency"
-              >
-                <GeohistoryTable
-                  type="old"
-                  table={{
-                    type: "old",
-                    data: [
-                      {
-                        old_name: "P.138 Bandar Malacca",
-                        seat_transferred: "P.138 Kota Melaka",
-                        pct_transferred: 79.2,
-                      },
-                    ],
-                  }}
-                />
+              <TabsContent className="mx-auto max-w-[626px]" value="old">
+                {current_seat && (
+                  <GeohistoryTable
+                    type="old"
+                    table={current_seat.lineage as RedelineationTableOld[]}
+                  />
+                )}
               </TabsContent>
             </Tabs>
           </div>

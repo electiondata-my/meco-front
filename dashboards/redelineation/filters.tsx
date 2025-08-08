@@ -56,7 +56,7 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
     mobile_year: params.year,
     mobile_election_type: params.election_type as ElectionType,
   });
-  const { push } = useRouter();
+  const { replace } = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -136,7 +136,7 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
             options={YEAR_OPTIONS}
             selected={YEAR_OPTIONS.find((opt) => opt.value === params.year)}
             onChange={(selected) => {
-              push(
+              replace(
                 `${routes.REDELINEATION}/${data.type_value}/${selected.value}/${params.election_type}`,
                 undefined,
                 {
@@ -148,7 +148,7 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
           <Tabs
             value={params.election_type}
             onValueChange={(value) => {
-              push(
+              replace(
                 `${routes.REDELINEATION}/${data.type_value}/${params.year}/${value}`,
                 undefined,
                 {
@@ -293,7 +293,7 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
               variant={"danger-fill"}
               className="w-full justify-center"
               onClick={() => {
-                push(
+                replace(
                   `${routes.REDELINEATION}/${data.mobile_type}/${data.mobile_year}/${data.mobile_election_type}`,
                   undefined,
                   {

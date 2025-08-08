@@ -1,0 +1,68 @@
+{
+  "callout_new": {
+    "total": 222,
+    "unchanged": 150,
+    "changed": 72,
+    "new": 0
+  },
+  "bar_new": {
+    "state": ["Johor", "Perak", "Kedah"],
+    "unchanged": [1, 2, 3],
+    "changed": [4, 5, 6],
+    "new": [4, 5, 6]
+  },
+  "callout_old": {
+    "total": 222,
+    "unchanged": 150,
+    "changed": 72,
+    "abolished": 0
+  },
+  "bar_old": {
+    "state": ["Johor", "Perak", "Kedah"],
+    "unchanged": [1, 2, 3],
+    "changed": [4, 5, 6],
+    "abolished": [4, 5, 6]
+  },
+  "map_new": "peninsular_2018_parlimen",
+  "map_old": "peninsular_2003_parlimen",
+  "new": [
+    {
+      "seat_new": "P.001 Padang Besar",
+      "seat_old": ["P.002 Kangar", "P.003 Arau"],
+      "center": [100.253686, 6.581356],
+      "zoom": 8.1,
+      "lineage": [
+        {
+          "seat_new": "P.001 Padang Besar",
+          "parent": "P.002 Kangar",
+          "perc_from_parent": 24.5
+        },
+        {
+          "seat_new": "P.001 Padang Besar",
+          "parent": "P.003 Arau",
+          "perc_from_parent": 75.5
+        }
+      ]
+    }
+  ],
+  "old": [
+    {
+      "seat_old": "P.001 Padang Besar",
+      "seat_new": ["P.002 Kangar", "P.003 Arau"],
+      "center": [100.253686, 6.581356],
+      "zoom": 8.1,
+      "lineage": [
+        {
+          "seat_old": "P.001 Padang Besar",
+          "child": "P.002 Kangar",
+          "perc_to_child": 24.5
+        },
+        {
+          "seat_old": "P.001 Padang Besar",
+          "child": "P.003 Arau",
+          "perc_to_child": 75.5
+        }
+      ]
+    }
+  ]
+}

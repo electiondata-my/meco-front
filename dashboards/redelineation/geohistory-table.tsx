@@ -1,15 +1,23 @@
 import ElectionTable from "@components/Election/ElectionTable";
-import { RedelineationTable } from "@dashboards/types";
+import {
+  RedelineationTableNew,
+  RedelineationTableOld,
+} from "@dashboards/types";
 import { useMediaQuery } from "@hooks/useMediaQuery";
 import { useTranslation } from "@hooks/useTranslation";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { FunctionComponent, useMemo } from "react";
 import BarPerc from "@charts/bar-perc";
 
-interface GeohistoryTableProps {
-  type: "old" | "new";
-  table: RedelineationTable;
-}
+type GeohistoryTableProps =
+  | {
+      type: "old";
+      table: RedelineationTableOld[];
+    }
+  | {
+      type: "new";
+      table: RedelineationTableNew[];
+    };
 
 const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
   type,
@@ -19,25 +27,25 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const t_schema = useMemo(() => {
-    if (table.type === "new") {
-      return generateSchema<(typeof table)["data"]>([
+    if (type === "new") {
+      return generateSchema<typeof table>([
         {
-          key: "new_name",
-          id: "new_name",
-          header: t("table.new_name"),
+          key: "seat_new",
+          id: "seat_new",
+          header: t("table.seat_new"),
           cell: ({ getValue }) => {
             return <p className="">{getValue()}</p>;
           },
         },
         {
-          key: "seat_transferred",
-          id: "seat_transferred",
-          header: t("table.seat_transferred_from"),
+          key: "parent",
+          id: "parent",
+          header: t("table.parent"),
         },
         {
-          key: "pct_transferred",
-          id: "pct_transferred",
-          header: t("table.pct_transferred"),
+          key: "perc_from_parent",
+          id: "perc_from_parent",
+          header: t("table.perc_from_parent"),
           cell: ({ getValue }) => {
             return (
               <p className="text-right font-mono tabular-nums">
@@ -48,25 +56,25 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
         },
       ]);
     }
-    if (table.type === "old") {
-      return generateSchema<(typeof table)["data"]>([
+    if (type === "old") {
+      return generateSchema<typeof table>([
         {
-          key: "old_name",
-          id: "old_name",
-          header: t("table.old_name"),
+          key: "seat_old",
+          id: "seat_old",
+          header: t("table.seat_old"),
           cell: ({ getValue }) => {
             return <p className="">{getValue()}</p>;
           },
         },
         {
-          key: "seat_transferred",
-          id: "seat_transferred",
-          header: t("table.seat_transferred_from"),
+          key: "child",
+          id: "child",
+          header: t("table.child"),
         },
         {
-          key: "pct_transferred",
-          id: "pct_transferred",
-          header: t("table.pct_transferred"),
+          key: "perc_to_child",
+          id: "perc_to_child",
+          header: t("table.perc_to_child"),
           cell: ({ getValue }) => {
             return (
               <p className="text-right font-mono tabular-nums">
@@ -77,16 +85,16 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
         },
       ]);
     }
-  }, [table.type]);
+  }, [type]);
 
-  if (!table.data) {
+  if (!table) {
     return null;
   }
 
   if (isDesktop && t_schema) {
     return (
       <ElectionTable
-        data={table.data}
+        data={table}
         columns={t_schema}
         isLoading={false}
         headerClassName="last-of-type:text-right"

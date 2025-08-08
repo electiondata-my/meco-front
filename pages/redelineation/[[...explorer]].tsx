@@ -7,13 +7,14 @@ import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { MapProvider } from "react-map-gl/mapbox";
+import sample from "@dashboards/redelineation/sample.json";
 
 const RedelineationIndex: Page = ({
   meta,
-  bar,
   dropdown,
   params,
   yearOptions,
+  data,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { t } = useTranslation(["redelineation"]);
 
@@ -26,7 +27,6 @@ const RedelineationIndex: Page = ({
       />
       <MapProvider>
         <RedelineationDashboard
-          bar_data={bar}
           dropdown_data={dropdown}
           params={{
             type: params.explorer?.[0] || "peninsular",
@@ -34,6 +34,7 @@ const RedelineationIndex: Page = ({
             election_type: params.explorer?.[2] || "parlimen",
           }}
           yearOptions={yearOptions}
+          data={data}
         />
       </MapProvider>
     </AnalyticsProvider>
@@ -67,43 +68,8 @@ export const getStaticProps: GetStaticProps = withi18n(
         else return e.value.data;
       });
 
-      const bar_peninsular = {
-        state: [
-          "Johor",
-          "Perak",
-          "Kedah",
-          "Kelantan",
-          "Pahang",
-          "N. Sembilan",
-          "Terengganu",
-          "Selangor",
-          "Penang",
-          "Malacca",
-          "Perlis",
-          "Putrajaya",
-          "KL",
-        ],
-        unchanged: [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
-        bigger: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
-        smaller: [13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
-        new: [1, 4, 6, 1, 3, 2, 7, 4, 2, 1, 2, 4, 4],
-      };
+      const data = sample;
 
-      const bar_sabah = {
-        state: ["Sabah"],
-        unchanged: [10],
-        bigger: [1],
-        smaller: [5],
-        new: [1],
-      };
-
-      const bar_sarawak = {
-        state: ["Sarawak"],
-        unchanged: [1],
-        bigger: [3],
-        smaller: [5],
-        new: [3],
-      };
       return {
         props: {
           meta: {
@@ -111,14 +77,9 @@ export const getStaticProps: GetStaticProps = withi18n(
             type: "dashboard",
           },
           params,
-          bar:
-            type === "peninsular"
-              ? bar_peninsular
-              : type === "sabah"
-                ? bar_sabah
-                : bar_sarawak,
           dropdown: dropdown.data,
           yearOptions,
+          data,
         },
       };
     } catch (error) {

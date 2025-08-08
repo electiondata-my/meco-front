@@ -155,23 +155,56 @@ export type Lineage =
       data: LineageDun[];
     };
 
-type RedelineationTableNew = {
-  new_name: string;
-  seat_transferred: string;
-  pct_transferred: number;
-};
-type RedelineationTableOld = {
-  old_name: string;
-  seat_transferred: string;
-  pct_transferred: number;
+export type RedelineationData = {
+  callout_new: {
+    total: number;
+    unchanged: number;
+    changed: number;
+    new: number;
+  };
+  bar_new: {
+    state: string[];
+    unchanged: number[];
+    changed: number[];
+    new: number[];
+  };
+  callout_old: {
+    total: number;
+    unchanged: number;
+    changed: number;
+    abolished: number;
+  };
+  bar_old: {
+    state: string[];
+    unchanged: number[];
+    changed: number[];
+    abolished: number[];
+  };
+  map_new: string;
+  map_old: string;
+  new: {
+    seat_new: string;
+    seat_old: string[];
+    center: [number, number];
+    zoom: number;
+    lineage: RedelineationTableNew[];
+  }[];
+  old: {
+    seat_old: string;
+    seat_new: string[];
+    center: [number, number];
+    zoom: number;
+    lineage: RedelineationTableOld[];
+  }[];
 };
 
-export type RedelineationTable =
-  | {
-      type: "new";
-      data: RedelineationTableNew[];
-    }
-  | {
-      type: "old";
-      data: RedelineationTableOld[];
-    };
+export type RedelineationTableNew = {
+  seat_new: string;
+  parent: string;
+  perc_from_parent: number;
+};
+export type RedelineationTableOld = {
+  seat_old: string;
+  child: string;
+  perc_to_child: number;
+};
