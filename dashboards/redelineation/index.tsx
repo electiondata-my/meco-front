@@ -287,7 +287,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   placeholder={t("search_seat", { ns: "home" })}
                   options={dropdown}
                   config={{
-                    keys: ["state", "value"],
+                    keys:
+                      election_type === "parlimen"
+                        ? ["value"]
+                        : ["state", "value"],
                   }}
                   format={(option) => (
                     <>
