@@ -113,8 +113,22 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         zoom: current_seat.zoom,
         duration: 2000,
       });
+
+      if (toggle_state === "new") {
+        redelineation_map.moveLayer(`${data.map_new}-line`);
+        redelineation_map.moveLayer(`${data.map_new}-fill`);
+      } else {
+        redelineation_map.moveLayer(`${data.map_old}-line`);
+        redelineation_map.moveLayer(`${data.map_old}-fill`);
+      }
     }
   }, [params, toggle_state]);
+
+  const new_year =
+    data["map_new"].split("_").find((part) => /^\d{4}$/.test(part)) || "";
+
+  const old_year =
+    data["map_old"].split("_").find((part) => /^\d{4}$/.test(part)) || "";
 
   return (
     <>
@@ -152,10 +166,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new" className="">
-                  {t("new_constituency", { ns: "common" })}
+                  {t("new_constituency", { ns: "common" })} ({new_year})
                 </TabsTrigger>
                 <TabsTrigger value="old">
-                  {t("old_constituency", { ns: "common" })}
+                  {t("old_constituency", { ns: "common" })} ({old_year})
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -254,10 +268,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new" className="">
-                  {t("new_constituency", { ns: "common" })}
+                  {t("new_constituency", { ns: "common" })} ({new_year})
                 </TabsTrigger>
                 <TabsTrigger value="old">
-                  {t("old_constituency", { ns: "common" })}
+                  {t("old_constituency", { ns: "common" })} ({old_year})
                 </TabsTrigger>
               </TabsList>
               <div className="mx-auto w-full max-w-[727px] text-center">
@@ -321,6 +335,11 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   mapLabel={
                     toggle_state === "new" ? ["new", "old"] : ["old", "new"]
                   }
+                  year={
+                    toggle_state === "new"
+                      ? [new_year, old_year]
+                      : [old_year, new_year]
+                  }
                 />
               </div>
               <TabsContent className="mx-auto max-w-[626px]" value="new">
@@ -328,6 +347,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   <GeohistoryTable
                     type="new"
                     table={current_seat.lineage as RedelineationTableNew[]}
+                    year={[new_year, old_year]}
                   />
                 )}
               </TabsContent>
@@ -336,6 +356,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   <GeohistoryTable
                     type="old"
                     table={current_seat.lineage as RedelineationTableOld[]}
+                    year={[new_year, old_year]}
                   />
                 )}
               </TabsContent>

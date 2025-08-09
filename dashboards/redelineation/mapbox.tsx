@@ -21,6 +21,7 @@ interface Props {
   useShaded: string | string[];
   election_type: ElectionType;
   mapLabel: [string, string];
+  year: [string, string];
 }
 
 const MapboxRedelineation: FC<Props> = ({
@@ -30,6 +31,7 @@ const MapboxRedelineation: FC<Props> = ({
   useShaded,
   election_type,
   mapLabel,
+  year,
 }) => {
   const { LIGHT_STYLE, DARK_STYLE } = MapboxMapStyle;
   const { resolvedTheme } = useTheme();
@@ -150,11 +152,15 @@ const MapboxRedelineation: FC<Props> = ({
           </p>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
             <div className="size-2 rounded-full bg-danger-600" />
-            <p>{t(mapLabel[0])}</p>
+            <p>
+              {t(mapLabel[0])} ({year[0]})
+            </p>
           </div>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
             <div className="size-2 rounded-full bg-danger-300" />
-            <p>{t(mapLabel[1])}</p>
+            <p>
+              {t(mapLabel[1])} ({year[1]})
+            </p>
           </div>
         </div>
       </div>

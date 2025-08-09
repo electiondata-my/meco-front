@@ -9,7 +9,7 @@ import { generateSchema } from "@lib/schema/election-explorer";
 import { FunctionComponent, useMemo } from "react";
 import BarPerc from "@charts/bar-perc";
 
-type GeohistoryTableProps =
+type GeohistoryTableProps = (
   | {
       type: "old";
       table: RedelineationTableOld[];
@@ -17,11 +17,15 @@ type GeohistoryTableProps =
   | {
       type: "new";
       table: RedelineationTableNew[];
-    };
+    }
+) & {
+  year: [string, string];
+};
 
 const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
   type,
   table,
+  year,
 }) => {
   const { t } = useTranslation(["redelineation"]);
   const isDesktop = useMediaQuery("(min-width: 768px)");
@@ -32,7 +36,7 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
         {
           key: "seat_new",
           id: "seat_new",
-          header: t("table.seat_new"),
+          header: `${t("table.seat_new")} (${year[0]})`,
           cell: ({ getValue }) => {
             return <p className="">{getValue()}</p>;
           },
@@ -40,7 +44,7 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
         {
           key: "parent",
           id: "parent",
-          header: t("table.parent"),
+          header: `${t("table.parent")} (${year[1]})`,
         },
         {
           key: "perc_from_parent",
@@ -61,7 +65,7 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
         {
           key: "seat_old",
           id: "seat_old",
-          header: t("table.seat_old"),
+          header: `${t("table.seat_old")} (${year[1]})`,
           cell: ({ getValue }) => {
             return <p className="">{getValue()}</p>;
           },
@@ -69,7 +73,7 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
         {
           key: "child",
           id: "child",
-          header: t("table.child"),
+          header: `${t("table.child")} (${year[0]})`,
         },
         {
           key: "perc_to_child",
