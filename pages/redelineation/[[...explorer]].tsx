@@ -7,11 +7,9 @@ import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { MapProvider } from "react-map-gl/mapbox";
-import sample from "@dashboards/redelineation/sample.json";
 
 const RedelineationIndex: Page = ({
   meta,
-  dropdown,
   params,
   yearOptions,
   data,
@@ -27,7 +25,6 @@ const RedelineationIndex: Page = ({
       />
       <MapProvider>
         <RedelineationDashboard
-          dropdown_data={dropdown}
           params={{
             type: params.explorer?.[0] || "peninsular",
             year: params.explorer?.[1] || "2018",
@@ -59,16 +56,14 @@ export const getStaticProps: GetStaticProps = withi18n(
       if (!type || !year || !election_type) return { notFound: true };
 
       const results = await Promise.allSettled([
-        get(`/map/dropdown_${type}_${year}_${election_type}.json`),
+        get(`/redelineation/${type}_${year}_${election_type}.json`),
         get(`/redelineation/filter.json`),
       ]);
 
-      const [dropdown, yearOptions] = results.map((e) => {
+      const [data, yearOptions] = results.map((e) => {
         if (e.status === "rejected") return null;
         else return e.value.data;
       });
-
-      const data = sample;
 
       return {
         props: {
@@ -77,7 +72,6 @@ export const getStaticProps: GetStaticProps = withi18n(
             type: "dashboard",
           },
           params,
-          dropdown: dropdown.data,
           yearOptions,
           data,
         },

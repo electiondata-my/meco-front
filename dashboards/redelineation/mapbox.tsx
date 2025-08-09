@@ -70,6 +70,7 @@ const MapboxRedelineation: FC<Props> = ({
       customAttribution={APP_NAME}
     >
       <Source
+        key={sources[0]}
         id={sources[0]}
         type="vector"
         url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${sources[0]}`}
@@ -104,16 +105,33 @@ const MapboxRedelineation: FC<Props> = ({
         />
       </Source>
       <Source
+        key={sources[1]}
         id={sources[1]}
         type="vector"
         url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${sources[1]}`}
       >
         <Layer
+          id={`${sources[1]}-line`}
+          type="line"
+          source-layer={sources[1]}
+          paint={{
+            "line-color": "#FCA5A5",
+            "line-width": 1,
+            "line-opacity": 0.8,
+          }}
+          filter={[
+            "in",
+            election_type === "parlimen" ? "parlimen" : "dun",
+            ...(Array.isArray(seat_old) ? seat_old : [seat_old]),
+          ]}
+        />
+        <Layer
           id={`${sources[1]}-fill`}
           type="fill"
           source-layer={sources[1]}
           paint={{
-            "fill-color": "rgba(252, 165, 165, 0.6)",
+            "fill-color": "#FCA5A5",
+            "fill-opacity": 0.5,
           }}
           filter={[
             "in",
@@ -129,11 +147,11 @@ const MapboxRedelineation: FC<Props> = ({
             {t("common:constituency")}
           </p>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="size-2 rounded-full bg-bg-danger-600" />
+            <div className="size-2 rounded-full bg-danger-600" />
             <p>{t("new")}</p>
           </div>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="size-2 rounded-full bg-fr-danger" />
+            <div className="size-2 rounded-full bg-danger-300" />
             <p>{t("old")}</p>
           </div>
         </div>

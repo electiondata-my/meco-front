@@ -52,20 +52,11 @@ interface RedelineationProps {
     year: string;
     election_type: ElectionType;
   };
-  dropdown_data: {
-    parlimen: string;
-    code_parlimen: string;
-    center: [number, number];
-    zoom: number;
-    dun: string;
-    code_dun: string;
-  }[];
   yearOptions: yearOptions;
   data: RedelineationData;
 }
 
 const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
-  dropdown_data,
   params,
   yearOptions,
   data,
@@ -219,7 +210,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 enableStack={true}
                 enableGridY={false}
                 className={clx(
-                  "mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[400px] lg:w-[842px]",
+                  "mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[480px] lg:w-[842px]",
                   bar_data["state"].length === 1 &&
                     "h-[80px] min-h-0 lg:h-[100px]",
                 )}
@@ -308,9 +299,9 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 <Mapbox
                   params_source={`${type}_${year}_${election_type}`}
                   initialState={{
-                    longitude: dropdown_data[0].center[0],
-                    latitude: dropdown_data[0].center[1],
-                    zoom: dropdown_data[0].zoom,
+                    longitude: data[toggle_state][0].center[0],
+                    latitude: data[toggle_state][0].center[1],
+                    zoom: data[toggle_state][0].zoom,
                   }}
                   sources={[data["map_new"], data["map_old"]]}
                   election_type={election_type}
