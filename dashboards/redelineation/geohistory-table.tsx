@@ -120,7 +120,7 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
                 <span className="font-semibold">
                   {t("new_constituency")} ({data.seat_new})
                 </span>{" "}
-                {t("table.seat_transferred_from")} ({data.parent})
+                {t("table.seat_came_from")} ({data.parent})
               </p>
               <div className="flex w-full flex-col gap-2">
                 <div className="flex items-center justify-between text-body-sm">
@@ -147,7 +147,7 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
                 <span className="font-semibold">
                   {t("old_constituency")} ({data.seat_old})
                 </span>{" "}
-                {t("table.seat_transferred_from")} ({data.child})
+                {t("table.seat_transferred_to")} ({data.child})
               </p>
               <div className="flex w-full flex-col gap-2">
                 <div className="flex items-center justify-between text-body-sm">

@@ -6,6 +6,7 @@ import { GeoJSONFeature } from "mapbox-gl";
 import Map, {
   Layer,
   MapRef,
+  Popup,
   Source,
   useMap,
   ViewState,
@@ -13,6 +14,7 @@ import Map, {
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { ElectionType } from "@dashboards/types";
+import { maxBy } from "lodash";
 
 interface Props {
   initialState: Partial<ViewState>;
@@ -60,6 +62,34 @@ const MapboxRedelineation: FC<Props> = ({
     else setData("styleUrl", LIGHT_STYLE);
   }, [resolvedTheme]);
 
+  const handleMouseMove = (e: mapboxgl.MapMouseEvent) => {
+    const features = mapRef.current?.queryRenderedFeatures(e.point, {
+      layers: sources.map((source) => `${source}-fill`),
+    });
+
+    if (features && features.length > 0) {
+      const feats = features
+        .map((feat) => ({
+          ...feat,
+          year:
+            feat.source?.split("_").find((part) => /^\d{4}$/.test(part)) || "",
+        }))
+        .sort((a, b) => Number(b) - Number(a));
+
+      const mostRecent = maxBy(feats, "year");
+
+      if (mostRecent) {
+        setPopupInfo({
+          feature: mostRecent,
+          longitude: e.lngLat.lng,
+          latitude: e.lngLat.lat,
+        });
+      }
+    } else {
+      setPopupInfo(null);
+    }
+  };
+
   return (
     <Map
       id="redelineation_map"
@@ -70,6 +100,8 @@ const MapboxRedelineation: FC<Props> = ({
       style={{ width: "100%", height: "100%" }}
       mapStyle={styleUrl}
       customAttribution={APP_NAME}
+      interactiveLayerIds={sources}
+      onMouseMove={handleMouseMove}
     >
       {/* Shaded Source */}
       <Source
@@ -164,6 +196,21 @@ const MapboxRedelineation: FC<Props> = ({
           </div>
         </div>
       </div>
+      {popupInfo && (
+        <Popup
+          longitude={popupInfo.longitude}
+          latitude={popupInfo.latitude}
+          closeButton={false}
+          closeOnClick={false}
+          anchor="bottom"
+        >
+          <p className="px-3 py-2 font-body text-body-xs text-txt-white">
+            {popupInfo.feature.properties?.["dun"] ||
+              popupInfo.feature.properties?.["parlimen"]}{" "}
+            ({popupInfo.feature.year})
+          </p>
+        </Popup>
+      )}
     </Map>
   );
 };
