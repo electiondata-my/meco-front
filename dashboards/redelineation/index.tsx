@@ -159,7 +159,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <div className="flex w-full gap-8 overflow-scroll sm:justify-center">
+            <div className="hide-scrollbar flex w-full gap-8 overflow-scroll sm:justify-center">
               {Object.entries(callout_data).map(([key, value]) =>
                 key === "total" ? null : (
                   <div key={key} className="flex flex-col gap-1">
@@ -173,7 +173,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 ),
               )}
             </div>
-            <div className="flex w-full items-center gap-4.5 overflow-scroll rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5 md:w-fit">
+            <div className="hide-scrollbar flex w-full items-center gap-4.5 overflow-scroll rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5 md:w-fit">
               {Object.entries(callout_data).map(([key, value]) =>
                 key === "total" ? null : (
                   <div key={key} className="flex items-center gap-2">

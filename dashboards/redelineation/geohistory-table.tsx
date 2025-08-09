@@ -103,25 +103,61 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
   }
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-md border border-otl-gray-200 bg-bg-white p-3">
-      <p className="text-body-sm">
-        <span className="font-semibold">
-          {t("new_constituency")} (P.138 Kota Melaka)
-        </span>{" "}
-        {t("table.seat_transferred_from_to")} (P.138 Bandar Malacca)
-      </p>
-      <div className="flex w-full flex-col gap-2">
-        <div className="flex items-center justify-between text-body-sm">
-          <p className="text-txt-black-500">{t("table.seat_transferred")}</p>
-          <p>79.20%</p>
-        </div>
-        <BarPerc
-          className="w-full"
-          hidden
-          value={79.2}
-          size={"h-[4px] w-full"}
-        />
-      </div>
+    <div className="space-y-4.5">
+      {type === "new" &&
+        table
+          .sort((a, b) => b.perc_from_parent - a.perc_from_parent)
+          .map((data) => (
+            <div className="flex w-full flex-col gap-3 rounded-md border border-otl-gray-200 bg-bg-white p-3">
+              <p className="text-body-sm">
+                <span className="font-semibold">
+                  {t("new_constituency")} ({data.seat_new})
+                </span>{" "}
+                {t("table.seat_transferred_from")} ({data.parent})
+              </p>
+              <div className="flex w-full flex-col gap-2">
+                <div className="flex items-center justify-between text-body-sm">
+                  <p className="text-txt-black-500">
+                    {t("table.seat_transferred")}
+                  </p>
+                  <p>{data.perc_from_parent}</p>
+                </div>
+                <BarPerc
+                  className="w-full"
+                  hidden
+                  value={data.perc_from_parent}
+                  size={"h-[4px] w-full"}
+                />
+              </div>
+            </div>
+          ))}
+      {type === "old" &&
+        table
+          .sort((a, b) => b.perc_to_child - a.perc_to_child)
+          .map((data) => (
+            <div className="flex w-full flex-col gap-3 rounded-md border border-otl-gray-200 bg-bg-white p-3">
+              <p className="text-body-sm">
+                <span className="font-semibold">
+                  {t("old_constituency")} ({data.seat_old})
+                </span>{" "}
+                {t("table.seat_transferred_from")} ({data.child})
+              </p>
+              <div className="flex w-full flex-col gap-2">
+                <div className="flex items-center justify-between text-body-sm">
+                  <p className="text-txt-black-500">
+                    {t("table.seat_transferred")}
+                  </p>
+                  <p>{data.perc_to_child}</p>
+                </div>
+                <BarPerc
+                  className="w-full"
+                  hidden
+                  value={data.perc_to_child}
+                  size={"h-[4px] w-full"}
+                />
+              </div>
+            </div>
+          ))}
     </div>
   );
 };
