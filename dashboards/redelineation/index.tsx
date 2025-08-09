@@ -297,16 +297,30 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               </div>
               <div className="relative mx-auto flex h-[400px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[846px]">
                 <Mapbox
-                  params_source={`${type}_${year}_${election_type}`}
                   initialState={{
                     longitude: data[toggle_state][0].center[0],
                     latitude: data[toggle_state][0].center[1],
                     zoom: data[toggle_state][0].zoom,
                   }}
-                  sources={[data["map_new"], data["map_old"]]}
+                  sources={
+                    toggle_state === "new"
+                      ? [data["map_new"], data["map_old"]]
+                      : [data["map_old"], data["map_new"]]
+                  }
                   election_type={election_type}
-                  seat_new={current_seat[`seat_new`]}
-                  seat_old={current_seat[`seat_old`]}
+                  useOutline={
+                    toggle_state === "new"
+                      ? current_seat[`seat_new`]
+                      : current_seat[`seat_old`]
+                  }
+                  useShaded={
+                    toggle_state === "new"
+                      ? current_seat[`seat_old`]
+                      : current_seat[`seat_new`]
+                  }
+                  mapLabel={
+                    toggle_state === "new" ? ["new", "old"] : ["old", "new"]
+                  }
                 />
               </div>
               <TabsContent className="mx-auto max-w-[626px]" value="new">
