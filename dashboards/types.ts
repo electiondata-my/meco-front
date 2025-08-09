@@ -184,6 +184,7 @@ export type RedelineationData = {
   map_old: string;
   new: {
     seat_new: string;
+    state: string;
     seat_old: string[];
     center: [number, number];
     zoom: number;
@@ -192,6 +193,7 @@ export type RedelineationData = {
   old: {
     seat_old: string;
     seat_new: string[];
+    state: string;
     center: [number, number];
     zoom: number;
     lineage: RedelineationTableOld[];

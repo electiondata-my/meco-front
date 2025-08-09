@@ -83,11 +83,13 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
       label: string;
       center: [number, number];
       zoom: number;
+      state: string;
     } => ({
       value: d[`seat_${toggle_state}`] as string,
-      label: d[`seat_${toggle_state}`] as string,
+      label: `${d[`seat_${toggle_state}`]}, ${d.state}` as string,
       center: d.center,
       zoom: d.zoom,
+      state: d.state,
     }),
   );
 
@@ -166,10 +168,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new" className="">
-                  {t("new_constituency", { ns: "common" })} ({new_year})
+                  {t("new_constituency")} ({new_year})
                 </TabsTrigger>
                 <TabsTrigger value="old">
-                  {t("old_constituency", { ns: "common" })} ({old_year})
+                  {t("old_constituency")} ({old_year})
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -268,22 +270,24 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new" className="">
-                  {t("new_constituency", { ns: "common" })} ({new_year})
+                  {t("new_constituency")} ({new_year})
                 </TabsTrigger>
                 <TabsTrigger value="old">
-                  {t("old_constituency", { ns: "common" })} ({old_year})
+                  {t("old_constituency")} ({old_year})
                 </TabsTrigger>
               </TabsList>
               <div className="mx-auto w-full max-w-[727px] text-center">
                 <ComboBox<{
                   value: string;
+                  label: string;
                   center: [number, number];
                   zoom: number;
+                  state: string;
                 }>
                   placeholder={t("search_seat", { ns: "home" })}
                   options={dropdown}
                   config={{
-                    keys: ["label"],
+                    keys: ["state", "value"],
                   }}
                   format={(option) => (
                     <>
