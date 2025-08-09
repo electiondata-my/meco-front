@@ -111,8 +111,11 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
       {type === "new" &&
         table
           .sort((a, b) => b.perc_from_parent - a.perc_from_parent)
-          .map((data) => (
-            <div className="flex w-full flex-col gap-3 rounded-md border border-otl-gray-200 bg-bg-white p-3">
+          .map((data, index) => (
+            <div
+              key={index}
+              className="flex w-full flex-col gap-3 rounded-md border border-otl-gray-200 bg-bg-white p-3"
+            >
               <p className="text-body-sm">
                 <span className="font-semibold">
                   {t("new_constituency")} ({data.seat_new})
