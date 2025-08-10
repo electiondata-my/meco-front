@@ -342,7 +342,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             </p>
           </div>
         </SectionGrid>
-        <SectionGrid className="space-y-6 lg:space-y-1 relative -top-6">
+        <SectionGrid className="space-y-6 lg:space-y-10 relative -top-6">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
