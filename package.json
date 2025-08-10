@@ -1,5 +1,5 @@
 {
-  "name": "dataspr-front",
+  "name": "meco-front",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -39,7 +39,7 @@
     "chartjs-plugin-crosshair": "^1.2.0",
     "chartjs-plugin-datalabels": "^2.2.0",
     "clsx": "^2.1.1",
-    "cookie": "^0.5.0",
+    "cookie": "^1.0.2",
     "d3-scale-chromatic": "^3.0.0",
     "dom-to-image": "^2.6.0",
     "geojson-bbox": "^0.0.1",

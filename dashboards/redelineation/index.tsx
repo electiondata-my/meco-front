@@ -349,7 +349,12 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   }
                 />
               </div>
-              <TabsContent className="mx-auto max-w-[626px]" value="new">
+              <div className="mx-auto max-w-[846px] text-center relative -top-6">
+                <p className="text-sm italic text-txt-black-600">
+                  {t("attribution_tindak")}
+                </p>
+              </div>
+              <TabsContent className="mx-auto max-w-[626px] relative -top-6" value="new">
                 {current_seat && (
                   <GeohistoryTable
                     type="new"

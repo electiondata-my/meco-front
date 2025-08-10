@@ -38,7 +38,8 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
           id: "seat_new",
           header: `${t("table.seat_new")} (${year[0]})`,
           cell: ({ getValue }) => {
-            return <p className="">{getValue()}</p>;
+            const value = getValue();
+            return value ? <p className="">{value}</p> : <p className=""></p>;
           },
         },
         {
@@ -67,7 +68,8 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
           id: "seat_old",
           header: `${t("table.seat_old")} (${year[1]})`,
           cell: ({ getValue }) => {
-            return <p className="">{getValue()}</p>;
+            const value = getValue();
+            return value ? <p className="">{value}</p> : <p className=""></p>;
           },
         },
         {
@@ -96,75 +98,134 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
   }
 
   if (isDesktop && t_schema) {
+    // Custom table with rowSpan for merged first column
     return (
-      <ElectionTable
-        data={table}
-        columns={t_schema}
-        isLoading={false}
-        headerClassName="last-of-type:text-right"
-      />
+      <div className="overflow-x-auto group">
+        <table className="w-full border-collapse border border-otl-gray-200">
+          <thead>
+            <tr className="border-b border-otl-gray-200">
+              {t_schema.map((column, index) => (
+                <th
+                  key={column.id}
+                  className={`py-3 px-3 text-left text-body-sm font-semibold text-txt-black-700 ${
+                    index === t_schema.length - 1 ? "text-right" : ""
+                  } ${
+                    index < t_schema.length - 1 ? "border-r border-otl-gray-200" : ""
+                  }`}
+                >
+                  {typeof column.header === "string" ? column.header : "Header"}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {table.map((row, rowIndex) => (
+              <tr
+                key={rowIndex}
+                className="border-b border-otl-gray-200 hover:bg-bg-washed"
+              >
+                {t_schema.map((column, colIndex) => {
+                  const columnKey = 'key' in column ? column.key : column.id;
+                  const value = row[columnKey as keyof typeof row];
+                  
+                  // For the first column, implement rowSpan logic
+                  if (colIndex === 0) {
+                    if (rowIndex === 0) {
+                      // First row: show the value and set rowSpan to span all rows
+                      return (
+                        <td
+                          key={column.id}
+                          rowSpan={table.length}
+                          className="py-3 px-3 border-r border-otl-gray-200 group-hover:bg-bg-washed"
+                        >
+                          <p className="flex items-center h-full">{value}</p>
+                        </td>
+                      );
+                    } else {
+                      // Other rows: skip this cell (it's merged with the first row)
+                      return null;
+                    }
+                  }
+                  
+                  // For other columns, render normally
+                  return (
+                    <td
+                      key={column.id}
+                      className={`py-3 ${
+                        colIndex === t_schema.length - 1 ? "pr-3 pl-1" : "px-3"
+                      } ${
+                        colIndex === t_schema.length - 1 ? "text-right" : ""
+                      } ${
+                        colIndex < t_schema.length - 1 ? "border-r border-otl-gray-200" : ""
+                      }`}
+                    >
+                      <p className={colIndex === t_schema.length - 1 ? "text-right font-mono tabular-nums" : ""}>
+                        {colIndex === t_schema.length - 1 ? Number(value).toFixed(2) : value}
+                      </p>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4.5">
-      {type === "new" &&
-        table
-          .sort((a, b) => b.perc_from_parent - a.perc_from_parent)
-          .map((data, index) => (
-            <div
-              key={index}
-              className="flex w-full flex-col gap-3 rounded-md border border-otl-gray-200 bg-bg-white p-3"
-            >
-              <p className="text-body-sm">
-                <span className="font-semibold">
-                  {t("new_constituency")} ({data.seat_new})
-                </span>{" "}
-                {t("table.seat_came_from")} ({data.parent})
-              </p>
-              <div className="flex w-full flex-col gap-2">
-                <div className="flex items-center justify-between text-body-sm">
-                  <p className="text-txt-black-500">
-                    {t("table.seat_transferred")}
-                  </p>
-                  <p>{data.perc_from_parent}</p>
-                </div>
-                <BarPerc
-                  className="w-full"
-                  hidden
-                  value={data.perc_from_parent}
-                  size={"h-[4px] w-full"}
-                />
-              </div>
-            </div>
-          ))}
-      {type === "old" &&
-        table
-          .sort((a, b) => b.perc_to_child - a.perc_to_child)
-          .map((data) => (
-            <div className="flex w-full flex-col gap-3 rounded-md border border-otl-gray-200 bg-bg-white p-3">
-              <p className="text-body-sm">
-                <span className="font-semibold">
-                  {t("old_constituency")} ({data.seat_old})
-                </span>{" "}
-                {t("table.seat_transferred_to")} ({data.child})
-              </p>
-              <div className="flex w-full flex-col gap-2">
-                <div className="flex items-center justify-between text-body-sm">
-                  <p className="text-txt-black-500">
-                    {t("table.seat_transferred")}
-                  </p>
-                  <p>{data.perc_to_child}</p>
-                </div>
-                <BarPerc
-                  className="w-full"
-                  hidden
-                  value={data.perc_to_child}
-                  size={"h-[4px] w-full"}
-                />
-              </div>
-            </div>
-          ))}
+    <div className="lg:hidden">
+      {/* Mobile-optimized table with header */}
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-txt-black-700 mb-2 pl-3">
+          {type === "new" 
+            ? `${t("table.seat_new")} (${year[0]})` 
+            : `${t("table.seat_old")} (${year[1]})`
+          }: {type === "new" ? (table[0] as any).seat_new : (table[0] as any).seat_old}
+        </h3>
+      </div>
+      
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border border-otl-gray-200">
+          <thead>
+            <tr className="border-b border-otl-gray-200">
+              <th className="py-3 px-3 text-left text-sm font-semibold text-txt-black-700 border-r border-otl-gray-200 w-3/5">
+                {type === "new" ? t("table.parent") : t("table.child")} ({type === "new" ? year[1] : year[0]})
+              </th>
+              <th className="py-3 px-3 text-right text-sm font-semibold text-txt-black-700 w-2/5">
+                {type === "new" ? t("table.perc_from_parent") : t("table.perc_to_child")}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {table.map((row, rowIndex) => {
+              const otherValue = type === "new" ? (row as any).parent : (row as any).child;
+              const percentageValue = type === "new" ? (row as any).perc_from_parent : (row as any).perc_to_child;
+              
+              return (
+                <tr
+                  key={rowIndex}
+                  className="border-b border-otl-gray-200 hover:bg-bg-washed"
+                >
+                  {/* First column */}
+                  <td className="py-3 px-3 border-r border-otl-gray-200">
+                    <p className="text-sm text-txt-black-700">
+                      {otherValue}
+                    </p>
+                  </td>
+                  
+                  {/* Second column */}
+                  <td className="py-3 px-3 text-right">
+                    <p className="text-sm font-mono tabular-nums text-txt-black-700">
+                      {Number(percentageValue).toFixed(2)}
+                    </p>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

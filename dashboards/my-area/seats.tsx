@@ -336,8 +336,13 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               <p>{t("common:toast.request_failure")}</p>
             )}
           </div>
+          <div className="mx-auto max-w-[842px] text-center relative -top-6">
+            <p className="text-sm italic text-txt-black-600">
+              {t("attribution_tindak")}
+            </p>
+          </div>
         </SectionGrid>
-        <SectionGrid className="space-y-6 lg:space-y-10">
+        <SectionGrid className="space-y-6 lg:space-y-1 relative -top-6">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
