@@ -142,7 +142,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         ]}
         header={[t("hero.header", { ns: "redelineation" })]}
         description={[t("hero.description", { ns: "redelineation" })]}
-        pageId="geo-history"
+        pageId="redelineation"
       />
 
       <RedelineationFilters
