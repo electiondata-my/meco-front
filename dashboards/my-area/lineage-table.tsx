@@ -39,7 +39,7 @@ interface LineageTableProps {
 }
 
 const LineageTable: FunctionComponent<LineageTableProps> = ({ lineage }) => {
-  const { t } = useTranslation(["home"]);
+  const { t } = useTranslation(["seats"]);
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { data, setData } = useData({
     open: false,

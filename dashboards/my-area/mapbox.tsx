@@ -57,7 +57,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
   const { LIGHT_STYLE, DARK_STYLE } = MapboxMapStyle;
   const { resolvedTheme } = useTheme();
   const [styleUrl, setStyleUrl] = useState(LIGHT_STYLE);
-  const { t } = useTranslation(["common", "home"]);
+  const { t } = useTranslation(["common", "seats"]);
   const {
     publicRuntimeConfig: { APP_NAME },
   } = useConfig();
@@ -209,7 +209,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
       <div className="absolute bottom-10 right-1/2 h-fit translate-x-1/2 lg:right-4 lg:top-4 lg:translate-x-0">
         <div className="flex h-fit w-[330px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog px-3 pb-2 pt-3 shadow-context-menu lg:w-40 lg:p-[5px]">
           <p className="px-2.5 py-1.5 text-center text-body-2xs font-medium text-txt-black-500 lg:text-start">
-            {t("home:boundaries_years")}
+            {t("seats:boundaries_years")}
           </p>
           <div className="flex h-[120px] flex-col flex-wrap gap-x-4 lg:h-full">
             {boundData.map(([year, hdata], index) => (
