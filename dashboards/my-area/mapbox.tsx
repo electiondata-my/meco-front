@@ -1,5 +1,5 @@
 import { FC, Fragment, useEffect, useRef, useState } from "react";
-import Map, { Layer, MapRef, Popup, Source } from "react-map-gl/mapbox";
+import Map, { Layer, MapRef, Popup, Source, useMap } from "react-map-gl/mapbox";
 import { useTheme } from "next-themes";
 import { Boundaries, ElectionType, Lineage } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
@@ -11,6 +11,7 @@ import { MapboxMapStyle } from "@lib/constants";
 import useConfig from "next/config";
 import LineageTable from "./lineage-table";
 import { GeoJSONFeature } from "mapbox-gl";
+import { maxBy } from "lodash";
 
 type SeatOption = {
   state: string;
@@ -61,10 +62,9 @@ const MapboxMyArea: FC<MapboxProps> = ({
     publicRuntimeConfig: { APP_NAME },
   } = useConfig();
   const [popupInfo, setPopupInfo] = useState<{
-    feature: GeoJSONFeature;
+    feature: GeoJSONFeature & { year: string };
     longitude: number;
     latitude: number;
-    year?: number;
   } | null>(null);
 
   const { replace } = useRouter();
@@ -108,24 +108,44 @@ const MapboxMyArea: FC<MapboxProps> = ({
     });
 
     if (features && features.length > 0) {
-      setPopupInfo({
-        feature: features[features.length - 1],
-        longitude: e.lngLat.lng,
-        latitude: e.lngLat.lat,
-        year: Number(
-          features[features.length - 1].source
-            ?.split("_")
-            .find((part) => /^\d{4}$/.test(part)),
-        ),
-      });
+      const feats = features
+        .map((feat) => ({
+          ...feat,
+          year:
+            feat.source?.split("_").find((part) => /^\d{4}$/.test(part)) || "",
+        }))
+        .sort((a, b) => Number(b) - Number(a));
+
+      const mostRecent = maxBy(feats, "year");
+
+      if (mostRecent) {
+        setPopupInfo({
+          feature: mostRecent,
+          longitude: e.lngLat.lng,
+          latitude: e.lngLat.lat,
+        });
+      }
     } else {
       setPopupInfo(null);
     }
   };
 
+  const { myarea_map } = useMap();
+
+  useEffect(() => {
+    setSelectedBounds([Object.entries(boundaries.polygons).reverse()[0][1][0]]);
+    if (myarea_map) {
+      myarea_map.flyTo({
+        center: boundaries.center,
+        zoom: boundaries.zoom,
+        duration: 2000,
+      });
+    }
+  }, [boundaries]);
+
   return (
     <Map
-      id="myarea-map"
+      id="myarea_map"
       ref={mapRef}
       reuseMaps={true}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
@@ -281,7 +301,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
           <p className="px-3 py-2 font-body text-body-xs text-txt-white">
             {popupInfo.feature.properties?.["dun"] ||
               popupInfo.feature.properties?.["parlimen"]}{" "}
-            ({popupInfo.year})
+            ({popupInfo.feature.year})
           </p>
         </Popup>
       )}

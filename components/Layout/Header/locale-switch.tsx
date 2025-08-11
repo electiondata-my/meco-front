@@ -27,7 +27,7 @@ export default function LocaleSwitch() {
       value={language}
     >
       <SelectTrigger>
-        {/* <GlobeIcon /> */}
+        <GlobeIcon className="hidden lg:block" />
         <SelectValue className="text-txt-black-900">
           {(locale) => languages?.[locale as "ms-MY" | "en-GB"].full}
         </SelectValue>
