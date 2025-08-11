@@ -20,6 +20,7 @@ import dynamic from "next/dynamic";
 import { FunctionComponent } from "react";
 import SectionGrid from "@components/Section/section-grid";
 import { useToast } from "@govtechmy/myds-react/hooks";
+import { routes } from "@lib/routes";
 
 /**
  * Trivia
@@ -192,7 +193,7 @@ const ElectionTriviaDashboard: FunctionComponent<ElectionTriviaProps> = ({
         category={[t("hero.category", { ns: "trivia" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "trivia" })]}
         description={[t("hero.description", { ns: "trivia" })]}
-        pageId="/trivia"
+        pageId={routes.TRIVIA}
       />
       <Container>
         <SectionGrid className="space-y-6 py-6 lg:space-y-12 lg:pb-16">

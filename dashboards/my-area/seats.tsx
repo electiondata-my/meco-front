@@ -260,7 +260,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         category={[t("hero.category", { ns: "seats" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "seats" })]}
         description={[t("hero.description", { ns: "seats" })]}
-        pageId="sitewide"
+        pageId={routes.SEATS}
       />
       <div ref={sentinelRef} className="-mt-10 h-16" />
       <div

@@ -143,7 +143,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
         category={[t("hero.category", { ns: "elections" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "elections" })]}
         description={[t("hero.description", { ns: "elections" })]}
-        pageId="/elections"
+        pageId={routes.ELECTIONS}
       />
       <Container>
         {/* Explore any election from Merdeka to the present! */}
