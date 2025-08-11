@@ -29,7 +29,12 @@ const Home: Page = ({
       <Metadata
         title={currentSeat.seat_name}
         description={t("hero.description", { ns: "seats" })}
-        image={`${process.env.NEXT_PUBLIC_API_URL_S3}/og-image/${params.seat_name}.png`}
+        image={
+          // Sitewide OG for root /seats, custom OG only when a seat is selected
+          selection.length === 0
+            ? undefined // Sitewide OG
+            : `${process.env.NEXT_PUBLIC_API_URL_S3}/og-image/${params.seat_name}.png` // Custom OG
+        }
         keywords={`Malaysia, election, seats, dashboard, results, ${currentSeat?.seat_name || ""}, ${params.seat_name}, parlimen, DUN`}
       />
       <MapProvider>
