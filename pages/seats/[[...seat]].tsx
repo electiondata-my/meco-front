@@ -3,6 +3,8 @@ import ElectionSeatsDashboard from "@dashboards/my-area/seats";
 import { get } from "@lib/api";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
+import { useTranslation } from "@hooks/useTranslation";
+import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { MapProvider } from "react-map-gl/mapbox";
 
@@ -13,12 +15,23 @@ import { MapProvider } from "react-map-gl/mapbox";
 
 const Home: Page = ({
   params,
+  meta,
   selection,
   seat,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
+  const { t } = useTranslation("seats");
+  const currentSeat = selection.find(
+    (seats: any) => seats.slug === params.seat_name,
+  );
+
   return (
-    <>
-      <Metadata keywords="" />
+    <AnalyticsProvider meta={meta}>
+      <Metadata
+        title={currentSeat.seat_name}
+        description={t("hero.description", { ns: "seats" })}
+        image={`${process.env.NEXT_PUBLIC_API_URL_S3}/og-image/${params.seat_name}.png`}
+        keywords={`Malaysia, election, seats, dashboard, results, ${currentSeat?.seat_name || ""}, ${params.seat_name}, parlimen, DUN`}
+      />
       <MapProvider>
         <ElectionSeatsDashboard
           elections={seat.data}
@@ -33,7 +46,7 @@ const Home: Page = ({
           lineage={{ type: "parlimen", data: seat.lineage }}
         />
       </MapProvider>
-    </>
+    </AnalyticsProvider>
   );
 };
 
