@@ -201,7 +201,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
   return (
     <SectionGrid className="space-y-6 py-8 lg:space-y-12 lg:py-12">
       <div className="flex flex-col gap-6">
-        <h4 className="text-center font-heading text-body-md font-bold lg:text-heading-2xs">
+        <h4 className="text-center font-heading text-heading-2xs font-bold">
           {t("header_2", { ns: "elections" })}
         </h4>
         <div className="mx-auto flex w-fit items-center gap-2">

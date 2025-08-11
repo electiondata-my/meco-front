@@ -332,7 +332,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       </div>
       <Container className="gap-8 py-8 lg:gap-16 lg:py-16">
         <SectionGrid className="space-y-8 lg:space-y-10">
-          <h2 className="max-w-[727px] text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
+          <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
             {language === "en-GB"
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
@@ -359,7 +359,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         <SectionGrid className="relative -top-6 space-y-6 lg:space-y-10">
           <ElectionTable
             title={
-              <h2 className="text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
+              <h2 className="text-center font-heading text-heading-2xs font-semibold">
                 {t("title", { ns: "seats" })}
                 <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
               </h2>
@@ -372,7 +372,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         </SectionGrid>
 
         <SectionGrid className="space-y-6 lg:space-y-10">
-          <h2 className="text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
+          <h2 className="text-center font-heading text-heading-2xs font-semibold">
             {t("breakdown_voters", {
               ns: "seats",
               number: voters_total && numFormat(voters_total, "standard"),

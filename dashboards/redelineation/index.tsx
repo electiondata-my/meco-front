@@ -152,7 +152,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
 
       <Container className="gap-8 py-8 lg:gap-16 lg:pb-16">
         <SectionGrid className="space-y-8">
-          <h2 className="max-w-[727px] text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
+          <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
             {t(`where_seats_${toggle_state}`)}
           </h2>
 
@@ -255,7 +255,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         </SectionGrid>
         <SectionGrid>
           <div className="mx-auto w-full space-y-6">
-            <h2 className="mx-auto max-w-[727px] text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
+            <h2 className="mx-auto max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
               {t("constituency_redistribution")}
             </h2>
 
@@ -349,12 +349,15 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   }
                 />
               </div>
-              <div className="mx-auto max-w-[846px] text-center relative -top-6">
-                <p className="text-sm italic text-txt-black-600">
+              <div className="relative -top-6 mx-auto max-w-[846px] text-center">
+                <p className="text-txt-black-600 text-sm italic">
                   {t("attribution_tindak")}
                 </p>
               </div>
-              <TabsContent className="mx-auto max-w-[626px] relative -top-6" value="new">
+              <TabsContent
+                className="relative -top-6 mx-auto max-w-[626px]"
+                value="new"
+              >
                 {current_seat && (
                   <GeohistoryTable
                     type="new"
