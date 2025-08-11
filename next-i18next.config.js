@@ -12,6 +12,7 @@ const namespaces = [
   "party",
   "trivia",
   "redelineation",
+  "seats",
 ];
 
 /** @type {import('next-i18next').UserConfig} */

@@ -1,5 +1,5 @@
 import { FC, Fragment, useEffect, useRef, useState } from "react";
-import Map, { Layer, MapRef, Popup, Source } from "react-map-gl/mapbox";
+import Map, { Layer, MapRef, Popup, Source, useMap } from "react-map-gl/mapbox";
 import { useTheme } from "next-themes";
 import { Boundaries, ElectionType, Lineage } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
@@ -130,9 +130,22 @@ const MapboxMyArea: FC<MapboxProps> = ({
     }
   };
 
+  const { myarea_map } = useMap();
+
+  useEffect(() => {
+    setSelectedBounds([Object.entries(boundaries.polygons).reverse()[0][1][0]]);
+    if (myarea_map) {
+      myarea_map.flyTo({
+        center: boundaries.center,
+        zoom: boundaries.zoom,
+        duration: 2000,
+      });
+    }
+  }, [boundaries]);
+
   return (
     <Map
-      id="myarea-map"
+      id="myarea_map"
       ref={mapRef}
       reuseMaps={true}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}

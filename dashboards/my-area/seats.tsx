@@ -23,6 +23,8 @@ import { useLanguage } from "@hooks/useLanguage";
 import { clx, numFormat } from "@lib/helpers";
 import { Chart, TooltipModel } from "chart.js";
 import { useToast } from "@govtechmy/myds-react/hooks";
+import { routes } from "@lib/routes";
+import { useWatch } from "@hooks/useWatch";
 
 /**
  * Seats
@@ -91,7 +93,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
   boundaries,
   lineage,
 }) => {
-  const { t } = useTranslation(["common", "home"]);
+  const { t } = useTranslation(["common", "seats"]);
   const { cache } = useCache();
   const { language } = useLanguage();
   const { toast } = useToast();
@@ -135,6 +137,12 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
 
     return () => observer.disconnect();
   }, []);
+
+  useWatch(() => {
+    if (`${params.type}_${params.seat_name}` !== data.seat_value) {
+      setData("seat_value", `${params.type}_${params.seat_name}`);
+    }
+  }, [params.type, params.seat_name]);
 
   const fetchFullResult = async (
     election: string,
@@ -249,9 +257,9 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     <>
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "home" }), "text-txt-danger"]}
-        header={[t("hero.header", { ns: "home" })]}
-        description={[t("hero.description", { ns: "home" })]}
+        category={[t("hero.category", { ns: "seats" }), "text-txt-danger"]}
+        header={[t("hero.header", { ns: "seats" })]}
+        description={[t("hero.description", { ns: "seats" })]}
         pageId="sitewide"
       />
       <div ref={sentinelRef} className="-mt-10 h-16" />
@@ -273,7 +281,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           <ComboBox<SeatOption>
             borderless={data.isStick}
             leftSearchButton={data.isStick}
-            placeholder={t("search_seat", { ns: "home" })}
+            placeholder={t("search_seat", { ns: "seats" })}
             options={SEAT_OPTIONS}
             config={{
               baseSort: (a: any, b: any) => {
@@ -302,7 +310,13 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 setData("loading", true);
                 setData("seat_value", selected.value);
                 const [type, seat] = selected.value.split("_");
-                push(`/${type}/${seat}`, `/${type}/${seat}`, { scroll: false })
+                push(
+                  `${routes.SEATS}/${type}/${seat}`,
+                  `${routes.SEATS}/${type}/${seat}`,
+                  {
+                    scroll: false,
+                  },
+                )
                   .catch((e) => {
                     toast({
                       variant: "error",
@@ -336,17 +350,17 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               <p>{t("common:toast.request_failure")}</p>
             )}
           </div>
-          <div className="mx-auto max-w-[842px] text-center relative -top-6">
-            <p className="text-sm italic text-txt-black-600">
+          <div className="relative -top-6 mx-auto max-w-[842px] text-center">
+            <p className="text-txt-black-600 text-sm italic">
               {t("attribution_tindak")}
             </p>
           </div>
         </SectionGrid>
-        <SectionGrid className="space-y-6 lg:space-y-10 relative -top-6">
+        <SectionGrid className="relative -top-6 space-y-6 lg:space-y-10">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
-                {t("title", { ns: "home" })}
+                {t("title", { ns: "seats" })}
                 <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
               </h2>
             }
@@ -360,7 +374,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         <SectionGrid className="space-y-6 lg:space-y-10">
           <h2 className="text-center font-heading text-body-md font-semibold lg:text-heading-2xs">
             {t("breakdown_voters", {
-              ns: "home",
+              ns: "seats",
               number: voters_total && numFormat(voters_total, "standard"),
             })}
             <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
@@ -372,7 +386,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 <Pyramid
                   title={
                     <h6 className="text-body-md font-semibold lg:text-body-lg">
-                      {t("gender_age_distr", { ns: "home" })}
+                      {t("gender_age_distr", { ns: "seats" })}
                     </h6>
                   }
                   className="h-[500px] w-full xl:h-[95%]"
@@ -415,11 +429,11 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                     tooltipVariable="abs"
                     title={
                       <h6 className="text-body-md font-semibold lg:text-body-lg">
-                        {t(`${type as string}`, { ns: "home" })}
+                        {t(`${type as string}`, { ns: "seats" })}
                       </h6>
                     }
                     data={Array.isArray(data) ? data : []}
-                    formatX={(key) => t(`barmeter.${key}`, { ns: "home" })}
+                    formatX={(key) => t(`barmeter.${key}`, { ns: "seats" })}
                     formatY={(perc, name) => (
                       <p className="whitespace-nowrap text-body-sm text-txt-black-500">{`${numFormat(perc, "compact", [2, 2])}%`}</p>
                     )}

@@ -4,40 +4,35 @@ import { get } from "@lib/api";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
+import { MapProvider } from "react-map-gl/mapbox";
 
 /**
- * Parlimen Seat
+ * Seats Dashboard
  * @overview Status: Live
  */
 
-const ParlimenSeat: Page = ({
+const Home: Page = ({
   params,
   selection,
   seat,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
-  const currentSeat = selection.find(
-    (seats: any) => seats.slug === params.seat_name,
-  );
   return (
     <>
-      <Metadata
-        keywords="parlimen"
-        image={`${process.env.NEXT_PUBLIC_API_URL_S3}/og-image/${params.seat_name}.png`}
-        title={currentSeat.seat_name}
-      />
-      <ElectionSeatsDashboard
-        key={`${params.type}-${params.seat_name}`}
-        boundaries={seat.boundaries}
-        elections={seat.data}
-        params={params}
-        selection={selection}
-        desc_en={seat.desc_en}
-        desc_ms={seat.desc_ms}
-        voters_total={seat.voters_total}
-        pyramid={seat.pyramid}
-        barmeter={seat.barmeter}
-        lineage={{ type: "parlimen", data: seat.lineage }}
-      />
+      <Metadata keywords="" />
+      <MapProvider>
+        <ElectionSeatsDashboard
+          elections={seat.data}
+          params={params}
+          selection={selection}
+          desc_en={seat.desc_en}
+          desc_ms={seat.desc_ms}
+          voters_total={seat.voters_total}
+          pyramid={seat.pyramid}
+          barmeter={seat.barmeter}
+          boundaries={seat.boundaries}
+          lineage={{ type: "parlimen", data: seat.lineage }}
+        />
+      </MapProvider>
     </>
   );
 };
@@ -50,35 +45,35 @@ export const getStaticPaths: GetStaticPaths = () => {
 };
 
 export const getStaticProps: GetStaticProps = withi18n(
-  ["home", "election"],
+  ["seats", "election"],
   async ({ params }) => {
-    if (!params || !params.seat) return { notFound: true };
-
     try {
-      const slug = params.seat.toString();
+      const [election_type, slug] = params?.seat
+        ? (params.seat as string[])
+        : ["parlimen", "p138-kota-melaka-melaka"];
+
+      if (!slug || !election_type) return { notFound: true };
 
       const results = await Promise.allSettled([
         get("/seats/dropdown.json"),
         get(`/seats/${slug}.json`),
-      ]);
+      ]).catch((e) => {
+        throw new Error(e);
+      });
 
       const [dropdown, seat] = results.map((e) => {
         if (e.status === "rejected") return null;
         else return e.value.data;
       });
 
-      const selection: Array<{ slug: string }> = dropdown.data;
-      const slugExists = selection.some((e) => e.slug === slug);
-
-      if (slug && !slugExists) return { notFound: true };
-
       return {
+        notFound: false,
         props: {
           meta: {
-            id: "parlimen-" + params.seat,
+            id: "seats",
             type: "dashboard",
           },
-          params: { seat_name: slug, type: "parlimen" },
+          params: { seat_name: slug, type: election_type },
           selection: dropdown.data,
           seat: seat,
         },
@@ -90,4 +85,4 @@ export const getStaticProps: GetStaticProps = withi18n(
   },
 );
 
-export default ParlimenSeat;
+export default Home;

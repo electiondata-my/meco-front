@@ -1,16 +1,17 @@
 export const routes = {
   HOME: "/",
+  API_DOCS: "/api-docs",
+  BLOGS: "/blogs",
+  CANDIDATES: "/candidates",
   DATA_CATALOGUE: "/data-catalogue",
-  PARLIMEN_SEATS: "/parlimen",
   DUN_SEATS: "/dun",
   ELECTIONS: "/elections",
-  CANDIDATES: "/candidates",
-  PARTIES: "/parties",
-  TRIVIA: "/trivia",
-  BLOGS: "/blogs",
-  API_DOCS: "/api-docs",
   MAP_EXPLORER: "/map/explorer",
+  PARLIMEN_SEATS: "/parlimen",
+  PARTIES: "/parties",
   REDELINEATION: "/redelineation",
+  SEATS: "/seats",
+  TRIVIA: "/trivia",
 };
 
 export const static_routes: string[] = (() => {
