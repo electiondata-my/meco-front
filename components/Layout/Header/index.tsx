@@ -45,9 +45,9 @@ export default function Header() {
         {(close) => (
           <>
             <Nav.Item
-              key={"/"}
-              title={t("common:nav.home")}
-              link="/"
+              key={"/seats"}
+              title={t("common:nav.seats")}
+              link="/seats"
               onClick={close}
             />
             <Nav.Item
@@ -68,6 +68,20 @@ export default function Header() {
               link="/parties"
               onClick={close}
             />
+
+            <Nav.Item
+              key={"/redelineation"}
+              title={t("common:nav.redelineation")}
+              link="/redelineation"
+              onClick={close}
+            />
+            <Nav.Item
+              key={"/map/explorer"}
+              title={t("common:nav.map")}
+              link="/map/explorer"
+              onClick={close}
+            />
+
             <Nav.Item
               key={"/trivia"}
               title={t("common:nav.trivia")}
@@ -82,12 +96,6 @@ export default function Header() {
                 onClick={close}
               />
             )}
-            <Nav.Item
-              key={"/map/explorer"}
-              title={t("common:nav.map")}
-              link="/map/explorer"
-              onClick={close}
-            />
           </>
         )}
       </Nav>

@@ -1,4 +1,5 @@
 export type ElectionType = "parlimen" | "dun";
+export type Region = "peninsular" | "sabah" | "sarawak";
 export enum ElectionEnum {
   Parlimen = 0,
   Dun = 1,
@@ -153,3 +154,59 @@ export type Lineage =
       type: "dun";
       data: LineageDun[];
     };
+
+export type RedelineationData = {
+  callout_new: {
+    total: number;
+    unchanged: number;
+    changed: number;
+    new: number;
+  };
+  bar_new: {
+    state: string[];
+    unchanged: number[];
+    changed: number[];
+    new: number[];
+  };
+  callout_old: {
+    total: number;
+    unchanged: number;
+    changed: number;
+    abolished: number;
+  };
+  bar_old: {
+    state: string[];
+    unchanged: number[];
+    changed: number[];
+    abolished: number[];
+  };
+  map_new: string;
+  map_old: string;
+  new: {
+    seat_new: string;
+    state: string;
+    seat_old: string[];
+    center: [number, number];
+    zoom: number;
+    lineage: RedelineationTableNew[];
+  }[];
+  old: {
+    seat_old: string;
+    seat_new: string[];
+    state: string;
+    center: [number, number];
+    zoom: number;
+    lineage: RedelineationTableOld[];
+  }[];
+};
+
+export type RedelineationTableNew = {
+  seat_new: string;
+  parent: string;
+  perc_from_parent: number;
+};
+export type RedelineationTableOld = {
+  seat_old: string;
+  child: string;
+  perc_to_child: number;
+};
