@@ -6,7 +6,7 @@ const LayoutFooter = () => {
   const { t } = useTranslation();
 
   return (
-    <footer className="w-full border-t border-otl-gray-200 bg-gray-100 px-4 pb-16 pt-12 md:px-6">
+    <footer className="w-full border-t border-otl-gray-200 bg-bg-gray-50 px-4 pb-16 pt-12 md:px-6">
       <div className="mx-auto max-w-screen-xl">
         <div className="flex flex-col gap-8 md:flex-row md:justify-between">
           {/* Left: Branding + License */}
