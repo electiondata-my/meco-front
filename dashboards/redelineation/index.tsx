@@ -31,6 +31,7 @@ import {
   RedelineationTableOld,
   Region,
 } from "@dashboards/types";
+import { routes } from "@lib/routes";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
@@ -142,7 +143,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         ]}
         header={[t("hero.header", { ns: "redelineation" })]}
         description={[t("hero.description", { ns: "redelineation" })]}
-        pageId="redelineation"
+        pageId={routes.REDELINEATION}
       />
 
       <RedelineationFilters

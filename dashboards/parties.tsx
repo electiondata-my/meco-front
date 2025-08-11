@@ -190,7 +190,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         category={[t("hero.category", { ns: "parties" }), "text-txt-danger"]}
         header={[t("hero.header", { ns: "parties" })]}
         description={[t("hero.description", { ns: "parties" })]}
-        pageId="/parties"
+        pageId={routes.PARTIES}
       />
       <Container>
         <SectionGrid className="space-y-6 py-6 lg:space-y-16 lg:pb-16">
