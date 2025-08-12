@@ -181,7 +181,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
       />
       <Container>
         <SectionGrid className="space-y-6 py-6 lg:space-y-16 lg:pb-16">
-          <div className="mt-3">
+          <div className="mt-3 w-full">
             <div className="mx-auto w-full md:w-[727px]">
               <ComboBox
                 placeholder={t("search_candidate", { ns: "candidates" })}

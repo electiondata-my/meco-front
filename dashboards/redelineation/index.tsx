@@ -317,48 +317,45 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   }}
                 />
               </div>
-              <div className="relative mx-auto flex h-[400px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[846px]">
-                <Mapbox
-                  initialState={{
-                    longitude: data[toggle_state][0].center[0],
-                    latitude: data[toggle_state][0].center[1],
-                    zoom: data[toggle_state][0].zoom,
-                  }}
-                  sources={
-                    toggle_state === "new"
-                      ? [data["map_new"], data["map_old"]]
-                      : [data["map_old"], data["map_new"]]
-                  }
-                  election_type={election_type}
-                  useOutline={
-                    toggle_state === "new"
-                      ? current_seat[`seat_new`]
-                      : current_seat[`seat_old`]
-                  }
-                  useShaded={
-                    toggle_state === "new"
-                      ? current_seat[`seat_old`]
-                      : current_seat[`seat_new`]
-                  }
-                  mapLabel={
-                    toggle_state === "new" ? ["new", "old"] : ["old", "new"]
-                  }
-                  year={
-                    toggle_state === "new"
-                      ? [new_year, old_year]
-                      : [old_year, new_year]
-                  }
-                />
-              </div>
-              <div className="relative -top-6 mx-auto max-w-[846px] text-center">
-                <p className="text-txt-black-600 text-sm italic">
+              <div className="space-y-3">
+                <div className="relative mx-auto flex h-[400px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[846px]">
+                  <Mapbox
+                    initialState={{
+                      longitude: data[toggle_state][0].center[0],
+                      latitude: data[toggle_state][0].center[1],
+                      zoom: data[toggle_state][0].zoom,
+                    }}
+                    sources={
+                      toggle_state === "new"
+                        ? [data["map_new"], data["map_old"]]
+                        : [data["map_old"], data["map_new"]]
+                    }
+                    election_type={election_type}
+                    useOutline={
+                      toggle_state === "new"
+                        ? current_seat[`seat_new`]
+                        : current_seat[`seat_old`]
+                    }
+                    useShaded={
+                      toggle_state === "new"
+                        ? current_seat[`seat_old`]
+                        : current_seat[`seat_new`]
+                    }
+                    mapLabel={
+                      toggle_state === "new" ? ["new", "old"] : ["old", "new"]
+                    }
+                    year={
+                      toggle_state === "new"
+                        ? [new_year, old_year]
+                        : [old_year, new_year]
+                    }
+                  />
+                </div>
+                <p className="text-center text-sm italic text-txt-black-500">
                   {t("attribution_tindak")}
                 </p>
               </div>
-              <TabsContent
-                className="relative -top-6 mx-auto max-w-[626px]"
-                value="new"
-              >
+              <TabsContent className="mx-auto max-w-[626px]" value="new">
                 {current_seat && (
                   <GeohistoryTable
                     type="new"

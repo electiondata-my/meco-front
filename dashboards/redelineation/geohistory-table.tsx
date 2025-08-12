@@ -1,4 +1,3 @@
-import ElectionTable from "@components/Election/ElectionTable";
 import {
   RedelineationTableNew,
   RedelineationTableOld,
@@ -7,7 +6,6 @@ import { useMediaQuery } from "@hooks/useMediaQuery";
 import { useTranslation } from "@hooks/useTranslation";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { FunctionComponent, useMemo } from "react";
-import BarPerc from "@charts/bar-perc";
 
 type GeohistoryTableProps = (
   | {
@@ -100,17 +98,19 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
   if (isDesktop && t_schema) {
     // Custom table with rowSpan for merged first column
     return (
-      <div className="overflow-x-auto group">
+      <div className="group overflow-x-auto">
         <table className="w-full border-collapse border border-otl-gray-200">
           <thead>
             <tr className="border-b border-otl-gray-200">
               {t_schema.map((column, index) => (
                 <th
                   key={column.id}
-                  className={`py-3 px-3 text-left text-body-sm font-semibold text-txt-black-700 ${
+                  className={`px-3 py-3 text-left text-body-sm font-semibold text-txt-black-700 ${
                     index === t_schema.length - 1 ? "text-right" : ""
                   } ${
-                    index < t_schema.length - 1 ? "border-r border-otl-gray-200" : ""
+                    index < t_schema.length - 1
+                      ? "border-r border-otl-gray-200"
+                      : ""
                   }`}
                 >
                   {typeof column.header === "string" ? column.header : "Header"}
@@ -125,9 +125,9 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
                 className="border-b border-otl-gray-200 hover:bg-bg-washed"
               >
                 {t_schema.map((column, colIndex) => {
-                  const columnKey = 'key' in column ? column.key : column.id;
+                  const columnKey = "key" in column ? column.key : column.id;
                   const value = row[columnKey as keyof typeof row];
-                  
+
                   // For the first column, implement rowSpan logic
                   if (colIndex === 0) {
                     if (rowIndex === 0) {
@@ -136,9 +136,9 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
                         <td
                           key={column.id}
                           rowSpan={table.length}
-                          className="py-3 px-3 border-r border-otl-gray-200 group-hover:bg-bg-washed"
+                          className="border-r border-otl-gray-200 px-3 py-3 group-hover:bg-bg-washed"
                         >
-                          <p className="flex items-center h-full">{value}</p>
+                          <p className="flex h-full items-center">{value}</p>
                         </td>
                       );
                     } else {
@@ -146,21 +146,31 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
                       return null;
                     }
                   }
-                  
+
                   // For other columns, render normally
                   return (
                     <td
                       key={column.id}
                       className={`py-3 ${
-                        colIndex === t_schema.length - 1 ? "pr-3 pl-1" : "px-3"
+                        colIndex === t_schema.length - 1 ? "pl-1 pr-3" : "px-3"
                       } ${
                         colIndex === t_schema.length - 1 ? "text-right" : ""
                       } ${
-                        colIndex < t_schema.length - 1 ? "border-r border-otl-gray-200" : ""
+                        colIndex < t_schema.length - 1
+                          ? "border-r border-otl-gray-200"
+                          : ""
                       }`}
                     >
-                      <p className={colIndex === t_schema.length - 1 ? "text-right font-mono tabular-nums" : ""}>
-                        {colIndex === t_schema.length - 1 ? Number(value).toFixed(2) : value}
+                      <p
+                        className={
+                          colIndex === t_schema.length - 1
+                            ? "text-right font-mono tabular-nums"
+                            : ""
+                        }
+                      >
+                        {colIndex === t_schema.length - 1
+                          ? Number(value).toFixed(2)
+                          : value}
                       </p>
                     </td>
                   );
@@ -176,47 +186,54 @@ const GeohistoryTable: FunctionComponent<GeohistoryTableProps> = ({
   return (
     <div className="lg:hidden">
       {/* Mobile-optimized table with header */}
-      <div className="mb-4">
-        <h3 className="text-base font-semibold text-txt-black-700 mb-2 pl-3">
-          {type === "new" 
-            ? `${t("table.seat_new")} (${year[0]})` 
-            : `${t("table.seat_old")} (${year[1]})`
-          }: {type === "new" ? (table[0] as any).seat_new : (table[0] as any).seat_old}
-        </h3>
-      </div>
-      
+
+      <h3 className="mb-4 pl-2 text-center text-body-md font-semibold text-txt-black-700">
+        {type === "new"
+          ? `${t("table.seat_new")} (${year[0]})`
+          : `${t("table.seat_old")} (${year[1]})`}
+        :{" "}
+        {type === "new"
+          ? (table[0] as any).seat_new
+          : (table[0] as any).seat_old}
+      </h3>
+
       <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-otl-gray-200">
           <thead>
             <tr className="border-b border-otl-gray-200">
-              <th className="py-3 px-3 text-left text-sm font-semibold text-txt-black-700 border-r border-otl-gray-200 w-3/5">
-                {type === "new" ? t("table.parent") : t("table.child")} ({type === "new" ? year[1] : year[0]})
+              <th className="w-3/5 border-r border-otl-gray-200 px-3 py-3 text-left text-sm font-semibold text-txt-black-700">
+                {type === "new" ? t("table.parent") : t("table.child")} (
+                {type === "new" ? year[1] : year[0]})
               </th>
-              <th className="py-3 px-3 text-right text-sm font-semibold text-txt-black-700 w-2/5">
-                {type === "new" ? t("table.perc_from_parent") : t("table.perc_to_child")}
+              <th className="w-2/5 px-3 py-3 text-right text-sm font-semibold text-txt-black-700">
+                {type === "new"
+                  ? t("table.perc_from_parent")
+                  : t("table.perc_to_child")}
               </th>
             </tr>
           </thead>
           <tbody>
             {table.map((row, rowIndex) => {
-              const otherValue = type === "new" ? (row as any).parent : (row as any).child;
-              const percentageValue = type === "new" ? (row as any).perc_from_parent : (row as any).perc_to_child;
-              
+              const otherValue =
+                type === "new" ? (row as any).parent : (row as any).child;
+              const percentageValue =
+                type === "new"
+                  ? (row as any).perc_from_parent
+                  : (row as any).perc_to_child;
+
               return (
                 <tr
                   key={rowIndex}
                   className="border-b border-otl-gray-200 hover:bg-bg-washed"
                 >
                   {/* First column */}
-                  <td className="py-3 px-3 border-r border-otl-gray-200">
-                    <p className="text-sm text-txt-black-700">
-                      {otherValue}
-                    </p>
+                  <td className="border-r border-otl-gray-200 px-3 py-3">
+                    <p className="text-sm text-txt-black-700">{otherValue}</p>
                   </td>
-                  
+
                   {/* Second column */}
-                  <td className="py-3 px-3 text-right">
-                    <p className="text-sm font-mono tabular-nums text-txt-black-700">
+                  <td className="px-3 py-3 text-right">
+                    <p className="font-mono text-sm tabular-nums text-txt-black-700">
                       {Number(percentageValue).toFixed(2)}
                     </p>
                   </td>

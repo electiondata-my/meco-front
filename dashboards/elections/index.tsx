@@ -160,7 +160,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
               <ElectionFilterTrigger />
             </DrawerTrigger>
             <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
-              <DrawerHeader className="flex w-full items-center justify-between px-4 py-3 uppercase">
+              <DrawerHeader className="flex w-full items-center justify-between px-4 py-3">
                 <DrawerTitle className="text-body-md font-bold">
                   {t("filters")}
                 </DrawerTitle>
