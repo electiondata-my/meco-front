@@ -175,6 +175,13 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                     zoom: current_seat.zoom,
                     duration: 2000,
                   });
+                  if (value === "new") {
+                    redelineation_map.moveLayer(`${data.map_new}-line`);
+                    redelineation_map.moveLayer(`${data.map_new}-fill`);
+                  } else {
+                    redelineation_map.moveLayer(`${data.map_old}-line`);
+                    redelineation_map.moveLayer(`${data.map_old}-fill`);
+                  }
                 }
               }}
             >
@@ -290,6 +297,14 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                     zoom: current_seat.zoom,
                     duration: 2000,
                   });
+
+                  if (value === "new") {
+                    redelineation_map.moveLayer(`${data.map_new}-line`);
+                    redelineation_map.moveLayer(`${data.map_new}-fill`);
+                  } else {
+                    redelineation_map.moveLayer(`${data.map_old}-line`);
+                    redelineation_map.moveLayer(`${data.map_old}-fill`);
+                  }
                 }
               }}
             >
