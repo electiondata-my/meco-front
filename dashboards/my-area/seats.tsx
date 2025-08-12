@@ -338,25 +338,25 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
               ? desc_en?.replace(SELECTED_SEATS?.seat || "", "")
               : desc_ms?.replace(SELECTED_SEATS?.seat || "", "")}
           </h2>
-          <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
-            {boundaries ? (
-              <Mapbox
-                type="map"
-                boundaries={boundaries}
-                seat_info={SELECTED_SEATS}
-                lineage={lineage}
-              />
-            ) : (
-              <p>{t("common:toast.request_failure")}</p>
-            )}
-          </div>
-          <div className="relative -top-6 mx-auto max-w-[842px] text-center">
-            <p className="text-txt-black-600 text-sm italic">
+          <div className="space-y-3">
+            <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
+              {boundaries ? (
+                <Mapbox
+                  type="map"
+                  boundaries={boundaries}
+                  seat_info={SELECTED_SEATS}
+                  lineage={lineage}
+                />
+              ) : (
+                <p>{t("common:toast.request_failure")}</p>
+              )}
+            </div>
+            <p className="text-center text-sm italic text-txt-black-500">
               {t("attribution_tindak")}
             </p>
           </div>
         </SectionGrid>
-        <SectionGrid className="relative -top-6 space-y-6 lg:space-y-10">
+        <SectionGrid className="space-y-6 lg:space-y-10">
           <ElectionTable
             title={
               <h2 className="text-center font-heading text-heading-2xs font-semibold">
