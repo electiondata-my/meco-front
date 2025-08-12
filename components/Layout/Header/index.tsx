@@ -20,15 +20,18 @@ export default function Header() {
           : ""
       }
     >
-      <Link href={"/"} className="flex items-center gap-2.5 no-underline">
+      <Link
+        href={"/"}
+        className="flex items-center gap-2.5 no-underline max-sm:gap-1.5"
+      >
         <Image
-          src="/static/images/icons/icon-512.png"
+          src="/static/logo/logo-default.png"
           alt="ElectionData.MY Logo"
           width={28}
           height={28}
           className="aspect-auto select-none object-contain"
         />
-        <h1 className="hidden font-poppins text-body-lg font-bold no-underline lg:block">
+        <h1 className="font-poppins text-body-lg font-bold no-underline max-sm:text-body-md">
           ElectionData.MY
         </h1>
       </Link>
