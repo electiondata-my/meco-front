@@ -26,6 +26,16 @@ interface Props {
   year: [string, string];
 }
 
+const SHADED_COLOR_INDEX = [
+  // [Fill, Outline]
+  "rgb(250, 220, 221)",
+  "rgb(252, 232, 216)",
+  "rgb(252, 247, 217)",
+  "rgb(222, 246, 222)",
+  "rgb(217, 240, 248)",
+  "rgb(233, 222, 250)",
+];
+
 const MapboxRedelineation: FC<Props> = ({
   initialState,
   sources,
@@ -115,9 +125,9 @@ const MapboxRedelineation: FC<Props> = ({
           type="line"
           source-layer={sources[1]}
           paint={{
-            "line-color": "#FCA5A5",
-            "line-width": 1,
-            "line-opacity": 0.8,
+            "line-color": "#A1A1AA",
+            "line-width": 2,
+            "line-opacity": 1,
           }}
           filter={[
             "in",
@@ -130,8 +140,15 @@ const MapboxRedelineation: FC<Props> = ({
           type="fill"
           source-layer={sources[1]}
           paint={{
-            "fill-color": "#FCA5A5",
-            "fill-opacity": 0.5,
+            "fill-color": [
+              "match",
+              ["get", election_type === "parlimen" ? "parlimen" : "dun"],
+              ...(Array.isArray(useShaded) ? useShaded : [useShaded]).flatMap(
+                (seat, i) => [seat, SHADED_COLOR_INDEX[i]],
+              ),
+              "transparent", // default
+            ],
+            "fill-opacity": 1,
           }}
           filter={[
             "in",
@@ -153,7 +170,7 @@ const MapboxRedelineation: FC<Props> = ({
           type="line"
           source-layer={sources[0]}
           paint={{
-            "line-color": "#DC2626",
+            "line-color": "black",
             "line-width": 2,
             "line-opacity": 1,
           }}
@@ -183,13 +200,16 @@ const MapboxRedelineation: FC<Props> = ({
             {t("common:constituency")}
           </p>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="size-2 rounded-full bg-danger-600" />
+            <div className="size-2 rounded-full bg-[#000000]" />
             <p>
               {t(mapLabel[0])} ({year[0]})
             </p>
           </div>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="size-2 rounded-full bg-danger-300" />
+            <div
+              className="size-2 rounded-full"
+              style={{ background: SHADED_COLOR_INDEX[0] }}
+            />
             <p>
               {t(mapLabel[1])} ({year[1]})
             </p>

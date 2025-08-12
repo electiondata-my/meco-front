@@ -23,7 +23,6 @@ import { useMap } from "react-map-gl/mapbox";
 import GeohistoryTable from "./geohistory-table";
 import { useMediaQuery } from "@hooks/useMediaQuery";
 import RedelineationFilters from "./filters";
-import { useWatch } from "@hooks/useWatch";
 import {
   ElectionType,
   RedelineationData,
@@ -125,7 +124,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         redelineation_map.moveLayer(`${data.map_old}-fill`);
       }
     }
-  }, [params, toggle_state]);
+  }, [params]);
 
   const new_year =
     data["map_new"].split("_").find((part) => /^\d{4}$/.test(part)) || "";
@@ -163,9 +162,21 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               variant="enclosed"
               className="space-y-6 lg:space-y-8"
               value={toggle_state}
-              onValueChange={(value) =>
-                setData("toggle_state", value as "new" | "old")
-              }
+              onValueChange={(value) => {
+                setData("toggle_state", value as "new" | "old");
+                setData(
+                  "seat_value",
+                  current_seat[`seat_${value as "old" | "new"}`][0],
+                );
+
+                if (redelineation_map) {
+                  redelineation_map.flyTo({
+                    center: current_seat.center,
+                    zoom: current_seat.zoom,
+                    duration: 2000,
+                  });
+                }
+              }}
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new" className="">
@@ -265,9 +276,22 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               variant="enclosed"
               className="space-y-6 lg:space-y-8"
               value={toggle_state}
-              onValueChange={(value) =>
-                setData("toggle_state", value as "new" | "old")
-              }
+              onValueChange={(value) => {
+                setData("toggle_state", value as "new" | "old");
+
+                setData(
+                  "seat_value",
+                  current_seat[`seat_${value as "old" | "new"}`][0],
+                );
+
+                if (redelineation_map) {
+                  redelineation_map.flyTo({
+                    center: current_seat.center,
+                    zoom: current_seat.zoom,
+                    duration: 2000,
+                  });
+                }
+              }}
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new" className="">
@@ -290,8 +314,8 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   config={{
                     keys:
                       election_type === "parlimen"
-                        ? ["value"]
-                        : ["state", "value"],
+                        ? ["label"]
+                        : ["state", "label"],
                   }}
                   format={(option) => (
                     <>
