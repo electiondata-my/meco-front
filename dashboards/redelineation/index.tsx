@@ -364,6 +364,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                       latitude: data[toggle_state][0].center[1],
                       zoom: data[toggle_state][0].zoom,
                     }}
+                    toggle_state={toggle_state}
                     sources={
                       toggle_state === "new"
                         ? [data["map_new"], data["map_old"]]

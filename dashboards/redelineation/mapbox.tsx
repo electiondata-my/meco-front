@@ -14,7 +14,8 @@ import Map, {
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { ElectionType } from "@dashboards/types";
-import { maxBy } from "lodash";
+import maxBy from "lodash/maxBy";
+import minBy from "lodash/minBy";
 
 interface Props {
   initialState: Partial<ViewState>;
@@ -24,16 +25,17 @@ interface Props {
   election_type: ElectionType;
   mapLabel: [string, string];
   year: [string, string];
+  toggle_state: "old" | "new";
 }
 
 const SHADED_COLOR_INDEX = [
   // [Fill, Outline]
   "rgb(250, 220, 221)",
-  "rgb(252, 232, 216)",
   "rgb(252, 247, 217)",
   "rgb(222, 246, 222)",
   "rgb(217, 240, 248)",
   "rgb(233, 222, 250)",
+  "rgb(252, 232, 216)",
 ];
 
 const MapboxRedelineation: FC<Props> = ({
@@ -44,6 +46,7 @@ const MapboxRedelineation: FC<Props> = ({
   election_type,
   mapLabel,
   year,
+  toggle_state,
 }) => {
   const { LIGHT_STYLE, DARK_STYLE } = MapboxMapStyle;
   const { resolvedTheme } = useTheme();
@@ -86,11 +89,12 @@ const MapboxRedelineation: FC<Props> = ({
         }))
         .sort((a, b) => Number(b) - Number(a));
 
-      const mostRecent = maxBy(feats, "year");
+      const featsByToggle =
+        toggle_state === "new" ? minBy(feats, "year") : maxBy(feats, "year");
 
-      if (mostRecent) {
+      if (featsByToggle) {
         setPopupInfo({
-          feature: mostRecent,
+          feature: featsByToggle,
           longitude: e.lngLat.lng,
           latitude: e.lngLat.lat,
         });
