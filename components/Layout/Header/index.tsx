@@ -7,6 +7,18 @@ import { useTranslation } from "@hooks/useTranslation";
 import Navbar, { Nav } from "../Navbar";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
+import {
+  DownloadIcon,
+  FlagIcon,
+  MapIcon,
+  UserIcon,
+} from "@govtechmy/myds-react/icon";
+import {
+  LightBulbIcon,
+  RedelineationIcon,
+  SeatsIcon,
+  VoteOutlineIcon,
+} from "@icons/index";
 
 export default function Header() {
   const { t } = useTranslation([]);
@@ -52,24 +64,28 @@ export default function Header() {
               title={t("common:nav.seats")}
               link="/seats"
               onClick={close}
+              icon={<SeatsIcon className="hidden size-8 max-lg:block" />}
             />
             <Nav.Item
               key={"/elections"}
               title={t("common:nav.elections")}
               link="/elections"
               onClick={close}
+              icon={<VoteOutlineIcon className="hidden size-8 max-lg:block" />}
             />
             <Nav.Item
               key={"/candidates"}
               title={t("common:nav.candidates")}
               link="/candidates"
               onClick={close}
+              icon={<UserIcon className="hidden size-8 max-lg:block" />}
             />
             <Nav.Item
               key={"/parties"}
               title={t("common:nav.parties")}
               link="/parties"
               onClick={close}
+              icon={<FlagIcon className="hidden size-8 max-lg:block" />}
             />
 
             <Nav.Item
@@ -77,12 +93,16 @@ export default function Header() {
               title={t("common:nav.redelineation")}
               link="/redelineation"
               onClick={close}
+              icon={
+                <RedelineationIcon className="hidden size-8 max-lg:block" />
+              }
             />
             <Nav.Item
               key={"/map/explorer"}
               title={t("common:nav.map")}
               link="/map/explorer"
               onClick={close}
+              icon={<MapIcon className="hidden size-8 max-lg:block" />}
             />
 
             <Nav.Item
@@ -90,12 +110,14 @@ export default function Header() {
               title={t("common:nav.trivia")}
               link="/trivia"
               onClick={close}
+              icon={<LightBulbIcon className="hidden size-8 max-lg:block" />}
             />
             {process.env.NEXT_PUBLIC_APP_ENV !== "production" && (
               <Nav.Item
                 key={"/data-catalogue"}
                 title={t("common:nav.catalogue")}
                 link="/data-catalogue"
+                icon={<DownloadIcon className="hidden size-8 max-lg:block" />}
                 onClick={close}
               />
             )}
