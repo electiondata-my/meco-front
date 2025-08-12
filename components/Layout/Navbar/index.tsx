@@ -90,9 +90,9 @@ const Item: FunctionComponent<NavItemProps> = ({
       underline={"none"}
       asChild
       className={clx(
-        "flex items-center px-2.5 py-1.5 font-medium text-txt-black-700",
+        "flex flex-col items-center gap-1 px-2.5 py-1.5 text-body-sm font-semibold text-txt-black-500 max-lg:px-2 max-lg:py-2 max-lg:font-bold lg:justify-center lg:text-txt-black-700",
         pathname.startsWith(link) && link !== "/"
-          ? "rounded-md bg-bg-washed-active"
+          ? "text-txt-danger lg:rounded-md lg:bg-bg-washed-active"
           : "",
         className,
       )}
@@ -148,8 +148,8 @@ const Nav: NavFunctionComponent = ({ children, action }) => {
       {action}
       <div
         className={clx(
-          "fixed left-0 top-16 flex w-full flex-col gap-0 bg-bg-white px-4 py-2 shadow-context-menu max-md:top-14 lg:hidden lg:gap-1 lg:p-1",
-          show ? "flex" : "hidden",
+          "fixed left-0 top-16 w-full grid-cols-3 gap-0 bg-bg-white px-3 py-6 shadow-context-menu max-md:top-14 lg:hidden",
+          show ? "grid" : "hidden",
         )}
       >
         {children(close)}

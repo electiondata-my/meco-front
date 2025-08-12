@@ -1,4 +1,4 @@
-import { ComponentProps, FunctionComponent } from "react";
+import { ComponentProps, FunctionComponent, SVGProps } from "react";
 
 export interface IconProps {
   className?: string;
@@ -6,7 +6,10 @@ export interface IconProps {
   transform?: string;
 }
 
-export const UpDownIcon: FunctionComponent<IconProps> = ({ className, transform }) => {
+export const UpDownIcon: FunctionComponent<IconProps> = ({
+  className,
+  transform,
+}) => {
   return (
     <svg
       width="20"
@@ -37,7 +40,10 @@ export const UpDownIcon: FunctionComponent<IconProps> = ({ className, transform 
  * @param className
  * @returns VoteIcon
  */
-export const VoteIcon: FunctionComponent<IconProps> = ({ className, fillColor = "#DC2626" }) => {
+export const VoteIcon: FunctionComponent<IconProps> = ({
+  className,
+  fillColor = "#DC2626",
+}) => {
   return (
     <svg
       width="32"
@@ -114,7 +120,7 @@ export const VoteIconSolid: FunctionComponent<IconProps> = ({ className }) => {
   );
 };
 
-export function MenuIcon(props: ComponentProps<'svg'>) {
+export function MenuIcon(props: ComponentProps<"svg">) {
   return (
     <svg
       fill="none"
@@ -129,20 +135,209 @@ export function MenuIcon(props: ComponentProps<'svg'>) {
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="2"
-          d="M4 6h16" />
+          d="M4 6h16"
+        />
       </g>
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2"
-        d="M4 12h16" />
+        d="M4 12h16"
+      />
       <g>
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="2"
-          d="M4 18h16" />
+          d="M4 18h16"
+        />
       </g>
     </svg>
   );
 }
+
+/**
+ * Vote Outline Icon
+ * @param className
+ * @returns FlagIcon
+ */
+export const VoteOutlineIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
+  props,
+) => {
+  return (
+    <svg
+      width="32"
+      height="33"
+      viewBox="0 0 32 33"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M23.8226 14.7245L28.5118 19.4724C28.6967 19.6595 28.8003 19.912 28.8003 20.1751V22.1045M8.17813 14.7245L3.48886 19.4724C3.30401 19.6595 3.20035 19.912 3.20035 20.1751V22.1045M28.8003 22.1045V24.4445V27.1245C28.8003 28.2291 27.9049 29.1245 26.8003 29.1245H5.20035C4.09578 29.1245 3.20035 28.2291 3.20035 27.1245V22.1045M28.8003 22.1045H3.20035"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <path
+        d="M19.8003 3.52441H12.2003C11.6481 3.52441 11.2003 3.97213 11.2003 4.52441V16.9244C11.2003 17.4767 11.6481 17.9244 12.2003 17.9244H19.8003C20.3526 17.9244 20.8003 17.4767 20.8003 16.9244V4.52441C20.8003 3.97213 20.3526 3.52441 19.8003 3.52441Z"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+    </svg>
+  );
+};
+
+/**
+ * Redelineation Icon
+ * @param className
+ * @returns FlagIcon
+ */
+export const RedelineationIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
+  props,
+) => {
+  return (
+    <svg
+      width="32"
+      height="33"
+      viewBox="0 0 32 33"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M10.4 5.76404L3.20001 8.96404V28.964L10.4 25.764M10.4 5.76404V25.764M10.4 5.76404L14.8 7.36404L15.9 7.76404M10.4 25.764L19.2 28.964M19.2 28.964L26.4 25.764V15.764V13.924M19.2 28.964V17.924"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <path
+        d="M25.6647 9.62074L24.9775 10.3135L23.6032 11.699L20.8545 14.4701L17.1152 14.8198L17.5524 11.1411L20.3011 8.37009L21.6754 6.98457L22.3626 6.2918M25.6647 9.62074L26.3519 8.92797L28.0872 7.1785C28.3912 6.87208 28.3912 6.37528 28.0872 6.06885L25.8858 3.84957C25.5819 3.54314 25.0891 3.54314 24.7851 3.84957L23.0498 5.59904L22.3626 6.2918M25.6647 9.62074L22.3626 6.2918"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};
+/**
+ * Seats Icon
+ * @param className
+ * @returns FlagIcon
+ */
+export const SeatsIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
+  props,
+) => {
+  return (
+    <svg
+      width="32"
+      height="33"
+      viewBox="0 0 32 33"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <g clip-path="url(#clip0_8741_11111)">
+        <path
+          d="M1.08445 18.5478C0.846584 18.2591 -0.480895 15.9854 0.185061 15.3028C0.851017 14.6201 3.49969 16.4437 3.95074 16.5633C4.4018 16.6828 4.85286 16.8622 6.21584 17.0894C7.57881 17.3166 10.369 17.8422 11.4309 21.3C11.732 22.2805 11.4446 23.4809 12.343 24.1164C12.6665 24.3452 14.9059 27.1383 14.6001 27.3612C11.9758 29.2738 2.32971 26.3665 1.93795 21.0069C1.8921 20.3797 1.47145 19.0175 1.08445 18.5478Z"
+          fill="currentColor"
+        />
+        <path
+          d="M16.043 27.397C18.4575 29.3838 11.4936 28.1231 11.8795 28.6241C12.2035 29.2204 15.1542 29.8238 16.0916 29.9546C17.0888 30.0937 19.9545 29.1046 20.1099 28.7291C20.5414 27.6867 28.2255 27.9977 26.3953 26.1959C25.8443 25.6535 25.1429 24.3067 25.3886 23.909C25.5989 23.5687 24.2583 22.586 24.0502 22.0963C23.6422 21.136 32.6054 20.7098 31.3183 19.7487C30.8784 19.4202 29.7198 19.4379 29.6375 19.3739C29.0971 18.9539 32.3531 18.4341 31.8001 18.0397C30.4542 17.0798 25.513 17.685 23.0924 16.9759C22.8956 16.9182 21.8308 15.8774 21.5149 16.0874C21.3327 16.2084 19.5243 19.4135 20.261 19.9835C20.5954 20.2423 20.7843 20.5242 20.8292 20.8422C20.8741 21.1603 19.4764 21.8546 19.0569 21.9238C17.3823 22.2002 19.488 24.1826 18.5336 24.847C17.6418 25.4679 14.5004 26.1277 16.043 27.397Z"
+          fill="currentColor"
+        />
+        <path
+          d="M21.2421 7.55641C21.2421 11.2119 15.5304 16.3241 15.5304 16.3241C15.5304 16.3241 9.81873 11.2119 9.81873 7.55641C9.81873 4.35787 12.5021 1.84473 15.5304 1.84473C18.5587 1.84473 21.2421 4.35787 21.2421 7.55641Z"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <ellipse
+          cx="15.5304"
+          cy="7.54564"
+          rx="1.76146"
+          ry="1.76146"
+          fill="currentColor"
+        />
+      </g>
+      <defs>
+        <clipPath id="clip0_8741_11111">
+          <rect
+            width="32"
+            height="32"
+            fill="white"
+            transform="translate(0 0.324097)"
+          />
+        </clipPath>
+      </defs>
+    </svg>
+  );
+};
+
+/**
+ * Light Bulb Icon
+ * @param className
+ * @returns FlagIcon
+ */
+export const LightBulbIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
+  props,
+) => {
+  return (
+    <svg
+      width="32"
+      height="33"
+      viewBox="0 0 32 33"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M27.2 17.1241H28.8"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <path
+        d="M3.20001 17.1241H4.80001"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <path
+        d="M16 3.52405L16 5.12405"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <path
+        d="M24.843 8.65979L25.9744 7.52843"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <path
+        d="M7.1571 8.65979L6.02573 7.52843"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <path
+        d="M19.2 21.9241V28.1241C19.2 28.6764 18.7523 29.1241 18.2 29.1241H13.8C13.2477 29.1241 12.8 28.6764 12.8 28.1241V21.9241"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+      <circle
+        cx="16"
+        cy="16.3241"
+        r="6.6"
+        stroke="currentColor"
+        stroke-width="2"
+      />
+    </svg>
+  );
+};
