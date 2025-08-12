@@ -13,7 +13,7 @@ const LayoutFooter = () => {
           <div className="flex flex-col gap-2 md:w-[300px]">
             <div className="flex items-center gap-x-2.5">
               <Image
-                src="/static/images/icons/icon-512.png"
+                src="/static/logo/logo-default.png"
                 alt="ElectionData.MY Logo"
                 width={28}
                 height={28}

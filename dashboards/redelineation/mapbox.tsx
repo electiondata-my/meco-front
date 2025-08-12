@@ -36,6 +36,8 @@ const SHADED_COLOR_INDEX = [
   "rgb(217, 240, 248)",
   "rgb(233, 222, 250)",
   "rgb(252, 232, 216)",
+  "rgb(224, 245, 242)",
+  "rgb(246, 228,240)",
 ];
 
 const MapboxRedelineation: FC<Props> = ({
@@ -148,11 +150,14 @@ const MapboxRedelineation: FC<Props> = ({
               "match",
               ["get", election_type === "parlimen" ? "parlimen" : "dun"],
               ...(Array.isArray(useShaded) ? useShaded : [useShaded]).flatMap(
-                (seat, i) => [seat, SHADED_COLOR_INDEX[i]],
+                (seat, i) => [
+                  seat,
+                  SHADED_COLOR_INDEX[i % SHADED_COLOR_INDEX.length],
+                ],
               ),
               "transparent", // default
             ],
-            "fill-opacity": 1,
+            "fill-opacity": 0.6,
           }}
           filter={[
             "in",
@@ -204,7 +209,7 @@ const MapboxRedelineation: FC<Props> = ({
             {t("common:constituency")}
           </p>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="size-2 rounded-full bg-[#000000]" />
+            <div className="h-0.5 w-2 bg-[#000000]" />
             <p>
               {t(mapLabel[0])} ({year[0]})
             </p>

@@ -11,7 +11,7 @@ import Script from "next/script";
 
 class HTMLDocument extends Document {
   static async getInitialProps(
-    ctx: DocumentContext
+    ctx: DocumentContext,
   ): Promise<DocumentInitialProps> {
     const initialProps = await Document.getInitialProps(ctx);
     return initialProps;
@@ -62,40 +62,41 @@ class HTMLDocument extends Document {
           <meta name="msapplication-tap-highlight" content="no" />
           <meta name="theme-color" content="#000000" />
 
-          <link
-            rel="apple-touch-icon"
-            href="/static/images/icons/touch-icon-iphone.png"
-          />
+          {/* Apple specific logo */}
+          <link rel="apple-touch-icon" href="/static/logo/pwa/192.png" />
+          {/* iPad (non-retina) */}
           <link
             rel="apple-touch-icon"
             sizes="152x152"
-            href="/static/images/icons/touch-icon-ipad.png"
+            href="/static/logo/pwa/144.png"
           />
+          {/* iPhone Retina */}
           <link
             rel="apple-touch-icon"
             sizes="180x180"
-            href="/static/images/icons/touch-icon-iphone-retina.png"
+            href="/static/logo/pwa/192.png"
           />
+          {/* iPad Retina */}
           <link
             rel="apple-touch-icon"
             sizes="167x167"
-            href="/static/images/icons/touch-icon-ipad-retina.png"
+            href="/static/logo/pwa/192.png"
           />
 
+          {/* Favicons  */}
           <link
             rel="icon"
             type="image/png"
             sizes="32x32"
-            href="/static/images/icons/favicon-32x32.png"
+            href="/static/logo/favicon-32x32.png"
           />
           <link
             rel="icon"
             type="image/png"
             sizes="16x16"
-            href="/static/images/icons/favicon-16x16.png"
+            href="/static/logo/favicon-16x16.png"
           />
           <link rel="manifest" href="/manifest.json" />
-          {/* <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#5bbad5" /> */}
           <link rel="shortcut icon" href="/favicon.ico" />
 
           {/* Apple Splash Screen */}
