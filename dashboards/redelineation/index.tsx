@@ -31,6 +31,7 @@ import {
   Region,
 } from "@dashboards/types";
 import { routes } from "@lib/routes";
+import { useTheme } from "next-themes";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
@@ -62,6 +63,9 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   data,
 }) => {
   const { t } = useTranslation(["redelineation"]);
+  const { resolvedTheme } = useTheme();
+  const theme = (resolvedTheme || "light") as "light" | "dark";
+
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const { type, year, election_type } = params;
@@ -98,10 +102,42 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
     data[toggle_state][0];
 
   const STATUS_COLOR_MAP = {
-    unchanged: "#E4E4E7",
-    changed: "#FFBA6C",
-    new: "#8BCBFF",
-    abolished: "#FC6B6B",
+    light: {
+      unchanged: {
+        fill: "rgba(171, 171, 171, 0.2)",
+        outline: "rgba(171, 171, 171, 1)",
+      },
+      changed: {
+        fill: "rgba(255, 167, 66, 0.2)",
+        outline: "rgba(255, 167, 66, 1)",
+      },
+      new: {
+        fill: "rgba(82, 171, 245, 0.2)",
+        outline: "rgba(82, 171, 245, 1)",
+      },
+      abolished: {
+        fill: "rgba(247, 92, 92, 0.2)",
+        outline: "rgba(247, 92, 92, 1)",
+      },
+    },
+    dark: {
+      unchanged: {
+        fill: "rgba(109, 109, 109, 0.2)",
+        outline: "rgba(109, 109, 109, 1)",
+      },
+      changed: {
+        fill: "rgba(255, 167, 66, 0.2)",
+        outline: "rgba(255, 167, 66, 1)",
+      },
+      new: {
+        fill: "rgba(82, 171, 245, 0.2)",
+        outline: "rgba(82, 171, 245, 1)",
+      },
+      abolished: {
+        fill: "rgba(247, 92, 92, 0.2)",
+        outline: "rgba(247, 92, 92, 1)",
+      },
+    },
   } as const;
 
   const { redelineation_map } = useMap();
@@ -215,7 +251,10 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                     <div
                       className="size-2 rounded-full"
                       style={{
-                        background: STATUS_COLOR_MAP[key as "unchanged"],
+                        background:
+                          STATUS_COLOR_MAP[theme][
+                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
+                          ].outline,
                       }}
                     />
                     <p>{t(`status.${key}.title`)}</p>
@@ -261,10 +300,15 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                         fill: true,
                         borderRadius: 4,
                         barThickness: isDesktop ? 24 : 16,
+                        borderWidth: 0.5,
+                        borderColor:
+                          STATUS_COLOR_MAP[theme][
+                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
+                          ].outline,
                         backgroundColor:
-                          STATUS_COLOR_MAP[
-                            key as keyof typeof STATUS_COLOR_MAP
-                          ],
+                          STATUS_COLOR_MAP[theme][
+                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
+                          ].fill,
                       };
                     }),
                 }}
