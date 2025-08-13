@@ -50,7 +50,7 @@ const Home: Page = ({
           pyramid={seat.pyramid}
           barmeter={seat.barmeter}
           boundaries={seat.boundaries}
-          lineage={{ type: "parlimen", data: seat.lineage }}
+          lineage={{ type: params.type, data: seat.lineage }}
         />
       </MapProvider>
     </AnalyticsProvider>
