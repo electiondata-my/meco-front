@@ -29,15 +29,14 @@ interface Props {
 }
 
 const SHADED_COLOR_INDEX = [
-  // [Fill, Outline]
-  "rgb(250, 220, 221)",
-  "rgb(252, 247, 217)",
-  "rgb(222, 246, 222)",
-  "rgb(217, 240, 248)",
-  "rgb(233, 222, 250)",
-  "rgb(252, 232, 216)",
-  "rgb(224, 245, 242)",
-  "rgb(246, 228,240)",
+  "rgba(255, 194, 194, 0.5)",
+  "rgba(255, 206, 157, 0.5)",
+  "rgba(255, 241, 166, 0.5)",
+  "rgba(162, 255, 162, 0.5)",
+  "rgba(185, 255, 255, 0.5)",
+  "rgba(194, 224, 255, 0.5)",
+  "rgba(206, 191, 255, 0.5)",
+  "rgba(255, 191, 255, 0.5)",
 ];
 
 const MapboxRedelineation: FC<Props> = ({
@@ -131,8 +130,8 @@ const MapboxRedelineation: FC<Props> = ({
           type="line"
           source-layer={sources[1]}
           paint={{
-            "line-color": "#A1A1AA",
-            "line-width": 2,
+            "line-color": resolvedTheme === "light" ? "#D4D4D8" : "#3F3F46",
+            "line-width": 1,
             "line-opacity": 1,
           }}
           filter={[
@@ -157,7 +156,6 @@ const MapboxRedelineation: FC<Props> = ({
               ),
               "transparent", // default
             ],
-            "fill-opacity": 0.6,
           }}
           filter={[
             "in",
@@ -179,7 +177,7 @@ const MapboxRedelineation: FC<Props> = ({
           type="line"
           source-layer={sources[0]}
           paint={{
-            "line-color": "black",
+            "line-color": resolvedTheme === "light" ? "#18181B" : "white",
             "line-width": 2,
             "line-opacity": 1,
           }}
@@ -209,7 +207,7 @@ const MapboxRedelineation: FC<Props> = ({
             {t("common:constituency")}
           </p>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="h-0.5 w-2 bg-[#000000]" />
+            <div className="h-0.5 w-2 bg-bg-black-900" />
             <p>
               {t(mapLabel[0])} ({year[0]})
             </p>
