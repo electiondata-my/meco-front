@@ -29,14 +29,14 @@ interface Props {
 }
 
 const SHADED_COLOR_INDEX = [
-  "rgba(255, 194, 194, 0.5)",
-  "rgba(255, 206, 157, 0.5)",
-  "rgba(255, 241, 166, 0.5)",
-  "rgba(162, 255, 162, 0.5)",
-  "rgba(185, 255, 255, 0.5)",
-  "rgba(194, 224, 255, 0.5)",
-  "rgba(206, 191, 255, 0.5)",
-  "rgba(255, 191, 255, 0.5)",
+  "rgba(255, 194, 194, 0.5)", // light pastel red-pink
+  "rgba(255, 241, 166, 0.5)", // light pastel yellow
+  "rgba(185, 255, 255, 0.5)", // light pastel cyan
+  "rgba(162, 255, 162, 0.5)", // light pastel green
+  "rgba(206, 191, 255, 0.5)", // light pastel lavender
+  "rgba(255, 206, 157, 0.5)", // light pastel orange-peach
+  "rgba(255, 191, 255, 0.5)", // light pastel pink-purple
+  "rgba(206, 191, 255, 0.5)", // light pastel lavender
 ];
 
 const MapboxRedelineation: FC<Props> = ({
