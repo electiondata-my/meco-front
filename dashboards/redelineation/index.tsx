@@ -32,6 +32,7 @@ import {
 } from "@dashboards/types";
 import { routes } from "@lib/routes";
 import { useTheme } from "next-themes";
+import { Theme } from "@lib/types";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
@@ -42,6 +43,8 @@ const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
  * Redelineation Dashboard
  * @overview Status: Live
  */
+
+type ToggleState = "old" | "new";
 
 export type yearOptions = {
   [K in `${Region}_${ElectionType}`]: string[];
@@ -64,7 +67,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
 }) => {
   const { t } = useTranslation(["redelineation"]);
   const { resolvedTheme } = useTheme();
-  const theme = (resolvedTheme || "light") as "light" | "dark";
+  const theme = (resolvedTheme || "light") as Theme;
 
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
@@ -72,7 +75,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
 
   const { data: _data, setData } = useData({
     seat_value: "",
-    toggle_state: "new" as "new" | "old",
+    toggle_state: "new" as ToggleState,
   });
 
   const { seat_value, toggle_state } = _data;
@@ -378,7 +381,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   }}
                   format={(option) => (
                     <>
-                      <span className="text-body-sm">{`${option.label} `}</span>
+                      <span className="text-body-sm">{`${option.label}`}</span>
                     </>
                   )}
                   selected={

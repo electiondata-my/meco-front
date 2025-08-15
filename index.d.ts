@@ -11,6 +11,7 @@ declare namespace NodeJS {
     REVALIDATE_TOKEN: string;
     AUTH_TOKEN: string;
     ANALYZE: boolean;
+    PROTECT_DEPLOYMENT: boolean;
 
     NEXT_PUBLIC_API_URL_TB: string;
     NEXT_PUBLIC_API_TOKEN_TB: string;

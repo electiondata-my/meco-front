@@ -10,9 +10,11 @@ export type AppPropsLayout = AppProps & {
   Component: Page;
 };
 
+export type Theme = "light" | "dark";
+
 export type Page = NextPage & {
   layout?: (page: ReactNode, props: Record<string, any>) => ReactElement;
-  theme?: "light" | "dark";
+  theme?: Theme;
 };
 
 export type I18nConfig = UserConfig & { autoloadNs: string[] };
