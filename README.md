@@ -1,28 +1,24 @@
 ## Table of Contents
 
+- [License](#license)
 - [Installation](#installation)
-  - [Environment Variables](#environment-variables)
 - [Commands to Know](#commands-to-know)
 - [Contributing](#contributing)
-- [License](#license)
+
+
+## License
+
+In the name of democracy, this project is released into the public domain under [CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/). You are free to use, modify, and distribute the code without any restrictions.
 
 ## Installation
 
-We recommend using `yarn` to manage the project's dependencies.
+We recommend using `pnpm` to manage the project's dependencies.
 
-```sh
-git clone git@github.com:electiondata-my/meco-front.git
+The following environment variables (.env) are used for electiondata.my.
+- ✅ indicates a required variable (meaning, core features won't work without these)
+- ⬜️ indicates an optional variable (only affects non-core features)
+- 🪦 indicates an unused variables (which may be used in future)
 
-# Yarn
-yarn install
-yarn prepare
-
-cp .env.example .env
-```
-
-### Environment Variables
-
-The following are the environment variables (.env) used for electiondata.my. ✅ indicates a required variable, while ⬜️ indicates an optional one. Unused variables are marked with 🪦.
 
 | Variables                       | Required | Default                             | Description                                     |
 | ------------------------------- | -------- | ----------------------------------- | ----------------------------------------------- |
@@ -36,27 +32,23 @@ The following are the environment variables (.env) used for electiondata.my. ✅
 | NEXT_PUBLIC_API_TOKEN_TB       | 🪦       |  (private, get your own)            | Tinybird API access token                       |
 | NEXT_PUBLIC_API_URL_S3         | ✅       | https://static.electiondata.my      | Static assets served via Cloudfront; no token needed             |
 | NEXT_PUBLIC_I18N_URL           | ✅       | https://static.electiondata.my/i18n | i18n resources served via Cloudfront; no token needed     |
+| NEXT_PUBLIC_TINYBIRD_TOKEN      | ⬜️ | (private, get your own)            | Token for updating viewcounts in Tinybird |
+| NEXT_PUBLIC_TINYBIRD_TOKEN_READ | ⬜️ | (private, get your own)            | Token for reading live viewcounts from Tinybird |
+| NEXT_PUBLIC_MAPBOX_ACCOUNT      | ✅ | (private, get your own)            | Mapbox account ID; map features won't work without this |
+| NEXT_PUBLIC_MAPBOX_TOKEN        | ✅ | (private, get your own)            | Mapbox API access token; map features won't work without this |
 
 ## Commands to Know
 
 ```bash
 # Start development server
-yarn dev
-
-# Start production server
-yarn start
+pnpm dev
 
 # Build production app
-yarn build
-
-# Setup husky for githook
-yarn prepare
+pnpm build
 ```
 
 ## Contributing
 
 Thank you for supporting this open source project dedicated to the public domain! When contributing, consider first opening an issue - so that everyone is on the same page. Happy coding!
 
-## License
 
-This project is released into the public domain under [CC0 1.0 Universal (CC0 1.0) Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/). You are free to use, modify, and distribute the code without any restrictions.

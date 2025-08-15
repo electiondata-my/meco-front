@@ -190,135 +190,6 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
       />
 
       <Container className="gap-8 py-8 lg:gap-16 lg:pb-16">
-        <SectionGrid className="space-y-8">
-          <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
-            {t(`where_seats_${toggle_state}`)}
-          </h2>
-
-          <div className="flex w-full flex-col items-center gap-6 lg:max-w-[842px]">
-            <Tabs
-              size="small"
-              variant="enclosed"
-              className="space-y-6 lg:space-y-8"
-              value={toggle_state}
-              onValueChange={(value) => {
-                setData("toggle_state", value as "new" | "old");
-                setData(
-                  "seat_value",
-                  current_seat[`seat_${value as "old" | "new"}`][0],
-                );
-
-                if (redelineation_map) {
-                  redelineation_map.flyTo({
-                    center: current_seat.center,
-                    zoom: current_seat.zoom,
-                    duration: 2000,
-                  });
-                  if (value === "new") {
-                    redelineation_map.moveLayer(`${data.map_new}-line`);
-                    redelineation_map.moveLayer(`${data.map_new}-fill`);
-                  } else {
-                    redelineation_map.moveLayer(`${data.map_old}-line`);
-                    redelineation_map.moveLayer(`${data.map_old}-fill`);
-                  }
-                }
-              }}
-            >
-              <TabsList className="mx-auto space-x-0 !py-0">
-                <TabsTrigger value="new" className="">
-                  {t("new_constituency")} ({new_year})
-                </TabsTrigger>
-                <TabsTrigger value="old">
-                  {t("old_constituency")} ({old_year})
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <div className="flex w-full justify-center gap-8">
-              {Object.entries(callout_data).map(([key, value]) =>
-                key === "total" ? null : (
-                  <div key={key} className="flex flex-col gap-1">
-                    <p className="text-body-xs text-txt-black-500">
-                      {t(`status.${key}.title`)}
-                    </p>
-                    <p className="text-body-md font-semibold">
-                      {value}/{callout_data["total"]}
-                    </p>
-                  </div>
-                ),
-              )}
-            </div>
-            <div className="flex w-fit items-center gap-4.5 rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5">
-              {Object.entries(callout_data).map(([key, value]) =>
-                key === "total" ? null : (
-                  <div key={key} className="flex items-center gap-2">
-                    <div
-                      className="size-2 rounded-full"
-                      style={{
-                        background:
-                          STATUS_COLOR_MAP[theme][
-                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
-                          ].outline,
-                      }}
-                    />
-                    <p>{t(`status.${key}.title`)}</p>
-                  </div>
-                ),
-              )}
-              <Tooltip>
-                <TooltipTrigger>
-                  <QuestionCircleIcon className="size-4.5" />
-                </TooltipTrigger>
-                <TooltipContent className="flex flex-col text-body-xs">
-                  {Object.entries(callout_data).map(([key, value]) =>
-                    key === "total" ? null : (
-                      <p key={key}>
-                        <strong>{t(`status.${key}.title`)}:</strong>{" "}
-                        {t(`status.${key}.description`)}
-                      </p>
-                    ),
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </div>
-
-            <div className="-mt-4 w-full">
-              <Bar
-                layout="horizontal"
-                enableStack={true}
-                enableGridY={false}
-                className={clx(
-                  "mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[480px] lg:w-[842px]",
-                  bar_data["state"].length === 1 &&
-                    "h-[80px] min-h-0 lg:h-[100px]",
-                )}
-                type="category"
-                data={{
-                  labels: bar_data["state"],
-                  datasets: Object.entries(bar_data)
-                    .filter(([key]) => key !== "state")
-                    .map(([key, value]) => {
-                      return {
-                        label: t(`status.${key}.title`),
-                        data: value,
-                        fill: true,
-                        borderRadius: 4,
-                        barThickness: isDesktop ? 24 : 16,
-                        borderWidth: 0.5,
-                        borderColor:
-                          STATUS_COLOR_MAP[theme][
-                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
-                          ].outline,
-                        backgroundColor:
-                          STATUS_COLOR_MAP[theme][
-                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
-                          ].fill,
-                      };
-                    }),
-                }}
-              />
-            </div>
-          </div>
-        </SectionGrid>
         <SectionGrid>
           <div className="mx-auto w-full space-y-6">
             <h2 className="mx-auto max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
@@ -461,6 +332,135 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 )}
               </TabsContent>
             </Tabs>
+          </div>
+        </SectionGrid>
+        <SectionGrid className="space-y-8">
+          <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
+            {t(`where_seats_${toggle_state}`)}
+          </h2>
+
+          <div className="flex w-full flex-col items-center gap-6 lg:max-w-[842px]">
+            <Tabs
+              size="small"
+              variant="enclosed"
+              className="space-y-6 lg:space-y-8"
+              value={toggle_state}
+              onValueChange={(value) => {
+                setData("toggle_state", value as "new" | "old");
+                setData(
+                  "seat_value",
+                  current_seat[`seat_${value as "old" | "new"}`][0],
+                );
+
+                if (redelineation_map) {
+                  redelineation_map.flyTo({
+                    center: current_seat.center,
+                    zoom: current_seat.zoom,
+                    duration: 2000,
+                  });
+                  if (value === "new") {
+                    redelineation_map.moveLayer(`${data.map_new}-line`);
+                    redelineation_map.moveLayer(`${data.map_new}-fill`);
+                  } else {
+                    redelineation_map.moveLayer(`${data.map_old}-line`);
+                    redelineation_map.moveLayer(`${data.map_old}-fill`);
+                  }
+                }
+              }}
+            >
+              <TabsList className="mx-auto space-x-0 !py-0">
+                <TabsTrigger value="new" className="">
+                  {t("new_constituency")} ({new_year})
+                </TabsTrigger>
+                <TabsTrigger value="old">
+                  {t("old_constituency")} ({old_year})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex w-full justify-center gap-8">
+              {Object.entries(callout_data).map(([key, value]) =>
+                key === "total" ? null : (
+                  <div key={key} className="flex flex-col gap-1">
+                    <p className="text-body-xs text-txt-black-500">
+                      {t(`status.${key}.title`)}
+                    </p>
+                    <p className="text-body-md font-semibold">
+                      {value}/{callout_data["total"]}
+                    </p>
+                  </div>
+                ),
+              )}
+            </div>
+            <div className="flex w-fit items-center gap-4.5 rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5">
+              {Object.entries(callout_data).map(([key, value]) =>
+                key === "total" ? null : (
+                  <div key={key} className="flex items-center gap-2">
+                    <div
+                      className="size-2 rounded-full"
+                      style={{
+                        background:
+                          STATUS_COLOR_MAP[theme][
+                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
+                          ].outline,
+                      }}
+                    />
+                    <p>{t(`status.${key}.title`)}</p>
+                  </div>
+                ),
+              )}
+              <Tooltip>
+                <TooltipTrigger>
+                  <QuestionCircleIcon className="size-4.5" />
+                </TooltipTrigger>
+                <TooltipContent className="flex flex-col text-body-xs">
+                  {Object.entries(callout_data).map(([key, value]) =>
+                    key === "total" ? null : (
+                      <p key={key}>
+                        <strong>{t(`status.${key}.title`)}:</strong>{" "}
+                        {t(`status.${key}.description`)}
+                      </p>
+                    ),
+                  )}
+                </TooltipContent>
+              </Tooltip>
+            </div>
+
+            <div className="-mt-4 w-full">
+              <Bar
+                layout="horizontal"
+                enableStack={true}
+                enableGridY={false}
+                className={clx(
+                  "mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[480px] lg:w-[842px]",
+                  bar_data["state"].length === 1 &&
+                    "h-[80px] min-h-0 lg:h-[100px]",
+                )}
+                type="category"
+                data={{
+                  labels: bar_data["state"],
+                  datasets: Object.entries(bar_data)
+                    .filter(([key]) => key !== "state")
+                    .map(([key, value]) => {
+                      return {
+                        label: t(`status.${key}.title`),
+                        data: value,
+                        fill: true,
+                        borderRadius: 4,
+                        barThickness: isDesktop ? 24 : 16,
+                        borderWidth: 0.5,
+                        borderColor:
+                          STATUS_COLOR_MAP[theme][
+                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
+                          ].outline,
+                        backgroundColor:
+                          STATUS_COLOR_MAP[theme][
+                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
+                          ].fill,
+                      };
+                    }),
+                }}
+              />
+            </div>
           </div>
         </SectionGrid>
       </Container>
