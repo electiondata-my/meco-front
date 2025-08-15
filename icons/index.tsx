@@ -176,14 +176,14 @@ export const VoteOutlineIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       <path
         d="M23.8226 14.7245L28.5118 19.4724C28.6967 19.6595 28.8003 19.912 28.8003 20.1751V22.1045M8.17813 14.7245L3.48886 19.4724C3.30401 19.6595 3.20035 19.912 3.20035 20.1751V22.1045M28.8003 22.1045V24.4445V27.1245C28.8003 28.2291 27.9049 29.1245 26.8003 29.1245H5.20035C4.09578 29.1245 3.20035 28.2291 3.20035 27.1245V22.1045M28.8003 22.1045H3.20035"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
       <path
         d="M19.8003 3.52441H12.2003C11.6481 3.52441 11.2003 3.97213 11.2003 4.52441V16.9244C11.2003 17.4767 11.6481 17.9244 12.2003 17.9244H19.8003C20.3526 17.9244 20.8003 17.4767 20.8003 16.9244V4.52441C20.8003 3.97213 20.3526 3.52441 19.8003 3.52441Z"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
     </svg>
   );
@@ -209,16 +209,16 @@ export const RedelineationIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       <path
         d="M10.4 5.76404L3.20001 8.96404V28.964L10.4 25.764M10.4 5.76404V25.764M10.4 5.76404L14.8 7.36404L15.9 7.76404M10.4 25.764L19.2 28.964M19.2 28.964L26.4 25.764V15.764V13.924M19.2 28.964V17.924"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M25.6647 9.62074L24.9775 10.3135L23.6032 11.699L20.8545 14.4701L17.1152 14.8198L17.5524 11.1411L20.3011 8.37009L21.6754 6.98457L22.3626 6.2918M25.6647 9.62074L26.3519 8.92797L28.0872 7.1785C28.3912 6.87208 28.3912 6.37528 28.0872 6.06885L25.8858 3.84957C25.5819 3.54314 25.0891 3.54314 24.7851 3.84957L23.0498 5.59904L22.3626 6.2918M25.6647 9.62074L22.3626 6.2918"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -240,7 +240,7 @@ export const SeatsIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <g clip-path="url(#clip0_8741_11111)">
+      <g clipPath="url(#clip0_8741_11111)">
         <path
           d="M1.08445 18.5478C0.846584 18.2591 -0.480895 15.9854 0.185061 15.3028C0.851017 14.6201 3.49969 16.4437 3.95074 16.5633C4.4018 16.6828 4.85286 16.8622 6.21584 17.0894C7.57881 17.3166 10.369 17.8422 11.4309 21.3C11.732 22.2805 11.4446 23.4809 12.343 24.1164C12.6665 24.3452 14.9059 27.1383 14.6001 27.3612C11.9758 29.2738 2.32971 26.3665 1.93795 21.0069C1.8921 20.3797 1.47145 19.0175 1.08445 18.5478Z"
           fill="currentColor"
@@ -252,9 +252,9 @@ export const SeatsIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
         <path
           d="M21.2421 7.55641C21.2421 11.2119 15.5304 16.3241 15.5304 16.3241C15.5304 16.3241 9.81873 11.2119 9.81873 7.55641C9.81873 4.35787 12.5021 1.84473 15.5304 1.84473C18.5587 1.84473 21.2421 4.35787 21.2421 7.55641Z"
           stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
         <ellipse
           cx="15.5304"
@@ -298,45 +298,45 @@ export const LightBulbIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
       <path
         d="M27.2 17.1241H28.8"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
       <path
         d="M3.20001 17.1241H4.80001"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
       <path
         d="M16 3.52405L16 5.12405"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
       <path
         d="M24.843 8.65979L25.9744 7.52843"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
       <path
         d="M7.1571 8.65979L6.02573 7.52843"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
       <path
         d="M19.2 21.9241V28.1241C19.2 28.6764 18.7523 29.1241 18.2 29.1241H13.8C13.2477 29.1241 12.8 28.6764 12.8 28.1241V21.9241"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
+        strokeWidth="2"
+        strokeLinecap="round"
       />
       <circle
         cx="16"
         cy="16.3241"
         r="6.6"
         stroke="currentColor"
-        stroke-width="2"
+        strokeWidth="2"
       />
     </svg>
   );

@@ -25,7 +25,7 @@ const Home: Page = ({
   const currentSeat = selection.find(
     (seats: any) => seats.slug === params.seat_name,
   );
-  const isRootSeatsPath = router.asPath === "/seats";  // Check if path is /seats (root)
+  const isRootSeatsPath = router.asPath === "/seats"; // Check if path is /seats (root)
 
   return (
     <AnalyticsProvider meta={meta}>
