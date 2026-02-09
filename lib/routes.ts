@@ -10,6 +10,7 @@ export const routes = {
   PARLIMEN_SEATS: "/parlimen",
   PARTIES: "/parties",
   REDELINEATION: "/redelineation",
+  RESEARCH: "/research",
   SEATS: "/seats",
   TRIVIA: "/trivia",
 };
