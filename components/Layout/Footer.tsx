@@ -73,8 +73,7 @@ const LayoutFooter = () => {
                 {t("footer.download")}
               </Link>
               <Link
-                target="_blank"
-                href="https://www.arxiv.org/abs/2505.06564"
+                href="/research"
                 className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
               >
                 {t("footer.documentation")}

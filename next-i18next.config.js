@@ -12,6 +12,7 @@ const namespaces = [
   "party",
   "trivia",
   "redelineation",
+  "research",
   "seats",
 ];
 
