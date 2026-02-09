@@ -10,6 +10,7 @@ import { GetStaticProps, InferGetStaticPropsType } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { clx } from "@lib/helpers";
+import { routes } from "@lib/routes";
 import { DocumentIcon } from "@heroicons/react/24/outline";
 
 type PaperStatus = "published" | "preprint" | "coming_soon";
@@ -124,7 +125,7 @@ const ResearchPage: Page = ({
         category={[t("hero.category"), "text-txt-danger"]}
         header={[t("hero.header")]}
         description={[t("hero.description")]}
-        pageId="research"
+        pageId={routes.RESEARCH}
       />
 
       <Container className="pb-12 pt-6 lg:pt-8">
