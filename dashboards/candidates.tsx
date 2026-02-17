@@ -52,7 +52,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
     }),
   );
 
-  const DEFAULT_CANDIDATE = "00103";
+  const DEFAULT_CANDIDATE = "CMVBA";
   const CANDIDATE_OPTION = CANDIDATE_OPTIONS.find(
     (e) => e.value === (params.candidate ?? DEFAULT_CANDIDATE),
   );
@@ -199,8 +199,8 @@ const ElectionCandidatesDashboard: FunctionComponent<
                 selected={
                   data.candidate_value
                     ? CANDIDATE_OPTIONS.find(
-                        (e) => e.value === data.candidate_value,
-                      )
+                      (e) => e.value === data.candidate_value,
+                    )
                     : null
                 }
                 onChange={(selected) => {
