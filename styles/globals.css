@@ -69,6 +69,24 @@ path:focus {
   @apply z-0;
 } */
 
+/* Mobile nav: thinner icon strokes for a more refined look */
+@media (max-width: 1023px) {
+  .nav-mobile-menu .nav-mobile-icon svg,
+  .nav-mobile-menu .nav-mobile-icon path,
+  .nav-mobile-menu .nav-mobile-icon line,
+  .nav-mobile-menu .nav-mobile-icon circle,
+  .nav-mobile-menu .nav-mobile-icon rect,
+  .nav-mobile-menu .nav-mobile-icon polyline,
+  .nav-mobile-menu .nav-mobile-icon polygon,
+  .nav-mobile-menu .nav-mobile-icon ellipse,
+  .nav-mobile-menu .nav-mobile-icon [stroke],
+  .nav-mobile-menu .nav-mobile-icon g path,
+  .nav-mobile-menu .nav-mobile-icon g line,
+  .nav-mobile-menu .nav-mobile-icon g [stroke] {
+    stroke-width: 1.25px !important;
+  }
+}
+
 /* MapPlot Popup Marker */
 /* .leaflet-popup-content {
   width: fit-content !important;

@@ -16,6 +16,9 @@ export type Candidate = {
   date: string;
   seat: string;
   party: string;
+  party_uid?: string;
+  coalition?: string;
+  coalition_uid?: string;
   votes: Record<"abs" | "perc", number>;
   result: ElectionResult;
 };
@@ -71,6 +74,9 @@ export type BaseResult = {
   election_name: string;
   seat: string;
   party: string;
+  party_uid?: string;
+  coalition?: string;
+  coalition_uid?: string;
   votes: number;
   votes_perc: number;
   result: string;

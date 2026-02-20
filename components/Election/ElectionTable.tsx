@@ -31,11 +31,14 @@ export interface ElectionTableProps {
   result?: ElectionResult;
   isLoading: boolean;
   headerClassName?: string;
+  /** When true, mobile party cell does not show row.original.name (e.g. for candidates page where name is redundant). */
+  hideNameInMobileParty?: boolean;
 }
 
 type TableIds =
   | "index"
   | "party"
+  | "coalition"
   | "election_name"
   | "name"
   | "votes"
@@ -57,6 +60,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   highlighted,
   isLoading = false,
   headerClassName,
+  hideNameInMobileParty = false,
 }) => {
   const { t, i18n } = useTranslation(["common", "election", "party"]);
 
@@ -106,13 +110,17 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             </Tooltip>
           </div>
         );
-      case "party":
+      case "party": {
+        const logoId = cell.row.original.party_uid;
+        const partyLogoSrc = logoId
+          ? `/static/images/parties/${logoId}.png`
+          : "/static/images/parties/_fallback_.png";
         return (
           <div className="flex items-center gap-1.5">
             <div className="relative flex h-4.5 w-8 justify-center">
               <ImageWithFallback
                 className="rounded-[2px] border border-otl-gray-200"
-                src={`/static/images/parties/${value}.png`}
+                src={partyLogoSrc}
                 width={32}
                 height={18}
                 alt={value}
@@ -128,6 +136,30 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             </span>
           </div>
         );
+      }
+      case "coalition": {
+        const coalitionUid = cell.row.original.coalition_uid;
+        const coalition = cell.row.original.coalition;
+        const coalitionLogoId =
+          coalitionUid && coalition ? `${coalitionUid}-${coalition}` : null;
+        const coalitionLogoSrc = coalitionLogoId
+          ? `/static/images/coalitions/${coalitionLogoId}.png`
+          : "/static/images/coalitions/_fallback_.png";
+        return (
+          <div className="flex items-center gap-1.5">
+            <div className="relative flex h-4.5 w-8 justify-center">
+              <ImageWithFallback
+                className="rounded-[2px] border border-otl-gray-200"
+                src={coalitionLogoSrc}
+                width={32}
+                height={18}
+                alt={value}
+              />
+            </div>
+            <span>{value ?? ""}</span>
+          </div>
+        );
+      }
       case "seats":
         percent = cell.row.original.seats_perc;
         const total = cell.row.original.seats_total;
@@ -136,11 +168,10 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             <div>
               <BarPerc hidden value={percent} size="w-[100px] h-[5px]" />
             </div>
-            <p className="whitespace-nowrap">{`${value} / ${total} ${
-              percent !== null
+            <p className="whitespace-nowrap">{`${value} / ${total} ${percent !== null
                 ? ` (${numFormat(percent, "compact", [1, 1])}%)`
                 : " (—)"
-            }`}</p>
+              }`}</p>
           </div>
         );
       case "result":
@@ -179,24 +210,33 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         ) : (
           <>#{value}</>
         );
-      case "party":
+      case "party": {
+        const logoId = cell.row.original.party_uid;
+        const coalition = cell.row.original.coalition;
+        const partyLabel = coalition
+          ? `${value} / ${coalition}`
+          : t(`party:${value}`);
+        const partyLogoSrc = logoId
+          ? `/static/images/parties/${logoId}.png`
+          : "/static/images/parties/_fallback_.png";
+        const showName = !hideNameInMobileParty && cell.row.original.name;
         return (
           <div className="flex items-center gap-1.5">
             <div className="relative flex h-4.5 w-8">
               <ImageWithFallback
                 className="rounded-[2px] border border-otl-gray-200"
-                src={`/static/images/parties/${value}.png`}
+                src={partyLogoSrc}
                 width={32}
                 height={18}
                 alt={value}
               />
             </div>
-            {cell.row.original.name ? (
+            {showName ? (
               <span>
                 <span className="pr-1 font-medium">
                   {cell.row.original.name}
                 </span>
-                <span className="inline-flex pr-1">{` (${value})`}</span>
+                <span className="inline-flex pr-1">{` (${partyLabel})`}</span>
                 <span className="inline-flex translate-y-0.5">
                   {highlight && (
                     <ResultBadge hidden value={cell.row.original.result} />
@@ -204,10 +244,20 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                 </span>
               </span>
             ) : (
-              <span className="font-medium">{t(`party:${value}`)}</span>
+              <span className="font-medium">
+                {partyLabel}
+                {highlight && (
+                  <span className="ml-1 inline-flex translate-y-0.5">
+                    <ResultBadge hidden value={cell.row.original.result} />
+                  </span>
+                )}
+              </span>
             )}
           </div>
         );
+      }
+      case "coalition":
+        return null;
       case "election_name":
         return (
           <div className="flex flex-wrap gap-x-3 text-sm">
@@ -231,11 +281,10 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               <BarPerc hidden value={percent} />
               <p>
                 {`${value} / ${total}
-                 (${
-                   percent !== null
-                     ? `${numFormat(percent, "compact", [1, 1])}%`
-                     : "(—)"
-                 })`}
+                 (${percent !== null
+                    ? `${numFormat(percent, "compact", [1, 1])}%`
+                    : "(—)"
+                  })`}
               </p>
             </div>
           </div>
@@ -249,11 +298,10 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
-              <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${
-                percent !== null
+              <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${percent !== null
                   ? `${numFormat(percent, "compact", [1, 1])}%`
                   : "—"
-              })`}</p>
+                })`}</p>
             </div>
           </div>
         );
@@ -269,11 +317,10 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             ) : (
               <div className="flex items-center gap-2">
                 <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
-                <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${
-                  percent !== null
+                <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${percent !== null
                     ? `${numFormat(percent, "compact", [1, 1])}%`
                     : "—"
-                })`}</p>
+                  })`}</p>
               </div>
             )}
           </div>
@@ -349,9 +396,9 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                   </th>
                 ))}
               </tr>
@@ -467,14 +514,14 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               {["election_name", "full_result"].some((id) =>
                 ids.includes(id),
               ) && (
-                <div className="flex items-start justify-between gap-x-2">
-                  <div className="flex gap-x-2">
-                    {_row.index}
-                    {_row.election_name}
+                  <div className="flex items-start justify-between gap-x-2">
+                    <div className="flex gap-x-2">
+                      {_row.index}
+                      {_row.election_name}
+                    </div>
+                    {_row.full_result}
                   </div>
-                  {_row.full_result}
-                </div>
-              )}
+                )}
               {/* Row 2 - Seat (if available)*/}
               {(_row.result || _row.index) && (
                 <div>

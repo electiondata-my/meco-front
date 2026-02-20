@@ -70,6 +70,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
     { key: "election_name", id: "election_name", header: t("election_name") },
     { key: "seat", id: "seat", header: t("constituency") },
     { key: "party", id: "party", header: t("party_name") },
+    { key: "coalition", id: "coalition", header: t("coalition_name") },
     { key: "votes", id: "votes", header: t("votes_won") },
     { key: "result", id: "result", header: t("result") },
     {
@@ -247,6 +248,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     name: CANDIDATE_OPTION?.label,
                     context: "parliament",
                   })}
+                  hideNameInMobileParty
                 />
               </Panel>
               <Panel name={t("dun")}>
@@ -259,6 +261,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     name: CANDIDATE_OPTION?.label,
                     context: "dun",
                   })}
+                  hideNameInMobileParty
                 />
               </Panel>
             </Tabs>

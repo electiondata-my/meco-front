@@ -8,13 +8,12 @@ import Navbar, { Nav } from "../Navbar";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import {
-  DownloadIcon,
+  ArrowDownTrayIcon,
   FlagIcon,
   MapIcon,
   UserIcon,
-} from "@govtechmy/myds-react/icon";
+} from "@heroicons/react/24/outline";
 import {
-  LightBulbIcon,
   RedelineationIcon,
   SeatsIcon,
   VoteOutlineIcon,
@@ -104,20 +103,14 @@ export default function Header() {
               onClick={close}
               icon={<MapIcon className="hidden size-8 max-lg:block" />}
             />
-
-            <Nav.Item
-              key={"/trivia"}
-              title={t("common:nav.trivia")}
-              link="/trivia"
-              onClick={close}
-              icon={<LightBulbIcon className="hidden size-8 max-lg:block" />}
-            />
             {process.env.NEXT_PUBLIC_APP_ENV !== "production" && (
               <Nav.Item
                 key={"/data-catalogue"}
                 title={t("common:nav.catalogue")}
                 link="/data-catalogue"
-                icon={<DownloadIcon className="hidden size-8 max-lg:block" />}
+                icon={
+                <ArrowDownTrayIcon className="hidden size-8 max-lg:block" />
+              }
                 onClick={close}
               />
             )}
