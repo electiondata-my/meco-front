@@ -37,6 +37,7 @@ const FullResultContent = ({
         <div className="font-bold">{t("election_result")}</div>
         <ElectionTable
           className="w-full overflow-y-auto"
+          compactFirstColumn
           data={data}
           columns={columns}
           isLoading={loading}

@@ -43,28 +43,40 @@ export const getStaticProps: GetStaticProps = withi18n(
   ["election", "parties", "party"],
   async ({ params }) => {
     try {
-      const [party = "PERIKATAN", state_code = "mys"] =
+      const [party = "001-UMNO", state_code = "mys"] =
         (params?.party as string[]) ?? [];
       const state = state_code ? CountryAndStates[state_code] : "Malaysia";
 
+      const dropdown = await get("/parties/dropdown.json").catch((e) => {
+        throw new Error("Failed to fetch dropdown. Message: " + e);
+      });
+
+      const selection: Array<{
+        party_uid: string;
+        party: string;
+        party_name_en: string;
+        party_name_bm: string;
+        type: string;
+      }> = dropdown.data.data;
+
+      const partyExists = selection.some((e) => e.party_uid === party);
+      const currentItem = selection.find((e) => e.party_uid === party);
+      const typePrefix =
+        currentItem?.type === "coalition" ? "coalitions" : "parties";
+
       const results = await Promise.allSettled([
-        get("/parties/dropdown.json"),
-        get(
-          `/parties/${party ?? "PERIKATAN"}/parlimen/${state ?? "Malaysia"}.json`,
-        ),
+        get(`/${typePrefix}/${party}/parlimen/${state ?? "Malaysia"}.json`),
         ...(!["mys", "kul", "pjy", "lbn"].includes(state_code)
-          ? [get(`/parties/${party ?? "PERIKATAN"}/dun/${state}.json`)]
+          ? [get(`/${typePrefix}/${party}/dun/${state}.json`)]
           : []),
       ]).catch((e) => {
         throw new Error("Invalid party name. Message: " + e);
       });
 
-      const [dropdown, parlimen, dun] = results.map((e) => {
+      const [parlimen, dun] = results.map((e) => {
         if (e.status === "rejected") return { data: [] };
         else return e.value.data;
       });
-      const selection: Array<{ party: string }> = dropdown.data;
-      const partyExists = selection.some((e) => e.party === party);
 
       if (party && !partyExists) return { notFound: true };
 

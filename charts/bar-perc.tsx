@@ -10,6 +10,8 @@ type BarPercProps = {
   precision?: number | [number, number];
   unit?: ReactNode;
   size?: string;
+  /** Override the bar fill color (e.g. "bg-otl-gray-400" for a lighter, less jarring bar). */
+  fillClassName?: string;
 };
 
 const BarPerc: FunctionComponent<BarPercProps> = ({
@@ -21,6 +23,7 @@ const BarPerc: FunctionComponent<BarPercProps> = ({
   total = 100,
   unit = "%",
   size = "h-[5px] w-[30px] md:w-[50px]",
+  fillClassName = "bg-bg-black-900",
 }) => {
   const percentFill = (value: number): string => {
     return `${limitMax((value / total) * 100)}%`;
@@ -51,7 +54,7 @@ const BarPerc: FunctionComponent<BarPercProps> = ({
         )}
       >
         <div
-          className="h-full items-center overflow-hidden rounded-full bg-bg-black-900"
+          className={clx("h-full items-center overflow-hidden rounded-full", fillClassName)}
           style={{ width: percentFill(value) }}
         />
       </div>

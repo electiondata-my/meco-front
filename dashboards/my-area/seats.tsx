@@ -148,13 +148,15 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     election: string,
     seat: string,
     date: string,
+    state?: string,
   ): Promise<Result<BaseResult[]>> => {
-    const identifier = `${election}_${seat}`;
+    const seatKey = state ? `${seat}, ${state}` : seat;
+    const identifier = `${election}_${seatKey}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
       try {
         const response = await get(
-          `/results/${encodeURIComponent(seat)}/${date}.json`,
+          `/results/${encodeURIComponent(seatKey)}/${date}.json`,
         );
         const { ballot, summary } = response.data;
         const summaryStats = summary[0];
@@ -207,6 +209,11 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     { key: "name", id: "name", header: t("candidate_name") },
     { key: "majority", id: "majority", header: t("majority") },
     {
+      key: "voter_turnout_perc",
+      id: "voter_turnout",
+      header: t("voter_turnout"),
+    },
+    {
       key: (item) => item,
       id: "full_result",
       header: "",
@@ -215,7 +222,12 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           options={elections.filter((election) => !("change_en" in election))}
           currentIndex={row.index}
           onChange={(option: Seat) =>
-            fetchFullResult(option.election_name, option.seat, option.date)
+            fetchFullResult(
+              option.election_name,
+              option.seat,
+              option.date,
+              SELECTED_SEATS?.state,
+            )
           }
           columns={generateSchema<BaseResult>([
             { key: "name", id: "name", header: t("candidate_name") },
@@ -368,6 +380,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             columns={seat_schema}
             isLoading={data.loading}
             className="w-full"
+            percentOnlyColumns={["majority", "voter_turnout"]}
           />
         </SectionGrid>
 

@@ -213,7 +213,7 @@ const ComboBox = <T extends unknown>({
         </Button>
       )}
       {image && selected ? (
-        <span className="mr-4 flex h-8 max-h-8 w-8 shrink-0 items-center justify-center self-center rounded-full">
+        <span className="mr-4 flex h-8 max-h-8 w-8 shrink-0 items-center justify-center self-center">
           {image(selected.value)}
         </span>
       ) : (

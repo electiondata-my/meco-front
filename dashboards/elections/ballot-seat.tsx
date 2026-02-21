@@ -350,7 +350,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
 
                             <div className="flex h-8 w-full items-center gap-1.5">
                               <ImageWithFallback
-                                className="rounded border border-otl-gray-200"
+                                className="border border-otl-gray-200"
                                 src={`/static/images/parties/${party}.png`}
                                 width={32}
                                 height={18}
