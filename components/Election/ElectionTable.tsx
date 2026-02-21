@@ -12,12 +12,6 @@ import { ImageWithFallback, Skeleton } from "@components/index";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { useTranslation } from "@hooks/useTranslation";
 import { FunctionComponent, ReactNode } from "react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@govtechmy/myds-react/tooltip";
-
 export interface ElectionTableProps {
   className?: string;
   fullBorder?: boolean;
@@ -31,19 +25,53 @@ export interface ElectionTableProps {
   result?: ElectionResult;
   isLoading: boolean;
   headerClassName?: string;
+  /** When true, mobile party cell does not show row.original.name (e.g. for candidates page where name is redundant). */
+  hideNameInMobileParty?: boolean;
+  /** Column ids that display only the percentage (e.g. ["majority", "voter_turnout"] for seats table). */
+  percentOnlyColumns?: string[];
+  /** When true, reduces left padding on first column (e.g. for modal/dialog contexts). */
+  compactFirstColumn?: boolean;
 }
 
 type TableIds =
   | "index"
   | "party"
+  | "coalition"
   | "election_name"
   | "name"
   | "votes"
   | "majority"
+  | "voter_turnout"
   | "seats"
+  | "seats_contested"
+  | "seats_won"
   | "seat"
   | "result"
   | "full_result";
+
+/**
+ * Format election name for display: name + year, with locale-specific abbreviations.
+ * - By-Election → "By-Elec" (en) / "PRK" (ms)
+ * - Malay: GE- → PRU-, SE- → PRN-
+ */
+const formatElectionDisplay = (
+  electionName: string,
+  date: string | undefined,
+  locale: string,
+): string => {
+  const isMalay = locale?.startsWith("ms");
+  const year = date ? toDate(date, "yyyy", locale) : "";
+  const suffix = year ? ` (${year})` : "";
+
+  if (electionName === "By-Election") {
+    return (isMalay ? "PRK" : "By-Elec") + suffix;
+  }
+  let displayName = electionName;
+  if (isMalay) {
+    displayName = displayName.replace(/^GE-/g, "PRU-").replace(/^SE-/g, "PRN-");
+  }
+  return displayName + suffix;
+};
 
 const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   className = "",
@@ -57,6 +85,9 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   highlighted,
   isLoading = false,
   headerClassName,
+  hideNameInMobileParty = false,
+  percentOnlyColumns = [],
+  compactFirstColumn = false,
 }) => {
   const { t, i18n } = useTranslation(["common", "election", "party"]);
 
@@ -89,45 +120,66 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         );
       case "election_name":
         return (
-          <div className="w-fit">
-            <Tooltip>
-              <TooltipTrigger>
-                <div
-                  className="cursor-help whitespace-nowrap underline decoration-dashed [text-underline-position:from-font]"
-                  tabIndex={0}
-                >
-                  {t(`election:${value}`)}
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                {cell.row.original.date &&
-                  toDate(cell.row.original.date, "dd MMM yyyy", i18n.language)}
-              </TooltipContent>
-            </Tooltip>
+          <div className="w-fit whitespace-nowrap">
+            {formatElectionDisplay(
+              value,
+              cell.row.original.date,
+              i18n.language ?? "en-GB",
+            )}
           </div>
         );
-      case "party":
+      case "party": {
+        const logoId = cell.row.original.party_uid;
+        const coalition = cell.row.original.coalition;
+        const partyName = !table
+          .getAllColumns()
+          .map((col) => col.id)
+          .includes("full_result")
+          ? t(`party:${value}`)
+          : value;
+        const partyLogoSrc = logoId
+          ? `/static/images/parties/${logoId}.png`
+          : "/static/images/parties/_fallback_.png";
         return (
           <div className="flex items-center gap-1.5">
             <div className="relative flex h-4.5 w-8 justify-center">
               <ImageWithFallback
-                className="rounded-[2px] border border-otl-gray-200"
-                src={`/static/images/parties/${value}.png`}
+                className="border border-otl-gray-200"
+                src={partyLogoSrc}
                 width={32}
                 height={18}
                 alt={value}
               />
             </div>
             <span>
-              {!table
-                .getAllColumns()
-                .map((col) => col.id)
-                .includes("full_result")
-                ? t(`party:${value}`)
-                : value}
+              {coalition && coalition !== "ALONE"
+                ? `${partyName} (${coalition})`
+                : partyName}
             </span>
           </div>
         );
+      }
+      case "coalition": {
+        if (!value || value === "ALONE") return <span className="font-light">&nbsp;&nbsp;—</span>;
+        const coalitionUid = cell.row.original.coalition_uid;
+        const coalitionLogoSrc = coalitionUid
+          ? `/static/images/coalitions/${coalitionUid}.png`
+          : "/static/images/coalitions/_fallback_.png";
+        return (
+          <div className="flex items-center gap-1.5">
+            <div className="relative flex h-4.5 w-8 justify-center">
+              <ImageWithFallback
+                className="border border-otl-gray-200"
+                src={coalitionLogoSrc}
+                width={32}
+                height={18}
+                alt={value}
+              />
+            </div>
+            <span>{value}</span>
+          </div>
+        );
+      }
       case "seats":
         percent = cell.row.original.seats_perc;
         const total = cell.row.original.seats_total;
@@ -136,19 +188,50 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             <div>
               <BarPerc hidden value={percent} size="w-[100px] h-[5px]" />
             </div>
-            <p className="whitespace-nowrap">{`${value} / ${total} ${
-              percent !== null
+            <p className="whitespace-nowrap">{`${value} / ${total} ${percent !== null
                 ? ` (${numFormat(percent, "compact", [1, 1])}%)`
                 : " (—)"
-            }`}</p>
+              }`}</p>
           </div>
         );
+      case "seats_contested":
+      case "seats_won": {
+        const seatsPerc = cell.row.original[id + "_perc"];
+        const seatsTotal = cell.row.original.seats_total;
+        return (
+          <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
+            <div>
+              <BarPerc hidden value={seatsPerc} size="w-[100px] h-[5px]" />
+            </div>
+            <p className="whitespace-nowrap">{`${value} / ${seatsTotal}${seatsPerc !== null
+                ? ` (${numFormat(seatsPerc, "compact", [1, 1])}%)`
+                : " (—)"
+              }`}</p>
+          </div>
+        );
+      }
       case "result":
         return <ResultBadge value={value} />;
 
       case "votes":
       case "majority":
+      case "voter_turnout": {
         percent = cell.row.original[id + "_perc"];
+        const showPercentOnly = percentOnlyColumns.includes(id);
+        if (showPercentOnly) {
+          return (
+            <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
+              <div className="lg:self-center">
+                <BarPerc hidden value={percent} size="w-[100px] h-[5px]" />
+              </div>
+              <span className="whitespace-nowrap">
+                {percent != null
+                  ? `${numFormat(percent, "compact", [1, 1])}%`
+                  : "—"}
+              </span>
+            </div>
+          );
+        }
         return (
           <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
             <div className="lg:self-center">
@@ -162,6 +245,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             </span>
           </div>
         );
+      }
       default:
         return flexRender(cell.column.columnDef.cell, cell.getContext());
     }
@@ -179,45 +263,86 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         ) : (
           <>#{value}</>
         );
-      case "party":
+      case "party": {
+        const logoId = cell.row.original.party_uid;
+        const coalition = cell.row.original.coalition;
+        const partyLabel =
+          coalition && coalition !== "ALONE"
+            ? `${value} / ${coalition}`
+            : t(`party:${value}`);
+        const partyLogoSrc = logoId
+          ? `/static/images/parties/${logoId}.png`
+          : "/static/images/parties/_fallback_.png";
+        const showName = !hideNameInMobileParty && cell.row.original.name;
         return (
-          <div className="flex items-center gap-1.5">
-            <div className="relative flex h-4.5 w-8">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <div className="relative flex h-4.5 w-8 shrink-0">
               <ImageWithFallback
-                className="rounded-[2px] border border-otl-gray-200"
-                src={`/static/images/parties/${value}.png`}
+                className="border border-otl-gray-200"
+                src={partyLogoSrc}
                 width={32}
                 height={18}
                 alt={value}
               />
             </div>
-            {cell.row.original.name ? (
-              <span>
-                <span className="pr-1 font-medium">
+            {showName ? (
+              <span className="flex min-w-0 flex-1 items-center gap-1 whitespace-nowrap">
+                <span
+                  className="truncate font-medium"
+                  title={cell.row.original.name}
+                >
                   {cell.row.original.name}
                 </span>
-                <span className="inline-flex pr-1">{` (${value})`}</span>
-                <span className="inline-flex translate-y-0.5">
-                  {highlight && (
+                <span className="shrink-0">{`(${partyLabel})`}</span>
+                {highlight && (
+                  <span className="shrink-0 translate-y-0.5">
                     <ResultBadge hidden value={cell.row.original.result} />
-                  )}
-                </span>
+                  </span>
+                )}
               </span>
             ) : (
-              <span className="font-medium">{t(`party:${value}`)}</span>
+              <span className="font-medium">
+                {partyLabel}
+                {highlight && (
+                  <span className="ml-1 inline-flex translate-y-0.5">
+                    <ResultBadge hidden value={cell.row.original.result} />
+                  </span>
+                )}
+              </span>
             )}
           </div>
         );
+      }
+      case "coalition": {
+        if (!value || value === "ALONE") return null;
+        const coalitionUid = cell.row.original.coalition_uid;
+        const coalitionLogoSrc = coalitionUid
+          ? `/static/images/coalitions/${coalitionUid}.png`
+          : "/static/images/coalitions/_fallback_.png";
+        return (
+          <div className="flex items-center gap-1.5">
+            <div className="relative flex h-4.5 w-8 justify-center">
+              <ImageWithFallback
+                className="border border-otl-gray-200"
+                src={coalitionLogoSrc}
+                width={32}
+                height={18}
+                alt={value}
+              />
+            </div>
+            <span>{value}</span>
+          </div>
+        );
+      }
       case "election_name":
         return (
-          <div className="flex flex-wrap gap-x-3 text-sm">
-            <p className="font-medium">{t(`election:${value}`)}</p>
-            {cell.row.original.date && (
-              <p className="text-txt-black-500">
-                {toDate(cell.row.original.date, "dd MMM yyyy", i18n.language)}
-              </p>
+          <p className="font-medium">
+            {formatElectionDisplay(
+              value,
+              cell.row.original.date,
+              i18n.language ?? "en-GB",
             )}
-          </div>
+          </p>
         );
       case "seats":
         percent = cell.row.original.seats_perc;
@@ -231,15 +356,33 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               <BarPerc hidden value={percent} />
               <p>
                 {`${value} / ${total}
-                 (${
-                   percent !== null
-                     ? `${numFormat(percent, "compact", [1, 1])}%`
-                     : "(—)"
-                 })`}
+                 (${percent !== null
+                    ? `${numFormat(percent, "compact", [1, 1])}%`
+                    : "(—)"
+                  })`}
               </p>
             </div>
           </div>
         );
+      case "seats_contested":
+      case "seats_won": {
+        const seatsPerc = cell.row.original[id + "_perc"];
+        const seatsTotal = cell.row.original.seats_total;
+        return (
+          <div className="flex flex-col space-y-1">
+            <p className="font-medium text-txt-black-500">
+              {flexRender(cell.column.columnDef.header, cell.getContext())}
+            </p>
+            <div className="flex items-center gap-2">
+              <BarPerc hidden value={seatsPerc} />
+              <p>{`${value} / ${seatsTotal} (${seatsPerc !== null
+                  ? `${numFormat(seatsPerc, "compact", [1, 1])}%`
+                  : "—"
+                })`}</p>
+            </div>
+          </div>
+        );
+      }
       case "votes":
         percent = cell.row.original.votes_perc;
         return (
@@ -249,35 +392,51 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
-              <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${
-                percent !== null
+              <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${percent !== null
                   ? `${numFormat(percent, "compact", [1, 1])}%`
                   : "—"
-              })`}</p>
+                })`}</p>
             </div>
           </div>
         );
       case "majority":
-        percent = cell.row.original.majority_perc;
-        return (
-          <div className="flex flex-row gap-2">
-            <p className="font-medium text-txt-black-500">
-              {flexRender(cell.column.columnDef.header, cell.getContext())}
-            </p>
-            {typeof value === "number" ? (
-              <p className="font-bold">{value}</p>
-            ) : (
+      case "voter_turnout": {
+        percent = cell.row.original[id + "_perc"];
+        if (percentOnlyColumns.includes(id)) {
+          return (
+            <div className="flex flex-col space-y-1">
+              <p className="font-medium text-txt-black-500">
+                {flexRender(cell.column.columnDef.header, cell.getContext())}
+              </p>
               <div className="flex items-center gap-2">
                 <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
-                <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${
-                  percent !== null
-                    ? `${numFormat(percent, "compact", [1, 1])}%`
-                    : "—"
-                })`}</p>
+                <p>{percent != null ? `${numFormat(percent, "compact", [1, 1])}%` : "—"}</p>
               </div>
-            )}
-          </div>
-        );
+            </div>
+          );
+        }
+        if (id === "majority") {
+          return (
+            <div className="flex flex-row gap-2">
+              <p className="font-medium text-txt-black-500">
+                {flexRender(cell.column.columnDef.header, cell.getContext())}
+              </p>
+              {typeof value === "number" ? (
+                <p className="font-bold">{value}</p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
+                  <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${percent !== null
+                      ? `${numFormat(percent, "compact", [1, 1])}%`
+                      : "—"
+                    })`}</p>
+                </div>
+              )}
+            </div>
+          );
+        }
+        return null;
+      }
       case "result":
         return (
           <div className="flex flex-col space-y-1">
@@ -335,12 +494,23 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           <thead>
             {table.getHeaderGroups().map((headerGroup: any) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header: any) => (
+                {headerGroup.headers.map((header: any, colIndex: number) => {
+                  const isLastCol =
+                    colIndex === headerGroup.headers.length - 1;
+                  const isFirstCol = colIndex === 0;
+                  const isFullResultCol = header.column.columnDef.id === "full_result";
+                  return (
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
                     className={clx(
-                      "whitespace-nowrap border-b-2 border-otl-gray-200 py-3 pr-3 font-medium",
+                      "whitespace-nowrap border-b-2 border-otl-gray-200 py-3 font-medium",
+                      isFirstCol
+                        ? compactFirstColumn
+                          ? "pl-2 pr-3"
+                          : "pl-4 pr-3"
+                        : "px-3",
+                      isLastCol && isFullResultCol && "pr-1 text-right",
                       fullBorder && "border border-b-2 text-body-xs",
                       alternateTextColor && "text-txt-black-500",
                       headerClassName,
@@ -349,11 +519,12 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                   </th>
-                ))}
+                );
+                })}
               </tr>
             ))}
           </thead>
@@ -384,14 +555,26 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                 >
                   {tableRow
                     .getVisibleCells()
-                    .map((cell: any, colIndex: number) => (
+                    .map((cell: any, colIndex: number) => {
+                      const isLastCol =
+                        colIndex === tableRow.getVisibleCells().length - 1;
+                      const isFirstCol = colIndex === 0;
+                      const isFullResultCol =
+                        cell.column.columnDef.id === "full_result";
+                      return (
                       <td
                         key={cell.id}
                         className={clx(
-                          highlight && colIndex === 0
+                          highlight && isFirstCol
                             ? "font-medium"
                             : "font-normal",
-                          "py-[11px] pr-3",
+                          "py-[11px]",
+                          isFirstCol
+                            ? compactFirstColumn
+                              ? "pl-2 pr-3"
+                              : "pl-4 pr-3"
+                            : "px-3",
+                          isLastCol && isFullResultCol && "pr-1 text-right",
                           fullBorder && "border",
                         )}
                       >
@@ -405,7 +588,8 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                           )
                         )}
                       </td>
-                    ))}
+                    );
+                    })}
                 </tr>
               );
             })}
@@ -457,24 +641,29 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           ) : (
             <div
               className={clx(
-                "flex flex-col space-y-2 border-b border-otl-gray-200 p-3 text-body-sm first:border-t-2 md:hidden",
+                "flex flex-col space-y-3 border-b border-otl-gray-200 px-4 py-4 text-body-sm first:border-t-2 md:hidden",
                 idx === 0 && "border-t-2",
                 highlight ? "bg-bg-black-50" : "bg-inherit",
               )}
               key={idx}
             >
-              {/* Row 1 - Election Name / Date / Full result */}
+              {/* Row 1 - Election Name / Coalition (centre) / Full result */}
               {["election_name", "full_result"].some((id) =>
                 ids.includes(id),
               ) && (
-                <div className="flex items-start justify-between gap-x-2">
-                  <div className="flex gap-x-2">
-                    {_row.index}
-                    {_row.election_name}
+                  <div className="flex items-center justify-between gap-x-2">
+                    <div className="flex gap-x-2">
+                      {_row.index}
+                      {_row.election_name}
+                    </div>
+                    {_row.coalition && (
+                      <div className="flex flex-1 justify-center">
+                        {_row.coalition}
+                      </div>
+                    )}
+                    {_row.full_result}
                   </div>
-                  {_row.full_result}
-                </div>
-              )}
+                )}
               {/* Row 2 - Seat (if available)*/}
               {(_row.result || _row.index) && (
                 <div>
@@ -482,11 +671,16 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                 </div>
               )}
               {/* Row 3 - Party */}
-              {_row.party && <div>{_row.party}</div>}
+              {_row.party && (
+                <div className="min-w-0 overflow-hidden">
+                  {_row.party}
+                </div>
+              )}
               {/* Row 4 - Result *Depends on page shown */}
               {_row.name && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
                   {_row.majority}
+                  {_row.voter_turnout}
                   {_row.votes}
                 </div>
               )}
@@ -496,10 +690,17 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                   {_row.result}
                 </div>
               )}
-              {_row.seats && (
-                <div className="flex gap-3">
-                  {_row.seats}
-                  {_row.votes}
+              {(_row.seats_won || _row.seats || _row.seats_contested) && (
+                <div className="flex flex-col gap-3">
+                  {(_row.seats_won || _row.seats) && (
+                    <div className="flex gap-6">
+                      {_row.seats_won ?? _row.seats}
+                      {_row.votes}
+                    </div>
+                  )}
+                  {_row.seats_contested && (
+                    <div>{_row.seats_contested}</div>
+                  )}
                 </div>
               )}
             </div>

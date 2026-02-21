@@ -16,6 +16,9 @@ export type Candidate = {
   date: string;
   seat: string;
   party: string;
+  party_uid?: string;
+  coalition?: string;
+  coalition_uid?: string;
   votes: Record<"abs" | "perc", number>;
   result: ElectionResult;
 };
@@ -26,7 +29,13 @@ export type Party = {
   state: string;
   election_name: string;
   date: string;
+  coalition?: string;
+  coalition_uid?: string;
   seats_total: number;
+  seats_contested: number;
+  seats_contested_perc: number;
+  seats_won: number;
+  seats_won_perc: number;
   seats_perc: number;
   seats: number;
   votes: number;
@@ -38,9 +47,12 @@ export type Seat = {
   election_name: string;
   date: string;
   party: string;
+  party_uid?: string;
   name: string;
   majority: number;
   majority_perc: number;
+  voter_turnout?: number;
+  voter_turnout_perc?: number;
   // type: ElectionType;
 };
 
@@ -71,6 +83,9 @@ export type BaseResult = {
   election_name: string;
   seat: string;
   party: string;
+  party_uid?: string;
+  coalition?: string;
+  coalition_uid?: string;
   votes: number;
   votes_perc: number;
   result: string;

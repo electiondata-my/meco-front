@@ -70,13 +70,13 @@ export const getStaticProps: GetStaticProps = withi18n(
     try {
       const [election_type, slug] = params?.seat
         ? (params.seat as string[])
-        : ["parlimen", "p138-kota-melaka-melaka"];
+        : ["parlimen", "p096-kuala-selangor-selangor"];
 
       if (!slug || !election_type) return { notFound: true };
 
       const results = await Promise.allSettled([
-        get("/seats/dropdown.json"),
-        get(`/seats/${slug}.json`),
+        get("/seats/current/dropdown.json"),
+        get(`/seats/current/${slug}.json`),
       ]).catch((e) => {
         throw new Error(e);
       });

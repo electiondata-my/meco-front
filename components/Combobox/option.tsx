@@ -54,7 +54,7 @@ function ComboOptionInner<T>(
         {format ? (
           <p
             className={clx(
-              "flex items-center gap-x-1 truncate",
+              "flex w-full items-center gap-x-1",
               isSelected ? "font-medium" : "font-normal",
             )}
           >
@@ -73,7 +73,7 @@ function ComboOptionInner<T>(
             </p>
           </>
         )}
-        {isSelected && (
+        {!format && isSelected && (
           <span className="absolute inset-y-0 right-3 flex items-center">
             <CheckCircleIcon className="h-4 w-4 text-primary-600" />
           </span>

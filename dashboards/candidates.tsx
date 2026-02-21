@@ -247,6 +247,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     name: CANDIDATE_OPTION?.label,
                     context: "parliament",
                   })}
+                  hideNameInMobileParty
                 />
               </Panel>
               <Panel name={t("dun")}>
@@ -259,6 +260,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     name: CANDIDATE_OPTION?.label,
                     context: "dun",
                   })}
+                  hideNameInMobileParty
                 />
               </Panel>
             </Tabs>

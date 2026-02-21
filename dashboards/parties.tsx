@@ -15,7 +15,6 @@ import { CountryAndStates } from "@lib/constants";
 import { useCache } from "@hooks/useCache";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
-import { OptionType } from "@lib/types";
 import { Trans } from "next-i18next";
 import dynamic from "next/dynamic";
 import { FunctionComponent, useEffect } from "react";
@@ -23,12 +22,8 @@ import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import SectionGrid from "@components/Section/section-grid";
 import { useToast } from "@govtechmy/myds-react/hooks";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@govtechmy/myds-react/tooltip";
-import { QuestionCircleIcon } from "@govtechmy/myds-react/icon";
+import { clx } from "@lib/helpers";
+import { ComboOptionProp } from "@components/Combobox/option";
 
 /**
  * Parties
@@ -42,8 +37,22 @@ const ElectionTable = dynamic(
   },
 );
 
+type PartyOption = {
+  party_uid: string;
+  party: string;
+  party_name_en: string;
+  party_name_bm: string;
+  party_type: string;
+};
+
 interface ElectionPartiesProps extends ElectionResource<Party> {
-  selection: { party: string }[];
+  selection: {
+    party_uid: string;
+    party: string;
+    party_name_en: string;
+    party_name_bm: string;
+    type: string;
+  }[];
 }
 
 const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
@@ -51,16 +60,28 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
   params,
   selection,
 }) => {
-  const { t } = useTranslation(["common", "parties"]);
+  const { t, i18n } = useTranslation(["common", "parties"]);
   const { cache } = useCache();
   const { toast } = useToast();
+  const isMalay = i18n.language?.startsWith("ms");
 
-  const PARTY_OPTIONS: Array<OptionType> = selection.map((option) => ({
-    label: t(option.party, { ns: "party" }),
-    value: option.party,
-  }));
+  const PARTY_OPTIONS: Array<ComboOptionProp<PartyOption>> = selection
+    .slice()
+    .sort((a, b) => {
+      if (a.type !== b.type) return a.type === "party" ? -1 : 1;
+      return a.party.localeCompare(b.party);
+    })
+    .map((option) => ({
+      label: `${option.party} (${isMalay ? option.party_name_bm : option.party_name_en})`,
+      value: option.party_uid,
+      party_uid: option.party_uid,
+      party: option.party,
+      party_name_en: option.party_name_en,
+      party_name_bm: option.party_name_bm,
+      party_type: option.type,
+    }));
 
-  const DEFAULT_PARTY = "PERIKATAN";
+  const DEFAULT_PARTY = "001-UMNO";
   const PARTY_OPTION = PARTY_OPTIONS.find(
     (e) => e.value === (params.party ?? DEFAULT_PARTY),
   );
@@ -81,9 +102,23 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
       id: "election_name",
       header: t("election_name"),
     },
+    ...(PARTY_OPTION?.party_type !== "coalition"
+      ? [
+          {
+            key: "coalition" as const,
+            id: "coalition",
+            header: t("coalition_name"),
+          },
+        ]
+      : []),
     {
-      key: "seats",
-      id: "seats",
+      key: "seats_contested",
+      id: "seats_contested",
+      header: t("seats_contested"),
+    },
+    {
+      key: "seats_won",
+      id: "seats_won",
       header: t("seats_won"),
     },
     {
@@ -196,12 +231,12 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         <SectionGrid className="space-y-6 py-6 lg:space-y-16 lg:pb-16">
           <div className="mt-3 w-full">
             <div className="mx-auto w-full md:w-[727px]">
-              <ComboBox
+              <ComboBox<PartyOption>
                 placeholder={t("search_party", { ns: "parties" })}
                 image={(value: string) => (
                   <div className="flex h-auto max-h-8 w-8 justify-center self-center">
                     <ImageWithFallback
-                      className="rounded border border-otl-gray-200"
+                      className="border border-otl-gray-200"
                       src={`/static/images/parties/${value}.png`}
                       width={28}
                       height={18}
@@ -215,6 +250,45 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                     />
                   </div>
                 )}
+                format={(option) => (
+                  <>
+                    <div className="flex h-auto w-7 shrink-0 items-center justify-center">
+                      <ImageWithFallback
+                        className="border border-otl-gray-200"
+                        src={`/static/images/parties/${option.value}.png`}
+                        width={28}
+                        height={18}
+                        alt={option.party}
+                        style={{
+                          width: "auto",
+                          maxWidth: "28px",
+                          height: "auto",
+                          maxHeight: "18px",
+                        }}
+                      />
+                    </div>
+                    <span className="grow truncate">{option.label}</span>
+                    <span
+                      className={clx(
+                        "ml-auto shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium",
+                        option.party_type === "coalition"
+                          ? "border-blue-400 bg-blue-50/60 text-blue-600"
+                          : "border-red-400 bg-red-50/60 text-red-600",
+                      )}
+                    >
+                      {t(option.party_type, { ns: "parties" })}
+                    </span>
+                  </>
+                )}
+                config={{
+                  keys: ["label", "party"],
+                  baseSort: (a: any, b: any) => {
+                    if (a.item.party_type !== b.item.party_type) {
+                      return a.item.party_type === "party" ? -1 : 1;
+                    }
+                    return a.item.party.localeCompare(b.item.party);
+                  },
+                }}
                 options={PARTY_OPTIONS}
                 selected={
                   data.party_value
@@ -226,8 +300,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                     setData("loading", true);
                     setData("party_value", selected.value);
                     push(
-                      `${routes.PARTIES}/${selected.value}/${
-                        data.state ?? CURRENT_STATE
+                      `${routes.PARTIES}/${selected.value}/${data.state ?? CURRENT_STATE
                       }`,
                       undefined,
                       { scroll: false },
@@ -240,32 +313,32 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
           <div className="w-full space-y-6">
             <Tabs
               title={
-                <div className="flex items-center gap-1.5">
-                  <span className="text-heading-2xs">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-heading-2xs">
+                  <div className="flex items-center gap-2">
                     <ImageWithFallback
-                      className="mr-2 inline-block rounded border border-otl-gray-200"
-                      src={`/static/images/parties/${
-                        PARTY_OPTION?.value ?? DEFAULT_PARTY
-                      }.png`}
+                      className="shrink-0 border border-otl-gray-200"
+                      src={`/static/images/parties/${PARTY_OPTION?.value ?? DEFAULT_PARTY
+                        }.png`}
                       width={32}
                       height={18}
-                      alt={t(PARTY_OPTION?.value ?? DEFAULT_PARTY)}
-                      inline
+                      alt={PARTY_OPTION?.party ?? DEFAULT_PARTY}
                     />
-                    <Trans>
-                      {t("title", {
-                        ns: "parties",
-                        party: `$t(party:${PARTY_OPTION?.value ?? DEFAULT_PARTY})`,
-                      })}
-                    </Trans>
-                    <StateDropdown
+                    <span>
+                      <Trans>
+                        {t("title", {
+                          ns: "parties",
+                          party: PARTY_OPTION?.party ?? DEFAULT_PARTY,
+                        })}
+                      </Trans>
+                    </span>
+                  </div>
+                  <StateDropdown
                       currentState={data.state ?? "mys"}
                       onChange={(selected) => {
                         setData("loading", true);
                         setData("state", selected.value);
                         push(
-                          `${routes.PARTIES}/${
-                            data.party_value ? data.party_value : DEFAULT_PARTY
+                          `${routes.PARTIES}/${data.party_value ? data.party_value : DEFAULT_PARTY
                           }/${selected.value}`,
                           undefined,
                           { scroll: false },
@@ -274,7 +347,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                       width="inline-flex"
                       anchor="left"
                     />
-                  </span>
                   {/* <Tooltip>
                     <TooltipTrigger className="h-6 w-6">
                       <QuestionCircleIcon className="h-4 w-4 text-txt-black-500" />
@@ -300,7 +372,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                     <Trans>
                       {t("no_data", {
                         ns: "parties",
-                        party: `$t(party:${params.party ?? DEFAULT_PARTY})`,
+                        party: `$t(party:${PARTY_OPTION?.party ?? DEFAULT_PARTY})`,
                         state: CountryAndStates[params.state],
                         context: "parlimen",
                       })}
@@ -319,7 +391,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                     <Trans>
                       {t("no_data", {
                         ns: "parties",
-                        party: `$t(party:${params.party ?? DEFAULT_PARTY})`,
+                        party: `$t(party:${PARTY_OPTION?.party ?? DEFAULT_PARTY})`,
                         state: CountryAndStates[params.state],
                         context: ["kul", "lbn", "pjy"].includes(params.state)
                           ? "dun_wp"
