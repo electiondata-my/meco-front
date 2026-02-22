@@ -8,7 +8,7 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { OptionType } from "@lib/types";
 import dynamic from "next/dynamic";
-import { FunctionComponent, useEffect } from "react";
+import { FunctionComponent, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import SectionGrid from "@components/Section/section-grid";
@@ -57,9 +57,17 @@ const ElectionCandidatesDashboard: FunctionComponent<
     (e) => e.value === (params.candidate ?? DEFAULT_CANDIDATE),
   );
 
+  const allElections = useMemo(
+    () =>
+      [...elections.parlimen, ...elections.dun].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      ),
+    [elections.parlimen, elections.dun],
+  );
+
   const { cache } = useCache();
   const { data, setData } = useData({
-    tab_index: 0, // parlimen = 0; dun = 1
+    tab_index: 0, // all = 0; parlimen = 1; dun = 2
     candidate_value: "",
     loading: false,
     parlimen: elections.parlimen,
@@ -78,7 +86,11 @@ const ElectionCandidatesDashboard: FunctionComponent<
       header: "",
       cell: ({ row }) => {
         const selection =
-          data.tab_index === 0 ? elections.parlimen : elections.dun;
+          data.tab_index === 0
+            ? allElections
+            : data.tab_index === 1
+              ? elections.parlimen
+              : elections.dun;
 
         return (
           <FullResults
@@ -164,7 +176,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
     const finishLoading = () => {
       setData("loading", false);
       setData("candidate_value", params.candidate);
-      setData("tab_index", elections.parlimen.length === 0 ? 1 : 0);
+      setData("tab_index", 0);
     };
     events.on("routeChangeComplete", finishLoading);
     return () => events.off("routeChangeComplete", finishLoading);
@@ -215,7 +227,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
               />
             </div>
           </div>
-          <div className="w-full space-y-6">
+          <div className="w-full min-h-[250px] space-y-6 pb-10 lg:pb-0">
             <Tabs
               title={
                 <p className="text-heading-2xs font-bold">
@@ -237,6 +249,19 @@ const ElectionCandidatesDashboard: FunctionComponent<
               onChange={(index) => setData("tab_index", index)}
               className="w-full gap-4"
             >
+              <Panel name={t("all")}>
+                <ElectionTable
+                  data={allElections}
+                  columns={candidate_schema}
+                  isLoading={data.loading}
+                  empty={t("no_data", {
+                    ns: "candidates",
+                    name: CANDIDATE_OPTION?.label,
+                    context: "all",
+                  })}
+                  hideNameInMobileParty
+                />
+              </Panel>
               <Panel name={t("parlimen")}>
                 <ElectionTable
                   data={elections.parlimen}
