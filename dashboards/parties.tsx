@@ -233,29 +233,37 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
             <div className="mx-auto w-full md:w-[727px]">
               <ComboBox<PartyOption>
                 placeholder={t("search_party", { ns: "parties" })}
-                image={(value: string) => (
-                  <div className="flex h-auto max-h-8 w-8 justify-center self-center">
-                    <ImageWithFallback
-                      className="border border-otl-gray-200"
-                      src={`/static/images/parties/${value}.png`}
-                      width={28}
-                      height={18}
-                      alt={value}
-                      style={{
-                        width: "auto",
-                        maxWidth: "28px",
-                        height: "auto",
-                        maxHeight: "28px",
-                      }}
-                    />
-                  </div>
-                )}
-                format={(option) => (
+                image={(value: string) => {
+                  const opt = PARTY_OPTIONS.find((e) => e.value === value);
+                  const folder =
+                    opt?.party_type === "coalition" ? "coalitions" : "parties";
+                  return (
+                    <div className="flex h-auto max-h-8 w-8 justify-center self-center">
+                      <ImageWithFallback
+                        className="border border-otl-gray-200"
+                        src={`/static/images/${folder}/${value}.png`}
+                        width={28}
+                        height={18}
+                        alt={value}
+                        style={{
+                          width: "auto",
+                          maxWidth: "28px",
+                          height: "auto",
+                          maxHeight: "28px",
+                        }}
+                      />
+                    </div>
+                  );
+                }}
+                format={(option) => {
+                  const folder =
+                    option.party_type === "coalition" ? "coalitions" : "parties";
+                  return (
                   <>
                     <div className="flex h-auto w-7 shrink-0 items-center justify-center">
                       <ImageWithFallback
                         className="border border-otl-gray-200"
-                        src={`/static/images/parties/${option.value}.png`}
+                        src={`/static/images/${folder}/${option.value}.png`}
                         width={28}
                         height={18}
                         alt={option.party}
@@ -279,7 +287,8 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                       {t(option.party_type, { ns: "parties" })}
                     </span>
                   </>
-                )}
+                  );
+                }}
                 config={{
                   keys: ["label", "party"],
                   baseSort: (a: any, b: any) => {
@@ -310,15 +319,14 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
               />
             </div>
           </div>
-          <div className="w-full space-y-6">
+          <div className="w-full min-h-[250px] space-y-6 pb-10 lg:pb-0">
             <Tabs
               title={
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-heading-2xs">
                   <div className="flex items-center gap-2">
                     <ImageWithFallback
                       className="shrink-0 border border-otl-gray-200"
-                      src={`/static/images/parties/${PARTY_OPTION?.value ?? DEFAULT_PARTY
-                        }.png`}
+                      src={`/static/images/${PARTY_OPTION?.party_type === "coalition" ? "coalitions" : "parties"}/${PARTY_OPTION?.value ?? DEFAULT_PARTY}.png`}
                       width={32}
                       height={18}
                       alt={PARTY_OPTION?.party ?? DEFAULT_PARTY}
