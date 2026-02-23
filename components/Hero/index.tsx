@@ -109,11 +109,11 @@ const Hero: FunctionComponent<HeroProps> = ({
         children
       ) : (
         <SectionGrid className={clx(sectionGridClassName)}>
-          <div className="flex max-w-[727px] flex-col items-center justify-center space-y-4 pt-16 lg:space-y-6">
+          <div className="flex max-w-[727px] flex-col items-center justify-center space-y-4 pt-16 pb-8 lg:space-y-6">
             {category && (
               <h3
                 className={clx(
-                  "text-center text-body-xs font-semibold uppercase leading-5 tracking-[0.2em] lg:text-start lg:text-body-lg",
+                  "text-center text-body-xs font-semibold uppercase leading-5 tracking-[0.1em] lg:text-start lg:text-body-lg",
                   category[1],
                 )}
                 data-testid="hero-category"
