@@ -98,7 +98,7 @@ const Item: FunctionComponent<NavItemProps> = ({
       )}
     >
       <Link href={link} scroll={false} onClick={onClick}>
-        <span className="nav-mobile-icon">{icon}</span>
+        <span className="nav-mobile-icon lg:hidden">{icon}</span>
         {title}
       </Link>
     </BaseLink>
@@ -144,7 +144,7 @@ const Nav: NavFunctionComponent = ({ children, action }) => {
 
   return (
     <div className="flex w-full flex-1 items-center justify-end lg:justify-between">
-      <div className="hidden w-fit lg:flex">{children(close)}</div>
+      <div className="hidden w-fit items-center lg:flex">{children(close)}</div>
       {action}
       <div
         className={clx(

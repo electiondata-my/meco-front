@@ -35,7 +35,7 @@ export default function LocaleSwitch() {
       <SelectContent>
         <SelectGroup>
           {Object.entries(languages).map(([value, label]) => (
-            <SelectItem key={value} value={value}>
+            <SelectItem key={value} value={value} className="text-body-sm">
               {label.full}
             </SelectItem>
           ))}
