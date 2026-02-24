@@ -74,7 +74,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
       icon: <BuildingLibraryIcon className="mr-1 h-5 w-5" />,
     },
     {
-      name: t("state"),
+      name: t("dun"),
       icon: <FlagIcon className="mr-1 h-5 w-5" />,
     },
   ];
@@ -110,6 +110,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
     let options: Array<OptionType> = [];
     if (data.state !== null && NON_SE_STATE.includes(data.state) === false)
       options = selection[CountryAndStates[data.state]]
+        .filter(({ election }) => !election.startsWith("GE-"))
         .map(({ election, date }) => ({
           label: `${t(election, { ns: "election" })} (${toDate(date, "yyyy")})`,
           value: election,
@@ -147,7 +148,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
       />
       <Container>
         {/* Explore any election from Merdeka to the present! */}
-        <SectionGrid className="pt-6 lg:pt-6">
+        <SectionGrid className="pt-2 lg:pt-2">
           {/* <h4 className="text-center text-heading-2xs font-bold">
             {t("header_1", { ns: "elections" })}
           </h4> */}

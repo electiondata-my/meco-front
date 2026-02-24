@@ -32,7 +32,7 @@ const FullResultContent = ({
   const { t } = useTranslation("common");
 
   return (
-    <div className="hide-scrollbar flex-1 space-y-4.5 overflow-scroll text-body-md max-md:px-4 max-md:pb-4">
+    <div className="hide-scrollbar flex-1 space-y-4.5 overflow-scroll text-body-md max-md:px-4 max-md:pb-2">
       <div className="space-y-3">
         <div className="font-bold">{t("election_result")}</div>
         <ElectionTable
@@ -47,8 +47,8 @@ const FullResultContent = ({
         />
       </div>
 
-      <div className="space-y-3">
-        <p className="text-body-sm font-semibold">{t("voting_statistics")}</p>
+      <div className="space-y-3 pt-4">
+        <p className="font-bold">{t("voting_statistics")}</p>
         {votes && votes.length > 0 ? (
           <div className="flex flex-col gap-3 text-sm">
             {votes.map(({ x, abs, perc }, i: number) =>

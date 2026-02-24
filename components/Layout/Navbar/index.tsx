@@ -148,7 +148,7 @@ const Nav: NavFunctionComponent = ({ children, action }) => {
       {action}
       <div
         className={clx(
-          "nav-mobile-menu fixed left-0 top-16 w-full grid-cols-3 gap-0 bg-bg-white px-3 py-6 shadow-context-menu max-md:top-14 lg:hidden",
+          "nav-mobile-menu fixed left-0 top-16 w-full grid-cols-3 gap-0 border-b border-otl-gray-200 bg-bg-white px-3 py-6 shadow-button max-md:top-14 lg:hidden",
           show ? "grid" : "hidden",
         )}
       >

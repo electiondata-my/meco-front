@@ -61,7 +61,7 @@ const Overview: FunctionComponent<OverviewProps> = ({
       icon: <BuildingLibraryIcon className="mr-1 h-5 w-5" />,
     },
     {
-      name: t("state"),
+      name: t("dun"),
       icon: <FlagIcon className="mr-1 h-5 w-5" />,
     },
   ];

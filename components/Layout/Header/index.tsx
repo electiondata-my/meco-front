@@ -9,15 +9,13 @@ import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
 import {
   ArrowDownTrayIcon,
+  BoltIcon,
+  ClipboardDocumentCheckIcon,
   FlagIcon,
   MapIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
-import {
-  RedelineationIcon,
-  SeatsIcon,
-  VoteOutlineIcon,
-} from "@icons/index";
+import { RedelineationIcon, SeatsIcon } from "@icons/index";
 
 export default function Header() {
   const { t } = useTranslation([]);
@@ -59,25 +57,20 @@ export default function Header() {
         {(close) => (
           <>
             <Nav.Item
-              key={"/seats"}
-              title={t("common:nav.seats")}
-              link="/seats"
-              onClick={close}
-              icon={<SeatsIcon className="hidden size-8 max-lg:block" />}
-            />
-            <Nav.Item
-              key={"/elections"}
-              title={t("common:nav.elections")}
-              link="/elections"
-              onClick={close}
-              icon={<VoteOutlineIcon className="hidden size-8 max-lg:block" />}
-            />
-            <Nav.Item
               key={"/candidates"}
               title={t("common:nav.candidates")}
               link="/candidates"
               onClick={close}
               icon={<UserIcon className="hidden size-8 max-lg:block" />}
+              className="lg:order-2"
+            />
+            <Nav.Item
+              key={"/seats"}
+              title={t("common:nav.seats")}
+              link="/seats"
+              onClick={close}
+              icon={<SeatsIcon className="hidden size-8 max-lg:block" />}
+              className="lg:order-1"
             />
             <Nav.Item
               key={"/parties"}
@@ -85,6 +78,23 @@ export default function Header() {
               link="/parties"
               onClick={close}
               icon={<FlagIcon className="hidden size-8 max-lg:block" />}
+              className="lg:order-3"
+            />
+            <Nav.Item
+              key={"/byelections"}
+              title={t("common:nav.byelections")}
+              link="/byelections"
+              onClick={close}
+              icon={<BoltIcon className="hidden size-8 max-lg:block" />}
+              className="lg:order-5"
+            />
+            <Nav.Item
+              key={"/elections"}
+              title={t("common:nav.elections")}
+              link="/elections"
+              onClick={close}
+              icon={<ClipboardDocumentCheckIcon className="hidden size-8 max-lg:block" />}
+              className="lg:order-4"
             />
 
             <Nav.Item
@@ -95,6 +105,7 @@ export default function Header() {
               icon={
                 <RedelineationIcon className="hidden size-8 max-lg:block" />
               }
+              className="lg:order-6"
             />
             <Nav.Item
               key={"/map/explorer"}
@@ -102,6 +113,7 @@ export default function Header() {
               link="/map/explorer"
               onClick={close}
               icon={<MapIcon className="hidden size-8 max-lg:block" />}
+              className="lg:order-7"
             />
             {process.env.NEXT_PUBLIC_APP_ENV !== "production" && (
               <Nav.Item
@@ -112,6 +124,7 @@ export default function Header() {
                 <ArrowDownTrayIcon className="hidden size-8 max-lg:block" />
               }
                 onClick={close}
+                className="lg:order-8"
               />
             )}
           </>

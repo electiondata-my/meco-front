@@ -2,6 +2,7 @@ export const routes = {
   HOME: "/",
   API_DOCS: "/api-docs",
   BLOGS: "/blogs",
+  BYELECTIONS: "/byelections",
   CANDIDATES: "/candidates",
   DATA_CATALOGUE: "/data-catalogue",
   DUN_SEATS: "/dun",
