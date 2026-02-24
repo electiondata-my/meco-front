@@ -274,7 +274,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
         description={[t("hero.description", { ns: "seats" })]}
         pageId={routes.SEATS}
       />
-      <div ref={sentinelRef} className="-mt-10 h-16" />
+      <div ref={sentinelRef} className="-mt-14 h-16" />
       <div
         ref={containerRef}
         className={clx(

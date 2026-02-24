@@ -1,6 +1,7 @@
 const I18NextHttpBackend = require("i18next-http-backend/cjs");
 
 const namespaces = [
+  "byelections",
   "candidates",
   "catalogue",
   "common",
