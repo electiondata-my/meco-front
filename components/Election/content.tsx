@@ -32,7 +32,7 @@ const FullResultContent = ({
   const { t } = useTranslation("common");
 
   return (
-    <div className="hide-scrollbar flex-1 space-y-4.5 overflow-scroll text-body-md max-md:px-4 max-md:pb-2">
+    <div className="hide-scrollbar flex-1 space-y-4.5 overflow-scroll text-body-md max-md:px-4 max-md:pb-8">
       <div className="space-y-3">
         <div className="font-bold">{t("election_result")}</div>
         <ElectionTable
