@@ -151,7 +151,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     state?: string,
   ): Promise<Result<BaseResult[]>> => {
     const seatKey = state ? `${seat}, ${state}` : seat;
-    const identifier = `${election}_${seatKey}`;
+    const identifier = `${election}_${seatKey}_${date}`;
     return new Promise(async (resolve) => {
       if (cache.has(identifier)) return resolve(cache.get(identifier));
       try {
