@@ -16,6 +16,7 @@ const HomePage: Page = ({
   selection,
   candidates,
   parties,
+  latest,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { t } = useTranslation("home");
 
@@ -36,6 +37,7 @@ const HomePage: Page = ({
         selection={selection}
         candidates={candidates}
         parties={parties}
+        latest={latest}
       />
     </>
   );
@@ -49,9 +51,10 @@ export const getStaticProps: GetStaticProps = withi18n(
         get("/seats/current/dropdown.json"),
         get("/candidates/dropdown.json"),
         get("/parties/dropdown.json"),
+        get("/latest.json"),
       ]);
 
-      const [seats, candidates, parties] = results.map((e) =>
+      const [seats, candidates, parties, latest] = results.map((e) =>
         e.status === "fulfilled" ? e.value.data.data : [],
       );
 
@@ -61,6 +64,7 @@ export const getStaticProps: GetStaticProps = withi18n(
           selection: seats,
           candidates,
           parties,
+          latest,
         },
       };
     } catch (e) {

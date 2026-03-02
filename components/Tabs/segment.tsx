@@ -17,7 +17,7 @@ const SegmentTabs: FunctionComponent<SegmentTabsProps> = ({
   return (
     <div
       className={clx(
-        "flex h-8 w-fit flex-row items-center rounded-lg bg-[#F4F4F5] p-0",
+        "flex h-8 w-fit flex-row items-center rounded-lg bg-bg-washed p-0",
         className,
       )}
     >
@@ -26,9 +26,9 @@ const SegmentTabs: FunctionComponent<SegmentTabsProps> = ({
           key={option}
           onClick={() => onChange(index)}
           className={clx(
-            "flex h-8 min-h-8 flex-row items-center justify-center px-2.5 py-1.5 text-sm font-medium transition-colors",
+            "flex h-8 min-h-8 flex-row items-center justify-center px-2.5 py-1.5 text-body-sm font-medium transition-colors",
             current === index
-              ? "rounded-lg border border-otl-gray-200 bg-white text-txt-black-900 shadow-[0px_1px_3px_rgba(0,0,0,0.07)]"
+              ? "rounded-md border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
               : "text-txt-black-500",
           )}
         >

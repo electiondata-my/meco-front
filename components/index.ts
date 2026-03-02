@@ -12,6 +12,7 @@ export { default as ErrorStatus } from "./ErrorStatus";
 export { default as Footer } from "./Layout/Footer";
 export { default as Header } from "./Layout/Header";
 export { default as Hero } from "./Hero";
+export { default as ImageTheme } from "./ImageTheme";
 export { default as ImageWithFallback } from "./ImageWithFallback";
 export { default as Input } from "./Input";
 export { default as Label } from "./Label";
