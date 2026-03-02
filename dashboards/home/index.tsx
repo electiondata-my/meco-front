@@ -349,11 +349,12 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             {latest.map((item) => (
               <div
                 className="group cursor-pointer overflow-hidden rounded-lg border bg-bg-dialog hover:border-bg-danger-200 hover:ring-[3px] hover:ring-fr-danger"
-                onClick={() =>
+                onClick={() => {
+                  if (!item.url) return;
                   item.url.startsWith("/")
                     ? push(item.url)
-                    : window.open(item.url, "_blank")
-                }
+                    : window.open(item.url, "_blank");
+                }}
               >
                 <div className="relative h-[250px] w-[312px]">
                   <ImageTheme
