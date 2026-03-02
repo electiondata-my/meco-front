@@ -18,7 +18,18 @@ import { FunctionComponent } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { ArrowRightIcon, ArrowUpRightIcon } from "@heroicons/react/20/solid";
-import { ScaleIcon, SearchCheckIcon } from "@icons/index";
+import {
+  BoltIcon,
+  ClipboardDocumentCheckIcon,
+  FlagIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
+import {
+  RedelineationIcon,
+  ScaleIcon,
+  SearchCheckIcon,
+  SeatsIcon,
+} from "@icons/index";
 import { DateTime } from "luxon";
 
 /**
@@ -44,6 +55,7 @@ type LatestOption = {
   title_en: string;
   title_bm: string;
   date: string;
+  url: string;
   img_light: string;
   img_dark: string;
 };
@@ -107,6 +119,45 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
     t("tab.candidates", { ns: "home" }),
     t("tab.parties", { ns: "home" }),
     t("tab.elections", { ns: "home" }),
+  ];
+
+  const DASHBOARDS = [
+    {
+      title: t("explore.seats.title", { ns: "common" }),
+      description: t("explore.seats.description", { ns: "common" }),
+      link: routes.SEATS,
+      icon: <SeatsIcon className="size-8 text-txt-danger" />,
+    },
+    {
+      title: t("explore.candidates.title", { ns: "common" }),
+      description: t("explore.candidates.description", { ns: "common" }),
+      link: routes.CANDIDATES,
+      icon: <UserIcon className="size-8 text-txt-danger" />,
+    },
+    {
+      title: t("explore.parties.title", { ns: "common" }),
+      description: t("explore.parties.description", { ns: "common" }),
+      link: routes.PARTIES,
+      icon: <FlagIcon className="size-8 text-txt-danger" />,
+    },
+    {
+      title: t("explore.elections.title", { ns: "common" }),
+      description: t("explore.elections.description", { ns: "common" }),
+      link: routes.ELECTIONS,
+      icon: <ClipboardDocumentCheckIcon className="size-8 text-txt-danger" />,
+    },
+    {
+      title: t("explore.byelections.title", { ns: "common" }),
+      description: t("explore.byelections.description", { ns: "common" }),
+      link: routes.BYELECTIONS,
+      icon: <BoltIcon className="size-8 text-txt-danger" />,
+    },
+    {
+      title: t("explore.redelineation.title", { ns: "common" }),
+      description: t("explore.redelineation.description", { ns: "common" }),
+      link: routes.REDELINEATION,
+      icon: <RedelineationIcon className="size-8 text-txt-danger" />,
+    },
   ];
 
   const { data, setData } = useData({
@@ -294,9 +345,16 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("latest.title", { ns: "home" })}
           </h2>
-          <div className="grid max-w-[1000px] grid-cols-3 gap-8">
+          <div className="grid max-w-[1000px] gap-8 lg:grid-cols-3">
             {latest.map((item) => (
-              <div className="group cursor-pointer overflow-hidden rounded-lg border bg-bg-dialog">
+              <div
+                className="group cursor-pointer overflow-hidden rounded-lg border bg-bg-dialog hover:border-bg-danger-200 hover:ring-[3px] hover:ring-fr-danger"
+                onClick={() =>
+                  item.url.startsWith("/")
+                    ? push(item.url)
+                    : window.open(item.url, "_blank")
+                }
+              >
                 <div className="relative h-[250px] w-[312px]">
                   <ImageTheme
                     lightSrc={item.img_light}
@@ -311,10 +369,44 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                     <ArrowUpRightIcon className="size-5 shrink-0 text-txt-black-500 opacity-0 transition-[opacity_transform] duration-0 group-hover:translate-x-1 group-hover:opacity-100 group-hover:duration-300" />
                   </p>
                   <div className="relative overflow-hidden">
-                    <p className="text-body-sm text-txt-black-500 transition-transform group-hover:translate-y-6">
+                    <p className="text-body-sm text-txt-black-500 transition-transform group-hover:-translate-y-full">
                       {DateTime.fromISO(item.date).toFormat("d MMM yyyy")}
                     </p>
-                    <p className="absolute -bottom-6 text-body-sm font-medium text-txt-danger transition-transform group-hover:-translate-y-6 group-hover:duration-300">
+                    <p className="absolute inset-x-0 bottom-0 translate-y-full text-body-sm font-medium text-txt-danger transition-transform group-hover:translate-y-0 group-hover:duration-300">
+                      {t("latest.click_to_explore", { ns: "home" })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionGrid>
+        <SectionGrid className="gap-12 py-16">
+          <h2 className="text-center font-poppins text-2xl font-semibold">
+            {t("explore.title", { ns: "home" })}
+          </h2>
+          <div className="grid max-w-[1000px] gap-8 lg:grid-cols-3">
+            {DASHBOARDS.map((item) => (
+              <div
+                className="group cursor-pointer overflow-hidden rounded-lg bg-bg-dialog text-center"
+                onClick={() => push(item.link)}
+              >
+                <div className="flex flex-col items-center gap-4 p-4.5">
+                  <div className="flex size-[54px] items-center justify-center rounded-md bg-bg-danger-100">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <p className="text-body-md font-semibold">{item.title}</p>
+                    <p className="text-body-sm text-txt-black-500">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  <div className="relative w-full overflow-hidden">
+                    <p className="invisible text-body-sm font-medium">
+                      {t("latest.click_to_explore", { ns: "home" })}
+                    </p>
+                    <p className="absolute inset-x-0 bottom-0 translate-y-full whitespace-nowrap text-body-sm font-medium text-txt-danger transition-transform group-hover:translate-y-0 group-hover:duration-300">
                       {t("latest.click_to_explore", { ns: "home" })}
                     </p>
                   </div>

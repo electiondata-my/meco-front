@@ -74,6 +74,7 @@ export const getStaticProps: GetStaticProps = withi18n(
           selection: [],
           candidates: [],
           parties: [],
+          latest: [],
         },
       };
     }
