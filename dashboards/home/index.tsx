@@ -10,11 +10,10 @@ import { ElectionType, SeatOptions } from "@dashboards/types";
 import { useData } from "@hooks/useData";
 import { useLanguage } from "@hooks/useLanguage";
 import { useTranslation } from "@hooks/useTranslation";
-import { ComboOptionProp } from "@components/Combobox/option";
-import { OptionType } from "@lib/types";
+import { StateKeyByName } from "@lib/constants";
 import { routes } from "@lib/routes";
 import { clx } from "@lib/helpers";
-import { FunctionComponent } from "react";
+import { FunctionComponent, useMemo } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { ArrowRightIcon, ArrowUpRightIcon } from "@heroicons/react/20/solid";
@@ -51,6 +50,12 @@ type PartyOption = {
   type: string;
 };
 
+type ElectionOption = {
+  state: string;
+  election: string;
+  date: string;
+};
+
 type LatestOption = {
   title_en: string;
   title_bm: string;
@@ -64,6 +69,7 @@ interface HomeDashboardProps {
   selection: SeatOptions[];
   candidates: Record<"name" | "slug" | "c" | "w" | "l", string>[];
   parties: PartyOption[];
+  elections: ElectionOption[];
   latest: LatestOption[];
 }
 
@@ -71,48 +77,75 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
   selection,
   candidates,
   parties,
+  elections,
   latest,
 }) => {
-  const { t } = useTranslation(["common", "seats", "candidates", "parties"]);
+  const { t } = useTranslation([
+    "common",
+    "seats",
+    "candidates",
+    "parties",
+    "elections",
+  ]);
   const { language } = useLanguage();
   const { push } = useRouter();
   const isMalay = language?.startsWith("ms");
 
-  const SEAT_OPTIONS: Array<
-    Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption
-  > = selection.map(({ seat_name, slug, type }) => ({
-    label: seat_name.concat(` (${t(type)})`),
-    value: type + "_" + slug,
-    state: seat_name.split(", ")[1],
-    seat: seat_name.split(", ")[0],
-    type,
-  }));
-
-  const CANDIDATE_OPTIONS: Array<OptionType> = candidates.map(
-    ({ name, slug, c, w, l }) => ({
-      label: `${name} (W${w}, L${l})`,
-      value: slug,
-      contests: Number(c),
-      wins: Number(w),
-      losses: Number(l),
-    }),
+  const SEAT_OPTIONS = useMemo(
+    () =>
+      selection.map(({ seat_name, slug, type }) => ({
+        label: seat_name.concat(` (${t(type)})`),
+        value: type + "_" + slug,
+        state: seat_name.split(", ")[1],
+        seat: seat_name.split(", ")[0],
+        type,
+      })),
+    [selection, t],
   );
 
-  const PARTY_OPTIONS: Array<ComboOptionProp<PartyOption>> = parties
-    .slice()
-    .sort((a, b) => {
-      if (a.type !== b.type) return a.type === "party" ? -1 : 1;
-      return a.party.localeCompare(b.party);
-    })
-    .map((option) => ({
-      label: `${option.party} (${isMalay ? option.party_name_bm : option.party_name_en})`,
-      value: option.party_uid,
-      party_uid: option.party_uid,
-      party: option.party,
-      party_name_en: option.party_name_en,
-      party_name_bm: option.party_name_bm,
-      type: option.type,
-    }));
+  const CANDIDATE_OPTIONS = useMemo(
+    () =>
+      candidates.map(({ name, slug, c, w, l }) => ({
+        label: `${name} (W${w}, L${l})`,
+        value: slug,
+        contests: Number(c),
+        wins: Number(w),
+        losses: Number(l),
+      })),
+    [candidates],
+  );
+
+  const ELECTION_OPTIONS = useMemo(
+    () =>
+      elections.map((option) => ({
+        label: `${option.election} (${option.state})`,
+        value: option.election,
+        state: StateKeyByName[option.state] ?? option.state,
+        election: option.election,
+        date: option.date,
+      })),
+    [elections],
+  );
+
+  const PARTY_OPTIONS = useMemo(
+    () =>
+      parties
+        .slice()
+        .sort((a, b) => {
+          if (a.type !== b.type) return a.type === "party" ? -1 : 1;
+          return a.party.localeCompare(b.party);
+        })
+        .map((option) => ({
+          label: `${option.party} (${isMalay ? option.party_name_bm : option.party_name_en})`,
+          value: option.party_uid,
+          party_uid: option.party_uid,
+          party: option.party,
+          party_name_en: option.party_name_en,
+          party_name_bm: option.party_name_bm,
+          type: option.type,
+        })),
+    [parties, isMalay],
+  );
 
   const TABS = [
     t("tab.seats", { ns: "home" }),
@@ -165,6 +198,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
     seat_value: "",
     candidate_value: "",
     party_value: "",
+    election_value: "",
     loading: false,
   });
 
@@ -231,7 +265,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                     }
                     return (b.item.contests ?? 0) - (a.item.contests ?? 0);
                   },
-                  keys: ["label", "name"],
+                  keys: ["label"],
                 }}
                 selected={
                   data.candidate_value
@@ -248,6 +282,31 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                       setData("loading", false),
                     );
                   } else setData("candidate_value", "");
+                }}
+              />
+            )}
+            {data.tab_index === 3 && (
+              <ComboBox<ElectionOption>
+                placeholder={t("search_election", { ns: "elections" })}
+                options={ELECTION_OPTIONS}
+                config={{
+                  keys: ["label", "election", "state"],
+                }}
+                selected={
+                  data.election_value
+                    ? (ELECTION_OPTIONS.find(
+                        (e) => e.value === data.election_value,
+                      ) ?? null)
+                    : null
+                }
+                onChange={(selected) => {
+                  if (selected) {
+                    setData("loading", true);
+                    setData("election_value", selected.value);
+                    push(
+                      `${routes.ELECTIONS}/${selected.state}/${selected.election}`,
+                    ).finally(() => setData("loading", false));
+                  } else setData("election_value", "");
                 }}
               />
             )}
@@ -348,7 +407,8 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           <div className="grid max-w-[1000px] gap-8 lg:grid-cols-3">
             {latest.map((item) => (
               <div
-                className="group cursor-pointer overflow-hidden rounded-lg border bg-bg-dialog hover:border-bg-danger-200 hover:ring-[3px] hover:ring-fr-danger"
+                key={item.title_en}
+                className="group cursor-pointer overflow-hidden rounded-lg border bg-bg-dialog hover:border-bg-danger-200 hover:ring-[3px] hover:ring-fr-danger dark:border-otl-gray-200"
                 onClick={() => {
                   if (!item.url) return;
                   item.url.startsWith("/")
@@ -362,6 +422,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                     darkSrc={item.img_dark}
                     alt={isMalay ? item.title_bm : item.title_en}
                     fill={true}
+                    sizes="312px"
                   />
                 </div>
                 <div className="p-4.5">
@@ -389,7 +450,8 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           <div className="grid max-w-[1000px] gap-8 lg:grid-cols-3">
             {DASHBOARDS.map((item) => (
               <div
-                className="group cursor-pointer overflow-hidden rounded-lg bg-bg-dialog text-center"
+                key={item.link}
+                className="group cursor-pointer overflow-hidden rounded-lg bg-bg-white text-center"
                 onClick={() => push(item.link)}
               >
                 <div className="flex flex-col items-center gap-4 p-4.5">

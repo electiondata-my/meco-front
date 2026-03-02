@@ -95,6 +95,14 @@ export const CountryAndStates: Record<string, string> = (() => {
 })();
 
 /**
+ * Reverse dictionary of country/state name to code.
+ * @example StateKeyByName["Melaka"] -> "mlk"
+ */
+export const StateKeyByName: Record<string, string> = Object.fromEntries(
+  Object.entries(CountryAndStates).map(([k, v]) => [v, k]),
+);
+
+/**
  * Dictionary of color palette.
  * @example COLOR.PRIMARY -> "#2563EB"
  */
