@@ -24,7 +24,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["api.mapbox.com"],
+    domains: ["api.mapbox.com", "static.electiondata.my"],
   },
   publicRuntimeConfig: {
     APP_NAME: "ElectionData.MY",
