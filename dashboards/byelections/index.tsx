@@ -31,6 +31,7 @@ import { routes } from "@lib/routes";
 import { BaseResult } from "@dashboards/types";
 import { FunctionComponent, useEffect, useRef } from "react";
 import { useToast } from "@govtechmy/myds-react/hooks";
+import { useRouter } from "next/router";
 
 /**
  * By-Elections Dashboard
@@ -64,7 +65,18 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
   const { t, i18n } = useTranslation(["common", "byelections"]);
   const { cache } = useCache();
   const { toast } = useToast();
+  const router = useRouter();
   const scrollRef = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const toSlug = (s: ByElectionSeat) => {
+    const year = new Date(s.date).getFullYear();
+    const seatSlug = s.seat
+      .toLowerCase()
+      .replace(/,/g, "")
+      .replace(/\./g, "")
+      .replace(/\s+/g, "-");
+    return `${seatSlug}-${year}`;
+  };
 
   const getStateCode = (state: string) =>
     state in CountryAndStates
@@ -144,12 +156,23 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
   };
 
   useEffect(() => {
-    if (seats.length > 0) {
-      const first = seats[0];
-      setData("seat", first.seat);
-      fetchSeatResult(first.seat, first.date);
+    if (seats.length === 0 || !router.isReady) return;
+    const resultParam = router.query.result as string | undefined;
+    const initial = resultParam
+      ? (seats.find((s) => toSlug(s) === resultParam) ?? seats[0])
+      : seats[0];
+    setData("seat", initial.seat);
+    fetchSeatResult(initial.seat, initial.date);
+    if (resultParam) {
+      setTimeout(() => {
+        scrollRef.current[initial.seat]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "end",
+        });
+      }, 200);
     }
-  }, [seats]);
+  }, [seats, router.isReady]);
 
   const selectedSeat = seats.find((s) => s.seat === data.seat);
 
@@ -180,6 +203,11 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                     setData("seat", newFiltered[0].seat);
                     setData("search_seat", "");
                     fetchSeatResult(newFiltered[0].seat, newFiltered[0].date);
+                    router.replace(
+                      { query: { result: toSlug(newFiltered[0]) } },
+                      undefined,
+                      { shallow: true },
+                    );
                   }
                 }}
                 width="w-fit"
@@ -222,6 +250,11 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                             setData("seat", found.seat);
                             setData("search_seat", found.seat);
                             fetchSeatResult(found.seat, found.date);
+                            router.replace(
+                              { query: { result: toSlug(found) } },
+                              undefined,
+                              { shallow: true },
+                            );
                             scrollRef.current[found.seat]?.scrollIntoView({
                               behavior: "smooth",
                               block: "center",
@@ -269,6 +302,11 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                                 setData("seat", seat);
                                 setData("search_seat", seat);
                                 fetchSeatResult(seat, date);
+                                router.replace(
+                                  { query: { result: toSlug(_seat) } },
+                                  undefined,
+                                  { shallow: true },
+                                );
                               }}
                             >
                               <div className="flex w-full items-center justify-between gap-2">

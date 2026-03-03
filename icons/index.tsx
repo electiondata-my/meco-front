@@ -159,7 +159,7 @@ export function MenuIcon(props: ComponentProps<"svg">) {
 /**
  * Vote Outline Icon
  * @param className
- * @returns FlagIcon
+ * @returns VoteOutlineIcon
  */
 export const VoteOutlineIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
@@ -192,7 +192,7 @@ export const VoteOutlineIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
 /**
  * Redelineation Icon
  * @param className
- * @returns FlagIcon
+ * @returns RedelineationIcon
  */
 export const RedelineationIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
@@ -226,7 +226,7 @@ export const RedelineationIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
 /**
  * Seats Icon
  * @param className
- * @returns FlagIcon
+ * @returns SeatsIcon
  */
 export const SeatsIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
@@ -281,7 +281,7 @@ export const SeatsIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
 /**
  * Light Bulb Icon
  * @param className
- * @returns FlagIcon
+ * @returns LightBulbIcon
  */
 export const LightBulbIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
   props,
@@ -337,6 +337,69 @@ export const LightBulbIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
         r="6.6"
         stroke="currentColor"
         strokeWidth="2"
+      />
+    </svg>
+  );
+};
+
+/**
+ * Search Check Icon
+ * @param className
+ * @returns SearchCheckIcon
+ */
+export const SearchCheckIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
+  props,
+) => {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M27.5999 27.5999L21.5999 21.5999M4.3999 14.3999C4.3999 8.87705 8.87705 4.3999 14.3999 4.3999C19.9228 4.3999 24.3999 8.87705 24.3999 14.3999C24.3999 19.9228 19.9228 24.3999 14.3999 24.3999C8.87705 24.3999 4.3999 19.9228 4.3999 14.3999Z"
+        stroke="#6B7280"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10.6001 15.2495L12.3623 17.2492C12.7854 17.7294 13.5487 17.6785 13.9044 17.1464L18.4001 10.4209"
+        stroke="#6B7280"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};
+
+/**
+ * Scale Icon
+ * @param className
+ * @returns ScaleIcon
+ */
+export const ScaleIcon: FunctionComponent<SVGProps<SVGSVGElement>> = (
+  props,
+) => {
+  return (
+    <svg
+      width="32"
+      height="32"
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M25.6087 8.02227L22.2174 19.1334M25.6087 8.02227L29 19.1334M25.6087 8.02227L16 6.91116M22.2174 19.1334H29M22.2174 19.1334C22.4058 19.8741 23.3478 21.3556 25.6087 21.3556C27.8696 21.3556 28.8116 19.8741 29 19.1334M6.3913 8.02227L3 19.1334M6.3913 8.02227L9.78261 19.1334M6.3913 8.02227L16 6.91116M3 19.1334H9.78261M3 19.1334C3.18841 19.8741 4.13043 21.3556 6.3913 21.3556C8.65217 21.3556 9.5942 19.8741 9.78261 19.1334M16 6.91116V22.4667M9.78261 25.8C9.78261 24.5728 12.5662 23.5778 16 23.5778C19.4338 23.5778 22.2174 24.5728 22.2174 25.8H9.78261ZM17.6957 7.46672C17.6957 8.38719 16.9365 9.13338 16 9.13338C15.0635 9.13338 14.3043 8.38719 14.3043 7.46672C14.3043 6.54624 15.0635 5.80005 16 5.80005C16.9365 5.80005 17.6957 6.54624 17.6957 7.46672Z"
+        stroke="#6B7280"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
