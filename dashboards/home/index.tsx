@@ -117,14 +117,39 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
 
   const ELECTION_OPTIONS = useMemo(
     () =>
-      elections.map((option) => ({
-        label: `${option.election} (${option.state})`,
-        value: option.election,
-        state: StateKeyByName[option.state] ?? option.state,
-        election: option.election,
-        date: option.date,
-      })),
-    [elections],
+      elections
+        .filter(
+          (option) =>
+            !option.election.startsWith("GE") || option.state === "Malaysia",
+        )
+        .map((option) => {
+          const isGE = option.election.startsWith("GE");
+          const year = DateTime.fromISO(option.date).toFormat("yyyy");
+          const electionDisplay = isMalay
+            ? option.election.replace(/^GE/, "PRU").replace(/^SE/, "PRN")
+            : option.election;
+          const label = isGE
+            ? `${electionDisplay} (${year})`
+            : `${option.state} ${electionDisplay} (${year})`;
+          return {
+            label,
+            value: option.election,
+            state: StateKeyByName[option.state] ?? option.state,
+            stateName: option.state,
+            election: option.election,
+            date: option.date,
+            isGE,
+          };
+        })
+        .sort((a, b) => {
+          if (a.isGE !== b.isGE) return a.isGE ? -1 : 1;
+          if (!a.isGE) {
+            const stateCompare = a.stateName.localeCompare(b.stateName);
+            if (stateCompare !== 0) return stateCompare;
+          }
+          return a.election.localeCompare(b.election);
+        }),
+    [elections, isMalay],
   );
 
   const PARTY_OPTIONS = useMemo(
@@ -156,38 +181,38 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
 
   const DASHBOARDS = [
     {
-      title: t("explore.seats.title", { ns: "common" }),
-      description: t("explore.seats.description", { ns: "common" }),
+      title: t("explore.seats.title", { ns: "home" }),
+      description: t("explore.seats.description", { ns: "home" }),
       link: routes.SEATS,
       icon: <SeatsIcon className="size-8 text-txt-danger" />,
     },
     {
-      title: t("explore.candidates.title", { ns: "common" }),
-      description: t("explore.candidates.description", { ns: "common" }),
+      title: t("explore.candidates.title", { ns: "home" }),
+      description: t("explore.candidates.description", { ns: "home" }),
       link: routes.CANDIDATES,
       icon: <UserIcon className="size-8 text-txt-danger" />,
     },
     {
-      title: t("explore.parties.title", { ns: "common" }),
-      description: t("explore.parties.description", { ns: "common" }),
+      title: t("explore.parties.title", { ns: "home" }),
+      description: t("explore.parties.description", { ns: "home" }),
       link: routes.PARTIES,
       icon: <FlagIcon className="size-8 text-txt-danger" />,
     },
     {
-      title: t("explore.elections.title", { ns: "common" }),
-      description: t("explore.elections.description", { ns: "common" }),
-      link: routes.ELECTIONS,
-      icon: <ClipboardDocumentCheckIcon className="size-8 text-txt-danger" />,
-    },
-    {
-      title: t("explore.byelections.title", { ns: "common" }),
-      description: t("explore.byelections.description", { ns: "common" }),
+      title: t("explore.byelections.title", { ns: "home" }),
+      description: t("explore.byelections.description", { ns: "home" }),
       link: routes.BYELECTIONS,
       icon: <BoltIcon className="size-8 text-txt-danger" />,
     },
     {
-      title: t("explore.redelineation.title", { ns: "common" }),
-      description: t("explore.redelineation.description", { ns: "common" }),
+      title: t("explore.elections.title", { ns: "home" }),
+      description: t("explore.elections.description", { ns: "home" }),
+      link: routes.ELECTIONS,
+      icon: <ClipboardDocumentCheckIcon className="size-8 text-txt-danger" />,
+    },
+    {
+      title: t("explore.redelineation.title", { ns: "home" }),
+      description: t("explore.redelineation.description", { ns: "home" }),
       link: routes.REDELINEATION,
       icon: <RedelineationIcon className="size-8 text-txt-danger" />,
     },
@@ -270,8 +295,8 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 selected={
                   data.candidate_value
                     ? (CANDIDATE_OPTIONS.find(
-                        (e) => e.value === data.candidate_value,
-                      ) ?? null)
+                      (e) => e.value === data.candidate_value,
+                    ) ?? null)
                     : null
                 }
                 onChange={(selected) => {
@@ -287,16 +312,27 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             )}
             {data.tab_index === 3 && (
               <ComboBox<ElectionOption>
-                placeholder={t("search_election", { ns: "elections" })}
+                placeholder={t("search_election", { ns: "home" })}
                 options={ELECTION_OPTIONS}
                 config={{
-                  keys: ["label", "election", "state"],
+                  keys: ["label", "election", "stateName"],
+                  baseSort: (a: any, b: any) => {
+                    if (a.item.isGE !== b.item.isGE)
+                      return a.item.isGE ? -1 : 1;
+                    if (!a.item.isGE) {
+                      const stateCompare = (
+                        a.item.stateName ?? ""
+                      ).localeCompare(b.item.stateName ?? "");
+                      if (stateCompare !== 0) return stateCompare;
+                    }
+                    return a.item.election.localeCompare(b.item.election);
+                  },
                 }}
                 selected={
                   data.election_value
                     ? (ELECTION_OPTIONS.find(
-                        (e) => e.value === data.election_value,
-                      ) ?? null)
+                      (e) => e.value === data.election_value,
+                    ) ?? null)
                     : null
                 }
                 onChange={(selected) => {
@@ -382,8 +418,8 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 selected={
                   data.party_value
                     ? (PARTY_OPTIONS.find(
-                        (e) => e.value === data.party_value,
-                      ) ?? null)
+                      (e) => e.value === data.party_value,
+                    ) ?? null)
                     : null
                 }
                 onChange={(selected) => {
@@ -404,7 +440,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("latest.title", { ns: "home" })}
           </h2>
-          <div className="grid max-w-[1000px] gap-8 lg:grid-cols-3">
+          <div className="grid max-w-[1000px] grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-8">
             {latest.map((item) => (
               <div
                 key={item.title_en}
@@ -416,16 +452,16 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                     : window.open(item.url, "_blank");
                 }}
               >
-                <div className="relative h-[250px] w-[312px]">
+                <div className="relative aspect-[5/4] w-full">
                   <ImageTheme
                     lightSrc={item.img_light}
                     darkSrc={item.img_dark}
                     alt={isMalay ? item.title_bm : item.title_en}
                     fill={true}
-                    sizes="312px"
+                    sizes="(max-width: 1024px) 50vw, 312px"
                   />
                 </div>
-                <div className="p-4.5">
+                <div className="p-3 lg:p-4.5">
                   <p className="flex items-start gap-1 text-body-md font-semibold">
                     {isMalay ? item.title_bm : item.title_en}
                     <ArrowUpRightIcon className="size-5 shrink-0 text-txt-black-500 opacity-0 transition-[opacity_transform] duration-0 group-hover:translate-x-1 group-hover:opacity-100 group-hover:duration-300" />
@@ -443,29 +479,30 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             ))}
           </div>
         </SectionGrid>
-        <SectionGrid className="gap-12 py-16">
+        <SectionGrid className="gap-6 py-16 lg:gap-12">
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("explore.title", { ns: "home" })}
           </h2>
-          <div className="grid max-w-[1000px] gap-8 lg:grid-cols-3">
+          <div className="grid max-w-[1000px] divide-y divide-otl-gray-200 lg:gap-8 lg:divide-y-0 lg:grid-cols-3">
             {DASHBOARDS.map((item) => (
               <div
                 key={item.link}
-                className="group cursor-pointer overflow-hidden rounded-lg bg-bg-white text-center"
+                className="group cursor-pointer overflow-hidden lg:rounded-lg lg:bg-bg-white lg:text-center"
                 onClick={() => push(item.link)}
               >
-                <div className="flex flex-col items-center gap-4 p-4.5">
-                  <div className="flex size-[54px] items-center justify-center rounded-md bg-bg-danger-100">
+                <div className="flex flex-row items-center gap-4 py-3 lg:flex-col lg:items-center lg:gap-4 lg:p-4.5">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-bg-danger-100 lg:size-[54px]">
                     {item.icon}
                   </div>
-                  <div>
+                  <div className="flex-1 lg:flex-none">
                     <p className="text-body-md font-semibold">{item.title}</p>
                     <p className="text-body-sm text-txt-black-500">
                       {item.description}
                     </p>
                   </div>
+                  <ArrowRightIcon className="size-4 shrink-0 text-txt-black-500 lg:hidden" />
 
-                  <div className="relative w-full overflow-hidden">
+                  <div className="relative hidden w-full overflow-hidden lg:block">
                     <p className="invisible text-body-sm font-medium">
                       {t("latest.click_to_explore", { ns: "home" })}
                     </p>
@@ -479,14 +516,14 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           </div>
         </SectionGrid>
         {/* Election data you can trust */}
-        <SectionGrid className="gap-12 py-16 lg:pb-[120px]">
+        <SectionGrid className="gap-12 pb-16 pt-4 lg:pb-[120px]">
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("trust.title", { ns: "home" })}
           </h2>
-          <div className="flex w-full max-w-[1000px] flex-col gap-8 lg:flex-row">
+          <div className="flex w-full max-w-[1000px] flex-col gap-4 lg:flex-row lg:gap-8">
             {/* Card 1: Research */}
-            <div className="flex flex-1 flex-col gap-6 rounded-lg border border-otl-gray-200 bg-gradient-to-r from-bg-dialog to-bg-gray-50 p-[30px]">
-              <div className="relative flex size-[52px] shrink-0 items-center justify-center rounded-lg border border-otl-gray-200 shadow-button">
+            <div className="flex flex-1 flex-col gap-4 rounded-lg border border-otl-gray-200 bg-gradient-to-r from-bg-dialog to-bg-gray-50 p-5 lg:gap-6 lg:p-[30px]">
+              <div className="relative flex size-10 shrink-0 items-center justify-center rounded-lg border border-otl-gray-200 shadow-button lg:size-[52px]">
                 <SearchCheckIcon />
               </div>
               <div className="flex flex-col gap-2">
@@ -507,8 +544,8 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             </div>
 
             {/* Card 2: Neutral */}
-            <div className="flex flex-1 flex-col gap-6 rounded-lg border border-otl-gray-200 bg-gradient-to-r from-bg-dialog to-bg-gray-50 p-[30px]">
-              <div className="relative flex size-[52px] shrink-0 items-center justify-center rounded-lg border border-otl-gray-200 shadow-button">
+            <div className="flex flex-1 flex-col gap-4 rounded-lg border border-otl-gray-200 bg-gradient-to-r from-bg-dialog to-bg-gray-50 p-5 lg:gap-6 lg:p-[30px]">
+              <div className="relative flex size-10 shrink-0 items-center justify-center rounded-lg border border-otl-gray-200 shadow-button lg:size-[52px]">
                 <ScaleIcon />
               </div>
               <div className="flex flex-col gap-2">
@@ -519,6 +556,13 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                   {t("trust.neutral.description", { ns: "home" })}
                 </p>
               </div>
+              <Link
+                href="/about"
+                className="flex items-center gap-1 text-sm font-medium text-txt-danger hover:underline"
+              >
+                {t("trust.neutral.link", { ns: "home" })}
+                <ArrowRightIcon className="size-4" />
+              </Link>
             </div>
           </div>
         </SectionGrid>
