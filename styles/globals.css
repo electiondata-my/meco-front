@@ -13,6 +13,10 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* Reserve scrollbar space to prevent layout shift when switching languages */
+html {
+  scrollbar-gutter: stable;
+}
 
 /* MODULE CSS */
 /* @import "./dashboards/general.css";
