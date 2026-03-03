@@ -10,7 +10,7 @@ import { ElectionType, SeatOptions } from "@dashboards/types";
 import { useData } from "@hooks/useData";
 import { useLanguage } from "@hooks/useLanguage";
 import { useTranslation } from "@hooks/useTranslation";
-import { StateKeyByName } from "@lib/constants";
+import { StateKeyByName, STATES } from "@lib/constants";
 import { routes } from "@lib/routes";
 import { clx } from "@lib/helpers";
 import { FunctionComponent, useMemo } from "react";
@@ -30,6 +30,11 @@ import {
   SeatsIcon,
 } from "@icons/index";
 import { DateTime } from "luxon";
+
+const STATE_ORDER = STATES.reduce(
+  (acc, s, i) => ({ ...acc, [s.key]: i }),
+  {} as Record<string, number>,
+);
 
 /**
  * Home Dashboard
@@ -129,7 +134,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             ? option.election.replace(/^GE/, "PRU").replace(/^SE/, "PRN")
             : option.election;
           const label = isGE
-            ? `${electionDisplay} (${year})`
+            ? `Malaysia ${electionDisplay} (${year})`
             : `${option.state} ${electionDisplay} (${year})`;
           return {
             label,
@@ -142,12 +147,19 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           };
         })
         .sort((a, b) => {
-          if (a.isGE !== b.isGE) return a.isGE ? -1 : 1;
-          if (!a.isGE) {
-            const stateCompare = a.stateName.localeCompare(b.stateName);
-            if (stateCompare !== 0) return stateCompare;
+          // GE (Malaysia) first, reverse chronological
+          if (a.isGE && b.isGE) {
+            return (
+              new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
           }
-          return a.election.localeCompare(b.election);
+          if (a.isGE) return -1;
+          if (b.isGE) return 1;
+          // State elections: by state order, then reverse chronological within state
+          const orderA = STATE_ORDER[a.state] ?? 999;
+          const orderB = STATE_ORDER[b.state] ?? 999;
+          if (orderA !== orderB) return orderA - orderB;
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
         }),
     [elections, isMalay],
   );
@@ -317,15 +329,22 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 config={{
                   keys: ["label", "election", "stateName"],
                   baseSort: (a: any, b: any) => {
-                    if (a.item.isGE !== b.item.isGE)
-                      return a.item.isGE ? -1 : 1;
-                    if (!a.item.isGE) {
-                      const stateCompare = (
-                        a.item.stateName ?? ""
-                      ).localeCompare(b.item.stateName ?? "");
-                      if (stateCompare !== 0) return stateCompare;
-                    }
-                    return a.item.election.localeCompare(b.item.election);
+                    const x = a.item;
+                    const y = b.item;
+                    if (x.isGE && y.isGE)
+                      return (
+                        new Date(y.date).getTime() -
+                        new Date(x.date).getTime()
+                      );
+                    if (x.isGE) return -1;
+                    if (y.isGE) return 1;
+                    const orderA = STATE_ORDER[x.state] ?? 999;
+                    const orderB = STATE_ORDER[y.state] ?? 999;
+                    if (orderA !== orderB) return orderA - orderB;
+                    return (
+                      new Date(y.date).getTime() -
+                      new Date(x.date).getTime()
+                    );
                   },
                 }}
                 selected={
