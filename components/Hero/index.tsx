@@ -137,7 +137,7 @@ const Hero: FunctionComponent<HeroProps> = ({
             {description && Array.isArray(description) ? (
               <p
                 className={clx(
-                  "w-full text-center text-body-sm text-txt-black-700 lg:text-body-md",
+                  "w-full whitespace-pre-line text-center text-body-sm text-txt-black-700 lg:text-body-md",
                   description[1],
                 )}
                 data-testid="hero-description"

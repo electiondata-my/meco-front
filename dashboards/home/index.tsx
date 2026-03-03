@@ -10,7 +10,7 @@ import { ElectionType, SeatOptions } from "@dashboards/types";
 import { useData } from "@hooks/useData";
 import { useLanguage } from "@hooks/useLanguage";
 import { useTranslation } from "@hooks/useTranslation";
-import { StateKeyByName } from "@lib/constants";
+import { StateKeyByName, STATES } from "@lib/constants";
 import { routes } from "@lib/routes";
 import { clx } from "@lib/helpers";
 import { FunctionComponent, useMemo } from "react";
@@ -30,6 +30,11 @@ import {
   SeatsIcon,
 } from "@icons/index";
 import { DateTime } from "luxon";
+
+const STATE_ORDER = STATES.reduce(
+  (acc, s, i) => ({ ...acc, [s.key]: i }),
+  {} as Record<string, number>,
+);
 
 /**
  * Home Dashboard
@@ -129,7 +134,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             ? option.election.replace(/^GE/, "PRU").replace(/^SE/, "PRN")
             : option.election;
           const label = isGE
-            ? `${electionDisplay} (${year})`
+            ? `Malaysia ${electionDisplay} (${year})`
             : `${option.state} ${electionDisplay} (${year})`;
           return {
             label,
@@ -142,12 +147,19 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           };
         })
         .sort((a, b) => {
-          if (a.isGE !== b.isGE) return a.isGE ? -1 : 1;
-          if (!a.isGE) {
-            const stateCompare = a.stateName.localeCompare(b.stateName);
-            if (stateCompare !== 0) return stateCompare;
+          // GE (Malaysia) first, reverse chronological
+          if (a.isGE && b.isGE) {
+            return (
+              new Date(b.date).getTime() - new Date(a.date).getTime()
+            );
           }
-          return a.election.localeCompare(b.election);
+          if (a.isGE) return -1;
+          if (b.isGE) return 1;
+          // State elections: by state order, then reverse chronological within state
+          const orderA = STATE_ORDER[a.state] ?? 999;
+          const orderB = STATE_ORDER[b.state] ?? 999;
+          if (orderA !== orderB) return orderA - orderB;
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
         }),
     [elections, isMalay],
   );
@@ -317,15 +329,22 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 config={{
                   keys: ["label", "election", "stateName"],
                   baseSort: (a: any, b: any) => {
-                    if (a.item.isGE !== b.item.isGE)
-                      return a.item.isGE ? -1 : 1;
-                    if (!a.item.isGE) {
-                      const stateCompare = (
-                        a.item.stateName ?? ""
-                      ).localeCompare(b.item.stateName ?? "");
-                      if (stateCompare !== 0) return stateCompare;
-                    }
-                    return a.item.election.localeCompare(b.item.election);
+                    const x = a.item;
+                    const y = b.item;
+                    if (x.isGE && y.isGE)
+                      return (
+                        new Date(y.date).getTime() -
+                        new Date(x.date).getTime()
+                      );
+                    if (x.isGE) return -1;
+                    if (y.isGE) return 1;
+                    const orderA = STATE_ORDER[x.state] ?? 999;
+                    const orderB = STATE_ORDER[y.state] ?? 999;
+                    if (orderA !== orderB) return orderA - orderB;
+                    return (
+                      new Date(y.date).getTime() -
+                      new Date(x.date).getTime()
+                    );
                   },
                 }}
                 selected={
@@ -440,11 +459,11 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("latest.title", { ns: "home" })}
           </h2>
-          <div className="grid max-w-[1000px] grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-8">
+          <div className="grid w-full max-w-[1000px] grid-cols-2 gap-3 lg:grid-cols-[repeat(3,minmax(250px,1fr))] lg:gap-8">
             {latest.map((item) => (
               <div
                 key={item.title_en}
-                className="group cursor-pointer overflow-hidden rounded-lg border bg-bg-dialog hover:border-bg-danger-200 hover:ring-[3px] hover:ring-fr-danger dark:border-otl-gray-200"
+                className="group flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg border bg-bg-dialog hover:border-bg-danger-200 hover:ring-[3px] hover:ring-fr-danger dark:border-otl-gray-200"
                 onClick={() => {
                   if (!item.url) return;
                   item.url.startsWith("/")
@@ -452,7 +471,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                     : window.open(item.url, "_blank");
                 }}
               >
-                <div className="relative aspect-[5/4] w-full">
+                <div className="relative aspect-[1200/630] w-full shrink-0">
                   <ImageTheme
                     lightSrc={item.img_light}
                     darkSrc={item.img_dark}
@@ -461,8 +480,8 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                     sizes="(max-width: 1024px) 50vw, 312px"
                   />
                 </div>
-                <div className="p-3 lg:p-4.5">
-                  <p className="flex items-start gap-1 text-body-md font-semibold">
+                <div className="flex flex-1 flex-col gap-1 p-3 lg:p-4.5">
+                  <p className="line-clamp-2 flex items-start gap-1 text-body-md font-semibold">
                     {isMalay ? item.title_bm : item.title_en}
                     <ArrowUpRightIcon className="size-5 shrink-0 text-txt-black-500 opacity-0 transition-[opacity_transform] duration-0 group-hover:translate-x-1 group-hover:opacity-100 group-hover:duration-300" />
                   </p>
@@ -483,7 +502,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("explore.title", { ns: "home" })}
           </h2>
-          <div className="grid max-w-[1000px] divide-y divide-otl-gray-200 lg:gap-8 lg:divide-y-0 lg:grid-cols-3">
+          <div className="grid max-w-[1000px] divide-y divide-otl-gray-200 lg:divide-y-0 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-4">
             {DASHBOARDS.map((item) => (
               <div
                 key={item.link}
