@@ -51,13 +51,6 @@ const LayoutFooter = () => {
               >
                 Tindak Malaysia
               </Link>
-              <Link
-                target="_blank"
-                href="https://bersih.org"
-                className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
-              >
-                BERSIH
-              </Link>
             </div>
 
             {/* Col 2: Download + Docs */}
