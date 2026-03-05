@@ -46,10 +46,10 @@ const LayoutFooter = () => {
               </Link>
               <Link
                 target="_blank"
-                href="https://www.tindakmalaysia.org"
+                href="https://open.dosm.gov.my/dashboard/kawasanku"
                 className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
               >
-                Tindak Malaysia
+                {t("footer.kawasanku")}
               </Link>
             </div>
 
