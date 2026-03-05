@@ -1,727 +1,483 @@
-import { default as CatalogueCode, SampleCode } from "@charts/partials/code";
-import CatalogueEmbed, { EmbedInterface } from "@charts/partials/embed";
+// import CatalogueCode from "datagovmy-ui/charts/partials/code";
+// import { SampleCode } from "datagovmy-ui/charts/partials/code";
+import { useRouter } from "next/router";
 import {
-  At,
-  Card,
-  Container,
-  Dropdown,
-  Search,
-  Section,
-  Slider,
-  Tooltip,
-  Markdown,
-} from "@components/index";
-import { DocumentArrowDownIcon, EyeIcon } from "@heroicons/react/24/solid";
-import { useAnalytics } from "@hooks/useAnalytics";
-import { useFilter } from "@hooks/useFilter";
-import { useTranslation } from "@hooks/useTranslation";
-import { SHORT_PERIOD, SHORT_PERIOD_FORMAT } from "@lib/constants";
-import { CatalogueContext } from "@lib/contexts/catalogue";
-import { WindowProvider } from "@lib/contexts/window";
-import { clx, interpolate, numFormat, toDate } from "@lib/helpers";
-import {
-  METADATA_TABLE_SCHEMA,
-  UNIVERSAL_TABLE_SCHEMA,
-} from "@lib/schema/data-catalogue";
-import {
-  DCChartKeys,
-  DCConfig,
-  DownloadOption,
-  FilterDefault,
-  OptionType,
-} from "@lib/types";
-import sum from "lodash/sum";
-import dynamic from "next/dynamic";
-import Image from "next/image";
-import {
+  Dispatch,
   FunctionComponent,
-  ReactNode,
+  SetStateAction,
   useContext,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import DCMethodology from "./methodology";
+// import { DownloadCard } from "../Card";
+import DCMetadata from "./metadata";
+import DCChartsAndTable from "./charts-table";
+import { groupBy } from "lodash";
+import { DCDataViz, DCVariable } from "@lib/types";
+import Metadata from "@components/Metadata";
+import Container from "@components/Container";
+import Sidebar from "@components/Sidebar";
+import Section from "@components/Section";
+import SectionGrid from "@components/Section/section-grid";
+import At from "@components/At";
+import {
+  CatalogueProvider,
+  DatasetType,
+  CatalogueContext,
+} from "@lib/contexts/catalogue";
+import { recurDataMapping } from "@lib/helpers";
+import { useTranslation } from "@hooks/useTranslation";
+import { useFilter } from "@hooks/useFilter";
+import { useAnalytics } from "@hooks/useAnalytics";
+import { AnalyticsProvider, Meta } from "@lib/contexts/analytics";
 
 /**
  * Catalogue Show
  * @overview Status: Live
  */
 
-const Table = dynamic(() => import("@charts/table"), { ssr: false });
-const CatalogueTimeseries = dynamic(
-  () => import("@charts/partials/timeseries"),
-  {
-    ssr: false,
-  },
-);
-const CatalogueChoropleth = dynamic(
-  () => import("@charts/partials/choropleth"),
-  {
-    ssr: false,
-  },
-);
-const CatalogueGeoChoropleth = dynamic(
-  () => import("@charts/partials/geochoropleth"),
-  {
-    ssr: false,
-  },
-);
-const CatalogueScatter = dynamic(() => import("@charts/partials/scatter"), {
-  ssr: false,
-});
-const CatalogueMapPlot = dynamic(() => import("@charts/partials/mapplot"), {
-  ssr: false,
-});
-const CatalogueGeojson = dynamic(() => import("@charts/partials/geojson"), {
-  ssr: false,
-});
-const CatalogueBar = dynamic(() => import("@charts/partials/bar"), {
-  ssr: false,
-});
-const CataloguePyramid = dynamic(() => import("@charts/partials/pyramid"), {
-  ssr: false,
-});
-const CatalogueHeatmap = dynamic(() => import("@charts/partials/heatmap"), {
-  ssr: false,
-});
-const CatalogueLine = dynamic(() => import("@charts/partials/line"), {
-  ssr: false,
-});
-
-interface CatalogueShowProps {
-  options: string[];
+type CatalogueShowWrapperProps = {
+  meta: Meta;
   params: {
     id: string;
   };
-  config: DCConfig;
-  dataset: {
-    type: DCChartKeys;
-    chart: any;
-    table: Record<string, any>[];
-    meta: { title: string; desc: string; unique_id: string };
-  };
-  explanation: { caveat: string; methodology: string; publication?: string };
-  metadata: {
-    data_as_of: string;
-    url: {
-      csv?: string;
-      parquet?: string;
-      [key: string]: string | undefined;
+  data: DCVariable;
+  query: any;
+};
+
+const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
+  params,
+  data,
+  meta,
+  query,
+}) => {
+  const [selectedViz, setSelectedViz] = useState<DCDataViz>(
+    data.dataviz_set.find((item) => item.dataviz_id === query.visual) ??
+      data.dataviz_set.find((item) => item.chart_type === "TABLE") ??
+      data.dataviz_set[0],
+  );
+  const router = useRouter();
+
+  const sliderOptions = useMemo(() => {
+    if (!selectedViz.config.slider) {
+      return null;
+    }
+
+    const groupedData = groupBy(data.data, selectedViz.config.slider.key);
+
+    return Object.keys(groupedData).sort(
+      (a: string, b: string) => new Date(a).getTime() - new Date(b).getTime(),
+    );
+  }, [selectedViz]);
+
+  const slider = useMemo(() => {
+    if (!sliderOptions) return null;
+
+    return (
+      sliderOptions.find((date) => date === query.date_slider) ??
+      sliderOptions[sliderOptions.length - 1] ??
+      null
+    );
+  }, [sliderOptions, query.date_slider]);
+
+  const extractChartDataset = (
+    table_data: Record<string, any>[],
+    currentViz: DCDataViz,
+  ) => {
+    if (slider) {
+      const groupedData = groupBy(table_data, currentViz.config.slider?.key);
+      const set = Object.entries(currentViz?.config.format).map(
+        ([key, value]) => recurDataMapping(key, value, groupedData[slider]),
+      );
+      return {
+        ...Object.fromEntries(set.map((array) => [array[0][0], array[0][1]])),
+      };
+    }
+
+    const set = Object.entries(currentViz?.config.format).map(([key, value]) =>
+      recurDataMapping(key, value, table_data),
+    );
+    return {
+      ...Object.fromEntries(set.map((array) => [array[0][0], array[0][1]])),
     };
-    source: string[];
-    definitions: Array<{
-      id: number;
-      unique_id?: string;
-      name: string;
-      desc: string;
-      title: string;
-    }>;
-    description: string;
   };
-  urls: {
-    [key: string]: string;
+
+  const dataset: DatasetType = useMemo(() => {
+    return {
+      type: selectedViz.chart_type,
+      chart:
+        selectedViz.chart_type !== "TABLE"
+          ? extractChartDataset(data.data, selectedViz)
+          : {},
+      table: data.data,
+      meta: {
+        unique_id: data.id,
+        title: data.title,
+        desc: data.description,
+      },
+    };
+  }, [selectedViz, query, slider]);
+
+  return (
+    <AnalyticsProvider meta={meta}>
+      <Metadata
+        title={
+          selectedViz.chart_type !== "TABLE"
+            ? selectedViz.title
+            : dataset.meta.title
+        }
+        description={dataset.meta.desc.replace(/^(.*?)]/, "")}
+        keywords={""}
+      />
+      <CatalogueProvider
+        dataset={dataset}
+        urls={{
+          csv: data.link_csv,
+          parquet: data.link_parquet,
+        }}
+      >
+        <CatalogueShow
+          key={router.asPath}
+          params={params}
+          query={query}
+          data={data}
+          selectedViz={selectedViz}
+          setSelectedViz={setSelectedViz}
+          sliderOptions={sliderOptions}
+          slider={slider}
+        />
+      </CatalogueProvider>
+    </AnalyticsProvider>
+  );
+};
+
+export interface CatalogueShowProps {
+  params: {
+    id: string;
   };
-  translations: {
-    [key: string]: string;
-  };
-  catalogueId?: string;
+  data: DCVariable;
+  selectedViz: DCDataViz;
+  setSelectedViz: Dispatch<SetStateAction<DCDataViz>>;
+  slider: string | null;
+  query: any;
+  sliderOptions: Array<string> | null;
 }
 
 const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
-  options,
   params,
-  config,
-  dataset,
-  explanation,
-  metadata,
-  urls,
-  translations,
-  catalogueId,
+  data,
+  selectedViz,
+  setSelectedViz,
+  query,
+  sliderOptions,
+  slider,
 }) => {
   const { t, i18n } = useTranslation(["catalogue", "common"]);
-  const availableOptions: OptionType[] = options.map((value) => ({
-    label: t(value),
-    value: value,
-  }));
-  const [show, setShow] = useState<OptionType>(availableOptions[0]);
-  const { downloads } = useContext(CatalogueContext);
-  const _downloads = Object.values(downloads).flatMap((option) => option);
-  const embedRef = useRef<EmbedInterface>(null);
+  const { config, ...viz } = selectedViz;
+  const scrollRef = useRef<Record<string, HTMLElement | null>>({});
   const { filter, setFilter } = useFilter(
-    config.context,
+    Object.fromEntries([
+      ...data.dropdown.map((item) => [
+        item.name,
+        query[item.name]
+          ? item.options.find((opt) => query[item.name] === opt)
+            ? {
+                value: query[item.name],
+                label: data.translations[query[item.name]] ?? query[item.name],
+              }
+            : {
+                value: item.options[0],
+                label: data.translations[item.options[0]] ?? item.options[0],
+              }
+          : {
+              value: item.selected,
+              label: data.translations[item.selected] ?? item.selected,
+            },
+      ]),
+      [
+        "visual",
+        { value: selectedViz.dataviz_id, label: selectedViz.dataviz_id },
+      ],
+      Boolean(slider)
+        ? [
+            "date_slider",
+            {
+              value: slider,
+              label: slider,
+            },
+          ]
+        : [],
+    ]),
     { id: params.id },
     true,
   );
-  const { result, track } = useAnalytics(dataset);
+  const { downloads, dataset } = useContext(CatalogueContext);
+  const { result } = useAnalytics(dataset);
 
-  const renderChart = (): ReactNode | undefined => {
-    switch (dataset.type) {
-      case "TIMESERIES":
-      case "STACKED_AREA":
-      case "INTRADAY":
-        return (
-          <CatalogueTimeseries
-            translations={translations}
-            config={{
-              precision: config.precision,
-              range: filter?.range?.value || "INTRADAY",
-            }}
-          />
-        );
-      case "BAR":
-      case "HBAR":
-      case "STACKED_BAR":
-        return (
-          <WindowProvider>
-            <CatalogueBar config={config} translations={translations} />
-          </WindowProvider>
-        );
-      case "CHOROPLETH":
-        return <CatalogueChoropleth config={config} />;
-      case "GEOCHOROPLETH":
-        return <CatalogueGeoChoropleth config={config} />;
-      case "GEOPOINT":
-        return <CatalogueMapPlot />;
-      case "GEOJSON":
-        return <CatalogueGeojson config={config} />;
-      case "PYRAMID":
-        return <CataloguePyramid config={config} translations={translations} />;
-      case "HEATTABLE":
-        return <CatalogueHeatmap config={config} translations={translations} />;
-      case "SCATTER":
-        return (
-          <CatalogueScatter
-            className="mx-auto aspect-square w-full lg:h-[512px] lg:w-1/2"
-            translations={translations}
-          />
-        );
-      case "LINE":
-        return <CatalogueLine config={config} translations={translations} />;
-      default:
-        break;
-    }
-    return;
-  };
+  const [selectedEdition, setSelectedEdition] = useState<string>(
+    data.link_editions && data.link_editions.length > 0
+      ? data.link_editions[0]
+      : "",
+  );
 
-  const generateTableSchema = () => {
-    const columns = Array.isArray(dataset.table)
-      ? Object.keys(dataset.table[0])
-      : [];
-    switch (dataset.type) {
-      case "TIMESERIES":
-      case "STACKED_AREA":
-        return UNIVERSAL_TABLE_SCHEMA(
-          columns,
-          translations,
-          config.freeze,
-          (item, key) => {
-            if (key === "x")
-              return toDate(
-                item[key],
-                SHORT_PERIOD_FORMAT[
-                  filter.range.value as keyof typeof SHORT_PERIOD_FORMAT
-                ],
-                i18n.language,
-              );
-            else return item[key];
-          },
-        );
-      case "GEOPOINT":
-      case "TABLE":
-        return UNIVERSAL_TABLE_SCHEMA(
-          columns,
-          translations,
-          config.freeze,
-          (item, key) => item[key],
-        );
-      default:
-        return UNIVERSAL_TABLE_SCHEMA(columns, translations, config.freeze);
-    }
-  };
+  const getURL = (url: string, edition: string) =>
+    edition ? url.replace("YYYY-MM-DD", edition) : url;
+
+  const [urls, setURLs] = useState(
+    data.link_editions && data.link_editions.length > 0
+      ? {
+          csv: getURL(data.link_csv, selectedEdition),
+          parquet: getURL(data.link_parquet, selectedEdition),
+        }
+      : { csv: data.link_csv, parquet: data.link_parquet },
+  );
 
   return (
-    <div>
-      <Container className="mx-auto w-full pt-6 md:max-w-screen-md lg:max-w-screen-lg">
-        {/* Chart & Table */}
-        <Section
-          title={<h4 data-testid="catalogue-title">{dataset.meta.title}</h4>}
-          description={
-            <p
-              className="text-dim whitespace-pre-line text-base"
-              data-testid="catalogue-description"
-            >
-              {interpolate(
-                dataset.meta.desc.substring(dataset.meta.desc.indexOf("]") + 1),
-              )}
-            </p>
+    <Container className="min-h-screen">
+      <SectionGrid className="items-start">
+        <Sidebar
+          categories={Object.entries(
+            getSideBarCollection({
+              publications: Boolean(data.publication),
+              related_datasets: Boolean(data.related_datasets.length),
+            })[i18n.language],
+          ).map(([category, subcategory]) => [
+            category,
+            Object.keys(subcategory),
+          ])}
+          onSelect={(selected) => {
+            scrollRef.current[selected]?.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "end",
+            });
+          }}
+          mobileClassName="top-4"
+          initialSelected={
+            i18n.language === "en-GB" ? "Table & Charts" : "Jadual & Carta"
           }
-          className=""
-          date={metadata.data_as_of}
-          menu={
-            <>
-              <Dropdown
-                width="w-fit"
-                sublabel={<EyeIcon className="h-4 w-4" />}
-                selected={availableOptions.find((e) => e.value === show.value)}
-                options={availableOptions}
-                onChange={(e) => setShow(e)}
-              />
-              <Dropdown
-                width="w-fit"
-                anchor="right"
-                sublabel={<DocumentArrowDownIcon className="h-4 w-4" />}
-                placeholder={t("download")}
-                options={_downloads
-                  .map((item) => ({
-                    label: item.title as string,
-                    value: item.id,
-                  }))
-                  .concat({ label: t("embed"), value: "embed" })}
-                onChange={(e) => {
-                  // embed
-                  if (e.value === "embed") {
-                    embedRef.current?.open();
-                    return;
-                  }
-                  // downloads
-                  const action = _downloads.find(({ id }) => e.value === id);
-                  if (!action) return;
-                  return action.href();
-                }}
-              />
-            </>
+          sidebarTitle={
+            i18n.language === "en-GB" ? "On this page" : "Kandungan"
           }
         >
-          {/* Dataset Filters & Chart / Table */}
-          <div
-            className={clx(
-              "flex gap-3 pb-3",
-              config.options !== null ? "justify-between" : "justify-end",
-            )}
-          >
-            <div className={clx("flex gap-2")}>
-              {config?.options?.map((item: FilterDefault, index: number) => (
-                <Dropdown
-                  key={item.key}
-                  width="w-fit"
-                  anchor={index > 0 ? "right" : "left"}
-                  options={item.options.map((option) => ({
-                    label: translations[option] ?? option,
-                    value: option,
-                  }))}
-                  selected={filter[item.key]}
-                  onChange={(e) => setFilter(item.key, e)}
-                />
-              ))}
-            </div>
-          </div>
+          <div className="mx-auto flex-1 p-2 py-6 pt-16 md:max-w-screen-md lg:max-w-screen-lg lg:p-8 lg:pb-6">
+            {/* Chart & Table */}
+            {/* <DCChartsAndTable
+              scrollRef={scrollRef}
+              data={{
+                ...data,
+                link_csv: urls.csv,
+                link_parquet: urls.parquet,
+              }}
+              selectedViz={selectedViz}
+              setSelectedViz={setSelectedViz}
+              filter={filter}
+              setFilter={setFilter}
+              sliderOptions={sliderOptions}
+              slider={slider}
+            /> */}
 
-          {/* Chart */}
-          <div
-            className={clx(
-              show.value === "chart" ? "block" : "hidden",
-              "space-y-2",
-            )}
-          >
-            {renderChart()}
-          </div>
+            {/* Methodology */}
+            <DCMethodology
+              explanation={{
+                methodology: data.methodology,
+                caveat: data.caveat,
+                publication: data.publication,
+                related_datasets: data.related_datasets,
+              }}
+              isGUI={false}
+              scrollRef={scrollRef}
+            />
 
-          {/* Table */}
-          {dataset.table && (
-            <div
-              className={clx(
-                dataset.type !== "TABLE" &&
-                  "mx-auto max-h-[500px] overflow-auto",
-                show.value === "table" ? "block" : "hidden",
-              )}
+            {/* Metadata */}
+            {/* <DCMetadata
+              isGUI={false}
+              scrollRef={scrollRef}
+              metadata={{
+                description: data.description,
+                fields: data.fields,
+                last_updated: data.last_updated,
+                next_update: data.next_update,
+                data_source: data.data_source.map((source) =>
+                  t(`agencies:${source.toLowerCase()}.full`, {
+                    defaultValue: source,
+                  }),
+                ),
+                link_csv: urls.csv,
+                link_parquet: urls.parquet,
+                link_editions: data.link_editions,
+              }}
+              selectedEdition={selectedEdition}
+              setSelectedEdition={(edition) => {
+                setSelectedEdition(edition);
+                setURLs({
+                  csv: getURL(data.link_csv, edition),
+                  parquet: getURL(data.link_parquet, edition),
+                });
+              }}
+            /> */}
+            {/* Download */}
+            {/* <Section
+              title={t("download")}
+              ref={(ref) => {
+                scrollRef.current[
+                  i18n.language === "en-GB" ? "Download" : "Muat Turun"
+                ] = ref;
+              }}
+              className="dark:border-b-outlineHover-dark mx-auto border-b py-12"
             >
-              <Table
-                className={clx("table-default table-sticky-header")}
-                stripe={true}
-                responsive={dataset.type === "TABLE"}
-                data={dataset.table}
-                freeze={config.freeze}
-                precision={config.precision}
-                search={
-                  dataset.type === "TABLE"
-                    ? (onSearch) => (
-                        <Search
-                          className="w-full border-b lg:w-auto"
-                          onChange={(query) => onSearch(query ?? "")}
-                        />
-                      )
-                    : undefined
-                }
-                config={generateTableSchema()}
-                enablePagination={
-                  ["TABLE", "GEOPOINT"].includes(dataset.type) ? 15 : false
-                }
-                data-testid="catalogue-table"
-              />
-            </div>
-          )}
-
-          {/* Date Slider (optional) */}
-          {config.dates !== null && (
-            <Slider
-              type="single"
-              value={config.dates?.options.indexOf(
-                config.context[config.dates.key]?.value || config.dates.default,
-              )}
-              data={config.dates.options}
-              period={SHORT_PERIOD[config.dates.interval]}
-              onChange={(e) =>
-                config.dates !== null &&
-                setFilter(config.dates.key, config.dates.options[e])
-              }
-            />
-          )}
-
-          <CatalogueEmbed
-            uid={dataset.meta.unique_id}
-            ref={embedRef}
-            options={config.options}
-            defaultOption={filter}
-            translations={translations}
-          />
-
-          {/* Views / download count*/}
-          <p className="text-dim flex justify-end gap-2 py-6 text-sm">
-            <span>
-              {`${numFormat(result?.view_count ?? 0, "compact")} ${t("views", {
-                ns: "common",
-                count: result?.view_count ?? 0,
-              })}`}
-            </span>
-            <span>&middot;</span>
-            <span>
-              {`${numFormat(
-                sum([
-                  result?.download_csv,
-                  result?.download_parquet,
-                  result?.download_png,
-                  result?.download_svg,
-                ]) ?? 0,
-                "compact",
-              )} ${t("downloads", {
-                ns: "common",
-                count:
-                  sum([
-                    result?.download_csv,
-                    result?.download_parquet,
-                    result?.download_png,
-                    result?.download_svg,
-                  ]) ?? 0,
-              })}`}
-            </span>
-          </p>
-        </Section>
-
-        <div className="dark:border-b-outlineHover-dark space-y-8 border-b py-8 lg:py-12">
-          {/* How is this data produced? */}
-          <Section
-            title={t("header_1")}
-            className=""
-            description={
-              <Markdown
-                className="markdown"
-                data-testid="catalogue-methodology"
-              >
-                {explanation.methodology}
-              </Markdown>
-            }
-          />
-
-          {/* What caveats I should bear in mind when using this data? */}
-          <Section
-            title={t("header_2")}
-            className=""
-            description={
-              <Markdown
-                className="markdown"
-                data-testid="catalogue-methodology"
-              >
-                {explanation.caveat}
-              </Markdown>
-            }
-          />
-
-          {/* Publication(s) using this data */}
-          {Boolean(explanation.publication) && (
-            <Section
-              title={t("header_3")}
-              className=""
-              description={
-                <Markdown
-                  className="markdown"
-                  data-testid="catalogue-publication"
-                >
-                  {explanation.publication!}
-                </Markdown>
-              }
-            />
-          )}
-        </div>
-
-        {/* Metadata */}
-        <Section
-          title={"Metadata"}
-          className="dark:border-b-outlineHover-dark mx-auto border-b py-8 lg:py-12"
-        >
-          <Card className="bg-background dark:border-outlineHover-dark dark:bg-washed-dark p-6">
-            <div className="space-y-6">
-              {/* Dataset description */}
-              <div className="space-y-3">
-                <h5>{t("meta_desc")}</h5>
-                <p className="text-dim leading-relaxed">
-                  {interpolate(metadata.description)}
-                </p>
-              </div>
-              <div className="space-y-3">
-                {/* Variable definitions */}
-                <h5>{t("meta_def")}</h5>
-                {metadata.definitions?.length > 0 && (
+              <div className="space-y-5">
+                {downloads?.chart.length > 0 && (
                   <>
-                    <ul className="text-dim ml-6 list-outside list-disc md:hidden">
-                      {metadata.definitions?.map((item) => (
-                        <li key={item.title}>
-                          <span className="flex gap-x-1">
-                            {Boolean(item.unique_id) ? (
-                              <At href={`/data-catalogue/${item.unique_id}`}>
-                                {item.title}
-                              </At>
-                            ) : (
-                              item.title
-                            )}
-                            <Tooltip tip={interpolate(item.desc)} />
-                          </span>
-                        </li>
+                    <h5>{t("chart")}</h5>
+                    <div className="grid grid-cols-1 gap-4.5 md:grid-cols-2">
+                      {downloads?.chart.map((props) => (
+                        <DownloadCard
+                          key={`${dataset.meta.unique_id}_${props.id}`}
+                          views={
+                            result
+                              ? result[`download_${props.id as "png" | "svg"}`]
+                              : undefined
+                          }
+                          link_editions={data.link_editions}
+                          url={props.id === "csv" ? urls.csv : urls.parquet}
+                          {...props}
+                        />
                       ))}
-                    </ul>
-                    <div className="hidden md:block">
-                      <Table
-                        className="table-slate table-default-slate md:w-full"
-                        data={metadata.definitions.map((item: any) => {
-                          const raw = item.desc;
-                          const [type, definition] = [
-                            raw.substring(
-                              raw.indexOf("[") + 1,
-                              raw.indexOf("]"),
-                            ),
-                            raw.substring(raw.indexOf("]") + 1),
-                          ];
-
-                          return {
-                            id: item.id,
-                            uid: item.unique_id,
-                            variable: item.name,
-                            variable_name: item.title,
-                            data_type: type,
-                            definition: interpolate(definition),
-                          };
-                        })}
-                        config={METADATA_TABLE_SCHEMA(
-                          t,
-                          dataset.type === "TABLE",
-                        )}
-                      />
+                    </div>
+                  </>
+                )}
+                {downloads?.data.length > 0 && (
+                  <>
+                    <h5>Data</h5>
+                    <div className="grid grid-cols-1 gap-4.5 md:grid-cols-2">
+                      {downloads?.data.map((props) => (
+                        <DownloadCard
+                          key={`${dataset.meta.unique_id}_${props.id}`}
+                          views={
+                            result
+                              ? result[
+                                  `download_${props.id as "csv" | "parquet"}`
+                                ]
+                              : undefined
+                          }
+                          link_editions={data.link_editions}
+                          url={props.id === "csv" ? urls.csv : urls.parquet}
+                          {...props}
+                        />
+                      ))}
                     </div>
                   </>
                 )}
               </div>
+            </Section> */}
 
-              {/* Data Source */}
-              <div className="space-y-3">
-                <h5>{t("meta_source")}</h5>
-                <ul className="text-dim ml-6 list-outside list-disc">
-                  {metadata.source?.map((source) => (
-                    <li key={source}>{source}</li>
-                  ))}
-                </ul>
-              </div>
-              {/* URLs to dataset */}
-              <div className="space-y-3">
-                <h5>{t("meta_url")}</h5>
-                <ul className="text-dim ml-6 list-outside list-disc">
-                  {Object.entries(metadata.url).map(
-                    ([key, url]: [string, unknown]) =>
-                      url ? (
-                        <li key={url as string}>
-                          <a
-                            href={url as string}
-                            className="text-primary dark:text-primary-dark break-all [text-underline-position:from-font] hover:underline"
-                            onClick={() =>
-                              track(
-                                key === "link_geojson"
-                                  ? "csv"
-                                  : (key as "parquet" | "csv"),
-                              )
-                            }
-                          >
-                            {url as string}
-                          </a>
-                        </li>
-                      ) : undefined,
-                  )}
-                </ul>
-              </div>
-              {/* License */}
-              <div className="space-y-3">
-                <h5>{t("meta_license")}</h5>
-                <p className="text-dim">
-                  {t("license_text")}{" "}
-                  <a
-                    className="text-primary dark:text-primary-dark lowercase [text-underline-position:from-font] hover:underline"
-                    target="_blank"
-                    rel="noopener"
-                    href="https://creativecommons.org/licenses/by/4.0/"
-                  >
-                    {t("here")}.
-                  </a>
-                </p>
-              </div>
-            </div>
-          </Card>
-        </Section>
+            {/* Dataset Source Code */}
+            {/* <Section
+              title={t("code")}
+              ref={(ref) => {
+                scrollRef.current[
+                  i18n.language === "en-GB"
+                    ? "Programmatic Access: Full dataset"
+                    : "Akses Programatif: Dataset penuh"
+                ] = ref;
+              }}
+              description={t("code_desc")}
+              className="mx-auto w-full py-12"
+            >
+              <CatalogueCode
+                type={dataset.type}
+                url={
+                  urls.parquet ||
+                  urls[Object.keys(urls)[0] as "csv" | "parquet"]
+                }
+              />
+            </Section> */}
 
-        {/* Download */}
-        <Section
-          title={t("download")}
-          className="dark:border-b-outlineHover-dark mx-auto border-b py-12"
-        >
-          <div className="space-y-5">
-            {downloads?.chart.length > 0 && (
-              <>
-                <h5>{t("chart")}</h5>
-                <div className="grid grid-cols-1 gap-4.5 md:grid-cols-2">
-                  {downloads?.chart.map((props) => (
-                    <DownloadCard
-                      key={`${dataset.meta.unique_id}_${props.id}`}
-                      views={
-                        result
-                          ? result[`download_${props.id as "png" | "svg"}`]
-                          : undefined
-                      }
-                      {...props}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-            {downloads?.data.length > 0 && (
-              <>
-                <h5>Data</h5>
-                <div className="grid grid-cols-1 gap-4.5 md:grid-cols-2">
-                  {downloads?.data.map((props) => (
-                    <DownloadCard
-                      key={`${dataset.meta.unique_id}_${props.id}`}
-                      views={
-                        result
-                          ? result[`download_${props.id as "csv" | "parquet"}`]
-                          : undefined
-                      }
-                      {...props}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+            {/* API Request Code */}
+            {/* <Section
+                title={t("sample_query.section_title")}
+                ref={(ref) => {
+                  scrollRef.current[
+                    i18n.language === "en-GB"
+                      ? "Programmatic Access: Open API"
+                      : "Akses Programatif: Open API"
+                  ] = ref;
+                }}
+                description={
+                  <p>
+                    {t("sample_query.desc1")}
+                    <At
+                      className="link-dim text-base underline"
+                      href={`https://developer.data.gov.my${
+                        i18n.language === "en-GB" ? "" : "/ms"
+                      }/static-api/data-catalogue`}
+                      external
+                    >
+                      {t("sample_query.link1")}
+                    </At>
+                    .
+                  </p>
+                }
+                className="mx-auto w-full py-12"
+              >
+                <SampleCode
+                  catalogueId={data.id}
+                  url={
+                    urls.parquet ||
+                    urls[Object.keys(urls)[0] as "csv" | "parquet"]
+                  }
+                  route="data-catalogue"
+                />
+              </Section> */}
           </div>
-        </Section>
-
-        {/* Dataset Source Code */}
-        <Section
-          title={t("code")}
-          description={t("code_desc")}
-          className="mx-auto w-full py-12"
-        >
-          <CatalogueCode
-            type={dataset.type}
-            url={urls?.parquet || urls[Object.keys(urls)[0]]}
-          />
-        </Section>
-
-        {/* API Request Code */}
-        {config.exclude_openapi ? (
-          <Section
-            title={t("sample_query.section_title")}
-            description={t("sample_query.unavailable")}
-          />
-        ) : (
-          <Section
-            title={t("sample_query.section_title")}
-            description={
-              <>
-                {t("sample_query.desc1")}
-                <At className="link-dim text-base underline" href="/api-docs">
-                  {t("sample_query.link1")}
-                </At>
-                .
-              </>
-            }
-            className="mx-auto w-full py-12"
-          >
-            <SampleCode
-              catalogueId={catalogueId}
-              url={urls?.parquet || urls[Object.keys(urls)[0]]}
-            />
-          </Section>
-        )}
-      </Container>
-    </div>
-  );
-};
-interface DownloadCard extends DownloadOption {
-  views?: number;
-}
-
-const DownloadCard: FunctionComponent<DownloadCard> = ({
-  href,
-  image,
-  title,
-  description,
-  icon,
-  id,
-  views,
-}) => {
-  return (
-    <Card
-      onClick={href}
-      className="bg-slate-50 dark:border-zinc-700 dark:bg-zinc-800 p-4.5"
-    >
-      <div className="flex items-center gap-4.5">
-        {["svg", "png"].includes(id) ? (
-          <Image
-            src={image || ""}
-            className="aspect-video h-14 rounded border bg-white object-cover lg:h-16"
-            width={128}
-            height={64}
-            alt={title as string}
-          />
-        ) : (
-          <Image
-            height={64}
-            width={64}
-            src={image || ""}
-            className="object-contain"
-            alt={title as string}
-          />
-        )}
-        <div className="block flex-grow">
-          <p className="font-bold">{title}</p>
-          {description && (
-            <p className="text-zinc-500 text-sm">{description}</p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          {icon}
-          <p className="text-zinc-500 text-center text-xs">
-            {numFormat(views ?? 0, "compact")}
-          </p>
-        </div>
-      </div>
-    </Card>
+        </Sidebar>
+      </SectionGrid>
+    </Container>
   );
 };
 
-export default CatalogueShow;
+const getSideBarCollection: (
+  item: Record<"publications" | "related_datasets", Boolean>,
+) => Record<string, Record<string, any>> = (item) => {
+  return {
+    "en-GB": {
+      "Table & Charts": {},
+      Metadata: {
+        Methodology: [],
+        Caveats: [],
+        ...(item.publications ? { Publications: [] } : {}),
+        ...(item.related_datasets ? { "Related Datasets": [] } : {}),
+        Variables: [],
+        "Next update": [],
+        License: [],
+      },
+      Download: {},
+      "Programmatic Access": {
+        "Full dataset": [],
+        "Open API": [],
+      },
+    },
+    "ms-MY": {
+      "Jadual & Carta": {},
+      Metadata: {
+        Metodologi: [],
+        Kaveat: [],
+        ...(item.publications ? { Penerbitan: [] } : {}),
+        ...(item.related_datasets ? { "Dataset Berkaitan": [] } : {}),
+        Pembolehubah: [],
+        "Kemaskini seterusnya": [],
+        Lesen: [],
+      },
+      "Muat Turun": {},
+      "Akses Programatif": {
+        "Dataset penuh": [],
+        "Open API": [],
+      },
+    },
+  };
+};
+
+export default CatalogueShowWrapper;

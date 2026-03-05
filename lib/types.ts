@@ -5,6 +5,8 @@ import type { NextPage } from "next";
 import { UserConfig } from "next-i18next";
 import type { AppProps } from "next/app";
 import type { JSX, ReactElement, ReactNode } from "react";
+import { SHORT_PERIOD } from "./constants";
+import { Periods } from "@charts/timeseries";
 
 export type AppPropsLayout = AppProps & {
   Component: Page;
@@ -106,8 +108,8 @@ export type DCChartKeys =
 export type DCPeriod = "YEARLY" | "QUARTERLY" | "MONTHLY" | "WEEKLY" | "DAILY";
 
 type BaseFilter = {
-  key: string;
-  default: string;
+  name: string;
+  selected: string;
   options: string[];
 };
 export type FilterDefault = BaseFilter & {
@@ -125,15 +127,6 @@ export type Precision = {
   columns?: Record<string, number>;
 };
 
-// DC Catalogue
-export type Catalogue = {
-  id: string;
-  title: string;
-  description?: string;
-  data_as_of?: string;
-};
-
-// Usage
 export type DCConfig = {
   context: {
     [key: string]: OptionType;
@@ -147,6 +140,94 @@ export type DCConfig = {
   line_variables?: Record<string, any>;
   exclude_openapi: boolean;
 };
+
+export type Catalogue = {
+  id: string;
+  title: string;
+  description?: string;
+  data_as_of?: string;
+  source?: Array<string>;
+  freq?: string;
+  geo?: string[];
+  demog?: string[];
+  begin?: number;
+  end?: number;
+};
+
+export type DCVariable = {
+  id: string;
+  exclude_openapi: boolean;
+  manual_trigger: string;
+  title: string;
+  description: string;
+  link_parquet: string;
+  link_csv: string;
+  link_preview: string;
+  link_editions?: string[];
+  frequency: keyof typeof SHORT_PERIOD;
+  data_source: Array<string>;
+  fields: Array<DCField>;
+  data_as_of: string;
+  last_updated: string;
+  next_update: string;
+  methodology: string;
+  caveat: string;
+  publication?: string;
+  translations: Record<string, string>;
+  related_datasets: Array<Pick<Catalogue, "id" | "title" | "description">>;
+  dataviz_set: Array<DCDataViz>;
+  dropdown: Array<DCFilter>;
+  data: Array<Record<string, unknown>>;
+};
+
+export type DCField = {
+  name: string;
+  title: string;
+  description: string;
+};
+
+export type DCDataViz = {
+  dataviz_id: string;
+  chart_type: DCChartKeys;
+  title: string;
+  config: {
+    format: Record<"x" | "y", string | Array<string>>;
+    precision: number;
+    filter_columns?: Array<string>;
+    freeze_columns?: Array<string>;
+    operation?: string;
+    colors?: string;
+    geojson?: string;
+    slider?: {
+      key: string;
+      interval: Exclude<
+        Periods,
+        false | "millisecond" | "second" | "minute" | "week"
+      >;
+    };
+  };
+};
+
+type DCDropdown = {
+  name: string;
+  selected: string;
+  options: Array<string>;
+};
+
+export interface IDataViz {
+  translation_key: string;
+  chart_type: DCChartKeys;
+  chart_filters: {
+    SLICE_BY: Array<string>;
+    precision: number;
+  };
+  chart_variables: {
+    parents: Array<string>;
+    operation: string;
+    format: { x: string; y: Array<string> | string };
+    config?: Record<string, unknown>;
+  };
+}
 
 /*************************** MIXPANEL ***************************** */
 

@@ -9,19 +9,30 @@ interface SidebarProps {
   children: ReactNode;
   categories: Array<[category: string, subcategory: string[]]>;
   onSelect: (index: string) => void;
-  mobileOpen: boolean;
-  setMobileOpen: (open: boolean) => void;
+  mobileOpen?: boolean;
+  setMobileOpen?: (open: boolean) => void;
+  mobileClassName?: string;
+  initialSelected?: string;
+  sidebarTitle?: string;
 }
 
 const Sidebar: FunctionComponent<SidebarProps> = ({
   children,
   categories,
   onSelect,
-  mobileOpen,
-  setMobileOpen,
+  mobileOpen: mobileOpenProp,
+  setMobileOpen: setMobileOpenProp,
+  mobileClassName,
+  initialSelected,
+  sidebarTitle,
 }) => {
   const { t } = useTranslation(["catalogue", "common"]);
-  const [selected, setSelected] = useState<string>(categories[0]?.[0] || "");
+  const [internalOpen, setInternalOpen] = useState<boolean>(false);
+  const mobileOpen = mobileOpenProp ?? internalOpen;
+  const setMobileOpen = setMobileOpenProp ?? setInternalOpen;
+  const [selected, setSelected] = useState<string>(
+    initialSelected ?? categories[0]?.[0] ?? "",
+  );
 
   return (
     <>
@@ -35,7 +46,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                   "w-full rounded-none text-start text-body-lg font-semibold leading-tight",
                 )}
               >
-                {t("category")}
+                {sidebarTitle ?? t("category")}
               </h5>
             </li>
             {categories.length > 0 ? (
@@ -112,13 +123,16 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                 <ButtonIcon>
                   <HamburgerMenuIcon />
                 </ButtonIcon>
-                {t("category")}
+                {sidebarTitle ?? t("category")}
               </Button>
             </div>
             <Transition
               show={mobileOpen}
               as="div"
-              className="shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r border-otl-gray-200 bg-bg-white p-4 shadow-context-menu sm:w-1/3"
+              className={clx(
+                "shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r border-otl-gray-200 bg-bg-white p-4 shadow-context-menu sm:w-1/3",
+                mobileClassName,
+              )}
               enter="transition-opacity duration-75"
               enterFrom="opacity-0"
               enterTo="opacity-100"
@@ -133,7 +147,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                       "w-full rounded-none text-start text-body-lg font-semibold leading-tight",
                     )}
                   >
-                    {t("category")}
+                    {sidebarTitle ?? t("category")}
                   </h5>
 
                   <Button

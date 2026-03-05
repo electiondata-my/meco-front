@@ -1,15 +1,4 @@
-import { GeoChoroplethRef } from "@charts/geochoropleth";
-import { useToast } from "@govtechmy/myds-react/hooks";
-import {
-  CloudArrowDownIcon,
-  DocumentArrowDownIcon,
-} from "@heroicons/react/24/outline";
-import { useAnalytics } from "@hooks/useAnalytics";
-import { useExport } from "@hooks/useExport";
-import { useTranslation } from "@hooks/useTranslation";
 import { download, exportAs } from "@lib/helpers";
-import { DCChartKeys, DownloadOptions } from "@lib/types";
-import { ChartTypeRegistry } from "chart.js";
 import {
   Dispatch,
   ForwardRefExoticComponent,
@@ -18,10 +7,29 @@ import {
   SetStateAction,
   createContext,
   forwardRef,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import {
+  CloudArrowDownIcon,
+  DocumentArrowDownIcon,
+} from "@heroicons/react/24/outline";
+import { toast } from "@components/Toast";
+import { ChartTypeRegistry } from "chart.js";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
+import { GeoChoroplethRef } from "@charts/geochoropleth";
+import { DCChartKeys, DownloadOptions } from "@lib/types";
+import { useTranslation } from "@hooks/useTranslation";
+import { useExport } from "@hooks/useExport";
+import { useAnalytics } from "@hooks/useAnalytics";
+
+export type DatasetType = {
+  type: DCChartKeys;
+  chart: any;
+  table: Record<string, any>[];
+  meta: { title: string; desc: string; unique_id: string };
+};
 
 interface CatalogueContextProps {
   bind: {
@@ -34,22 +42,12 @@ interface CatalogueContextProps {
     >;
     leaflet: MutableRefObject<GeoChoroplethRef | null>;
   };
-  dataset: {
-    type: DCChartKeys;
-    chart: any;
-    table: Record<string, any>[];
-    meta: { title: string; desc: string; unique_id: string };
-  };
+  dataset: DatasetType;
   downloads: DownloadOptions;
 }
 
 interface CatalogueProviderProps {
-  dataset: {
-    type: DCChartKeys;
-    chart: any;
-    table: Record<string, any>[];
-    meta: { title: string; desc: string; unique_id: string };
-  };
+  dataset: DatasetType;
   urls: {
     [key: string]: string;
   };
@@ -85,12 +83,56 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
     const leaflet = useRef<GeoChoroplethRef | null>(null);
     const { png } = useExport(Boolean(leaflet.current), dataset.meta.unique_id);
     const { track } = useAnalytics(dataset);
-    const { toast } = useToast();
+
+    const _dataset = useMemo(() => {
+      if (["TIMESERIES", "STACKED_AREA", "INTRADAY"].includes(dataset.type)) {
+        const { x, ...y } = dataset.chart as Record<
+          string,
+          (number | null)[]
+        > & { x: string[] };
+
+        let x_vals = x;
+        // trim null values off start and end
+        const trimmed_y = Object.fromEntries(
+          Object.entries(y).map(([key, y_values], index, ori_arr) => {
+            let y_vals = y_values;
+
+            // loop from start
+            for (let i = 0; i < y_values.length; i++) {
+              // check if y-value for each dataset is not null (y[i], y1[i], ...)
+              if (ori_arr.some(([_, y_vals]) => y_vals[i] !== null)) {
+                // slice previous null values and break loop
+                y_vals = y_vals.slice(i);
+                // only slice x-values for first dataset
+                if (index === 0) x_vals = x_vals.slice(i);
+                break;
+              }
+            }
+
+            // loop from end
+            for (let i = y_values.length - 1; i >= 0; i--) {
+              // check if y-value for each dataset is not null (y[i], y1[i], ...)
+              if (ori_arr.some(([_, y_vals]) => y_vals[i] !== null)) {
+                // slice null values and break loop
+                y_vals = y_vals.slice(0, i + 1);
+                // only slice x-values for first dataset
+                if (index === 0) x_vals = x_vals.slice(0, i + 1);
+                break;
+              }
+            }
+
+            return [key, y_vals];
+          }),
+        );
+
+        return { ...dataset, chart: { x: x_vals, ...trimmed_y } };
+      }
+      return dataset;
+    }, [dataset]);
 
     const _downloads = (() => {
       switch (dataset.type) {
         // Case: Leaflet based maps
-        case "GEOJSON":
         case "GEOCHOROPLETH":
           return {
             chart: [
@@ -137,6 +179,44 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
                     dataset.meta.unique_id.concat(".parquet"),
                   );
                   track("parquet");
+                },
+              },
+            ],
+          };
+        // Case: GEOJSON
+        case "GEOJSON":
+          return {
+            chart: [
+              {
+                id: "png",
+                image: png,
+                title: t("image.title"),
+                description: t("image.desc"),
+                icon: (
+                  <CloudArrowDownIcon className="text-dim h-6 min-w-[24px]" />
+                ),
+                href: () => {
+                  if (!leaflet) return;
+                  leaflet.current?.print(dataset.meta.unique_id.concat(".png"));
+                  track("png");
+                },
+              },
+            ],
+            data: [
+              {
+                id: "geojson",
+                image: "/static/images/icons/geojson.png",
+                title: t("geojson.title"),
+                description: t("geojson.desc"),
+                icon: (
+                  <DocumentArrowDownIcon className="text-dim h-6 min-w-[24px]" />
+                ),
+                href: () => {
+                  download(
+                    urls.link_geojson,
+                    dataset.meta.unique_id.concat(".geojson"),
+                  );
+                  track("parquet"); // TODO: Fix GeoJSON analytics
                 },
               },
             ],
@@ -214,14 +294,10 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
                     )
                     .then(() => track("svg"))
                     .catch((e) => {
-                      toast({
-                        variant: "error",
-                        title: t("toast.image_download_failure", {
-                          ns: "common",
-                        }),
-                        description: t("toast.try_again", { ns: "common" }),
-                      });
-
+                      toast.error(
+                        t("common:error.toast.image_download_failure"),
+                        t("common:error.toast.try_again"),
+                      );
                       console.error(e);
                     });
                 },
@@ -270,7 +346,7 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
             leaflet: leaflet,
           },
           downloads: _downloads,
-          dataset: dataset,
+          dataset: _dataset,
         }}
       >
         {children}
