@@ -11,10 +11,8 @@ import {
   useState,
 } from "react";
 import DCMethodology from "./methodology";
-// import { DownloadCard } from "../Card";
 import DCMetadata from "./metadata";
 import DCChartsAndTable from "./charts-table";
-import { groupBy } from "lodash";
 import { DCDataViz, DCVariable } from "@lib/types";
 import Metadata from "@components/Metadata";
 import Container from "@components/Container";
@@ -27,11 +25,11 @@ import {
   DatasetType,
   CatalogueContext,
 } from "@lib/contexts/catalogue";
-import { recurDataMapping } from "@lib/helpers";
 import { useTranslation } from "@hooks/useTranslation";
 import { useFilter } from "@hooks/useFilter";
 import { useAnalytics } from "@hooks/useAnalytics";
 import { AnalyticsProvider, Meta } from "@lib/contexts/analytics";
+import { DownloadCard } from "./card";
 
 /**
  * Catalogue Show
@@ -60,57 +58,10 @@ const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
   );
   const router = useRouter();
 
-  const sliderOptions = useMemo(() => {
-    if (!selectedViz.config.slider) {
-      return null;
-    }
-
-    const groupedData = groupBy(data.data, selectedViz.config.slider.key);
-
-    return Object.keys(groupedData).sort(
-      (a: string, b: string) => new Date(a).getTime() - new Date(b).getTime(),
-    );
-  }, [selectedViz]);
-
-  const slider = useMemo(() => {
-    if (!sliderOptions) return null;
-
-    return (
-      sliderOptions.find((date) => date === query.date_slider) ??
-      sliderOptions[sliderOptions.length - 1] ??
-      null
-    );
-  }, [sliderOptions, query.date_slider]);
-
-  const extractChartDataset = (
-    table_data: Record<string, any>[],
-    currentViz: DCDataViz,
-  ) => {
-    if (slider) {
-      const groupedData = groupBy(table_data, currentViz.config.slider?.key);
-      const set = Object.entries(currentViz?.config.format).map(
-        ([key, value]) => recurDataMapping(key, value, groupedData[slider]),
-      );
-      return {
-        ...Object.fromEntries(set.map((array) => [array[0][0], array[0][1]])),
-      };
-    }
-
-    const set = Object.entries(currentViz?.config.format).map(([key, value]) =>
-      recurDataMapping(key, value, table_data),
-    );
-    return {
-      ...Object.fromEntries(set.map((array) => [array[0][0], array[0][1]])),
-    };
-  };
-
   const dataset: DatasetType = useMemo(() => {
     return {
       type: selectedViz.chart_type,
-      chart:
-        selectedViz.chart_type !== "TABLE"
-          ? extractChartDataset(data.data, selectedViz)
-          : {},
+      chart: {},
       table: data.data,
       meta: {
         unique_id: data.id,
@@ -118,7 +69,7 @@ const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
         desc: data.description,
       },
     };
-  }, [selectedViz, query, slider]);
+  }, [selectedViz]);
 
   return (
     <AnalyticsProvider meta={meta}>
@@ -145,8 +96,6 @@ const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
           data={data}
           selectedViz={selectedViz}
           setSelectedViz={setSelectedViz}
-          sliderOptions={sliderOptions}
-          slider={slider}
         />
       </CatalogueProvider>
     </AnalyticsProvider>
@@ -160,9 +109,7 @@ export interface CatalogueShowProps {
   data: DCVariable;
   selectedViz: DCDataViz;
   setSelectedViz: Dispatch<SetStateAction<DCDataViz>>;
-  slider: string | null;
   query: any;
-  sliderOptions: Array<string> | null;
 }
 
 const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
@@ -171,8 +118,6 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
   selectedViz,
   setSelectedViz,
   query,
-  sliderOptions,
-  slider,
 }) => {
   const { t, i18n } = useTranslation(["catalogue", "common"]);
   const { config, ...viz } = selectedViz;
@@ -200,15 +145,6 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
         "visual",
         { value: selectedViz.dataviz_id, label: selectedViz.dataviz_id },
       ],
-      Boolean(slider)
-        ? [
-            "date_slider",
-            {
-              value: slider,
-              label: slider,
-            },
-          ]
-        : [],
     ]),
     { id: params.id },
     true,
@@ -264,7 +200,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
         >
           <div className="mx-auto flex-1 p-2 py-6 pt-16 md:max-w-screen-md lg:max-w-screen-lg lg:p-8 lg:pb-6">
             {/* Chart & Table */}
-            {/* <DCChartsAndTable
+            <DCChartsAndTable
               scrollRef={scrollRef}
               data={{
                 ...data,
@@ -275,9 +211,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
               setSelectedViz={setSelectedViz}
               filter={filter}
               setFilter={setFilter}
-              sliderOptions={sliderOptions}
-              slider={slider}
-            /> */}
+            />
 
             {/* Methodology */}
             <DCMethodology
@@ -314,14 +248,14 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
               }}
             />
             {/* Download */}
-            {/* <Section
+            <Section
               title={t("download")}
               ref={(ref) => {
                 scrollRef.current[
                   i18n.language === "en-GB" ? "Download" : "Muat Turun"
                 ] = ref;
               }}
-              className="dark:border-b-outlineHover-dark mx-auto border-b py-12"
+              className="mx-auto max-lg:py-8 lg:pb-16"
             >
               <div className="space-y-5">
                 {downloads?.chart.length > 0 && (
@@ -367,7 +301,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                   </>
                 )}
               </div>
-            </Section> */}
+            </Section>
 
             {/* Dataset Source Code */}
             {/* <Section
@@ -417,7 +351,7 @@ const getSideBarCollection: (
     "ms-MY": {
       "Jadual & Carta": {},
       Metadata: {
-        "Nota untuk Dataset": [],
+        "Nota untuk Dataset ini": [],
         Pembolehubah: [],
         "Kemaskini seterusnya": [],
         Lesen: [],

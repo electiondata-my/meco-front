@@ -44,7 +44,7 @@ const Section: FunctionComponent<SectionProps> = forwardRef(
               <div className="flex flex-col flex-wrap items-start gap-2 lg:flex-row lg:items-center lg:justify-between">
                 {title && typeof title === "string" ? <h4>{title}</h4> : title}
                 {date && date !== null && (
-                  <span className="text-zinc-500 text-right text-sm">
+                  <span className="text-right text-sm text-txt-black-500">
                     {t("common:data_of", { date: displayDate })}
                   </span>
                 )}

@@ -16,7 +16,7 @@ const DCMethodology: FunctionComponent<MethodologyProps> = ({
   const { i18n, t } = useTranslation(["catalogue", "common"]);
 
   return (
-    <div className="space-y-8 border-b py-8 lg:py-12">
+    <div className="space-y-8 max-lg:py-8 lg:pb-16">
       <Section
         title={t("header_4")} // Notes on this dataset
         ref={(ref) => {

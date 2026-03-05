@@ -49,7 +49,7 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
               : "Metadata: Pembolehubah"
           ] = ref;
         }}
-        className="bo mx-auto border-b py-8 lg:py-12"
+        className="mx-auto max-lg:py-8 lg:pb-16"
       >
         <Card className="p-6">
           <div className="space-y-6">
