@@ -342,7 +342,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           />
         </div>
       </div>
-      <Container className="gap-8 pt-4 pb-8 lg:gap-16 lg:pt-8 lg:pb-16">
+      <Container className="gap-8 pb-8 pt-4 lg:gap-16 lg:pb-16 lg:pt-8">
         <SectionGrid className="space-y-8 lg:space-y-10">
           {/* <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
             <span className="text-txt-danger">{SELECTED_SEATS?.seat}</span>
@@ -352,7 +352,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           </h2> */}
           <div className="space-y-3">
             <div className="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
-              {boundaries ? (
+              {boundaries?.polygons ? (
                 <Mapbox
                   type="map"
                   boundaries={boundaries}
