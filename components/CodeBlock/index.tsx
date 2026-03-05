@@ -90,7 +90,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
   });
 
   const [language, setLanguage] = useState<(typeof LANGUAGE_OPTIONS)[number]>(
-    languageOptions[0]
+    languageOptions[0],
   );
   const [copyText, setCopyText] = useState<string>("copy");
 
@@ -111,7 +111,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
       hljs.highlight(children[language.value] ?? "", {
         language: language.value,
       }).value,
-    [language, children]
+    [language, children],
   );
 
   const handleCopy = () => {
@@ -122,7 +122,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
     }, 1000);
   };
   return (
-    <div className="dark:border-zinc-700 bg-slate-50 dark:bg-[#121212] h-fit rounded-xl border">
+    <div className="h-fit rounded-xl border bg-bg-washed">
       <div className="border-slate-400 flex justify-between border-b border-opacity-20 p-1">
         <Dropdown
           className={clx(hidden ? "invisible" : "visible", "w-fit")}

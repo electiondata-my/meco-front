@@ -130,7 +130,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
               show={mobileOpen}
               as="div"
               className={clx(
-                "shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r border-otl-gray-200 bg-bg-white p-4 shadow-context-menu sm:w-1/3",
+                "shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r bg-bg-white p-4 shadow-context-menu sm:w-1/3",
                 mobileClassName,
               )}
               enter="transition-opacity duration-75"

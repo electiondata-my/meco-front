@@ -125,11 +125,11 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
           <>
             <Popover.Button
               className={clx(
-                "text-zinc-900 flex items-center gap-1.5 rounded-md px-3 py-1.5 text-start text-sm font-medium shadow-button dark:text-white",
-                "active:bg-slate-100 hover:dark:bg-zinc-800/50 active:dark:bg-zinc-800 dark:bg-zinc-900 select-none bg-white",
-                "border-slate-200 dark:border-zinc-800 hover:border-slate-400 hover:dark:border-zinc-700 border outline-none",
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-start text-sm font-medium text-txt-black-900 shadow-button",
+                "select-none bg-bg-white active:bg-bg-black-100",
+                "hover:border-otl-gray-400 border outline-none",
                 disabled &&
-                  "disabled:bg-slate-200 dark:disabled:bg-zinc-800 disabled:border-slate-200 dark:disabled:border-zinc-800 disabled:text-slate-400 dark:disabled:text-zinc-700 disabled:pointer-events-none disabled:cursor-not-allowed",
+                  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-otl-gray-200 disabled:text-txt-black-disabled",
                 className,
               )}
               disabled={disabled}
@@ -161,7 +161,7 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
                 )}
               >
                 <div>
-                  <div className="dark:border-zinc-800 dark:bg-zinc-900 sticky top-0 z-20 grid w-[250px] grid-cols-2 border-b bg-white px-4 py-3">
+                  <div className="sticky top-0 z-20 grid w-[250px] grid-cols-2 border-b bg-bg-white px-4 py-3">
                     <p className="text-zinc-500">
                       {t("begin")}:{" "}
                       <span className="text-zinc-900 dark:text-white">
@@ -175,7 +175,7 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
                       </span>
                     </p>
                   </div>
-                  <div className="dark:border-zinc-800 grid h-full grid-cols-2 overflow-auto border-b">
+                  <div className="grid h-full grid-cols-2 overflow-auto border-b">
                     <List
                       ref={startRef}
                       height={320}

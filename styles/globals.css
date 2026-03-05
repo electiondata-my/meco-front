@@ -18,6 +18,38 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* Default border color */
+*,
+::before,
+::after {
+  @apply border-otl-gray-200;
+}
+
+/* Heading base styles */
+h1 {
+  @apply font-poppins text-4xl font-bold leading-[54px] text-txt-black-900;
+}
+
+h2 {
+  @apply font-poppins text-3xl font-bold leading-[38px] text-txt-black-900;
+}
+
+h3 {
+  @apply font-poppins text-2xl font-bold text-txt-black-900;
+}
+
+h4 {
+  @apply font-poppins text-xl font-bold text-txt-black-900;
+}
+
+h5 {
+  @apply text-lg font-bold text-txt-black-900;
+}
+
+h6 {
+  @apply text-base font-semibold uppercase tracking-wider text-txt-black-500;
+}
+
 /* MODULE CSS */
 /* @import "./dashboards/general.css";
 @import "./dashboards/table.css";

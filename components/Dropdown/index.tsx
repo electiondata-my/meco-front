@@ -196,9 +196,9 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 shadow-button",
                 "text-start text-body-sm font-medium text-txt-black-900",
                 "select-none bg-bg-white active:bg-bg-black-100",
-                "border border-otl-gray-200 outline-none hover:border-bg-black-400 hover:dark:border-bg-black-700",
+                "border outline-none hover:border-bg-black-400",
                 disabled &&
-                  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-otl-gray-200 disabled:bg-otl-gray-200 disabled:text-txt-black-disabled dark:disabled:text-txt-black-700",
+                  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-otl-gray-200 disabled:text-txt-black-disabled",
                 width,
                 className,
               )}
@@ -273,7 +273,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
 
                 {/* Search - optional*/}
                 {enableSearch && (
-                  <div className="dark:border-zinc-700 border-b pt-1">
+                  <div className="border-b pt-1">
                     <Input
                       type="search"
                       icon={<MagnifyingGlassIcon className="h-4 w-4" />}
@@ -328,7 +328,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
                     onClick={() =>
                       multiple ? onChange([]) : onChange(undefined)
                     }
-                    className="hover:bg-slate-100 dark:hover:bg-zinc-800 dark:border-zinc-800 group relative flex w-full cursor-default select-none items-center gap-2 border-t py-3 pl-10 pr-4 text-txt-black-500 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="group relative flex w-full cursor-default select-none items-center gap-2 border-t py-3 pl-10 pr-4 text-txt-black-500 hover:bg-bg-black-100 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={Array.isArray(selected) && selected.length === 0}
                   >
                     <p>{t("common:clear")}</p>

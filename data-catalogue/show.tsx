@@ -283,17 +283,12 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             <DCMethodology
               explanation={{
                 methodology: data.methodology,
-                caveat: data.caveat,
-                publication: data.publication,
-                related_datasets: data.related_datasets,
               }}
-              isGUI={false}
               scrollRef={scrollRef}
             />
 
             {/* Metadata */}
-            {/* <DCMetadata
-              isGUI={false}
+            <DCMetadata
               scrollRef={scrollRef}
               metadata={{
                 description: data.description,
@@ -317,7 +312,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                   parquet: getURL(data.link_parquet, edition),
                 });
               }}
-            /> */}
+            />
             {/* Download */}
             {/* <Section
               title={t("download")}
@@ -395,43 +390,6 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                 }
               />
             </Section> */}
-
-            {/* API Request Code */}
-            {/* <Section
-                title={t("sample_query.section_title")}
-                ref={(ref) => {
-                  scrollRef.current[
-                    i18n.language === "en-GB"
-                      ? "Programmatic Access: Open API"
-                      : "Akses Programatif: Open API"
-                  ] = ref;
-                }}
-                description={
-                  <p>
-                    {t("sample_query.desc1")}
-                    <At
-                      className="link-dim text-base underline"
-                      href={`https://developer.data.gov.my${
-                        i18n.language === "en-GB" ? "" : "/ms"
-                      }/static-api/data-catalogue`}
-                      external
-                    >
-                      {t("sample_query.link1")}
-                    </At>
-                    .
-                  </p>
-                }
-                className="mx-auto w-full py-12"
-              >
-                <SampleCode
-                  catalogueId={data.id}
-                  url={
-                    urls.parquet ||
-                    urls[Object.keys(urls)[0] as "csv" | "parquet"]
-                  }
-                  route="data-catalogue"
-                />
-              </Section> */}
           </div>
         </Sidebar>
       </SectionGrid>
@@ -446,10 +404,7 @@ const getSideBarCollection: (
     "en-GB": {
       "Table & Charts": {},
       Metadata: {
-        Methodology: [],
-        Caveats: [],
-        ...(item.publications ? { Publications: [] } : {}),
-        ...(item.related_datasets ? { "Related Datasets": [] } : {}),
+        "Notes on this Dataset": [],
         Variables: [],
         "Next update": [],
         License: [],
@@ -457,16 +412,12 @@ const getSideBarCollection: (
       Download: {},
       "Programmatic Access": {
         "Full dataset": [],
-        "Open API": [],
       },
     },
     "ms-MY": {
       "Jadual & Carta": {},
       Metadata: {
-        Metodologi: [],
-        Kaveat: [],
-        ...(item.publications ? { Penerbitan: [] } : {}),
-        ...(item.related_datasets ? { "Dataset Berkaitan": [] } : {}),
+        "Nota untuk Dataset": [],
         Pembolehubah: [],
         "Kemaskini seterusnya": [],
         Lesen: [],
@@ -474,7 +425,6 @@ const getSideBarCollection: (
       "Muat Turun": {},
       "Akses Programatif": {
         "Dataset penuh": [],
-        "Open API": [],
       },
     },
   };

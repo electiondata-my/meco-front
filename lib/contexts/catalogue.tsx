@@ -2,7 +2,7 @@ import { download, exportAs } from "@lib/helpers";
 import {
   Dispatch,
   ForwardRefExoticComponent,
-  MutableRefObject,
+  RefObject,
   ReactNode,
   SetStateAction,
   createContext,
@@ -40,7 +40,7 @@ interface CatalogueContextProps {
         unknown
       > | null>
     >;
-    leaflet: MutableRefObject<GeoChoroplethRef | null>;
+    leaflet: RefObject<GeoChoroplethRef | null>;
   };
   dataset: DatasetType;
   downloads: DownloadOptions;

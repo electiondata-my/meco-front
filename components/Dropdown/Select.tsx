@@ -51,23 +51,26 @@ const Select: FunctionComponent<SelectProps> = ({
 
   const recurOptions = (
     options: Record<string, OptionType[]> | OptionType[],
-    key?: string
+    key?: string,
   ): any => {
     if (isOptions(options)) {
       return (
-        <div
-          className="dark:border-zinc-700 relative w-full bg-white dark:bg-zinc-900"
-          key={key}
-        >
-          {key && <h5 className="bg-slate-100 sticky top-0 z-10 px-4 py-1.5 text-sm">{key}</h5>}
+        <div className="relative w-full bg-bg-white" key={key}>
+          {key && (
+            <h5 className="bg-slate-100 sticky top-0 z-10 px-4 py-1.5 text-sm">
+              {key}
+            </h5>
+          )}
           <div>
-            {options.map(option => (
+            {options.map((option) => (
               <Listbox.Option
                 key={option.value}
                 className={[
                   "hover:bg-slate-100 dark:hover:bg-zinc-800 relative flex cursor-default select-none items-center gap-2 py-2 pr-4 transition-all",
                   multiple ? "pl-10" : "pl-8",
-                  selected.some((item: OptionType) => item.value == option.value)
+                  selected.some(
+                    (item: OptionType) => item.value == option.value,
+                  )
                     ? "bg-slate-100 dark:bg-zinc-800"
                     : "bg-inherit",
                 ].join(" ")}
@@ -89,7 +92,9 @@ const Select: FunctionComponent<SelectProps> = ({
                       readOnly
                       checked={
                         selected &&
-                        (selected as OptionType[]).some(item => item.value === option.value)
+                        (selected as OptionType[]).some(
+                          (item) => item.value === option.value,
+                        )
                       }
                       className="border-slate-200 text-zinc-500 h-4 w-4 rounded focus:ring-0"
                     />
@@ -102,11 +107,13 @@ const Select: FunctionComponent<SelectProps> = ({
       );
     }
 
-    return Object.entries(options).map(([key, values]) => recurOptions(values, key));
+    return Object.entries(options).map(([key, values]) =>
+      recurOptions(values, key),
+    );
   };
 
   const isOptions = (
-    options: Record<string, OptionType[]> | OptionType[]
+    options: Record<string, OptionType[]> | OptionType[],
   ): options is OptionType[] => {
     return Array.isArray(options);
   };
@@ -116,32 +123,46 @@ const Select: FunctionComponent<SelectProps> = ({
       {label && <Label label={label} />}
       <Listbox
         value={selected}
-        onChange={(option: OptionType & OptionType[]) => !multiple && handleChange(option)}
+        onChange={(option: OptionType & OptionType[]) =>
+          !multiple && handleChange(option)
+        }
         multiple={multiple}
         disabled={disabled}
       >
         {({ open }) => (
           <>
-            <div className={clx("relative text-sm", disabled ? "cursor-not-allowed" : "")}>
+            <div
+              className={clx(
+                "relative text-sm",
+                disabled ? "cursor-not-allowed" : "",
+              )}
+            >
               <Listbox.Button
                 className={clx(
-                  "dark:border-zinc-800 shadow-button relative flex w-full flex-col items-start gap-1.5 rounded-md border py-1.5 pl-3 pr-8 text-left dark:bg-zinc-900 lg:w-fit lg:flex-row lg:items-center",
+                  "relative flex w-full flex-col items-start gap-1.5 rounded-md border bg-bg-white py-1.5 pl-3 pr-8 text-left shadow-button lg:w-fit lg:flex-row lg:items-center",
                   className,
                   disabled
                     ? "bg-slate-200 text-zinc-500 pointer-events-none"
-                    : "hover:border-slate-400 focus:outline-none focus-visible:ring-0"
+                    : "hover:border-slate-400 focus:outline-none focus-visible:ring-0",
                 )}
               >
                 <>
-                  {sublabel && <span className="text-zinc-500 truncate">{sublabel}</span>}
+                  {sublabel && (
+                    <span className="text-zinc-500 truncate">{sublabel}</span>
+                  )}
 
                   <span className={`block truncate ${label ? "" : ""}`}>
                     {multiple
-                      ? title ?? placeholder
-                      : (selected as OptionType)?.label || placeholder || "Select"}
+                      ? (title ?? placeholder)
+                      : (selected as OptionType)?.label ||
+                        placeholder ||
+                        "Select"}
                   </span>
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1.5">
-                    <ChevronDownIcon className="text-zinc-500 h-5 w-5" aria-hidden="true" />
+                    <ChevronDownIcon
+                      className="text-zinc-500 h-5 w-5"
+                      aria-hidden="true"
+                    />
                   </span>
                 </>
               </Listbox.Button>
@@ -154,8 +175,12 @@ const Select: FunctionComponent<SelectProps> = ({
               >
                 <Listbox.Options
                   className={clx(
-                    "shadow-floating absolute z-20 mt-1 max-h-80 w-full overflow-auto rounded-md ring-1 ring-zinc-900 ring-opacity-5 focus:outline-none lg:w-auto",
-                    anchor === "right" ? "right-0" : anchor === "left" ? "left-0" : anchor
+                    "shadow-floating ring-zinc-900 absolute z-20 mt-1 max-h-80 w-full overflow-auto rounded-md ring-1 ring-opacity-5 focus:outline-none lg:w-auto",
+                    anchor === "right"
+                      ? "right-0"
+                      : anchor === "left"
+                        ? "left-0"
+                        : anchor,
                   )}
                   static={!disabled}
                 >

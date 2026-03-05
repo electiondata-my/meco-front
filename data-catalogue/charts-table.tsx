@@ -1,7 +1,7 @@
 import {
   Dispatch,
   FunctionComponent,
-  MutableRefObject,
+  RefObject,
   ReactNode,
   SetStateAction,
   useContext,
@@ -81,7 +81,7 @@ const CatalogueLine = dynamic(() => import("datagovmy-ui/dc-charts/line"), {
 });
 
 type ChartTableProps = {
-  scrollRef: MutableRefObject<Record<string, HTMLElement | null>>;
+  scrollRef: RefObject<Record<string, HTMLElement | null>>;
   data: DCVariable;
   selectedViz: DCDataViz;
   setSelectedViz: Dispatch<SetStateAction<DCDataViz>>;
