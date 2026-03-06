@@ -8,7 +8,6 @@ import {
 import Dropdown from "@components/Dropdown";
 import Search from "@components/Search";
 import Section from "@components/Section";
-import { useTranslation } from "@hooks/useTranslation";
 import { interpolate } from "@lib/helpers";
 import { CatalogueContext } from "@lib/contexts/catalogue";
 import { DCDataViz, DCVariable } from "@lib/types";
@@ -33,7 +32,6 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
   filter,
   setFilter,
 }) => {
-  const { i18n } = useTranslation(["catalogue", "common"]);
   const { dataset } = useContext(CatalogueContext);
   const { config } = selectedViz;
 
@@ -58,9 +56,7 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
     <>
       <Section
         ref={(ref) => {
-          scrollRef.current[
-            i18n.language === "en-GB" ? "Table & Charts" : "Jadual & Carta"
-          ] = ref;
+          scrollRef.current["charts_table"] = ref;
         }}
         title={<h4 data-testid="catalogue-title">{dataset.meta.title}</h4>}
         description={

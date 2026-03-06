@@ -1,4 +1,4 @@
-import { GetServerSideProps, InferGetServerSidePropsType } from "next";
+import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { AxiosResponse } from "axios";
 import { DCVariable, Page } from "@lib/types";
 import { withi18n } from "@lib/decorators";
@@ -10,22 +10,23 @@ import DataCatalogueShow from "@data-catalogue/show";
 const CatalogueShow: Page = ({
   meta,
   params,
-  query,
   ...variable
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+}: InferGetStaticPropsType<typeof getStaticProps>) => {
   const data = variable as DCVariable;
-  return (
-    <DataCatalogueShow params={params} data={data} meta={meta} query={query} />
-  );
+  return <DataCatalogueShow params={params} data={data} meta={meta} />;
 };
 
-export const getServerSideProps: GetServerSideProps = withi18n(
+export const getStaticPaths: GetStaticPaths = () => ({
+  paths: [],
+  fallback: "blocking",
+});
+
+export const getStaticProps: GetStaticProps = withi18n(
   "catalogue",
-  async ({ locale, query, params }) => {
+  async ({ locale, params }) => {
     try {
       // const { data } = (await get(`/data-catalogue/${params?.id}`, {
       //   language: SHORT_LANG[locale as keyof typeof SHORT_LANG],
-      //   ...query,
       // })) as AxiosResponse<DCVariable>;
 
       return {
@@ -39,7 +40,6 @@ export const getServerSideProps: GetServerSideProps = withi18n(
               : "",
           },
           params: { ...params },
-          query: query,
           ...data,
         },
       };
@@ -47,9 +47,6 @@ export const getServerSideProps: GetServerSideProps = withi18n(
       console.error(error);
       return { notFound: true };
     }
-  },
-  {
-    cache_expiry: 21600, // 6 hrs
   },
 );
 

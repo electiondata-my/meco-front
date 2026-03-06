@@ -13,18 +13,14 @@ const DCMethodology: FunctionComponent<MethodologyProps> = ({
   scrollRef,
   explanation,
 }) => {
-  const { i18n, t } = useTranslation(["catalogue", "common"]);
+  const { t } = useTranslation(["catalogue", "common"]);
 
   return (
     <div className="space-y-8 max-lg:py-8 lg:pb-16">
       <Section
         title={t("header_4")} // Notes on this dataset
         ref={(ref) => {
-          scrollRef.current[
-            i18n.language === "en-GB"
-              ? "Metadata: Notes on this Dataset"
-              : "Metadata: Nota untuk Dataset ini"
-          ] = ref;
+          scrollRef.current["metadata: notes"] = ref;
         }}
         className=""
         description={

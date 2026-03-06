@@ -10,7 +10,12 @@ type SearchProps = {
   placeholder?: string;
 };
 
-const Search: FunctionComponent<SearchProps> = ({ query, onChange, className, placeholder }) => {
+const Search: FunctionComponent<SearchProps> = ({
+  query,
+  onChange,
+  className,
+  placeholder,
+}) => {
   const searchRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
@@ -38,12 +43,12 @@ const Search: FunctionComponent<SearchProps> = ({ query, onChange, className, pl
         type="search"
         placeholder={placeholder ?? t("common:placeholder.search")}
         value={query}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         autoComplete="off"
-        className="text-zinc-500 dark:border-zinc-700 block w-full border-0 bg-inherit pl-10 text-sm focus:ring-0 lg:text-base"
+        className="block w-full border-0 bg-inherit px-2 py-3 pl-10 text-sm text-txt-black-500 focus:outline-none focus:ring-0 lg:text-base"
       />
       <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-        <SearchIcon className="text-zinc-500 h-4 w-4" />
+        <SearchIcon className="h-4 w-4 text-txt-black-500" />
       </div>
     </div>
   );

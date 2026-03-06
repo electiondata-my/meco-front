@@ -6,6 +6,7 @@ import {
   FunctionComponent,
   SetStateAction,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -42,21 +43,27 @@ type CatalogueShowWrapperProps = {
     id: string;
   };
   data: DCVariable;
-  query: any;
 };
 
 const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
   params,
   data,
   meta,
-  query,
 }) => {
+  const router = useRouter();
   const [selectedViz, setSelectedViz] = useState<DCDataViz>(
-    data.dataviz_set.find((item) => item.dataviz_id === query.visual) ??
-      data.dataviz_set.find((item) => item.chart_type === "TABLE") ??
+    data.dataviz_set.find((item) => item.chart_type === "TABLE") ??
       data.dataviz_set[0],
   );
-  const router = useRouter();
+
+  // Sync selectedViz from ?visual= query param after hydration (SSG)
+  useEffect(() => {
+    if (!router.isReady || !router.query.visual) return;
+    const viz = data.dataviz_set.find(
+      (item) => item.dataviz_id === router.query.visual,
+    );
+    if (viz) setSelectedViz(viz);
+  }, [router.isReady]);
 
   const dataset: DatasetType = useMemo(() => {
     return {
@@ -92,7 +99,6 @@ const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
         <CatalogueShow
           key={router.asPath}
           params={params}
-          query={query}
           data={data}
           selectedViz={selectedViz}
           setSelectedViz={setSelectedViz}
@@ -109,7 +115,6 @@ export interface CatalogueShowProps {
   data: DCVariable;
   selectedViz: DCDataViz;
   setSelectedViz: Dispatch<SetStateAction<DCDataViz>>;
-  query: any;
 }
 
 const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
@@ -117,7 +122,6 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
   data,
   selectedViz,
   setSelectedViz,
-  query,
 }) => {
   const { t, i18n } = useTranslation(["catalogue", "common"]);
   const { config, ...viz } = selectedViz;
@@ -126,20 +130,10 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
     Object.fromEntries([
       ...data.dropdown.map((item) => [
         item.name,
-        query[item.name]
-          ? item.options.find((opt) => query[item.name] === opt)
-            ? {
-                value: query[item.name],
-                label: data.translations[query[item.name]] ?? query[item.name],
-              }
-            : {
-                value: item.options[0],
-                label: data.translations[item.options[0]] ?? item.options[0],
-              }
-          : {
-              value: item.selected,
-              label: data.translations[item.selected] ?? item.selected,
-            },
+        {
+          value: item.selected,
+          label: data.translations[item.selected] ?? item.selected,
+        },
       ]),
       [
         "visual",
@@ -174,15 +168,8 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
     <Container className="min-h-screen">
       <SectionGrid className="items-start">
         <Sidebar
-          categories={Object.entries(
-            getSideBarCollection({
-              publications: Boolean(data.publication),
-              related_datasets: Boolean(data.related_datasets.length),
-            })[i18n.language],
-          ).map(([category, subcategory]) => [
-            category,
-            Object.keys(subcategory),
-          ])}
+          categories={SIDEBAR_CATEGORIES}
+          labels={SIDEBAR_LABELS[i18n.language]}
           onSelect={(selected) => {
             scrollRef.current[selected]?.scrollIntoView({
               behavior: "smooth",
@@ -191,9 +178,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             });
           }}
           mobileClassName="top-4"
-          initialSelected={
-            i18n.language === "en-GB" ? "Table & Charts" : "Jadual & Carta"
-          }
+          initialSelected="charts_table"
           sidebarTitle={
             i18n.language === "en-GB" ? "On this page" : "Kandungan"
           }
@@ -251,9 +236,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             <Section
               title={t("download")}
               ref={(ref) => {
-                scrollRef.current[
-                  i18n.language === "en-GB" ? "Download" : "Muat Turun"
-                ] = ref;
+                scrollRef.current["download"] = ref;
               }}
               className="mx-auto max-lg:py-8 lg:pb-16"
             >
@@ -307,11 +290,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             {/* <Section
               title={t("code")}
               ref={(ref) => {
-                scrollRef.current[
-                  i18n.language === "en-GB"
-                    ? "Programmatic Access: Full dataset"
-                    : "Akses Programatif: Dataset penuh"
-                ] = ref;
+                scrollRef.current["programmatic_access: full_dataset"] = ref;
               }}
               description={t("code_desc")}
               className="mx-auto w-full py-12"
@@ -331,37 +310,36 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
   );
 };
 
-const getSideBarCollection: (
-  item: Record<"publications" | "related_datasets", Boolean>,
-) => Record<string, Record<string, any>> = (item) => {
-  return {
-    "en-GB": {
-      "Table & Charts": {},
-      Metadata: {
-        "Notes on this Dataset": [],
-        Variables: [],
-        "Next update": [],
-        License: [],
-      },
-      Download: {},
-      "Programmatic Access": {
-        "Full dataset": [],
-      },
-    },
-    "ms-MY": {
-      "Jadual & Carta": {},
-      Metadata: {
-        "Nota untuk Dataset ini": [],
-        Pembolehubah: [],
-        "Kemaskini seterusnya": [],
-        Lesen: [],
-      },
-      "Muat Turun": {},
-      "Akses Programatif": {
-        "Dataset penuh": [],
-      },
-    },
-  };
+const SIDEBAR_CATEGORIES: Array<[key: string, subcategories: string[]]> = [
+  ["charts_table", []],
+  ["metadata", ["notes", "variables", "next_update", "license"]],
+  ["download", []],
+  ["programmatic_access", ["full_dataset"]],
+];
+
+const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
+  "en-GB": {
+    charts_table: "Table & Charts",
+    metadata: "Metadata",
+    notes: "Notes on this Dataset",
+    variables: "Variables",
+    next_update: "Next update",
+    license: "License",
+    download: "Download",
+    programmatic_access: "Programmatic Access",
+    full_dataset: "Full dataset",
+  },
+  "ms-MY": {
+    charts_table: "Jadual & Carta",
+    metadata: "Metadata",
+    notes: "Nota untuk Dataset ini",
+    variables: "Pembolehubah",
+    next_update: "Kemaskini seterusnya",
+    license: "Lesen",
+    download: "Muat Turun",
+    programmatic_access: "Akses Programatif",
+    full_dataset: "Dataset penuh",
+  },
 };
 
 export default CatalogueShowWrapper;

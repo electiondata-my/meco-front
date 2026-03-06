@@ -43,11 +43,7 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
       <Section
         title={"Metadata"}
         ref={(ref) => {
-          scrollRef.current[
-            i18n.language === "en-GB"
-              ? "Metadata: Variables"
-              : "Metadata: Pembolehubah"
-          ] = ref;
+          scrollRef.current["metadata: variables"] = ref;
         }}
         className="mx-auto max-lg:py-8 lg:pb-16"
       >
@@ -118,11 +114,7 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
             <div
               className="space-y-3"
               ref={(ref) => {
-                scrollRef.current[
-                  i18n.language === "en-GB"
-                    ? "Metadata: Next update"
-                    : "Metadata: Kemaskini seterusnya"
-                ] = ref;
+                scrollRef.current["metadata: next_update"] = ref;
               }}
             >
               <h5>{t("next_update", { date: "" })}</h5>
@@ -203,11 +195,7 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
             <div
               className="space-y-3"
               ref={(ref) => {
-                scrollRef.current[
-                  i18n.language === "en-GB"
-                    ? "Metadata: License"
-                    : "Metadata: Lesen"
-                ] = ref;
+                scrollRef.current["metadata: license"] = ref;
               }}
             >
               <h5>{t("meta_license")}</h5>

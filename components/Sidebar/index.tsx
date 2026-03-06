@@ -8,6 +8,7 @@ import { CrossIcon, HamburgerMenuIcon } from "@govtechmy/myds-react/icon";
 interface SidebarProps {
   children: ReactNode;
   categories: Array<[category: string, subcategory: string[]]>;
+  labels?: Record<string, string>;
   onSelect: (index: string) => void;
   mobileOpen?: boolean;
   setMobileOpen?: (open: boolean) => void;
@@ -19,6 +20,7 @@ interface SidebarProps {
 const Sidebar: FunctionComponent<SidebarProps> = ({
   children,
   categories,
+  labels,
   onSelect,
   mobileOpen: mobileOpenProp,
   setMobileOpen: setMobileOpenProp,
@@ -33,6 +35,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
   const [selected, setSelected] = useState<string>(
     initialSelected ?? categories[0]?.[0] ?? "",
   );
+  const label = (key: string) => labels?.[key] ?? key;
 
   return (
     <>
@@ -74,12 +77,12 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                       );
                     }}
                   >
-                    {category}
+                    {label(category)}
                   </Button>
                   {subcategory.length > 0 && (
                     <ul className="space-y-1 px-1 pl-6">
                       {subcategory.map((title) => (
-                        <li key={title} title={title}>
+                        <li key={title} title={label(title)}>
                           <Button
                             variant={
                               selected === title
@@ -96,7 +99,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                               onSelect(`${category}: ${title}`);
                             }}
                           >
-                            {title}
+                            {label(title)}
                           </Button>
                         </li>
                       ))}
@@ -193,12 +196,12 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                           setMobileOpen(false);
                         }}
                       >
-                        {category}
+                        {label(category)}
                       </Button>
                       {subcategory.length > 0 && (
                         <ul className="space-y-1 px-1 pl-6">
                           {subcategory.map((title) => (
-                            <li key={title} title={title}>
+                            <li key={title} title={label(title)}>
                               <Button
                                 variant={
                                   selected === title
@@ -216,7 +219,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                                   setMobileOpen(false);
                                 }}
                               >
-                                {title}
+                                {label(title)}
                               </Button>
                             </li>
                           ))}
