@@ -182,6 +182,7 @@ const ElectionFullResults = ({
             partyNameDisplay={partyNameDisplay}
             simpleMobileTable
             scrollable
+            showVotingStats={false}
           />
           <Pagination />
         </DialogContent>
@@ -221,6 +222,7 @@ const ElectionFullResults = ({
           votes={data.results?.votes || []}
           partyNameDisplay={partyNameDisplay}
           simpleMobileTable
+          showVotingStats={false}
         />
         <DrawerFooter>
           <Pagination />
