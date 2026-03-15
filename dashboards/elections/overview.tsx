@@ -1,43 +1,26 @@
-import { Party, PartyResult } from "../types";
+import { PartyResult } from "../types";
 import {
   BuildingLibraryIcon,
   FlagIcon,
-  MapIcon,
   TableCellsIcon,
 } from "@heroicons/react/24/solid";
-import { generateSchema } from "@lib/schema/election-explorer";
-import {
-  ImageWithFallback,
-  List,
-  Panel,
-  Section,
-  SpinnerBox,
-  Tabs,
-} from "@components/index";
-import { CountryAndStates, PoliticalPartyColours } from "@lib/constants";
+import { List, Panel, Tabs } from "@components/index";
+import { CountryAndStates } from "@lib/constants";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import dynamic from "next/dynamic";
 import { FunctionComponent } from "react";
 import SectionGrid from "@components/Section/section-grid";
 
-
 /**
  * Election Explorer Dashboard
  * @overview Status: In-development
  */
 
-const ElectionTable = dynamic(
-  () => import("@components/Election/ElectionTable"),
-  {
-    ssr: false,
-  },
+const ElectionOverviewTable = dynamic(
+  () => import("@dashboards/elections/ElectionOverviewTable"),
+  { ssr: false },
 );
-const Choropleth = dynamic(() => import("@charts/choropleth"), {
-  loading: () => <SpinnerBox height="h-[400px] lg:h-[500px]" width="w-auto" />,
-  ssr: false,
-});
-const Waffle = dynamic(() => import("@charts/waffle"), { ssr: false });
 
 interface OverviewProps {
   choropleth: any;
@@ -49,7 +32,6 @@ interface OverviewProps {
 }
 
 const Overview: FunctionComponent<OverviewProps> = ({
-  choropleth,
   params,
   table,
 }) => {
@@ -65,35 +47,6 @@ const Overview: FunctionComponent<OverviewProps> = ({
       icon: <FlagIcon className="mr-1 h-5 w-5" />,
     },
   ];
-
-  const waffleDummy = [
-    {
-      id: "PH",
-      label: "PH",
-      value: 82,
-    },
-    {
-      id: "BN",
-      label: "BN",
-      value: 30,
-    },
-    {
-      id: "PN",
-      label: "PN",
-      value: 74,
-    },
-    {
-      id: "GPS",
-      label: "GPS",
-      value: 23,
-    },
-    {
-      id: "Others",
-      label: "Others",
-      value: 13,
-    },
-  ];
-  const waffleColours = ["#e2462f", "#000080", "#003152", "#FF9B0E", "#E2E8F0"];
 
   const { data, setData } = useData({
     tab_index: 0,
@@ -128,17 +81,12 @@ const Overview: FunctionComponent<OverviewProps> = ({
               </h5>
               <div className="flex w-full justify-start sm:w-auto">
                 <List
-                  options={[
-                    t("table", { ns: "elections" }),
-                    // t("map", { ns: "elections" }),
-                    // t("summary", { ns: "elections" }),
-                  ]}
+                  options={[t("table", { ns: "elections" })]}
                   icons={[
                     <TableCellsIcon
                       key="table_cell_icon"
                       className="mr-1 h-5 w-5"
                     />,
-                    // <MapIcon key="map_icon" className="mr-1 h-5 w-5" />,
                   ]}
                   current={data.tab_index}
                   onChange={(index) => setData("tab_index", index)}
@@ -150,57 +98,11 @@ const Overview: FunctionComponent<OverviewProps> = ({
                 name={t("table", { ns: "elections" })}
                 icon={<TableCellsIcon className="mr-1 h-5 w-5" />}
               >
-                <ElectionTable
+                <ElectionOverviewTable
+                  data={table as any}
                   isLoading={data.isLoading}
-                  className="pt-6"
-                  data={table}
-                  partyNameDisplay="short"
-                  simpleMobileTable
-                  scrollable
-                  columns={generateSchema<Party>([
-                    {
-                      key: "party",
-                      id: "party",
-                      header: t("party_name"),
-                    },
-                    {
-                      key: "seats_won",
-                      id: "seats_won",
-                      header: t("seats_won"),
-                    },
-                    {
-                      key: "votes",
-                      id: "votes",
-                      header: t("votes_won"),
-                    },
-                    {
-                      key: "seats_contested",
-                      id: "seats_contested",
-                      header: t("seats_contested"),
-                    },
-                  ])}
                 />
               </Panel>
-              {/*
-                  <Panel
-                    name={t("map", { ns: "elections" })}
-                    icon={<MapIcon className="mr-1 h-5 w-5" />}
-                  >
-                    <div className="bg-slate-50 dark:bg-[#121212] border-slate-200 dark:border-zinc-800 rounded-xl border static xl:py-4">
-                      <Choropleth
-                        className="h-[400px] w-auto lg:h-[500px]"
-                        type={
-                          (params.election ?? "GE-15").startsWith("S")
-                            ? "dun"
-                            : "parlimen"
-                        }
-                      />
-                    </div>
-                  </Panel>
-                  <Panel name={t("summary", { ns: "elections" })}>
-                    ...summary content...
-                  </Panel>
-                  */}
             </Tabs>
           </Tabs.Panel>
         ))}

@@ -142,30 +142,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
             onChange={(option: Party) =>
               fetchFullResult(option.election_name, option.state)
             }
-            columns={generateSchema<PartyResult[number]>([
-              {
-                key: "party",
-                id: "party",
-                header: t("party_name"),
-              },
-              {
-                key: "seats_won",
-                id: "seats_won",
-                header: t("seats_won"),
-              },
-              {
-                key: "votes",
-                id: "votes",
-                header: t("votes_won"),
-              },
-              {
-                key: "seats_contested",
-                id: "seats_contested",
-                header: t("seats_contested"),
-              },
-            ])}
-            partyNameDisplay="short"
-            highlighted={data.party_value ?? DEFAULT_PARTY}
           />
         );
       },
