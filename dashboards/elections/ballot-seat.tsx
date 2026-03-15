@@ -417,6 +417,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                     result="won"
                     votes={data.results.votes}
                     partyNameDisplay="short"
+                    compactMobileTable
                   />
                 </DrawerContent>
               </Drawer>

@@ -455,7 +455,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           </div>
         </SectionGrid>
 
-        <SectionGrid className="gap-12 py-16">
+        <SectionGrid className="gap-6 py-8 lg:gap-12 lg:py-16">
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("latest.title", { ns: "home" })}
           </h2>
@@ -498,7 +498,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             ))}
           </div>
         </SectionGrid>
-        <SectionGrid className="gap-6 py-16 lg:gap-12">
+        <SectionGrid className="gap-4 py-8 lg:gap-12 lg:py-16">
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("explore.title", { ns: "home" })}
           </h2>
@@ -535,7 +535,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           </div>
         </SectionGrid>
         {/* Election data you can trust */}
-        <SectionGrid className="gap-12 pb-16 pt-4 lg:pb-[120px]">
+        <SectionGrid className="gap-6 pb-8 pt-4 lg:gap-12 lg:pb-[120px]">
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("trust.title", { ns: "home" })}
           </h2>
