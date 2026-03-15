@@ -112,11 +112,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         ]
       : []),
     {
-      key: "seats_contested",
-      id: "seats_contested",
-      header: t("seats_contested"),
-    },
-    {
       key: "seats_won",
       id: "seats_won",
       header: t("seats_won"),
@@ -125,6 +120,11 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
       key: "votes",
       id: "votes",
       header: t("votes_won"),
+    },
+    {
+      key: "seats_contested",
+      id: "seats_contested",
+      header: t("seats_contested"),
     },
     {
       key: (item) => item,
@@ -148,8 +148,8 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                 header: t("party_name"),
               },
               {
-                key: "seats",
-                id: "seats",
+                key: "seats_won",
+                id: "seats_won",
                 header: t("seats_won"),
               },
               {
@@ -157,7 +157,13 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                 id: "votes",
                 header: t("votes_won"),
               },
+              {
+                key: "seats_contested",
+                id: "seats_contested",
+                header: t("seats_contested"),
+              },
             ])}
+            partyNameDisplay="short"
             highlighted={data.party_value ?? DEFAULT_PARTY}
           />
         );

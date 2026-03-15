@@ -31,6 +31,12 @@ export interface ElectionTableProps {
   percentOnlyColumns?: string[];
   /** When true, reduces left padding on first column (e.g. for modal/dialog contexts). */
   compactFirstColumn?: boolean;
+  /** When "short", party column shows party code + (coalition) instead of full translated name. */
+  partyNameDisplay?: "full" | "short";
+  /** When true, first column uses whitespace-nowrap so it sizes to content without wrapping. */
+  firstColumnNoWrap?: boolean;
+  /** When true, uses a smaller bar width for percentage columns (e.g. in modals). */
+  compactBars?: boolean;
 }
 
 type TableIds =
@@ -88,8 +94,12 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   hideNameInMobileParty = false,
   percentOnlyColumns = [],
   compactFirstColumn = false,
+  partyNameDisplay = "full",
+  firstColumnNoWrap = false,
+  compactBars = false,
 }) => {
   const { t, i18n } = useTranslation(["common", "election", "party"]);
+  const barSize = compactBars ? "w-[72px] h-[5px]" : "w-[100px] h-[5px]";
 
   const table = useReactTable({
     data,
@@ -131,12 +141,13 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "party": {
         const logoId = cell.row.original.party_uid;
         const coalition = cell.row.original.coalition;
-        const partyName = !table
-          .getAllColumns()
-          .map((col) => col.id)
-          .includes("full_result")
-          ? t(`party:${value}`)
-          : value;
+        const useShortName =
+          partyNameDisplay === "short" ||
+          table
+            .getAllColumns()
+            .map((col) => col.id)
+            .includes("full_result");
+        const partyName = useShortName ? value : t(`party:${value}`);
         const partyLogoSrc = logoId
           ? `/static/images/parties/${logoId}.png`
           : "/static/images/parties/_fallback_.png";
@@ -186,7 +197,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         return (
           <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
             <div>
-              <BarPerc hidden value={percent} size="w-[100px] h-[5px]" />
+              <BarPerc hidden value={percent} size={barSize} />
             </div>
             <p className="whitespace-nowrap">{`${value} / ${total} ${percent !== null
                 ? ` (${numFormat(percent, "compact", [1, 1])}%)`
@@ -201,7 +212,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         return (
           <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
             <div>
-              <BarPerc hidden value={seatsPerc} size="w-[100px] h-[5px]" />
+              <BarPerc hidden value={seatsPerc} size={barSize} />
             </div>
             <p className="whitespace-nowrap">{`${value} / ${seatsTotal}${seatsPerc !== null
                 ? ` (${numFormat(seatsPerc, "compact", [1, 1])}%)`
@@ -222,7 +233,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           return (
             <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
               <div className="lg:self-center">
-                <BarPerc hidden value={percent} size="w-[100px] h-[5px]" />
+                <BarPerc hidden value={percent} size={barSize} />
               </div>
               <span className="whitespace-nowrap">
                 {percent != null
@@ -235,7 +246,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         return (
           <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
             <div className="lg:self-center">
-              <BarPerc hidden value={percent} size="w-[100px] h-[5px]" />
+              <BarPerc hidden value={percent} size={barSize} />
             </div>
             <span className="whitespace-nowrap">
               {value !== null ? numFormat(value, "standard") : `—`}
@@ -266,10 +277,15 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "party": {
         const logoId = cell.row.original.party_uid;
         const coalition = cell.row.original.coalition;
+        const useShortName = partyNameDisplay === "short";
         const partyLabel =
           coalition && coalition !== "ALONE"
-            ? `${value} / ${coalition}`
-            : t(`party:${value}`);
+            ? useShortName
+              ? `${value} (${coalition})`
+              : `${value} / ${coalition}`
+            : useShortName
+              ? value
+              : t(`party:${value}`);
         const partyLogoSrc = logoId
           ? `/static/images/parties/${logoId}.png`
           : "/static/images/parties/_fallback_.png";
@@ -514,6 +530,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                       fullBorder && "border border-b-2 text-body-xs",
                       alternateTextColor && "text-txt-black-500",
                       headerClassName,
+                      isFirstCol && firstColumnNoWrap && "whitespace-nowrap",
                     )}
                   >
                     {header.isPlaceholder
@@ -569,6 +586,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                             ? "font-medium"
                             : "font-normal",
                           "py-[11px]",
+                          isFirstCol && firstColumnNoWrap && "whitespace-nowrap",
                           isFirstCol
                             ? compactFirstColumn
                               ? "pl-2 pr-3"
