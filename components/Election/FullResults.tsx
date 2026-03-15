@@ -221,6 +221,7 @@ const FullResults = <T extends Candidate | Seat>({
             result={isCandidate ? selected.result : undefined}
             votes={data.results?.votes ?? []}
             partyNameDisplay={partyNameDisplay}
+            headerClassName="!bg-bg-dialog"
           />
           <Pagination />
         </DialogContent>
@@ -264,6 +265,7 @@ const FullResults = <T extends Candidate | Seat>({
           result={isCandidate ? selected.result : undefined}
           votes={data.results?.votes || []}
           partyNameDisplay={partyNameDisplay}
+          compactMobileTable
         />
         <DrawerFooter>
           <Pagination />
