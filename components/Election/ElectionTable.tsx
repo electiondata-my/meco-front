@@ -639,9 +639,10 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                         <th
                           key={header.id}
                           className={clx(
-                            "sticky top-0 z-20 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
+                            "sticky top-0 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
+                            isFirst ? "left-0 z-30" : "z-20",
                             isFirst
-                              ? `left-0 ${compactFirstColumn ? "pl-2" : "pl-4"} pr-3`
+                              ? `${compactFirstColumn ? "pl-2" : "pl-4"} pr-3`
                               : "px-3",
                           )}
                         >

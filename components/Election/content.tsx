@@ -21,6 +21,7 @@ interface FullResultContentProps {
   partyNameDisplay?: "full" | "short";
   simpleMobileTable?: boolean;
   scrollable?: boolean;
+  showVotingStats?: boolean;
 }
 
 const FullResultContent = ({
@@ -34,6 +35,7 @@ const FullResultContent = ({
   partyNameDisplay,
   simpleMobileTable = false,
   scrollable = false,
+  showVotingStats = true,
 }: FullResultContentProps) => {
   const { t } = useTranslation("common");
 
@@ -58,7 +60,7 @@ const FullResultContent = ({
         />
       </div>
 
-      <div className="space-y-3 pt-4">
+      {showVotingStats && <div className="space-y-3 pt-4">
         <p className="font-bold">{t("voting_statistics")}</p>
         {votes && votes.length > 0 ? (
           <div className="flex flex-col gap-3 text-sm">
@@ -102,7 +104,7 @@ const FullResultContent = ({
               ))}
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 };
