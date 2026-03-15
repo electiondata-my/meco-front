@@ -22,6 +22,8 @@ interface FullResultContentProps {
   simpleMobileTable?: boolean;
   scrollable?: boolean;
   showVotingStats?: boolean;
+  compactMobileTable?: boolean;
+  headerClassName?: string;
 }
 
 const FullResultContent = ({
@@ -36,6 +38,8 @@ const FullResultContent = ({
   simpleMobileTable = false,
   scrollable = false,
   showVotingStats = true,
+  compactMobileTable = false,
+  headerClassName,
 }: FullResultContentProps) => {
   const { t } = useTranslation("common");
 
@@ -57,6 +61,8 @@ const FullResultContent = ({
           compactBars
           simpleMobileTable={simpleMobileTable}
           scrollable={scrollable}
+          compactMobileTable={compactMobileTable}
+          headerClassName={headerClassName}
         />
       </div>
 

@@ -41,6 +41,8 @@ export interface ElectionTableProps {
   simpleMobileTable?: boolean;
   /** When true, wraps the desktop table in its own fixed-height scroll container (max 14.5 rows). Mirrors the mobile simpleMobileTable scroll behaviour. */
   scrollable?: boolean;
+  /** When true, renders a compact 3-column table on mobile (Name | Party | Votes Won) for use in the FullResult modal drawer. */
+  compactMobileTable?: boolean;
 }
 
 type TableIds =
@@ -103,6 +105,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   compactBars = false,
   simpleMobileTable = false,
   scrollable = false,
+  compactMobileTable = false,
 }) => {
   const { t, i18n } = useTranslation(["common", "election", "party"]);
   const barSize = compactBars ? "w-[72px] h-[5px]" : "w-[100px] h-[5px]";
@@ -726,8 +729,107 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           </div>
         )}
 
+        {/* Mobile – compact 3-column table (FullResult modal drawer) */}
+        {compactMobileTable && (
+          <div className="md:hidden overflow-y-auto max-h-[498px] [&::-webkit-scrollbar]:hidden">
+            <table className="w-full text-left text-body-sm">
+              <thead>
+                <tr>
+                  <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white py-3 pl-2 pr-3 font-medium">
+                    {t("candidate_name")}
+                  </th>
+                  <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white px-3 py-3 text-center font-medium">
+                    {t("party_name")}
+                  </th>
+                  <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white px-3 py-3 font-medium">
+                    {t("votes_won")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((tableRow: any) => {
+                  const highlight = isHighlighted(tableRow);
+                  const row = tableRow.original;
+                  const logoSrc = row.party_uid
+                    ? `/static/images/parties/${row.party_uid}.png`
+                    : "/static/images/parties/_fallback_.png";
+                  const coalition = row.coalition;
+                  const useShortName = partyNameDisplay === "short";
+                  const partyLabel =
+                    coalition && coalition !== "ALONE"
+                      ? `${useShortName ? row.party : t(`party:${row.party}`)} (${coalition})`
+                      : useShortName
+                        ? row.party
+                        : t(`party:${row.party}`);
+                  const votesPerc = row.votes_perc;
+                  return (
+                    <tr
+                      key={tableRow.id}
+                      className={clx(
+                        "border-b border-otl-gray-200",
+                        highlight ? "bg-bg-black-50" : "bg-inherit",
+                      )}
+                    >
+                      {/* Name */}
+                      <td className={clx("py-3 pl-2 pr-3 w-full min-w-0", highlight && "font-medium")}>
+                        {isLoading ? (
+                          <Skeleton className="w-24" />
+                        ) : (
+                          <span>
+                            {row.name}
+                            {highlight && (
+                              <span className="ml-1 inline-flex translate-y-0.5">
+                                <ResultBadge hidden value={row.result} />
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </td>
+                      {/* Party */}
+                      <td className="px-3 py-3">
+                        {isLoading ? (
+                          <Skeleton className="mx-auto w-8" />
+                        ) : (
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="relative flex h-4.5 w-8 justify-center">
+                              <ImageWithFallback
+                                className="border border-otl-gray-200"
+                                src={logoSrc}
+                                width={32}
+                                height={18}
+                                alt={row.party}
+                              />
+                            </div>
+                            <span className="whitespace-nowrap text-center text-xs text-txt-black-700">{partyLabel}</span>
+                          </div>
+                        )}
+                      </td>
+                      {/* Votes Won */}
+                      <td className="px-3 py-3">
+                        {isLoading ? (
+                          <Skeleton className="w-16" />
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            <BarPerc hidden value={votesPerc} size="w-[80px] h-[5px]" />
+                            <span className="whitespace-nowrap text-xs">
+                              {row.votes !== null ? numFormat(row.votes, "standard") : "—"}
+                              {votesPerc !== null
+                                ? ` (${numFormat(votesPerc, "compact", [1, 1])}%)`
+                                : " (—)"}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         {/* Mobile – card layout */}
-        {!simpleMobileTable && data.map((row: any, idx: number) => {
+        {!simpleMobileTable && !compactMobileTable && data.map((row: any, idx: number) => {
           if (row.change_en) {
             const isMalay = i18n.language && i18n.language.startsWith("ms");
             return (
