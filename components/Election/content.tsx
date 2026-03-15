@@ -18,6 +18,7 @@ interface FullResultContentProps {
     abs: number;
     perc: number;
   }[];
+  partyNameDisplay?: "full" | "short";
 }
 
 const FullResultContent = ({
@@ -28,6 +29,7 @@ const FullResultContent = ({
   loading,
   result,
   votes,
+  partyNameDisplay,
 }: FullResultContentProps) => {
   const { t } = useTranslation("common");
 
@@ -44,6 +46,9 @@ const FullResultContent = ({
           highlighted={highlighted}
           highlightedRows={highlightedRows}
           result={result}
+          partyNameDisplay={partyNameDisplay}
+          firstColumnNoWrap
+          compactBars
         />
       </div>
 

@@ -303,7 +303,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                 {election && (
                   <div className="hide-scrollbar grid h-[394px] max-w-screen-sm grid-flow-col grid-rows-3 overflow-x-auto rounded-md sm:max-w-screen-md md:max-w-screen-lg lg:flex lg:h-full lg:w-full lg:flex-col lg:overflow-y-auto lg:px-0.5">
                     {filteredSeats.map((_seat) => {
-                      const { seat, name, majority, majority_perc, party } =
+                      const { seat, name, majority, majority_perc, party, party_uid } =
                         _seat;
                       return (
                         <div
@@ -351,10 +351,10 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                             <div className="flex h-8 w-full items-center gap-1.5">
                               <ImageWithFallback
                                 className="border border-otl-gray-200"
-                                src={`/static/images/parties/${party}.png`}
+                                src={`/static/images/parties/${party_uid ?? party}.png`}
                                 width={32}
                                 height={18}
-                                alt={t(`${party}`)}
+                                alt={party}
                                 style={{
                                   width: "auto",
                                   maxWidth: "32px",
@@ -416,6 +416,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                     loading={data.loading}
                     result="won"
                     votes={data.results.votes}
+                    partyNameDisplay="short"
                   />
                 </DrawerContent>
               </Drawer>
@@ -440,6 +441,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                       loading={data.loading}
                       result="won"
                       votes={data.results.votes}
+                      partyNameDisplay="short"
                     />
                   </>
                 )}

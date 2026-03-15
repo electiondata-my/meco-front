@@ -49,6 +49,8 @@ interface FullResultsProps<T extends Candidate | Party | Seat> {
   highlighted?: string;
   highlightedRows?: Array<number>;
   currentIndex: number;
+  /** When "short", party column shows party code + (coalition) instead of full name. */
+  partyNameDisplay?: "full" | "short";
 }
 
 const FullResults = <T extends Candidate | Party | Seat>({
@@ -58,6 +60,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
   highlighted,
   highlightedRows,
   currentIndex,
+  partyNameDisplay,
 }: FullResultsProps<T>) => {
   if (!options) return <></>;
 
@@ -222,6 +225,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
             highlightedRows={highlightedRows}
             result={isCandidate ? selected.result : undefined}
             votes={data.results?.votes ?? []}
+            partyNameDisplay={partyNameDisplay}
           />
           <Pagination />
         </DialogContent>
@@ -272,6 +276,7 @@ const FullResults = <T extends Candidate | Party | Seat>({
           highlightedRows={highlightedRows}
           result={isCandidate ? selected.result : undefined}
           votes={data.results?.votes || []}
+          partyNameDisplay={partyNameDisplay}
         />
         <DrawerFooter>
           <Pagination />
