@@ -1,5 +1,6 @@
 import { ElectionResource, Party, PartyResult } from "./types";
-import FullResults, { Result } from "@components/Election/FullResults";
+import ElectionFullResults from "@components/Election/ElectionFullResults";
+import { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
 import {
@@ -112,11 +113,6 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         ]
       : []),
     {
-      key: "seats_contested",
-      id: "seats_contested",
-      header: t("seats_contested"),
-    },
-    {
       key: "seats_won",
       id: "seats_won",
       header: t("seats_won"),
@@ -127,6 +123,11 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
       header: t("votes_won"),
     },
     {
+      key: "seats_contested",
+      id: "seats_contested",
+      header: t("seats_contested"),
+    },
+    {
       key: (item) => item,
       id: "full_result",
       header: "",
@@ -135,30 +136,12 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
           data.tab_index === 0 ? elections.parlimen : elections.dun;
 
         return (
-          <FullResults
+          <ElectionFullResults
             options={selection}
             currentIndex={row.index}
             onChange={(option: Party) =>
               fetchFullResult(option.election_name, option.state)
             }
-            columns={generateSchema<PartyResult[number]>([
-              {
-                key: "party",
-                id: "party",
-                header: t("party_name"),
-              },
-              {
-                key: "seats",
-                id: "seats",
-                header: t("seats_won"),
-              },
-              {
-                key: "votes",
-                id: "votes",
-                header: t("votes_won"),
-              },
-            ])}
-            highlighted={data.party_value ?? DEFAULT_PARTY}
           />
         );
       },

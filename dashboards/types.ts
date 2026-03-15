@@ -72,6 +72,7 @@ export type OverallSeat = Summary & {
   seat: string;
   date: string;
   party: string;
+  party_uid?: string;
   name: string;
   party_lost?: string[];
 };
