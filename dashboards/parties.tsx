@@ -1,5 +1,6 @@
 import { ElectionResource, Party, PartyResult } from "./types";
-import FullResults, { Result } from "@components/Election/FullResults";
+import ElectionFullResults from "@components/Election/ElectionFullResults";
+import { Result } from "@components/Election/FullResults";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
 import {
@@ -135,7 +136,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
           data.tab_index === 0 ? elections.parlimen : elections.dun;
 
         return (
-          <FullResults
+          <ElectionFullResults
             options={selection}
             currentIndex={row.index}
             onChange={(option: Party) =>
