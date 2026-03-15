@@ -19,6 +19,8 @@ interface FullResultContentProps {
     perc: number;
   }[];
   partyNameDisplay?: "full" | "short";
+  simpleMobileTable?: boolean;
+  scrollable?: boolean;
 }
 
 const FullResultContent = ({
@@ -30,6 +32,8 @@ const FullResultContent = ({
   result,
   votes,
   partyNameDisplay,
+  simpleMobileTable = false,
+  scrollable = false,
 }: FullResultContentProps) => {
   const { t } = useTranslation("common");
 
@@ -49,6 +53,8 @@ const FullResultContent = ({
           partyNameDisplay={partyNameDisplay}
           firstColumnNoWrap
           compactBars
+          simpleMobileTable={simpleMobileTable}
+          scrollable={scrollable}
         />
       </div>
 
