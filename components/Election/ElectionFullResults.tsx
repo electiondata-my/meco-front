@@ -22,17 +22,20 @@ import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { useState } from "react";
 import { useMediaQuery } from "@hooks/useMediaQuery";
-import { FullResultContent } from "./content";
 import { ButtonIcon, Button } from "@govtechmy/myds-react/button";
 import type { Result } from "./FullResults";
+import dynamic from "next/dynamic";
+import Skeleton from "@components/Skeleton";
+
+const ElectionOverviewTable = dynamic(
+  () => import("@dashboards/elections/ElectionOverviewTable"),
+  { ssr: false },
+);
 
 interface ElectionFullResultsProps {
   onChange: (option: Party) => Promise<Result<PartyResult>>;
   options: Array<Party>;
-  columns?: any;
-  highlighted?: string;
   currentIndex: number;
-  partyNameDisplay?: "full" | "short";
 }
 
 /**
@@ -42,10 +45,7 @@ interface ElectionFullResultsProps {
 const ElectionFullResults = ({
   onChange,
   options,
-  columns,
-  highlighted,
   currentIndex,
-  partyNameDisplay,
 }: ElectionFullResultsProps) => {
   if (!options) return <></>;
 
@@ -150,6 +150,21 @@ const ElectionFullResults = ({
     return <></>;
   };
 
+  const TableContent = () =>
+    data.loading ? (
+      <div className="flex-1 space-y-2 px-4 py-2">
+        {Array(6)
+          .fill(null)
+          .map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+      </div>
+    ) : (
+      <div className="hide-scrollbar flex-1 overflow-y-scroll">
+        <ElectionOverviewTable data={(data.results?.data ?? []) as any} className="pt-0" />
+      </div>
+    );
+
   if (isDesktop)
     return (
       <Dialog
@@ -173,17 +188,7 @@ const ElectionFullResults = ({
               </DialogDescription>
             </div>
           </DialogHeader>
-          <FullResultContent
-            data={data.results?.data}
-            columns={columns}
-            loading={data.loading}
-            highlighted={highlighted}
-            votes={data.results?.votes ?? []}
-            partyNameDisplay={partyNameDisplay}
-            simpleMobileTable
-            scrollable
-            showVotingStats={false}
-          />
+          <TableContent />
           <Pagination />
         </DialogContent>
       </Dialog>
@@ -214,16 +219,7 @@ const ElectionFullResults = ({
             </DrawerClose>
           </div>
         </DrawerHeader>
-        <FullResultContent
-          data={data.results?.data}
-          columns={columns}
-          loading={data.loading}
-          highlighted={highlighted}
-          votes={data.results?.votes || []}
-          partyNameDisplay={partyNameDisplay}
-          simpleMobileTable
-          showVotingStats={false}
-        />
+        <TableContent />
         <DrawerFooter>
           <Pagination />
         </DrawerFooter>

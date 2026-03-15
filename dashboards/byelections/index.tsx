@@ -395,6 +395,7 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                         loading={data.loading}
                         result="won"
                         votes={data.results.votes ?? []}
+                        compactMobileTable
                       />
                     </DrawerContent>
                   </Drawer>
