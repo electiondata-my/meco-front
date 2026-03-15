@@ -20,7 +20,7 @@ import { useTranslation } from "@hooks/useTranslation";
 import dynamic from "next/dynamic";
 import { FunctionComponent } from "react";
 import SectionGrid from "@components/Section/section-grid";
-import { Button } from "@govtechmy/myds-react/button";
+
 
 /**
  * Election Explorer Dashboard
@@ -97,7 +97,6 @@ const Overview: FunctionComponent<OverviewProps> = ({
 
   const { data, setData } = useData({
     tab_index: 0,
-    showMore: table.length > 10,
     isLoading: false,
     toggle_index: 0,
   });
@@ -151,45 +150,36 @@ const Overview: FunctionComponent<OverviewProps> = ({
                 name={t("table", { ns: "elections" })}
                 icon={<TableCellsIcon className="mr-1 h-5 w-5" />}
               >
-                <>
-                  <ElectionTable
-                    isLoading={data.isLoading}
-                    className="pt-6"
-                    data={data.showMore ? table.slice(0, 10) : table}
-                    partyNameDisplay="short"
-                    columns={generateSchema<Party>([
-                      {
-                        key: "party",
-                        id: "party",
-                        header: t("party_name"),
-                      },
-                      {
-                        key: "seats_won",
-                        id: "seats_won",
-                        header: t("seats_won"),
-                      },
-                      {
-                        key: "votes",
-                        id: "votes",
-                        header: t("votes_won"),
-                      },
-                      {
-                        key: "seats_contested",
-                        id: "seats_contested",
-                        header: t("seats_contested"),
-                      },
-                    ])}
-                  />
-                  {data.showMore && (
-                    <Button
-                      variant={"default-outline"}
-                      className="mx-auto mt-6"
-                      onClick={() => setData("showMore", false)}
-                    >
-                      {t("show_more", { ns: "elections" })}
-                    </Button>
-                  )}
-                </>
+                <ElectionTable
+                  isLoading={data.isLoading}
+                  className="pt-6"
+                  data={table}
+                  partyNameDisplay="short"
+                  simpleMobileTable
+                  scrollable
+                  columns={generateSchema<Party>([
+                    {
+                      key: "party",
+                      id: "party",
+                      header: t("party_name"),
+                    },
+                    {
+                      key: "seats_won",
+                      id: "seats_won",
+                      header: t("seats_won"),
+                    },
+                    {
+                      key: "votes",
+                      id: "votes",
+                      header: t("votes_won"),
+                    },
+                    {
+                      key: "seats_contested",
+                      id: "seats_contested",
+                      header: t("seats_contested"),
+                    },
+                  ])}
+                />
               </Panel>
               {/*
                   <Panel

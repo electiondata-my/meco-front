@@ -1,10 +1,4 @@
-import ResultBadge from "@components/Election/ResultBadge";
-import type {
-  BaseResult,
-  Candidate,
-  ElectionResult,
-  Seat,
-} from "@dashboards/types";
+import type { Party, PartyResult } from "@dashboards/types";
 import {
   Dialog,
   DialogContent,
@@ -23,47 +17,36 @@ import {
 } from "@components/drawer";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { ArrowsPointingOutIcon, XMarkIcon } from "@heroicons/react/24/solid";
-import { clx, toDate } from "@lib/helpers";
+import { toDate } from "@lib/helpers";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
 import { useState } from "react";
 import { useMediaQuery } from "@hooks/useMediaQuery";
 import { FullResultContent } from "./content";
 import { ButtonIcon, Button } from "@govtechmy/myds-react/button";
+import type { Result } from "./FullResults";
 
-export type Result<T> = {
-  data: T;
-  votes?: Array<{
-    x: string;
-    abs: number;
-    perc: number;
-  }>;
-} | void;
-
-interface FullResultsProps<T extends Candidate | Seat> {
-  onChange: (option: T) => Promise<Result<BaseResult[]>>;
-  options: Array<T>;
+interface ElectionFullResultsProps {
+  onChange: (option: Party) => Promise<Result<PartyResult>>;
+  options: Array<Party>;
   columns?: any;
   highlighted?: string;
-  highlightedRows?: Array<number>;
   currentIndex: number;
-  /** When "short", party column shows party code + (coalition) instead of full name. */
   partyNameDisplay?: "full" | "short";
 }
 
 /**
- * Modal popup for a single constituency result (candidates / seats / trivia / byelections).
- * For the full election result (parties), use ElectionFullResults instead.
+ * Modal popup for a full election result (all parties).
+ * Used on the /parties page. Always renders the compact mobile table layout.
  */
-const FullResults = <T extends Candidate | Seat>({
+const ElectionFullResults = ({
   onChange,
   options,
   columns,
   highlighted,
-  highlightedRows,
   currentIndex,
   partyNameDisplay,
-}: FullResultsProps<T>) => {
+}: ElectionFullResultsProps) => {
   if (!options) return <></>;
 
   const { t, i18n } = useTranslation(["common", "election"]);
@@ -71,38 +54,23 @@ const FullResults = <T extends Candidate | Seat>({
   const isDesktop = useMediaQuery("(min-width: 768px)");
   const { data, setData } = useData<{
     index: number;
-    badge: ElectionResult | undefined;
-    area: string;
     date: string;
     election_name: string;
-    state: string;
     loading: boolean;
-    results: Result<BaseResult[]> | undefined;
+    results: Result<PartyResult> | undefined;
   }>({
     index: currentIndex,
-    area: "",
-    badge: undefined,
     date: "",
     election_name: "",
-    state: "",
     results: undefined,
     loading: false,
   });
 
   const selected = options[currentIndex];
-  const isCandidate = typeof selected === "object" && "result" in selected;
 
-  const getData = (obj: Candidate | Seat) => {
+  const getData = (obj: Party) => {
     setData("date", toDate(obj.date, "dd MMM yyyy", i18n.language));
     setData("election_name", obj.election_name);
-    if ("seat" in obj) {
-      const matches = obj.seat.split(",");
-      setData("area", matches[0]);
-      setData("state", matches[1]);
-    }
-    if ("result" in obj) {
-      setData("badge", obj.result);
-    }
   };
 
   const Trigger = () => (
@@ -196,20 +164,13 @@ const FullResults = <T extends Candidate | Seat>({
         </DialogTrigger>
         <DialogContent className="flex max-h-[calc(100%-40px)] max-w-4xl flex-col">
           <DialogHeader className="pr-8 uppercase">
-            <div className="flex w-full items-center justify-between">
-              <div className="flex flex-wrap gap-x-2 text-lg">
-                <DialogTitle className="text-body-lg font-semibold">
-                  {data.area}
-                </DialogTitle>
-                <DialogDescription className="font-normal text-txt-black-500">
-                  {data.state}
-                </DialogDescription>
-              </div>
-              {isCandidate && <ResultBadge value={data.badge} />}
-            </div>
-            <div className="flex flex-wrap gap-x-2 text-body-sm">
-              <span>{t(data.election_name, { ns: "election" })}</span>
-              <span className="text-txt-black-500">{data.date}</span>
+            <div className="flex flex-wrap gap-x-2 text-lg">
+              <DialogTitle className="text-body-lg font-semibold">
+                {t(data.election_name, { ns: "election" })}
+              </DialogTitle>
+              <DialogDescription className="font-normal text-txt-black-500">
+                {data.date}
+              </DialogDescription>
             </div>
           </DialogHeader>
           <FullResultContent
@@ -217,10 +178,10 @@ const FullResults = <T extends Candidate | Seat>({
             columns={columns}
             loading={data.loading}
             highlighted={highlighted}
-            highlightedRows={highlightedRows}
-            result={isCandidate ? selected.result : undefined}
             votes={data.results?.votes ?? []}
             partyNameDisplay={partyNameDisplay}
+            simpleMobileTable
+            scrollable
           />
           <Pagination />
         </DialogContent>
@@ -242,28 +203,24 @@ const FullResults = <T extends Candidate | Seat>({
         <DrawerHeader className="flex w-full flex-col items-start px-4 py-3 uppercase">
           <div className="flex w-full items-center justify-between">
             <div className="flex flex-wrap items-center gap-x-2 text-lg">
-              <h5 className="text-body-lg font-semibold">{data.area}</h5>
-              <span className="text-txt-black-500">{data.state}</span>
+              <h5 className="text-body-lg font-semibold">
+                {t(data.election_name, { ns: "election" })}
+              </h5>
+              <span className="text-txt-black-500">{data.date}</span>
             </div>
             <DrawerClose>
               <XMarkIcon className="h-5 w-5 text-txt-black-500" />
             </DrawerClose>
           </div>
-          <div className="flex flex-wrap gap-x-2">
-            <span>{t(data.election_name, { ns: "election" })}</span>
-            <span className="text-txt-black-500">{data.date}</span>
-          </div>
-          {isCandidate && <ResultBadge value={data.badge} />}
         </DrawerHeader>
         <FullResultContent
           data={data.results?.data}
           columns={columns}
           loading={data.loading}
           highlighted={highlighted}
-          highlightedRows={highlightedRows}
-          result={isCandidate ? selected.result : undefined}
           votes={data.results?.votes || []}
           partyNameDisplay={partyNameDisplay}
+          simpleMobileTable
         />
         <DrawerFooter>
           <Pagination />
@@ -273,4 +230,4 @@ const FullResults = <T extends Candidate | Seat>({
   );
 };
 
-export default FullResults;
+export default ElectionFullResults;
