@@ -341,36 +341,6 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
               />
             </SearchBarInputContainer>
           </SearchBar>
-          <div className="flex w-fit items-center justify-center gap-2">
-            {/* <Button
-              variant={"default-outline"}
-              onClick={() => setMobileOpen(true)}
-              className="lg:hidden"
-            >
-              <ButtonIcon>
-                <HamburgerMenuIcon />
-              </ButtonIcon>
-              {t("category")}
-            </Button> */}
-            <StateDropdown
-              anchor={isStick ? "right" : "right-1/2 translate-x-1/2"}
-              width="w-fit self-center"
-              currentState={currentState}
-              onChange={(selected) => {
-                if (selected.value === "mys") {
-                  replace(routes.DATA_CATALOGUE, undefined, { scroll: false });
-                  return;
-                }
-                replace(
-                  `${routes.DATA_CATALOGUE}/state/${selected.value}`,
-                  undefined,
-                  {
-                    scroll: false,
-                  },
-                );
-              }}
-            />
-          </div>
         </div>
       </div>
     </>

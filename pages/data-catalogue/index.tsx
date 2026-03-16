@@ -50,14 +50,11 @@ const recurSort = (
 
 export const getStaticProps: GetStaticProps = withi18n(
   ["catalogue"],
-  async ({ locale, params }) => {
-    const state = "mys";
+  async ({ locale }) => {
     const lang = SHORT_LANG[locale! as keyof typeof SHORT_LANG];
     try {
-      const response = await get(`/catalogue/index-${state}-${lang}.json`);
+      const response = await get(`/catalogue/index-${lang}.json`);
       const collection = response.data || {};
-
-      // const collection = recurSort(_collection);
 
       return {
         notFound: false,
