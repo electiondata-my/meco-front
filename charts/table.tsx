@@ -179,10 +179,7 @@ const Table: FunctionComponent<TableProps> = ({
         </div>
       )}
       <div
-        className={clx(
-          responsive &&
-            "relative overflow-x-auto [&::-webkit-scrollbar]:hidden",
-        )}
+        className={clx(responsive && "hide-scrollbar relative overflow-x-auto")}
       >
         <table
           className={clx(

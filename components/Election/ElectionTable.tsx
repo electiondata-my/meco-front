@@ -529,7 +529,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         <div
           className={clx(
             scrollable &&
-              "hidden max-h-[537px] overflow-y-auto md:block [&::-webkit-scrollbar]:hidden",
+              "hide-scrollbar hidden max-h-[537px] overflow-y-auto md:block",
           )}
         >
           <table
@@ -653,7 +653,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
 
         {/* Mobile – simple table (e.g. elections overview) */}
         {simpleMobileTable && (
-          <div className="max-h-[498px] overflow-x-auto overflow-y-auto md:hidden [&::-webkit-scrollbar]:hidden">
+          <div className="hide-scrollbar max-h-[498px] overflow-x-auto overflow-y-auto md:hidden">
             <table className="w-full text-left text-body-sm">
               <thead>
                 {table.getHeaderGroups().map((headerGroup: any) => (
@@ -771,7 +771,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
 
         {/* Mobile – compact 3-column table (FullResult modal drawer) */}
         {compactMobileTable && (
-          <div className="max-h-[498px] overflow-y-auto md:hidden [&::-webkit-scrollbar]:hidden">
+          <div className="hide-scrollbar max-h-[498px] overflow-y-auto md:hidden">
             <table className="w-full text-left text-body-sm">
               <thead>
                 <tr>
