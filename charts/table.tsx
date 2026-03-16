@@ -178,7 +178,7 @@ const Table: FunctionComponent<TableProps> = ({
           {search && search(onSearch)}
         </div>
       )}
-      <div className={clx(responsive && "relative overflow-x-auto")}>
+      <div className={clx(responsive && "relative overflow-x-auto [&::-webkit-scrollbar]:hidden")}>
         <table
           className={clx(
             "relative mx-auto w-full table-auto border-separate border-spacing-0 whitespace-nowrap md:w-fit",
@@ -197,7 +197,7 @@ const Table: FunctionComponent<TableProps> = ({
                       colSpan={header.colSpan}
                       className={clx(
                         freeze?.includes(header.id) &&
-                          "sticky z-10 bg-inherit max-lg:border-r-2",
+                          "sticky z-10 bg-bg-white",
                         "border-b-2 border-otl-gray-200 py-[10px] font-medium",
                       )}
                       style={{
@@ -310,7 +310,7 @@ const Table: FunctionComponent<TableProps> = ({
                         typeof value === "number" && "tabular-nums text-right",
                         lastCellInGroup.id === cell.column.id && "text-sm",
                         freeze?.includes(cell.column.id) &&
-                          "sticky z-10 bg-inherit max-lg:border-r-2",
+                          "sticky z-10 bg-bg-white",
                         cell.column.columnDef.className
                           ? cell.column.columnDef.className
                           : cellClass,
