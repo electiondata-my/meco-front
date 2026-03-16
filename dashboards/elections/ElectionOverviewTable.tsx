@@ -58,10 +58,15 @@ const ElectionOverviewTable: FunctionComponent<ElectionOverviewTableProps> = ({
     const groups: CoalitionGroup[] = [];
     for (const [uid, parties] of groupMap.entries()) {
       const seats_won = parties.reduce((s, p) => s + p.seats_won, 0);
-      const seats_contested = parties.reduce((s, p) => s + p.seats_contested, 0);
+      const seats_contested = parties.reduce(
+        (s, p) => s + p.seats_contested,
+        0,
+      );
       const votes = parties.reduce((s, p) => s + p.votes, 0);
       const coalition = parties[0].coalition ?? uid;
-      const sortedParties = [...parties].sort((a, b) => b.seats_won - a.seats_won);
+      const sortedParties = [...parties].sort(
+        (a, b) => b.seats_won - a.seats_won,
+      );
       groups.push({
         coalition_uid: uid,
         coalition,
@@ -80,7 +85,11 @@ const ElectionOverviewTable: FunctionComponent<ElectionOverviewTableProps> = ({
     groups.sort((a, b) => b.seats_won - a.seats_won);
     alone.sort((a, b) => b.seats_won - a.seats_won);
 
-    return { coalitionGroups: groups, aloneParties: alone, seatsTotal: seats_total };
+    return {
+      coalitionGroups: groups,
+      aloneParties: alone,
+      seatsTotal: seats_total,
+    };
   }, [data]);
 
   const allCoalitionIds = useMemo(
@@ -106,8 +115,16 @@ const ElectionOverviewTable: FunctionComponent<ElectionOverviewTableProps> = ({
   const displayRows = useMemo((): DisplayRow[] => {
     const rows: DisplayRow[] = [];
     const entries = [
-      ...coalitionGroups.map((g) => ({ kind: "coalition" as const, group: g, seats_won: g.seats_won })),
-      ...aloneParties.map((p) => ({ kind: "party" as const, party: p, seats_won: p.seats_won })),
+      ...coalitionGroups.map((g) => ({
+        kind: "coalition" as const,
+        group: g,
+        seats_won: g.seats_won,
+      })),
+      ...aloneParties.map((p) => ({
+        kind: "party" as const,
+        party: p,
+        seats_won: p.seats_won,
+      })),
     ].sort((a, b) => b.seats_won - a.seats_won);
 
     for (const entry of entries) {
@@ -128,25 +145,62 @@ const ElectionOverviewTable: FunctionComponent<ElectionOverviewTableProps> = ({
   const barSize = "w-[100px] h-[5px]";
   const mobileBarSize = "w-[60px] h-[5px]";
 
-  const renderSeatsWon = (value: number, perc: number, total: number, mobile = false) => (
-    <div className={clx("flex items-center gap-2", !mobile && "md:flex-col md:items-start lg:flex-row lg:items-center")}>
-      {!mobile && <div><BarPerc hidden value={perc} size={barSize} /></div>}
+  const renderSeatsWon = (
+    value: number,
+    perc: number,
+    total: number,
+    mobile = false,
+  ) => (
+    <div
+      className={clx(
+        "flex items-center gap-2",
+        !mobile && "md:flex-col md:items-start lg:flex-row lg:items-center",
+      )}
+    >
+      {!mobile && (
+        <div>
+          <BarPerc hidden value={perc} size={barSize} />
+        </div>
+      )}
       {mobile && <BarPerc hidden value={perc} size={mobileBarSize} />}
       <p className="whitespace-nowrap">{`${value} / ${total} (${numFormat(perc, "compact", [1, 1])}%)`}</p>
     </div>
   );
 
-  const renderSeatsContested = (value: number, perc: number, total: number, mobile = false) => (
-    <div className={clx("flex items-center gap-2", !mobile && "md:flex-col md:items-start lg:flex-row lg:items-center")}>
-      {!mobile && <div><BarPerc hidden value={perc} size={barSize} /></div>}
+  const renderSeatsContested = (
+    value: number,
+    perc: number,
+    total: number,
+    mobile = false,
+  ) => (
+    <div
+      className={clx(
+        "flex items-center gap-2",
+        !mobile && "md:flex-col md:items-start lg:flex-row lg:items-center",
+      )}
+    >
+      {!mobile && (
+        <div>
+          <BarPerc hidden value={perc} size={barSize} />
+        </div>
+      )}
       {mobile && <BarPerc hidden value={perc} size={mobileBarSize} />}
       <p className="whitespace-nowrap">{`${value} / ${total} (${numFormat(perc, "compact", [1, 1])}%)`}</p>
     </div>
   );
 
   const renderVotes = (value: number, perc: number, mobile = false) => (
-    <div className={clx("flex items-center gap-2", !mobile && "md:flex-col md:items-start lg:flex-row lg:items-center")}>
-      {!mobile && <div className="lg:self-center"><BarPerc hidden value={perc} size={barSize} /></div>}
+    <div
+      className={clx(
+        "flex items-center gap-2",
+        !mobile && "md:flex-col md:items-start lg:flex-row lg:items-center",
+      )}
+    >
+      {!mobile && (
+        <div className="lg:self-center">
+          <BarPerc hidden value={perc} size={barSize} />
+        </div>
+      )}
       {mobile && <BarPerc hidden value={perc} size={mobileBarSize} />}
       <span className="whitespace-nowrap">
         {numFormat(value, "standard")} ({numFormat(perc, "compact", [1, 1])}%)
@@ -208,13 +262,21 @@ const ElectionOverviewTable: FunctionComponent<ElectionOverviewTableProps> = ({
                       </div>
                     </td>
                     <td className="px-3 py-[11px]">
-                      {renderSeatsWon(group.seats_won, group.seats_won_perc, group.seats_total)}
+                      {renderSeatsWon(
+                        group.seats_won,
+                        group.seats_won_perc,
+                        group.seats_total,
+                      )}
                     </td>
                     <td className="px-3 py-[11px]">
                       {renderVotes(group.votes, group.votes_perc)}
                     </td>
                     <td className="px-3 py-[11px]">
-                      {renderSeatsContested(group.seats_contested, group.seats_contested_perc, group.seats_total)}
+                      {renderSeatsContested(
+                        group.seats_contested,
+                        group.seats_contested_perc,
+                        group.seats_total,
+                      )}
                     </td>
                   </tr>
                 );
@@ -225,8 +287,16 @@ const ElectionOverviewTable: FunctionComponent<ElectionOverviewTableProps> = ({
                 ? `/static/images/parties/${party.party_uid}.png`
                 : "/static/images/parties/_fallback_.png";
               return (
-                <tr key={`party-${party.party}-${idx}`} className="border-b border-otl-gray-200">
-                  <td className={clx("py-[11px] pr-3", isChild ? "pl-10" : "pl-4")}>
+                <tr
+                  key={`party-${party.party}-${idx}`}
+                  className="border-b border-otl-gray-200"
+                >
+                  <td
+                    className={clx(
+                      "py-[11px] pr-3",
+                      isChild ? "pl-10" : "pl-4",
+                    )}
+                  >
                     <div className="flex items-center gap-1.5">
                       <div className="relative flex h-4.5 w-8 justify-center">
                         <ImageWithFallback
@@ -241,13 +311,21 @@ const ElectionOverviewTable: FunctionComponent<ElectionOverviewTableProps> = ({
                     </div>
                   </td>
                   <td className="px-3 py-[11px]">
-                    {renderSeatsWon(party.seats_won, party.seats_won_perc, party.seats_total)}
+                    {renderSeatsWon(
+                      party.seats_won,
+                      party.seats_won_perc,
+                      party.seats_total,
+                    )}
                   </td>
                   <td className="px-3 py-[11px]">
                     {renderVotes(party.votes, party.votes_perc)}
                   </td>
                   <td className="px-3 py-[11px]">
-                    {renderSeatsContested(party.seats_contested, party.seats_contested_perc, party.seats_total)}
+                    {renderSeatsContested(
+                      party.seats_contested,
+                      party.seats_contested_perc,
+                      party.seats_total,
+                    )}
                   </td>
                 </tr>
               );
@@ -332,7 +410,10 @@ const ElectionOverviewTable: FunctionComponent<ElectionOverviewTableProps> = ({
                 ? `/static/images/parties/${party.party_uid}.png`
                 : "/static/images/parties/_fallback_.png";
               return (
-                <tr key={`m-party-${party.party}-${idx}`} className="border-b border-otl-gray-200">
+                <tr
+                  key={`m-party-${party.party}-${idx}`}
+                  className="border-b border-otl-gray-200"
+                >
                   <td
                     className={clx(
                       "sticky left-0 z-10 w-px whitespace-nowrap bg-bg-white py-[11px] pr-3",

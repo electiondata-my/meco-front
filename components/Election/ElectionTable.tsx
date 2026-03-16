@@ -180,7 +180,8 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         );
       }
       case "coalition": {
-        if (!value || value === "ALONE") return <span className="font-light">&nbsp;&nbsp;—</span>;
+        if (!value || value === "ALONE")
+          return <span className="font-light">&nbsp;&nbsp;—</span>;
         const coalitionUid = cell.row.original.coalition_uid;
         const coalitionLogoSrc = coalitionUid
           ? `/static/images/coalitions/${coalitionUid}.png`
@@ -208,10 +209,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             <div>
               <BarPerc hidden value={percent} size={barSize} />
             </div>
-            <p className="whitespace-nowrap">{`${value} / ${total} ${percent !== null
+            <p className="whitespace-nowrap">{`${value} / ${total} ${
+              percent !== null
                 ? ` (${numFormat(percent, "compact", [1, 1])}%)`
                 : " (—)"
-              }`}</p>
+            }`}</p>
           </div>
         );
       case "seats_contested":
@@ -223,10 +225,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             <div>
               <BarPerc hidden value={seatsPerc} size={barSize} />
             </div>
-            <p className="whitespace-nowrap">{`${value} / ${seatsTotal}${seatsPerc !== null
+            <p className="whitespace-nowrap">{`${value} / ${seatsTotal}${
+              seatsPerc !== null
                 ? ` (${numFormat(seatsPerc, "compact", [1, 1])}%)`
                 : " (—)"
-              }`}</p>
+            }`}</p>
           </div>
         );
       }
@@ -381,10 +384,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               <BarPerc hidden value={percent} />
               <p>
                 {`${value} / ${total}
-                 (${percent !== null
-                    ? `${numFormat(percent, "compact", [1, 1])}%`
-                    : "(—)"
-                  })`}
+                 (${
+                   percent !== null
+                     ? `${numFormat(percent, "compact", [1, 1])}%`
+                     : "(—)"
+                 })`}
               </p>
             </div>
           </div>
@@ -400,10 +404,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             </p>
             <div className="flex items-center gap-2">
               <BarPerc hidden value={seatsPerc} />
-              <p>{`${value} / ${seatsTotal} (${seatsPerc !== null
+              <p>{`${value} / ${seatsTotal} (${
+                seatsPerc !== null
                   ? `${numFormat(seatsPerc, "compact", [1, 1])}%`
                   : "—"
-                })`}</p>
+              })`}</p>
             </div>
           </div>
         );
@@ -417,10 +422,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
-              <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${percent !== null
+              <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${
+                percent !== null
                   ? `${numFormat(percent, "compact", [1, 1])}%`
                   : "—"
-                })`}</p>
+              })`}</p>
             </div>
           </div>
         );
@@ -435,7 +441,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               </p>
               <div className="flex items-center gap-2">
                 <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
-                <p>{percent != null ? `${numFormat(percent, "compact", [1, 1])}%` : "—"}</p>
+                <p>
+                  {percent != null
+                    ? `${numFormat(percent, "compact", [1, 1])}%`
+                    : "—"}
+                </p>
               </div>
             </div>
           );
@@ -451,10 +461,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
               ) : (
                 <div className="flex items-center gap-2">
                   <BarPerc hidden value={percent} size="w-[40px] h-[5px]" />
-                  <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${percent !== null
+                  <p>{`${value !== null ? numFormat(value, "standard") : "—"} (${
+                    percent !== null
                       ? `${numFormat(percent, "compact", [1, 1])}%`
                       : "—"
-                    })`}</p>
+                  })`}</p>
                 </div>
               )}
             </div>
@@ -515,149 +526,168 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       </div>
       <div className={clx("relative", className)}>
         {/* Desktop */}
-        <div className={clx(
-          scrollable && "hidden md:block overflow-y-auto max-h-[537px] [&::-webkit-scrollbar]:hidden",
-        )}>
-        <table className={clx("w-full text-left text-body-sm", !scrollable && "hidden md:table")}>
-          <thead>
-            {table.getHeaderGroups().map((headerGroup: any) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header: any, colIndex: number) => {
-                  const isLastCol =
-                    colIndex === headerGroup.headers.length - 1;
-                  const isFirstCol = colIndex === 0;
-                  const isFullResultCol = header.column.columnDef.id === "full_result";
-                  return (
-                  <th
-                    key={header.id}
-                    colSpan={header.colSpan}
-                    className={clx(
-                      "sticky top-0 z-10 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
-                      isFirstCol
-                        ? compactFirstColumn
-                          ? "pl-2 pr-3"
-                          : "pl-4 pr-3"
-                        : "px-3",
-                      isLastCol && isFullResultCol && "pr-1 text-right",
-                      fullBorder && "border border-b-2 text-body-xs",
-                      alternateTextColor && "text-txt-black-500",
-                      headerClassName,
-                      isFirstCol && firstColumnNoWrap && "whitespace-nowrap",
-                    )}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                  </th>
-                );
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {data.map((row: any, idx: number) => {
-              if (row.change_en) {
-                return (
-                  <ExplanationRow
-                    key={"explanation-" + idx}
-                    change_en={row.change_en}
-                    change_ms={row.change_ms}
-                  />
-                );
-              }
-              // Use react-table for normal rows
-              const tableRow = table
-                .getRowModel()
-                .rows.find((r: any) => r.index === idx);
-              if (!tableRow) return null;
-              const highlight = isHighlighted(tableRow);
-              return (
-                <tr
-                  key={tableRow.id}
-                  className={clx(
-                    highlight ? "bg-bg-washed" : "bg-inherit",
-                    "border-b border-otl-gray-200",
-                  )}
-                >
-                  {tableRow
-                    .getVisibleCells()
-                    .map((cell: any, colIndex: number) => {
-                      const isLastCol =
-                        colIndex === tableRow.getVisibleCells().length - 1;
-                      const isFirstCol = colIndex === 0;
-                      const isFullResultCol =
-                        cell.column.columnDef.id === "full_result";
-                      return (
-                      <td
-                        key={cell.id}
+        <div
+          className={clx(
+            scrollable &&
+              "hidden max-h-[537px] overflow-y-auto md:block [&::-webkit-scrollbar]:hidden",
+          )}
+        >
+          <table
+            className={clx(
+              "w-full text-left text-body-sm",
+              !scrollable && "hidden md:table",
+            )}
+          >
+            <thead>
+              {table.getHeaderGroups().map((headerGroup: any) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header: any, colIndex: number) => {
+                    const isLastCol =
+                      colIndex === headerGroup.headers.length - 1;
+                    const isFirstCol = colIndex === 0;
+                    const isFullResultCol =
+                      header.column.columnDef.id === "full_result";
+                    return (
+                      <th
+                        key={header.id}
+                        colSpan={header.colSpan}
                         className={clx(
-                          highlight && isFirstCol
-                            ? "font-medium"
-                            : "font-normal",
-                          "py-[11px]",
-                          isFirstCol && firstColumnNoWrap && "whitespace-nowrap",
+                          "sticky top-0 z-10 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
                           isFirstCol
                             ? compactFirstColumn
                               ? "pl-2 pr-3"
                               : "pl-4 pr-3"
                             : "px-3",
                           isLastCol && isFullResultCol && "pr-1 text-right",
-                          fullBorder && "border",
+                          fullBorder && "border border-b-2 text-body-xs",
+                          alternateTextColor && "text-txt-black-500",
+                          headerClassName,
+                          isFirstCol &&
+                            firstColumnNoWrap &&
+                            "whitespace-nowrap",
                         )}
                       >
-                        {isLoading ? (
-                          <Skeleton />
-                        ) : (
-                          lookupDesktop(
-                            cell.column.columnDef.id,
-                            cell,
-                            highlight,
-                          )
-                        )}
-                      </td>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </th>
                     );
-                    })}
+                  })}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ))}
+            </thead>
+            <tbody>
+              {data.map((row: any, idx: number) => {
+                if (row.change_en) {
+                  return (
+                    <ExplanationRow
+                      key={"explanation-" + idx}
+                      change_en={row.change_en}
+                      change_ms={row.change_ms}
+                    />
+                  );
+                }
+                // Use react-table for normal rows
+                const tableRow = table
+                  .getRowModel()
+                  .rows.find((r: any) => r.index === idx);
+                if (!tableRow) return null;
+                const highlight = isHighlighted(tableRow);
+                return (
+                  <tr
+                    key={tableRow.id}
+                    className={clx(
+                      highlight ? "bg-bg-washed" : "bg-inherit",
+                      "border-b border-otl-gray-200",
+                    )}
+                  >
+                    {tableRow
+                      .getVisibleCells()
+                      .map((cell: any, colIndex: number) => {
+                        const isLastCol =
+                          colIndex === tableRow.getVisibleCells().length - 1;
+                        const isFirstCol = colIndex === 0;
+                        const isFullResultCol =
+                          cell.column.columnDef.id === "full_result";
+                        return (
+                          <td
+                            key={cell.id}
+                            className={clx(
+                              highlight && isFirstCol
+                                ? "font-medium"
+                                : "font-normal",
+                              "py-[11px]",
+                              isFirstCol &&
+                                firstColumnNoWrap &&
+                                "whitespace-nowrap",
+                              isFirstCol
+                                ? compactFirstColumn
+                                  ? "pl-2 pr-3"
+                                  : "pl-4 pr-3"
+                                : "px-3",
+                              isLastCol && isFullResultCol && "pr-1 text-right",
+                              fullBorder && "border",
+                            )}
+                          >
+                            {isLoading ? (
+                              <Skeleton />
+                            ) : (
+                              lookupDesktop(
+                                cell.column.columnDef.id,
+                                cell,
+                                highlight,
+                              )
+                            )}
+                          </td>
+                        );
+                      })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
         {/* Mobile – simple table (e.g. elections overview) */}
         {simpleMobileTable && (
-          <div className="md:hidden overflow-x-auto overflow-y-auto max-h-[498px] [&::-webkit-scrollbar]:hidden">
+          <div className="max-h-[498px] overflow-x-auto overflow-y-auto md:hidden [&::-webkit-scrollbar]:hidden">
             <table className="w-full text-left text-body-sm">
               <thead>
                 {table.getHeaderGroups().map((headerGroup: any) => (
                   <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header: any, colIndex: number) => {
-                      const isSeatsWon = header.column.columnDef.id === "seats_won";
-                      const seatsTotal = data[0]?.seats_total;
-                      const isFirst = colIndex === 0;
-                      return (
-                        <th
-                          key={header.id}
-                          className={clx(
-                            "sticky top-0 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
-                            isFirst ? "left-0 z-30" : "z-20",
-                            isFirst
-                              ? `${compactFirstColumn ? "pl-2" : "pl-4"} pr-3`
-                              : "px-3",
-                          )}
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                          {isSeatsWon && seatsTotal != null && (
-                            <span className="font-normal text-txt-black-500">{` / ${seatsTotal}`}</span>
-                          )}
-                        </th>
-                      );
-                    })}
+                    {headerGroup.headers.map(
+                      (header: any, colIndex: number) => {
+                        const isSeatsWon =
+                          header.column.columnDef.id === "seats_won";
+                        const seatsTotal = data[0]?.seats_total;
+                        const isFirst = colIndex === 0;
+                        return (
+                          <th
+                            key={header.id}
+                            className={clx(
+                              "sticky top-0 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
+                              isFirst ? "left-0 z-30" : "z-20",
+                              isFirst
+                                ? `${compactFirstColumn ? "pl-2" : "pl-4"} pr-3`
+                                : "px-3",
+                            )}
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext(),
+                                )}
+                            {isSeatsWon && seatsTotal != null && (
+                              <span className="font-normal text-txt-black-500">{` / ${seatsTotal}`}</span>
+                            )}
+                          </th>
+                        );
+                      },
+                    )}
                   </tr>
                 ))}
               </thead>
@@ -673,54 +703,64 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                         highlight ? "bg-bg-black-50" : "bg-inherit",
                       )}
                     >
-                      {tableRow.getVisibleCells().map((cell: any, colIndex: number) => {
-                        const id = cell.column.columnDef.id;
-                        const value = cell.getValue();
-                        const isFirst = colIndex === 0;
-                        let content: ReactNode;
-                        if (id === "party") {
-                          content = lookupMobile("party", cell, highlight);
-                        } else if (id === "seats_won" || id === "seats_contested") {
-                          const seatsPerc = cell.row.original[id + "_perc"];
-                          content = isLoading ? (
-                            <Skeleton className="w-16" />
-                          ) : (
-                            <span className="whitespace-nowrap">
-                              {value}
-                              {seatsPerc !== null
-                                ? ` (${numFormat(seatsPerc, "compact", [1, 1])}%)`
-                                : " (—)"}
-                            </span>
+                      {tableRow
+                        .getVisibleCells()
+                        .map((cell: any, colIndex: number) => {
+                          const id = cell.column.columnDef.id;
+                          const value = cell.getValue();
+                          const isFirst = colIndex === 0;
+                          let content: ReactNode;
+                          if (id === "party") {
+                            content = lookupMobile("party", cell, highlight);
+                          } else if (
+                            id === "seats_won" ||
+                            id === "seats_contested"
+                          ) {
+                            const seatsPerc = cell.row.original[id + "_perc"];
+                            content = isLoading ? (
+                              <Skeleton className="w-16" />
+                            ) : (
+                              <span className="whitespace-nowrap">
+                                {value}
+                                {seatsPerc !== null
+                                  ? ` (${numFormat(seatsPerc, "compact", [1, 1])}%)`
+                                  : " (—)"}
+                              </span>
+                            );
+                          } else if (id === "votes") {
+                            const votesPerc = cell.row.original.votes_perc;
+                            content = isLoading ? (
+                              <Skeleton className="w-20" />
+                            ) : (
+                              <span className="whitespace-nowrap">
+                                {value !== null
+                                  ? numFormat(value, "standard")
+                                  : "—"}
+                                {votesPerc !== null
+                                  ? ` (${numFormat(votesPerc, "compact", [1, 1])}%)`
+                                  : " (—)"}
+                              </span>
+                            );
+                          } else {
+                            content = flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            );
+                          }
+                          return (
+                            <td
+                              key={cell.id}
+                              className={clx(
+                                "py-[11px]",
+                                isFirst
+                                  ? `sticky left-0 z-10 w-px whitespace-nowrap ${compactFirstColumn ? "pl-2" : "pl-4"} pr-3 ${stickyBg}`
+                                  : "px-3",
+                              )}
+                            >
+                              {content}
+                            </td>
                           );
-                        } else if (id === "votes") {
-                          const votesPerc = cell.row.original.votes_perc;
-                          content = isLoading ? (
-                            <Skeleton className="w-20" />
-                          ) : (
-                            <span className="whitespace-nowrap">
-                              {value !== null ? numFormat(value, "standard") : "—"}
-                              {votesPerc !== null
-                                ? ` (${numFormat(votesPerc, "compact", [1, 1])}%)`
-                                : " (—)"}
-                            </span>
-                          );
-                        } else {
-                          content = flexRender(cell.column.columnDef.cell, cell.getContext());
-                        }
-                        return (
-                          <td
-                            key={cell.id}
-                            className={clx(
-                              "py-[11px]",
-                              isFirst
-                                ? `sticky left-0 z-10 w-px whitespace-nowrap ${compactFirstColumn ? "pl-2" : "pl-4"} pr-3 ${stickyBg}`
-                                : "px-3",
-                            )}
-                          >
-                            {content}
-                          </td>
-                        );
-                      })}
+                        })}
                     </tr>
                   );
                 })}
@@ -731,7 +771,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
 
         {/* Mobile – compact 3-column table (FullResult modal drawer) */}
         {compactMobileTable && (
-          <div className="md:hidden overflow-y-auto max-h-[498px] [&::-webkit-scrollbar]:hidden">
+          <div className="max-h-[498px] overflow-y-auto md:hidden [&::-webkit-scrollbar]:hidden">
             <table className="w-full text-left text-body-sm">
               <thead>
                 <tr>
@@ -771,7 +811,12 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                       )}
                     >
                       {/* Name */}
-                      <td className={clx("py-3 pl-2 pr-3 w-full min-w-0", highlight && "font-medium")}>
+                      <td
+                        className={clx(
+                          "w-full min-w-0 py-3 pl-2 pr-3",
+                          highlight && "font-medium",
+                        )}
+                      >
                         {isLoading ? (
                           <Skeleton className="w-24" />
                         ) : (
@@ -800,7 +845,9 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                                 alt={row.party}
                               />
                             </div>
-                            <span className="whitespace-nowrap text-center text-xs text-txt-black-700">{partyLabel}</span>
+                            <span className="whitespace-nowrap text-center text-xs text-txt-black-700">
+                              {partyLabel}
+                            </span>
                           </div>
                         )}
                       </td>
@@ -810,9 +857,15 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                           <Skeleton className="w-16" />
                         ) : (
                           <div className="flex flex-col gap-2">
-                            <BarPerc hidden value={votesPerc} size="w-[80px] h-[5px]" />
+                            <BarPerc
+                              hidden
+                              value={votesPerc}
+                              size="w-[80px] h-[5px]"
+                            />
                             <span className="whitespace-nowrap text-xs">
-                              {row.votes !== null ? numFormat(row.votes, "standard") : "—"}
+                              {row.votes !== null
+                                ? numFormat(row.votes, "standard")
+                                : "—"}
                               {votesPerc !== null
                                 ? ` (${numFormat(votesPerc, "compact", [1, 1])}%)`
                                 : " (—)"}
@@ -829,60 +882,62 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
         )}
 
         {/* Mobile – card layout */}
-        {!simpleMobileTable && !compactMobileTable && data.map((row: any, idx: number) => {
-          if (row.change_en) {
-            const isMalay = i18n.language && i18n.language.startsWith("ms");
-            return (
-              <div
-                key={"explanation-mobile-" + idx}
-                className="border-b border-otl-gray-200 bg-bg-washed p-3 text-center text-body-sm italic text-txt-black-700 md:hidden"
-              >
-                {isMalay && row.change_ms ? row.change_ms : row.change_en}
-              </div>
-            );
-          }
-          // Use react-table for normal rows
-          const tableRow = table
-            .getRowModel()
-            .rows.find((r: any) => r.index === idx);
-          if (!tableRow) return null;
-          const ids = table.getAllColumns().map((col) => col.id);
-          const highlight = isHighlighted(tableRow);
+        {!simpleMobileTable &&
+          !compactMobileTable &&
+          data.map((row: any, idx: number) => {
+            if (row.change_en) {
+              const isMalay = i18n.language && i18n.language.startsWith("ms");
+              return (
+                <div
+                  key={"explanation-mobile-" + idx}
+                  className="border-b border-otl-gray-200 bg-bg-washed p-3 text-center text-body-sm italic text-txt-black-700 md:hidden"
+                >
+                  {isMalay && row.change_ms ? row.change_ms : row.change_en}
+                </div>
+              );
+            }
+            // Use react-table for normal rows
+            const tableRow = table
+              .getRowModel()
+              .rows.find((r: any) => r.index === idx);
+            if (!tableRow) return null;
+            const ids = table.getAllColumns().map((col) => col.id);
+            const highlight = isHighlighted(tableRow);
 
-          let _row: Record<string, ReactNode> = {};
-          tableRow.getVisibleCells().forEach((cell: any) => {
-            _row[cell.column.columnDef.id] = lookupMobile(
-              cell.column.columnDef.id,
-              cell,
-              highlight,
-            );
-          });
-          return isLoading ? (
-            <div
-              key={idx}
-              className="flex flex-col gap-2 border-b border-otl-gray-200 p-3 first-of-type:border-t-2 md:hidden"
-            >
-              <Skeleton className="w-full" />
-              <div className="grid grid-cols-2 gap-3">
-                <Skeleton className="w-24" />
-                <Skeleton className="w-24" />
-                <Skeleton className="w-32" />
-                <Skeleton className="w-32" />
+            let _row: Record<string, ReactNode> = {};
+            tableRow.getVisibleCells().forEach((cell: any) => {
+              _row[cell.column.columnDef.id] = lookupMobile(
+                cell.column.columnDef.id,
+                cell,
+                highlight,
+              );
+            });
+            return isLoading ? (
+              <div
+                key={idx}
+                className="flex flex-col gap-2 border-b border-otl-gray-200 p-3 first-of-type:border-t-2 md:hidden"
+              >
+                <Skeleton className="w-full" />
+                <div className="grid grid-cols-2 gap-3">
+                  <Skeleton className="w-24" />
+                  <Skeleton className="w-24" />
+                  <Skeleton className="w-32" />
+                  <Skeleton className="w-32" />
+                </div>
               </div>
-            </div>
-          ) : (
-            <div
-              className={clx(
-                "flex flex-col space-y-3 border-b border-otl-gray-200 px-4 py-4 text-body-sm first:border-t-2 md:hidden",
-                idx === 0 && "border-t-2",
-                highlight ? "bg-bg-black-50" : "bg-inherit",
-              )}
-              key={idx}
-            >
-              {/* Row 1 - Election Name / Coalition (centre) / Full result */}
-              {["election_name", "full_result"].some((id) =>
-                ids.includes(id),
-              ) && (
+            ) : (
+              <div
+                className={clx(
+                  "flex flex-col space-y-3 border-b border-otl-gray-200 px-4 py-4 text-body-sm first:border-t-2 md:hidden",
+                  idx === 0 && "border-t-2",
+                  highlight ? "bg-bg-black-50" : "bg-inherit",
+                )}
+                key={idx}
+              >
+                {/* Row 1 - Election Name / Coalition (centre) / Full result */}
+                {["election_name", "full_result"].some((id) =>
+                  ids.includes(id),
+                ) && (
                   <div className="flex items-center justify-between gap-x-2">
                     <div className="flex gap-x-2">
                       {_row.index}
@@ -896,48 +951,44 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                     {_row.full_result}
                   </div>
                 )}
-              {/* Row 2 - Seat (if available)*/}
-              {(_row.result || _row.index) && (
-                <div>
-                  <p>{_row.seat} </p>
-                </div>
-              )}
-              {/* Row 3 - Party */}
-              {_row.party && (
-                <div className="min-w-0 overflow-hidden">
-                  {_row.party}
-                </div>
-              )}
-              {/* Row 4 - Result *Depends on page shown */}
-              {_row.name && (
-                <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  {_row.majority}
-                  {_row.voter_turnout}
-                  {_row.votes}
-                </div>
-              )}
-              {_row.result && (
-                <div className="flex gap-4">
-                  {_row.votes}
-                  {_row.result}
-                </div>
-              )}
-              {(_row.seats_won || _row.seats || _row.seats_contested) && (
-                <div className="flex flex-col gap-3">
-                  {(_row.seats_won || _row.seats) && (
-                    <div className="flex gap-6">
-                      {_row.seats_won ?? _row.seats}
-                      {_row.votes}
-                    </div>
-                  )}
-                  {_row.seats_contested && (
-                    <div>{_row.seats_contested}</div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                {/* Row 2 - Seat (if available)*/}
+                {(_row.result || _row.index) && (
+                  <div>
+                    <p>{_row.seat} </p>
+                  </div>
+                )}
+                {/* Row 3 - Party */}
+                {_row.party && (
+                  <div className="min-w-0 overflow-hidden">{_row.party}</div>
+                )}
+                {/* Row 4 - Result *Depends on page shown */}
+                {_row.name && (
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {_row.majority}
+                    {_row.voter_turnout}
+                    {_row.votes}
+                  </div>
+                )}
+                {_row.result && (
+                  <div className="flex gap-4">
+                    {_row.votes}
+                    {_row.result}
+                  </div>
+                )}
+                {(_row.seats_won || _row.seats || _row.seats_contested) && (
+                  <div className="flex flex-col gap-3">
+                    {(_row.seats_won || _row.seats) && (
+                      <div className="flex gap-6">
+                        {_row.seats_won ?? _row.seats}
+                        {_row.votes}
+                      </div>
+                    )}
+                    {_row.seats_contested && <div>{_row.seats_contested}</div>}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         {!data.length && (
           <div className="flex h-[200px] items-center justify-center">
             <div className="flex h-auto w-[300px] rounded-md bg-otl-gray-200 px-3 pb-2 pt-1 lg:w-fit">

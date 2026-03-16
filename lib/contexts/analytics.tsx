@@ -1,6 +1,12 @@
 import { post } from "@lib/api";
 import { MetaPage } from "@lib/types";
-import { FunctionComponent, ReactNode, createContext, useEffect, useState } from "react";
+import {
+  FunctionComponent,
+  ReactNode,
+  createContext,
+  useEffect,
+  useState,
+} from "react";
 
 /**
  * Realtime view count for dashboard & data-catalogue.
@@ -20,7 +26,9 @@ type MetricType =
   | "download_svg"
   | "download_parquet";
 
-export type Meta = Omit<MetaPage["meta"], "type"> & { type: "dashboard" | "data-catalogue" };
+export type Meta = Omit<MetaPage["meta"], "type"> & {
+  type: "dashboard" | "data-catalogue";
+};
 
 type AnalyticsResult<T extends "dashboard" | "data-catalogue"> = {
   id: string;
@@ -49,8 +57,13 @@ export const AnalyticsContext = createContext<
   realtime_track(id, type, metric) {},
 });
 
-export const AnalyticsProvider: FunctionComponent<ContextChildren> = ({ meta, children }) => {
-  const [data, setData] = useState<AnalyticsResult<"dashboard" | "data-catalogue"> | undefined>();
+export const AnalyticsProvider: FunctionComponent<ContextChildren> = ({
+  meta,
+  children,
+}) => {
+  const [data, setData] = useState<
+    AnalyticsResult<"dashboard" | "data-catalogue"> | undefined
+  >();
   // auto-increment view count for id
   // useEffect(() => {
   //   track(meta.id, meta.type, "view_count");
@@ -59,8 +72,8 @@ export const AnalyticsProvider: FunctionComponent<ContextChildren> = ({ meta, ch
   // increment activity count
   const track = (id: string, type: Meta["type"], metric: MetricType) => {
     post(`/view-count/?id=${id}&type=${type}&metric=${metric}`, null, "api")
-      .then(response => setData(response.data))
-      .catch(e => console.error(e));
+      .then((response) => setData(response.data))
+      .catch((e) => console.error(e));
   };
 
   return (

@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Johor", parlimen: "P.158 Tebrau", code_state: 1, code_parlimen: "P.158" },
+  properties: {
+    state: "Johor",
+    parlimen: "P.158 Tebrau",
+    code_state: 1,
+    code_parlimen: "P.158",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Perlis", parlimen: "P.003 Arau", code_state: 9, code_parlimen: "P.003" },
+  properties: {
+    state: "Perlis",
+    parlimen: "P.003 Arau",
+    code_state: 9,
+    code_parlimen: "P.003",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

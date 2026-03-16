@@ -30,7 +30,7 @@ const CatalogueScatter: FunctionComponent<CatalogueScatterProps> = ({
 
   return (
     <Scatter
-      _ref={ref => bind.chartjs(ref)}
+      _ref={(ref) => bind.chartjs(ref)}
       className={className}
       data={_datasets}
       enableRegression

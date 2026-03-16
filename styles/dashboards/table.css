@@ -57,16 +57,16 @@
   @apply w-max whitespace-nowrap font-normal text-txt-black-900;
 }
 .table-slate tbody tr {
-  @apply dark:border-txt-black-700 border-b-[0.5px] border-l-0;
+  @apply border-b-[0.5px] border-l-0 dark:border-txt-black-700;
 }
 .table-slate tbody tr:first-child {
-  @apply dark:border-txt-black-700 border-t-[0.5px];
+  @apply border-t-[0.5px] dark:border-txt-black-700;
 }
 .table-slate tbody tr:first-child td {
-  @apply border-t-bg-black-400 dark:border-txt-black-700 border-t-[0.5px] bg-white font-bold text-txt-black-900 dark:bg-bg-black-900 dark:text-white;
+  @apply border-t-[0.5px] border-t-bg-black-400 bg-white font-bold text-txt-black-900 dark:border-txt-black-700 dark:bg-bg-black-900 dark:text-white;
 }
 .table-slate tbody tr:last-child {
-  @apply border-b-bg-black-200 dark:border-txt-black-700 border-b-[0.5px];
+  @apply border-b-[0.5px] border-b-bg-black-200 dark:border-txt-black-700;
 }
 .table-slate td {
   @apply py-4 text-txt-black-900 dark:text-white;

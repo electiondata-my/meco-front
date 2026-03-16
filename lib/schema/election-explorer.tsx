@@ -1,4 +1,9 @@
-import { AccessorFn, createColumnHelper, DeepKeys, Row } from "@tanstack/react-table";
+import {
+  AccessorFn,
+  createColumnHelper,
+  DeepKeys,
+  Row,
+} from "@tanstack/react-table";
 
 type ElectionSchema<T> = {
   key: DeepKeys<T> | AccessorFn<T>;
@@ -9,7 +14,7 @@ type ElectionSchema<T> = {
 
 export const generateSchema = <T,>(schemas: ElectionSchema<T>[]) => {
   const helper = createColumnHelper<T>();
-  return schemas.map(schema => {
+  return schemas.map((schema) => {
     if (schema.cell)
       return helper.accessor(schema.key, {
         id: schema.id,

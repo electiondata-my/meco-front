@@ -22,7 +22,10 @@ const ByElectionsPage: Page = ({
     <AnalyticsProvider meta={meta}>
       <Metadata
         title={t("hero.header", { ns: "byelections" })}
-        description={t("hero.description", { ns: "byelections", count: seats.length })}
+        description={t("hero.description", {
+          ns: "byelections",
+          count: seats.length,
+        })}
         keywords=""
       />
       <ByElectionsDashboard seats={seats} />

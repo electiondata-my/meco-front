@@ -22,13 +22,13 @@ export default function ThemeToggle() {
       <ButtonIcon>
         <MoonIcon
           data-state={resolvedTheme === "light" ? "dark" : "light"}
-          className="text-txt-black-700 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 size-4 group-hover:text-black data-[state=dark]:flex data-[state=light]:hidden"
+          className="group-hover:text-black size-4 text-txt-black-700 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 data-[state=dark]:flex data-[state=light]:hidden"
         />
       </ButtonIcon>
       <ButtonIcon>
         <SunIcon
           data-state={resolvedTheme === "light" ? "dark" : "light"}
-          className="text-txt-black-700 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 -m-0.5 size-5 group-hover:text-[#FFFFFF] data-[state=light]:flex data-[state=dark]:hidden"
+          className="-m-0.5 size-5 text-txt-black-700 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2 group-hover:text-[#FFFFFF] data-[state=light]:flex data-[state=dark]:hidden"
         />
       </ButtonIcon>
       <div className="sr-only">{theme === "light" ? "Dark" : "Light"}</div>

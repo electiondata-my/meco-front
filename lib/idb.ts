@@ -32,7 +32,9 @@ export class IndexedDB {
     });
   }
 
-  async read<T extends Record<string, any>>(id: string): Promise<T | undefined> {
+  async read<T extends Record<string, any>>(
+    id: string,
+  ): Promise<T | undefined> {
     const db = await this.open();
     const transaction = db.transaction([this.model], "readonly");
     const store = transaction.objectStore(this.model);
@@ -74,9 +76,9 @@ export class IndexedDB {
     const store = transaction.objectStore(this.model);
     const _ids = Array.isArray(ids) ? ids : [ids];
     return new Promise((resolve, reject) => {
-      Promise.allSettled(_ids.map(id => store.delete(id)))
+      Promise.allSettled(_ids.map((id) => store.delete(id)))
         .then(() => resolve())
-        .catch(e => reject(e));
+        .catch((e) => reject(e));
     });
   }
 
@@ -116,7 +118,8 @@ export class IndexedDB {
         const db = request.result as IDBDatabase;
 
         for (const model of IndexedDB.MODELS) {
-          if (!db.objectStoreNames.contains(model)) db.createObjectStore(model, { keyPath: "id" });
+          if (!db.objectStoreNames.contains(model))
+            db.createObjectStore(model, { keyPath: "id" });
         }
       };
     });

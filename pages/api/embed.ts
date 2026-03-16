@@ -9,7 +9,10 @@ import { NextApiRequest, NextApiResponse } from "next";
  * @param res Response
  * @returns {RevalidateData} Result
  */
-export default async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<any>,
+) {
   try {
     const { id, lang, ...query } = req.query;
     const { data } = await get("/data-variable/", {
@@ -19,13 +22,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     });
 
     return res
-    .setHeader("Cache-Control", "public, s-maxage=21600, stale-while-revalidate=21600") // 30 min
-    .json({
-      params: {
-        id: id ?? null,
-      },
-      options: data.API.filters?.filter((item: DCFilter) => item.key !== "date_slider") ?? null,
-    });
+      .setHeader(
+        "Cache-Control",
+        "public, s-maxage=21600, stale-while-revalidate=21600",
+      ) // 30 min
+      .json({
+        params: {
+          id: id ?? null,
+        },
+        options:
+          data.API.filters?.filter(
+            (item: DCFilter) => item.key !== "date_slider",
+          ) ?? null,
+      });
   } catch (err: any) {
     return res.status(400).json({ error: "Bad request", authorized: false });
   }

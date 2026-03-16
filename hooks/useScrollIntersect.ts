@@ -3,7 +3,10 @@ import { useEffect, useRef } from "react";
  * Language switcher hook.
  * @returns Page with current language
  */
-export const useScrollIntersect = (target: Element | null, className: string[]) => {
+export const useScrollIntersect = (
+  target: Element | null,
+  className: string[],
+) => {
   const observer = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {

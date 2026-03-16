@@ -31,10 +31,7 @@ interface OverviewProps {
   table: PartyResult;
 }
 
-const Overview: FunctionComponent<OverviewProps> = ({
-  params,
-  table,
-}) => {
+const Overview: FunctionComponent<OverviewProps> = ({ params, table }) => {
   const { t } = useTranslation(["common", "elections", "election"]);
 
   const PANELS = [

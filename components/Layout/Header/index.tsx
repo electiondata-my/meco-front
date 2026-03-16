@@ -93,7 +93,9 @@ export default function Header() {
               title={t("common:nav.elections")}
               link="/elections"
               onClick={close}
-              icon={<ClipboardDocumentCheckIcon className="hidden size-8 max-lg:block" />}
+              icon={
+                <ClipboardDocumentCheckIcon className="hidden size-8 max-lg:block" />
+              }
               className="lg:order-4"
             />
 
@@ -121,8 +123,8 @@ export default function Header() {
                 title={t("common:nav.catalogue")}
                 link="/data-catalogue"
                 icon={
-                <ArrowDownTrayIcon className="hidden size-8 max-lg:block" />
-              }
+                  <ArrowDownTrayIcon className="hidden size-8 max-lg:block" />
+                }
                 onClick={close}
                 className="lg:order-8"
               />

@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Johor", parlimen: "P.143 Pagoh", code_state: 1, code_parlimen: "P.143" },
+  properties: {
+    state: "Johor",
+    parlimen: "P.143 Pagoh",
+    code_state: 1,
+    code_parlimen: "P.143",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

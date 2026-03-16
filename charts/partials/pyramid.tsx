@@ -1,4 +1,3 @@
-
 import { COLOR } from "@lib/constants";
 import { CatalogueContext } from "@lib/contexts/catalogue";
 import { ChartDataset } from "chart.js";
@@ -37,9 +36,11 @@ const CataloguePyramid: FunctionComponent<CataloguePyramidProps> = ({
 
   return (
     <Pyramid
-      _ref={ref => bind.chartjs(ref)}
+      _ref={(ref) => bind.chartjs(ref)}
       className={className}
-      precision={config?.precision !== undefined ? [config.precision, 0] : [1, 0]}
+      precision={
+        config?.precision !== undefined ? [config.precision, 0] : [1, 0]
+      }
       data={{
         labels: dataset.chart.x,
         datasets: _datasets,

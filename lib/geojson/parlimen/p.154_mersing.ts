@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Johor", parlimen: "P.154 Mersing", code_state: 1, code_parlimen: "P.154" },
+  properties: {
+    state: "Johor",
+    parlimen: "P.154 Mersing",
+    code_state: 1,
+    code_parlimen: "P.154",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

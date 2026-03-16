@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Sabah", parlimen: "P.181 Tenom", code_state: 12, code_parlimen: "P.181" },
+  properties: {
+    state: "Sabah",
+    parlimen: "P.181 Tenom",
+    code_state: 12,
+    code_parlimen: "P.181",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

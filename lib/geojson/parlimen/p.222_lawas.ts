@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Sarawak", parlimen: "P.222 Lawas", code_state: 13, code_parlimen: "P.222" },
+  properties: {
+    state: "Sarawak",
+    parlimen: "P.222 Lawas",
+    code_state: 13,
+    code_parlimen: "P.222",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

@@ -22,16 +22,20 @@ const CatalogueBar: FunctionComponent<CatalogueBarProps> = ({
   const { bind, dataset } = useContext(CatalogueContext);
   const { size } = useContext(WindowContext);
   const bar_layout = useMemo<"horizontal" | "vertical">(() => {
-    if (dataset.type === "HBAR" || size.width < BREAKPOINTS.MD) return "horizontal";
+    if (dataset.type === "HBAR" || size.width < BREAKPOINTS.MD)
+      return "horizontal";
     return "vertical";
   }, [dataset.type, size.width]);
 
   const _datasets = useMemo<ChartDataset<"bar", any[]>[]>(() => {
-    const sets = Object.entries(dataset.chart).filter(([key, _]) => key !== "x");
+    const sets = Object.entries(dataset.chart).filter(
+      ([key, _]) => key !== "x",
+    );
 
     return sets.map(([key, y], index) => ({
       data: y as number[],
-      label: sets.length === 1 ? dataset.meta.title : translations[key] ?? key,
+      label:
+        sets.length === 1 ? dataset.meta.title : (translations[key] ?? key),
       borderColor: CATALOGUE_COLORS[index],
       backgroundColor: CATALOGUE_COLORS[index].concat("1A"),
       borderWidth: 1,
@@ -40,13 +44,13 @@ const CatalogueBar: FunctionComponent<CatalogueBarProps> = ({
 
   return (
     <Bar
-      _ref={ref => bind.chartjs(ref)}
+      _ref={(ref) => bind.chartjs(ref)}
       className={clx(
         className
           ? className
           : bar_layout === "vertical"
-          ? "h-[350px] w-full lg:h-[450px]"
-          : "mx-auto h-[500px] w-full lg:h-[600px] lg:w-3/4"
+            ? "h-[350px] w-full lg:h-[450px]"
+            : "mx-auto h-[500px] w-full lg:h-[600px] lg:w-3/4",
       )}
       type="category"
       enableStack={dataset.type === "STACKED_BAR"}
@@ -54,7 +58,11 @@ const CatalogueBar: FunctionComponent<CatalogueBarProps> = ({
       enableGridX={bar_layout !== "vertical"}
       enableGridY={bar_layout === "vertical"}
       enableLegend={_datasets.length > 1}
-      precision={config?.precision !== undefined ? [config.precision, config.precision] : [1, 1]}
+      precision={
+        config?.precision !== undefined
+          ? [config.precision, config.precision]
+          : [1, 1]
+      }
       data={{
         labels: dataset.chart.x,
         datasets: _datasets,

@@ -54,7 +54,10 @@ const BarPerc: FunctionComponent<BarPercProps> = ({
         )}
       >
         <div
-          className={clx("h-full items-center overflow-hidden rounded-full", fillClassName)}
+          className={clx(
+            "h-full items-center overflow-hidden rounded-full",
+            fillClassName,
+          )}
           style={{ width: percentFill(value) }}
         />
       </div>

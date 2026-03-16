@@ -72,7 +72,7 @@ print(df)`;
     switch (type) {
       case "GEOJSON":
         return `# ${t(
-          "code_note"
+          "code_note",
         )}: install.packages("geojsonio"); install.packages("sp")
 library(geojsonio, sp)
 

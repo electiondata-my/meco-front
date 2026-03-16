@@ -6,11 +6,17 @@ import { useMemo } from "react";
  * @param {[number, number]} minmax [min index, max index]
  * @returns Sliced state
  */
-export const useSlice = (state: Record<string, number[]>, minmax?: [number, number]) => {
+export const useSlice = (
+  state: Record<string, number[]>,
+  minmax?: [number, number],
+) => {
   const sliced = useMemo(() => {
     return Object.entries(state).map(([key, data]) => [
       key,
-      data.slice(minmax ? minmax[0] : 0, minmax ? minmax[1] + 1 : data.length - 1),
+      data.slice(
+        minmax ? minmax[0] : 0,
+        minmax ? minmax[1] + 1 : data.length - 1,
+      ),
     ]);
   }, [state, minmax]);
 

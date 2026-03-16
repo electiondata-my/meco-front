@@ -149,9 +149,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
         .sort((a, b) => {
           // GE (Malaysia) first, reverse chronological
           if (a.isGE && b.isGE) {
-            return (
-              new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
+            return new Date(b.date).getTime() - new Date(a.date).getTime();
           }
           if (a.isGE) return -1;
           if (b.isGE) return 1;
@@ -307,8 +305,8 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 selected={
                   data.candidate_value
                     ? (CANDIDATE_OPTIONS.find(
-                      (e) => e.value === data.candidate_value,
-                    ) ?? null)
+                        (e) => e.value === data.candidate_value,
+                      ) ?? null)
                     : null
                 }
                 onChange={(selected) => {
@@ -333,8 +331,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                     const y = b.item;
                     if (x.isGE && y.isGE)
                       return (
-                        new Date(y.date).getTime() -
-                        new Date(x.date).getTime()
+                        new Date(y.date).getTime() - new Date(x.date).getTime()
                       );
                     if (x.isGE) return -1;
                     if (y.isGE) return 1;
@@ -342,16 +339,15 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                     const orderB = STATE_ORDER[y.state] ?? 999;
                     if (orderA !== orderB) return orderA - orderB;
                     return (
-                      new Date(y.date).getTime() -
-                      new Date(x.date).getTime()
+                      new Date(y.date).getTime() - new Date(x.date).getTime()
                     );
                   },
                 }}
                 selected={
                   data.election_value
                     ? (ELECTION_OPTIONS.find(
-                      (e) => e.value === data.election_value,
-                    ) ?? null)
+                        (e) => e.value === data.election_value,
+                      ) ?? null)
                     : null
                 }
                 onChange={(selected) => {
@@ -437,8 +433,8 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 selected={
                   data.party_value
                     ? (PARTY_OPTIONS.find(
-                      (e) => e.value === data.party_value,
-                    ) ?? null)
+                        (e) => e.value === data.party_value,
+                      ) ?? null)
                     : null
                 }
                 onChange={(selected) => {
@@ -502,7 +498,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("explore.title", { ns: "home" })}
           </h2>
-          <div className="grid max-w-[1000px] divide-y divide-otl-gray-200 lg:divide-y-0 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-4">
+          <div className="grid max-w-[1000px] divide-y divide-otl-gray-200 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-4 lg:divide-y-0">
             {DASHBOARDS.map((item) => (
               <div
                 key={item.link}

@@ -1,5 +1,11 @@
 import throttle from "lodash/throttle";
-import { FunctionComponent, ReactNode, createContext, useEffect, useState } from "react";
+import {
+  FunctionComponent,
+  ReactNode,
+  createContext,
+  useEffect,
+  useState,
+} from "react";
 
 interface WindowContextProps {
   size: {
@@ -30,9 +36,17 @@ export const WindowContext = createContext<WindowContextProps>({
 /**
  * Note: Re-renders Table on Scroll
  */
-export const WindowProvider: FunctionComponent<WindowProviderProps> = ({ children }) => {
-  const [size, setSize] = useState<WindowContextProps["size"]>({ width: 1536, height: 0 });
-  const [scroll, setScroll] = useState<WindowContextProps["scroll"]>({ x: 0, y: 0 });
+export const WindowProvider: FunctionComponent<WindowProviderProps> = ({
+  children,
+}) => {
+  const [size, setSize] = useState<WindowContextProps["size"]>({
+    width: 1536,
+    height: 0,
+  });
+  const [scroll, setScroll] = useState<WindowContextProps["scroll"]>({
+    x: 0,
+    y: 0,
+  });
 
   useEffect(() => {
     function handleResize() {
@@ -52,5 +66,9 @@ export const WindowProvider: FunctionComponent<WindowProviderProps> = ({ childre
     };
   }, []);
 
-  return <WindowContext.Provider value={{ size, scroll }}>{children}</WindowContext.Provider>;
+  return (
+    <WindowContext.Provider value={{ size, scroll }}>
+      {children}
+    </WindowContext.Provider>
+  );
 };
