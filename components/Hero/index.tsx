@@ -9,7 +9,6 @@ import Container from "@components/Container";
 import { clx, numFormat } from "@lib/helpers";
 import { useTranslation } from "next-i18next";
 import { EyeIcon } from "@heroicons/react/20/solid";
-import HeroPattern from "./hero-pattern";
 import SectionGrid from "@components/Section/section-grid";
 
 type ConditionalHeroProps =
@@ -102,7 +101,14 @@ const Hero: FunctionComponent<HeroProps> = ({
     >
       {withPattern && (
         <div className="absolute flex h-full w-full justify-center overflow-hidden">
-          <HeroPattern className="animate-flow absolute motion-reduce:animate-none" />
+          <img
+            src="/static/images/hero-pattern.svg"
+            alt=""
+            aria-hidden="true"
+            width={1512}
+            height={378}
+            className="absolute opacity-10"
+          />
         </div>
       )}
       {children ? (
