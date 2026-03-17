@@ -1,10 +1,8 @@
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
-import { AxiosResponse } from "axios";
 import { DCVariable, Page } from "@lib/types";
 import { withi18n } from "@lib/decorators";
 import { SHORT_LANG } from "@lib/constants";
 import { get } from "@lib/api";
-import data from "@lib/mock/dc.json";
 import DataCatalogueShow from "@data-catalogue/show";
 
 const CatalogueShow: Page = ({
@@ -25,21 +23,22 @@ export const getStaticProps: GetStaticProps = withi18n(
   "catalogue",
   async ({ locale, params }) => {
     try {
-      // const { data } = (await get(`/data-catalogue/${params?.id}`, {
-      //   language: SHORT_LANG[locale as keyof typeof SHORT_LANG],
-      // })) as AxiosResponse<DCVariable>;
+      const lang = SHORT_LANG[locale! as keyof typeof SHORT_LANG];
+
+      const response = await get(`/catalogue/${params?.id}-${lang}.json`);
+
+      const data = response.data || {};
 
       return {
+        notFound: false,
         props: {
           meta: {
-            id: data.id,
+            id: params?.id,
             type: "data-catalogue",
-            category: null,
-            agency: Array.isArray(data.data_source)
-              ? data.data_source.join(",")
-              : "",
           },
           params: { ...params },
+          id: params?.id,
+          translations: {},
           ...data,
         },
       };

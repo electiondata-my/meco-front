@@ -2,7 +2,6 @@ import Metadata from "@components/Metadata";
 import ByElectionsDashboard from "@dashboards/byelections";
 import { get } from "@lib/api";
 import { withi18n } from "@lib/decorators";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { Page } from "@lib/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
@@ -19,7 +18,7 @@ const ByElectionsPage: Page = ({
   const { t } = useTranslation("byelections");
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={t("hero.header", { ns: "byelections" })}
         description={t("hero.description", {
@@ -29,7 +28,7 @@ const ByElectionsPage: Page = ({
         keywords=""
       />
       <ByElectionsDashboard seats={seats} />
-    </AnalyticsProvider>
+    </>
   );
 };
 

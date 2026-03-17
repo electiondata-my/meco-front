@@ -3,7 +3,6 @@ import ElectionExplorerDashboard from "@dashboards/elections";
 import { useTranslation } from "@hooks/useTranslation";
 import { get } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import groupBy from "lodash/groupBy";
@@ -20,7 +19,7 @@ const ElectionExplorerIndex: Page = ({
   const { t } = useTranslation("elections");
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={t("hero.header", { ns: "elections" })}
         description={t("hero.description", { ns: "elections" })}
@@ -33,7 +32,7 @@ const ElectionExplorerIndex: Page = ({
         selection={selection}
         table={table}
       />
-    </AnalyticsProvider>
+    </>
   );
 };
 

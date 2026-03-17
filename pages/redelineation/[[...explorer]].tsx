@@ -2,7 +2,6 @@ import Metadata from "@components/Metadata";
 import RedelineationDashboard from "@dashboards/redelineation";
 import { useTranslation } from "@hooks/useTranslation";
 import { get } from "@lib/api";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
@@ -17,7 +16,7 @@ const RedelineationIndex: Page = ({
   const { t } = useTranslation(["redelineation"]);
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={t("hero.header", { ns: "redelineation" })}
         description={t("hero.description", { ns: "redelineation" })}
@@ -34,7 +33,7 @@ const RedelineationIndex: Page = ({
           data={data}
         />
       </MapProvider>
-    </AnalyticsProvider>
+    </>
   );
 };
 

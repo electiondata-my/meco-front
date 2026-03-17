@@ -1,4 +1,3 @@
-import { download, exportAs } from "@lib/helpers";
 import {
   Dispatch,
   ForwardRefExoticComponent,
@@ -11,18 +10,12 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  CloudArrowDownIcon,
-  DocumentArrowDownIcon,
-} from "@heroicons/react/24/outline";
-import { toast } from "@components/Toast";
 import { ChartTypeRegistry } from "chart.js";
 import { ChartJSOrUndefined } from "react-chartjs-2/dist/types";
 import { GeoChoroplethRef } from "@charts/geochoropleth";
-import { DCChartKeys, DownloadOptions } from "@lib/types";
+import { DCChartKeys } from "@lib/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { useExport } from "@hooks/useExport";
-import { useAnalytics } from "@hooks/useAnalytics";
 
 export type DatasetType = {
   type: DCChartKeys;
@@ -43,14 +36,10 @@ interface CatalogueContextProps {
     leaflet: RefObject<GeoChoroplethRef | null>;
   };
   dataset: DatasetType;
-  downloads: DownloadOptions;
 }
 
 interface CatalogueProviderProps {
   dataset: DatasetType;
-  urls: {
-    [key: string]: string;
-  };
   children: ReactNode;
 }
 
@@ -59,7 +48,6 @@ export const CatalogueContext = createContext<CatalogueContextProps>({
     chartjs: () => {},
     leaflet: { current: null },
   },
-  downloads: { chart: [], data: [] },
   dataset: {
     type: "TABLE",
     chart: undefined,
@@ -73,7 +61,7 @@ export const CatalogueContext = createContext<CatalogueContextProps>({
 });
 
 export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps> =
-  forwardRef(({ children, dataset, urls }, ref) => {
+  forwardRef(({ children, dataset }, ref) => {
     const { t } = useTranslation(["catalogue", "common"]);
     const [chartjs, setChartjs] = useState<ChartJSOrUndefined<
       keyof ChartTypeRegistry,
@@ -81,9 +69,6 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
       unknown
     > | null>(null);
     const leaflet = useRef<GeoChoroplethRef | null>(null);
-    const { png } = useExport(Boolean(leaflet.current), dataset.meta.unique_id);
-    const { track } = useAnalytics(dataset);
-
     const _dataset = useMemo(() => {
       if (["TIMESERIES", "STACKED_AREA", "INTRADAY"].includes(dataset.type)) {
         const { x, ...y } = dataset.chart as Record<
@@ -130,214 +115,6 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
       return dataset;
     }, [dataset]);
 
-    const _downloads = (() => {
-      switch (dataset.type) {
-        // Case: Leaflet based maps
-        case "GEOCHOROPLETH":
-          return {
-            chart: [
-              {
-                id: "png",
-                image: png,
-                title: t("image.title"),
-                description: t("image.desc"),
-                icon: (
-                  <CloudArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  if (!leaflet) return;
-                  leaflet.current?.print(dataset.meta.unique_id.concat(".png"));
-                  track("png");
-                },
-              },
-            ],
-            data: [
-              {
-                id: "csv",
-                image: "/static/images/icons/csv.png",
-                title: t("csv.title"),
-                description: t("csv.desc"),
-                icon: (
-                  <DocumentArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  download(urls.csv, dataset.meta.unique_id.concat(".csv"));
-                  track("csv");
-                },
-              },
-              {
-                id: "parquet",
-                image: "/static/images/icons/parquet.png",
-                title: t("parquet.title"),
-                description: t("parquet.desc"),
-                icon: (
-                  <DocumentArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  download(
-                    urls.parquet,
-                    dataset.meta.unique_id.concat(".parquet"),
-                  );
-                  track("parquet");
-                },
-              },
-            ],
-          };
-        // Case: GEOJSON
-        case "GEOJSON":
-          return {
-            chart: [
-              {
-                id: "png",
-                image: png,
-                title: t("image.title"),
-                description: t("image.desc"),
-                icon: (
-                  <CloudArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  if (!leaflet) return;
-                  leaflet.current?.print(dataset.meta.unique_id.concat(".png"));
-                  track("png");
-                },
-              },
-            ],
-            data: [
-              {
-                id: "geojson",
-                image: "/static/images/icons/geojson.png",
-                title: t("geojson.title"),
-                description: t("geojson.desc"),
-                icon: (
-                  <DocumentArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  download(
-                    urls.link_geojson,
-                    dataset.meta.unique_id.concat(".geojson"),
-                  );
-                  track("parquet"); // TODO: Fix GeoJSON analytics
-                },
-              },
-            ],
-          };
-
-        // Case: Table
-        case "TABLE":
-          return {
-            chart: [],
-            data: [
-              {
-                id: "csv",
-                image: "/static/images/icons/csv.png",
-                title: t("csv.title"),
-                description: t("csv.desc"),
-                icon: (
-                  <DocumentArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href() {
-                  download(urls.csv, dataset.meta.unique_id.concat(".csv"));
-                  track("csv");
-                },
-              },
-              {
-                id: "parquet",
-                image: "/static/images/icons/parquet.png",
-                title: t("parquet.title"),
-                description: t("parquet.desc"),
-                icon: (
-                  <DocumentArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href() {
-                  download(
-                    urls.parquet,
-                    dataset.meta.unique_id.concat(".parquet"),
-                  );
-                  track("parquet");
-                },
-              },
-            ],
-          };
-
-        // Default: ChartJS based charts
-        default:
-          return {
-            chart: [
-              {
-                id: "png",
-                image: chartjs && chartjs.toBase64Image("png", 1),
-                title: t("image.title"),
-                description: t("image.desc"),
-                icon: (
-                  <CloudArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  download(
-                    chartjs!.toBase64Image("png", 1),
-                    dataset.meta.unique_id.concat(".png"),
-                  );
-                  track("png");
-                },
-              },
-              {
-                id: "svg",
-                image: chartjs && chartjs.toBase64Image("image/png", 1),
-                title: t("vector.title"),
-                description: t("vector.desc"),
-                icon: (
-                  <CloudArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  exportAs("svg", chartjs!.canvas)
-                    .then((dataUrl) =>
-                      download(dataUrl, dataset.meta.unique_id.concat(".svg")),
-                    )
-                    .then(() => track("svg"))
-                    .catch((e) => {
-                      toast.error(
-                        t("common:error.toast.image_download_failure"),
-                        t("common:error.toast.try_again"),
-                      );
-                      console.error(e);
-                    });
-                },
-              },
-            ],
-            data: [
-              {
-                id: "csv",
-                image: "/static/images/icons/csv.png",
-                title: t("csv.title"),
-                description: t("csv.desc"),
-                icon: (
-                  <DocumentArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  download(urls.csv, dataset.meta.unique_id.concat(".csv"));
-                  track("csv");
-                },
-              },
-              {
-                id: "parquet",
-                image: "/static/images/icons/parquet.png",
-                title: t("parquet.title"),
-                description: t("parquet.desc"),
-                icon: (
-                  <DocumentArrowDownIcon className="text-dim h-6 min-w-[24px]" />
-                ),
-                href: () => {
-                  download(
-                    urls.parquet,
-                    dataset.meta.unique_id.concat(".parquet"),
-                  );
-                  track("parquet");
-                },
-              },
-            ],
-          };
-      }
-    })();
-
     return (
       <CatalogueContext.Provider
         value={{
@@ -345,7 +122,6 @@ export const CatalogueProvider: ForwardRefExoticComponent<CatalogueProviderProps
             chartjs: setChartjs,
             leaflet: leaflet,
           },
-          downloads: _downloads,
           dataset: _dataset,
         }}
       >

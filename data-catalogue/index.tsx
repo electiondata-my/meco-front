@@ -1,4 +1,4 @@
-import { Container, Hero, Sidebar, StateDropdown } from "@components/index";
+import { Container, Hero, Sidebar } from "@components/index";
 import SectionGrid from "@components/Section/section-grid";
 import { useTranslation } from "@hooks/useTranslation";
 import { BREAKPOINTS } from "@lib/constants";
@@ -24,7 +24,6 @@ import {
 } from "@govtechmy/myds-react/search-bar";
 import { Pill } from "@govtechmy/myds-react/pill";
 import { useData } from "@hooks/useData";
-import useFocus from "@hooks/useFocus";
 import { clx, toDate } from "@lib/helpers";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -194,9 +193,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
   const searchRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const { focused } = useFocus(searchRef);
   const { query, replace, pathname, isReady } = useRouter();
-  const { size } = useContext(WindowContext);
 
   const search = typeof query.search === "string" ? query.search : "";
   const { data, setData } = useData({
@@ -205,7 +202,6 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
   });
 
   const { isStick, input } = data;
-  const currentState = (query?.state as string) || "mys";
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

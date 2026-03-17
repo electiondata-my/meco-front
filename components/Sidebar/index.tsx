@@ -42,7 +42,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
       <div className="flex w-full flex-row gap-8">
         {/* Desktop */}
         <div className="xl:1/5 hidden lg:block lg:w-1/5">
-          <ul className="hide-scrollbar sticky top-36 flex h-[90vh] w-full flex-col gap-2 overflow-x-visible overflow-y-scroll">
+          <ul className="hide-scrollbar sticky top-20 flex h-[calc(100dvh-64px)] w-full flex-col gap-2 overflow-x-visible overflow-y-scroll">
             <li className="px-1">
               <h5
                 className={clx(

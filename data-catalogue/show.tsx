@@ -5,7 +5,6 @@ import {
   Dispatch,
   FunctionComponent,
   SetStateAction,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -20,17 +19,11 @@ import Container from "@components/Container";
 import Sidebar from "@components/Sidebar";
 import Section from "@components/Section";
 import SectionGrid from "@components/Section/section-grid";
-import At from "@components/At";
-import {
-  CatalogueProvider,
-  DatasetType,
-  CatalogueContext,
-} from "@lib/contexts/catalogue";
+import { CatalogueProvider, DatasetType } from "@lib/contexts/catalogue";
 import { useTranslation } from "@hooks/useTranslation";
 import { useFilter } from "@hooks/useFilter";
-import { useAnalytics } from "@hooks/useAnalytics";
 import { AnalyticsProvider, Meta } from "@lib/contexts/analytics";
-import { DownloadCard } from "./card";
+import DCDownload from "./download";
 
 /**
  * Catalogue Show
@@ -89,13 +82,7 @@ const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
         description={dataset.meta.desc.replace(/^(.*?)]/, "")}
         keywords={""}
       />
-      <CatalogueProvider
-        dataset={dataset}
-        urls={{
-          csv: data.link_csv,
-          parquet: data.link_parquet,
-        }}
-      >
+      <CatalogueProvider dataset={dataset}>
         <CatalogueShow
           key={router.asPath}
           params={params}
@@ -123,7 +110,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
   selectedViz,
   setSelectedViz,
 }) => {
-  const { t, i18n } = useTranslation(["catalogue", "common"]);
+  const { i18n } = useTranslation(["catalogue", "common"]);
   const { config, ...viz } = selectedViz;
   const scrollRef = useRef<Record<string, HTMLElement | null>>({});
   const { filter, setFilter } = useFilter(
@@ -142,26 +129,6 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
     ]),
     { id: params.id },
     true,
-  );
-  const { downloads, dataset } = useContext(CatalogueContext);
-  const { result } = useAnalytics(dataset);
-
-  const [selectedEdition, setSelectedEdition] = useState<string>(
-    data.link_editions && data.link_editions.length > 0
-      ? data.link_editions[0]
-      : "",
-  );
-
-  const getURL = (url: string, edition: string) =>
-    edition ? url.replace("YYYY-MM-DD", edition) : url;
-
-  const [urls, setURLs] = useState(
-    data.link_editions && data.link_editions.length > 0
-      ? {
-          csv: getURL(data.link_csv, selectedEdition),
-          parquet: getURL(data.link_parquet, selectedEdition),
-        }
-      : { csv: data.link_csv, parquet: data.link_parquet },
   );
 
   return (
@@ -187,21 +154,15 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             {/* Chart & Table */}
             <DCChartsAndTable
               scrollRef={scrollRef}
-              data={{
-                ...data,
-                link_csv: urls.csv,
-                link_parquet: urls.parquet,
-              }}
+              data={data}
               selectedViz={selectedViz}
               setSelectedViz={setSelectedViz}
-              filter={filter}
-              setFilter={setFilter}
             />
 
             {/* Methodology */}
             <DCMethodology
               explanation={{
-                methodology: data.methodology,
+                notes: data.notes,
               }}
               scrollRef={scrollRef}
             />
@@ -211,80 +172,16 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
               scrollRef={scrollRef}
               metadata={{
                 description: data.description,
+                notes: data.notes,
                 fields: data.fields,
                 last_updated: data.last_updated,
                 next_update: data.next_update,
-                data_source: data.data_source.map((source) =>
-                  t(`agencies:${source.toLowerCase()}.full`, {
-                    defaultValue: source,
-                  }),
-                ),
-                link_csv: urls.csv,
-                link_parquet: urls.parquet,
-                link_editions: data.link_editions,
-              }}
-              selectedEdition={selectedEdition}
-              setSelectedEdition={(edition) => {
-                setSelectedEdition(edition);
-                setURLs({
-                  csv: getURL(data.link_csv, edition),
-                  parquet: getURL(data.link_parquet, edition),
-                });
+                link_csv: data.download?.csv?.link,
+                link_parquet: data.download?.parquet?.link,
               }}
             />
             {/* Download */}
-            <Section
-              title={t("download")}
-              ref={(ref) => {
-                scrollRef.current["download"] = ref;
-              }}
-              className="mx-auto max-lg:py-8 lg:pb-16"
-            >
-              <div className="space-y-5">
-                {downloads?.chart.length > 0 && (
-                  <>
-                    <h5>{t("chart")}</h5>
-                    <div className="grid grid-cols-1 gap-4.5 md:grid-cols-2">
-                      {downloads?.chart.map((props) => (
-                        <DownloadCard
-                          key={`${dataset.meta.unique_id}_${props.id}`}
-                          views={
-                            result
-                              ? result[`download_${props.id as "png" | "svg"}`]
-                              : undefined
-                          }
-                          link_editions={data.link_editions}
-                          url={props.id === "csv" ? urls.csv : urls.parquet}
-                          {...props}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-                {downloads?.data.length > 0 && (
-                  <>
-                    <h5>Data</h5>
-                    <div className="grid grid-cols-1 gap-4.5 md:grid-cols-2">
-                      {downloads?.data.map((props) => (
-                        <DownloadCard
-                          key={`${dataset.meta.unique_id}_${props.id}`}
-                          views={
-                            result
-                              ? result[
-                                  `download_${props.id as "csv" | "parquet"}`
-                                ]
-                              : undefined
-                          }
-                          link_editions={data.link_editions}
-                          url={props.id === "csv" ? urls.csv : urls.parquet}
-                          {...props}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </Section>
+            <DCDownload scrollRef={scrollRef} download={data.download} />
 
             {/* Dataset Source Code */}
             {/* <Section
@@ -314,7 +211,7 @@ const SIDEBAR_CATEGORIES: Array<[key: string, subcategories: string[]]> = [
   ["charts_table", []],
   ["metadata", ["notes", "variables", "next_update", "license"]],
   ["download", []],
-  ["programmatic_access", ["full_dataset"]],
+  // ["programmatic_access", ["full_dataset"]],
 ];
 
 const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
@@ -326,8 +223,8 @@ const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
     next_update: "Next update",
     license: "License",
     download: "Download",
-    programmatic_access: "Programmatic Access",
-    full_dataset: "Full dataset",
+    // programmatic_access: "Programmatic Access",
+    // full_dataset: "Full dataset",
   },
   "ms-MY": {
     charts_table: "Jadual & Carta",
@@ -337,8 +234,8 @@ const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
     next_update: "Kemaskini seterusnya",
     license: "Lesen",
     download: "Muat Turun",
-    programmatic_access: "Akses Programatif",
-    full_dataset: "Dataset penuh",
+    // programmatic_access: "Akses Programatif",
+    // full_dataset: "Dataset penuh",
   },
 };
 

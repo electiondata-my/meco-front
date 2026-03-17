@@ -2,41 +2,29 @@ import { FunctionComponent, RefObject, useContext } from "react";
 import Card from "@components/Card";
 import Section from "@components/Section";
 import Tooltip from "@components/Tooltip";
-import Dropdown from "@components/Dropdown";
-import { useAnalytics } from "@hooks/useAnalytics";
 import { useTranslation } from "@hooks/useTranslation";
+import { AnalyticsContext } from "@lib/contexts/analytics";
 import { interpolate, toDate } from "@lib/helpers";
 import Table from "@charts/table";
 import { METADATA_TABLE_SCHEMA } from "@lib/schema/data-catalogue";
 import { DCVariable } from "@lib/types";
-import { CatalogueContext } from "@lib/contexts/catalogue";
-
 type MetadataProps = {
   scrollRef: RefObject<Record<string, HTMLElement | null>>;
   metadata: Pick<
     DCVariable,
-    | "description"
-    | "fields"
-    | "last_updated"
-    | "next_update"
-    | "data_source"
-    | "link_csv"
-    | "link_parquet"
-    | "link_editions"
-  >;
-  selectedEdition: string | undefined;
-  setSelectedEdition: (edition: string) => void;
+    "description" | "fields" | "notes" | "last_updated" | "next_update"
+  > & {
+    link_csv?: string;
+    link_parquet?: string;
+  };
 };
 
 const DCMetadata: FunctionComponent<MetadataProps> = ({
   scrollRef,
   metadata,
-  selectedEdition,
-  setSelectedEdition,
 }) => {
   const { t, i18n } = useTranslation(["catalogue", "common"]);
-  const { dataset } = useContext(CatalogueContext);
-  const { track } = useAnalytics(dataset);
+  const { trackDownload } = useContext(AnalyticsContext);
 
   return (
     <>
@@ -130,64 +118,32 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
               </p>
             </div>
 
-            {/* Data Source */}
-            <div className="space-y-3">
-              <h5>{t("meta_source")}</h5>
-              <ul className="ml-6 list-outside list-disc text-txt-black-500">
-                {metadata.data_source.map((source) => (
-                  <li key={source}>{source}</li>
-                ))}
-              </ul>
-            </div>
-
             {/* URLs to dataset */}
             <div className="space-y-3">
               <h5>{t("meta_url")}</h5>
-              {metadata.link_editions && metadata.link_editions.length > 0 && (
-                <Dropdown
-                  options={metadata.link_editions.map((edition) => ({
-                    label: edition,
-                    value: edition,
-                  }))}
-                  selected={
-                    selectedEdition
-                      ? { label: selectedEdition, value: selectedEdition }
-                      : undefined
-                  }
-                  onChange={(selected) =>
-                    setSelectedEdition(selected.value as string)
-                  }
-                  placeholder={t("common:common.select_edition")}
-                  className="w-fit"
-                  width="w-fit"
-                  anchor="left"
-                />
-              )}
               <ul className="ml-6 list-outside list-disc text-txt-black-500">
-                {Object.entries({
-                  csv: metadata.link_csv,
-                  parquet: metadata.link_parquet,
-                }).map(([key, url]: [string, string]) =>
-                  url ? (
-                    <li key={url}>
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="break-all text-txt-primary [text-underline-position:from-font] hover:underline"
-                        onClick={() =>
-                          track(
-                            key === "link_geojson"
-                              ? "parquet"
-                              : (key as "parquet" | "csv"),
-                          )
-                        }
-                      >
-                        {url}
-                      </a>
-                    </li>
-                  ) : null,
-                )}
+                {metadata.link_csv &&
+                  metadata.link_parquet &&
+                  Object.entries({
+                    csv: metadata.link_csv,
+                    parquet: metadata.link_parquet,
+                  }).map(([key, url]: [string, string]) =>
+                    url ? (
+                      <li key={url}>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="break-all text-txt-danger [text-underline-position:from-font] hover:underline"
+                          onClick={() =>
+                            trackDownload(key as "parquet" | "csv")
+                          }
+                        >
+                          {url}
+                        </a>
+                      </li>
+                    ) : null,
+                  )}
               </ul>
             </div>
 
@@ -202,7 +158,7 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
               <p className="text-txt-black-500">
                 {t("license_text")}{" "}
                 <a
-                  className="lowercase text-txt-primary [text-underline-position:from-font] hover:underline"
+                  className="lowercase text-txt-danger [text-underline-position:from-font] hover:underline"
                   target="_blank"
                   rel="noopener"
                   href="https://creativecommons.org/licenses/by/4.0/"

@@ -8,11 +8,13 @@ import {
 import Dropdown from "@components/Dropdown";
 import Search from "@components/Search";
 import Section from "@components/Section";
-import { interpolate } from "@lib/helpers";
+import { interpolate, numFormat } from "@lib/helpers";
 import { CatalogueContext } from "@lib/contexts/catalogue";
 import { DCDataViz, DCVariable } from "@lib/types";
 import dynamic from "next/dynamic";
 import { UNIVERSAL_TABLE_SCHEMA } from "@lib/schema/data-catalogue";
+import { AnalyticsContext } from "@lib/contexts/analytics";
+import { useTranslation } from "@hooks/useTranslation";
 
 const Table = dynamic(() => import("@charts/table"), { ssr: false });
 
@@ -21,18 +23,16 @@ type ChartTableProps = {
   data: DCVariable;
   selectedViz: DCDataViz;
   setSelectedViz: Dispatch<SetStateAction<DCDataViz>>;
-  filter: any;
-  setFilter: (key: string, value: any) => void;
 };
 
 const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
   scrollRef,
   data,
   selectedViz,
-  filter,
-  setFilter,
 }) => {
+  const { t } = useTranslation(["catalogue", "common"]);
   const { dataset } = useContext(CatalogueContext);
+  const { downloads, views } = useContext(AnalyticsContext);
   const { config } = selectedViz;
 
   const generateTableSchema = () => {
@@ -72,25 +72,6 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
         className="max-lg:py-8 lg:pb-16"
         date={data.data_as_of}
       >
-        {data.dropdown.length > 0 && (
-          <div className="flex gap-2 pb-3">
-            {data.dropdown.map((item, index) => (
-              <Dropdown
-                key={item.name}
-                width="w-full md:w-fit min-w-[120px]"
-                anchor={index > 0 ? "right" : "left"}
-                options={item.options.map((option) => ({
-                  label: data.translations[option] ?? option,
-                  value: option,
-                }))}
-                selected={filter[item.name]}
-                onChange={(e) => setFilter(item.name, e)}
-                enableSearch={item.options.length > 20}
-              />
-            ))}
-          </div>
-        )}
-
         <div className="min-h-[350px] lg:min-h-[450px]">
           {dataset.type === "TABLE" ? (
             <Table
@@ -112,6 +93,24 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
             renderChart()
           )}
         </div>
+
+        {/* Views / download count*/}
+        <p className="flex justify-end gap-2 py-6 text-body-sm text-txt-black-500">
+          <span>
+            {`${numFormat(views ?? 0, "compact")} ${t("common:views_other", {
+              count: views ?? 0,
+            })}`}
+          </span>
+          <span>&middot;</span>
+          <span>
+            {`${numFormat(
+              Object.values(downloads ?? {}).reduce((a, b) => a + b, 0),
+              "compact",
+            )} ${t("common:downloads_other", {
+              count: Object.values(downloads ?? {}).reduce((a, b) => a + b, 0),
+            })}`}
+          </span>
+        </p>
       </Section>
     </>
   );

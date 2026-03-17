@@ -562,3 +562,16 @@ export function fitGeoJSONBoundsToView(
     zoom: Math.max(zoom, 0),
   };
 }
+
+export function formatBytes(bytes: number) {
+  if (bytes === 0) return "0 bytes";
+  if (bytes === 1) return "1 byte";
+
+  const k = 1000;
+  const sizes = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const decimal = i > 0 ? 2 : 0;
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(decimal)) + " " + sizes[i];
+}

@@ -28,7 +28,7 @@
 }
 
 .markdown a {
-  @apply text-txt-primary hover:underline;
+  @apply text-txt-danger hover:underline;
 }
 
 .tooltip-list ul {

@@ -4,8 +4,7 @@ import type { AnnotationPluginOptions } from "chartjs-plugin-annotation";
 import type { NextPage } from "next";
 import { UserConfig } from "next-i18next";
 import type { AppProps } from "next/app";
-import type { JSX, ReactElement, ReactNode } from "react";
-import { SHORT_PERIOD } from "./constants";
+import type { ReactElement, ReactNode } from "react";
 import { Periods } from "@charts/timeseries";
 
 export type AppPropsLayout = AppProps & {
@@ -56,27 +55,6 @@ export type TimeseriesOption = {
 };
 
 export type DashboardPeriod = "daily_7d" | "daily" | "monthly" | "yearly";
-
-export type DownloadOption = {
-  id: string;
-  image: string | null | false | undefined;
-  title: ReactNode;
-  description: ReactNode;
-  icon: JSX.Element;
-  href: () => void;
-};
-
-export type DownloadOptions = {
-  chart: DownloadOption[];
-  data: DownloadOption[];
-};
-
-export interface AnalyticsEvent {
-  action: string;
-  category: string;
-  label: string;
-  value: string;
-}
 
 export type OptionType = {
   label: string;
@@ -146,26 +124,15 @@ export type Catalogue = {
   title: string;
   description?: string;
   data_as_of?: string;
-  source?: Array<string>;
-  freq?: string;
-  geo?: string[];
-  demog?: string[];
-  begin?: number;
-  end?: number;
 };
 
 export type DCVariable = {
   id: string;
-  exclude_openapi: boolean;
-  manual_trigger: string;
   title: string;
   description: string;
-  link_parquet: string;
-  link_csv: string;
-  link_preview: string;
+  notes: string;
+  download: DCDownload;
   link_editions?: string[];
-  frequency: keyof typeof SHORT_PERIOD;
-  data_source: Array<string>;
   fields: Array<DCField>;
   data_as_of: string;
   last_updated: string;
@@ -174,7 +141,6 @@ export type DCVariable = {
   caveat: string;
   publication?: string;
   translations: Record<string, string>;
-  related_datasets: Array<Pick<Catalogue, "id" | "title" | "description">>;
   dataviz_set: Array<DCDataViz>;
   dropdown: Array<DCFilter>;
   data: Array<Record<string, unknown>>;
@@ -191,6 +157,7 @@ export type DCDataViz = {
   chart_type: DCChartKeys;
   title: string;
   config: {
+    mapbox_key?: string;
     format: Record<"x" | "y", string | Array<string>>;
     precision: number;
     filter_columns?: Array<string>;
@@ -208,11 +175,26 @@ export type DCDataViz = {
   };
 };
 
-type DCDropdown = {
-  name: string;
-  selected: string;
-  options: Array<string>;
-};
+export type DCDownloadType =
+  | "parquet"
+  | "csv"
+  | "geojson"
+  | "topojson"
+  | "geoparquet"
+  | "flatgeobuf"
+  | "kml";
+
+export type DCDownload = Record<
+  DCDownloadType,
+  {
+    link: string;
+    n_objects: number;
+    n_attributes: number;
+    size_bytes: number;
+    n_rows: number;
+    n_cols: number;
+  }
+>;
 
 export interface IDataViz {
   translation_key: string;

@@ -6,7 +6,7 @@ import { DCVariable } from "@lib/types";
 
 type MethodologyProps = {
   scrollRef: RefObject<Record<string, HTMLElement | null>>;
-  explanation: Pick<DCVariable, "methodology">;
+  explanation: Pick<DCVariable, "notes">;
 };
 
 const DCMethodology: FunctionComponent<MethodologyProps> = ({
@@ -24,7 +24,7 @@ const DCMethodology: FunctionComponent<MethodologyProps> = ({
         }}
         className=""
         description={
-          <Markdown className="markdown">{explanation.methodology}</Markdown>
+          <Markdown className="markdown">{explanation.notes}</Markdown>
         }
       />
     </div>

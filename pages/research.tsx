@@ -2,7 +2,6 @@ import Metadata from "@components/Metadata";
 import Hero from "@components/Hero";
 import Container from "@components/Container";
 import SectionGrid from "@components/Section/section-grid";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { useTranslation } from "@hooks/useTranslation";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
@@ -114,7 +113,7 @@ const ResearchPage: Page = ({
   const { t } = useTranslation("research");
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={t("hero.header")}
         description={t("hero.description")}
@@ -138,7 +137,7 @@ const ResearchPage: Page = ({
           </div>
         </SectionGrid>
       </Container>
-    </AnalyticsProvider>
+    </>
   );
 };
 
