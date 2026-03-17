@@ -119,12 +119,11 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
             </div>
 
             {/* URLs to dataset */}
-            <div className="space-y-3">
-              <h5>{t("meta_url")}</h5>
-              <ul className="ml-6 list-outside list-disc text-txt-black-500">
-                {metadata.link_csv &&
-                  metadata.link_parquet &&
-                  Object.entries({
+            {metadata.link_csv && metadata.link_parquet && (
+              <div className="space-y-3">
+                <h5>{t("meta_url")}</h5>
+                <ul className="ml-6 list-outside list-disc text-txt-black-500">
+                  {Object.entries({
                     csv: metadata.link_csv,
                     parquet: metadata.link_parquet,
                   }).map(([key, url]: [string, string]) =>
@@ -144,8 +143,9 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
                       </li>
                     ) : null,
                   )}
-              </ul>
-            </div>
+                </ul>
+              </div>
+            )}
 
             {/* License */}
             <div

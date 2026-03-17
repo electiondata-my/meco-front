@@ -56,7 +56,7 @@ h5 {
 }
 
 h6 {
-  @apply text-base font-semibold uppercase tracking-wider text-txt-black-500;
+  @apply text-base font-semibold text-txt-black-900;
 }
 
 input[type="search"]::-webkit-search-decoration,

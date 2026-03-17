@@ -110,7 +110,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
         setMobileOpen={(open) => setOpen(open)}
       />
       <Container>
-        <SectionGrid className="max-w-screen-2xl justify-start py-6 lg:py-16">
+        <SectionGrid className="max-w-screen-xl justify-start py-6 lg:py-16">
           <Sidebar
             categories={groupedSubcategories}
             onSelect={(selected) =>
@@ -287,7 +287,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
           className={clx(
             "flex w-full flex-col items-center gap-6 px-4.5 md:px-0",
             isStick &&
-              "mx-auto max-w-screen-2xl flex-row justify-between gap-3 px-4.5 py-0 md:px-6 2xl:px-0",
+              "mx-auto max-w-screen-xl flex-row justify-between gap-3 px-4.5 py-0 md:px-6 2xl:px-0",
           )}
         >
           <SearchBar
