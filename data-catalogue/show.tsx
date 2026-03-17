@@ -5,6 +5,7 @@ import {
   Dispatch,
   FunctionComponent,
   SetStateAction,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -19,11 +20,16 @@ import Container from "@components/Container";
 import Sidebar from "@components/Sidebar";
 import Section from "@components/Section";
 import SectionGrid from "@components/Section/section-grid";
-import { CatalogueProvider, DatasetType } from "@lib/contexts/catalogue";
+import {
+  CatalogueContext,
+  CatalogueProvider,
+  DatasetType,
+} from "@lib/contexts/catalogue";
 import { useTranslation } from "@hooks/useTranslation";
 import { useFilter } from "@hooks/useFilter";
 import { AnalyticsProvider, Meta } from "@lib/contexts/analytics";
 import DCDownload from "./download";
+import CatalogueCode from "@charts/partials/code";
 
 /**
  * Catalogue Show
@@ -110,9 +116,11 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
   selectedViz,
   setSelectedViz,
 }) => {
-  const { i18n } = useTranslation(["catalogue", "common"]);
+  const { t, i18n } = useTranslation(["catalogue", "common"]);
   const { config, ...viz } = selectedViz;
   const scrollRef = useRef<Record<string, HTMLElement | null>>({});
+  const { dataset } = useContext(CatalogueContext);
+
   const { filter, setFilter } = useFilter(
     Object.fromEntries([
       ...data.dropdown.map((item) => [
@@ -184,7 +192,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             <DCDownload scrollRef={scrollRef} download={data.download} />
 
             {/* Dataset Source Code */}
-            {/* <Section
+            <Section
               title={t("code")}
               ref={(ref) => {
                 scrollRef.current["programmatic_access: full_dataset"] = ref;
@@ -195,11 +203,11 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
               <CatalogueCode
                 type={dataset.type}
                 url={
-                  urls.parquet ||
-                  urls[Object.keys(urls)[0] as "csv" | "parquet"]
+                  data.download?.parquet?.link ||
+                  data.download?.geoparquet?.link
                 }
               />
-            </Section> */}
+            </Section>
           </div>
         </Sidebar>
       </SectionGrid>
@@ -211,7 +219,7 @@ const SIDEBAR_CATEGORIES: Array<[key: string, subcategories: string[]]> = [
   ["charts_table", []],
   ["metadata", ["notes", "variables", "next_update", "license"]],
   ["download", []],
-  // ["programmatic_access", ["full_dataset"]],
+  ["programmatic_access", ["full_dataset"]],
 ];
 
 const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
@@ -223,8 +231,8 @@ const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
     next_update: "Next update",
     license: "License",
     download: "Download",
-    // programmatic_access: "Programmatic Access",
-    // full_dataset: "Full dataset",
+    programmatic_access: "Programmatic Access",
+    full_dataset: "Full dataset",
   },
   "ms-MY": {
     charts_table: "Jadual & Carta",
@@ -234,8 +242,8 @@ const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
     next_update: "Kemaskini seterusnya",
     license: "Lesen",
     download: "Muat Turun",
-    // programmatic_access: "Akses Programatif",
-    // full_dataset: "Dataset penuh",
+    programmatic_access: "Akses Programatif",
+    full_dataset: "Dataset penuh",
   },
 };
 

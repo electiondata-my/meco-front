@@ -200,6 +200,11 @@ export const toDate = (
       .toFormat(
         `${locale === "ms-MY" ? "'ST'" : ""}q${locale === "ms-MY" ? "" : "Q"} yyyy`,
       );
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(timestamp)) {
+    // Format: YYYY-MM-DD
+    return DateTime.fromFormat(timestamp, "yyyy-MM-dd")
+      .setLocale(locale)
+      .toFormat("dd MMM yyyy");
   } else if (/^\d+$/.test(timestamp)) {
     // Format: YYYY
     return DateTime.fromFormat(timestamp, "yyyy")

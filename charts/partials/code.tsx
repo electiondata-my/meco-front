@@ -16,36 +16,6 @@ const CatalogueCode: FunctionComponent<CatalogueCodeProps> = ({
 
   const pythonTemplate = useMemo(() => {
     switch (type) {
-      case "GEOJSON":
-        return `# ${t("code_note")}: pip install pandas matplotlib geopandas
-import pandas as pd
-import matplotlib.pyplot as plt
-import geopandas as gpd
-
-${t("code_comments.geojson_1")}
-URL_GEOJSON = '${url}'
-URL_GEOJSON_LIGHT = URL_GEOJSON.replace('.geojson','_light.geojson')
-MAPSIZE = [10,5]
-
-geo = gpd.read_file(URL_GEOJSON_LIGHT)
-
-${t("code_comments.geojson_2")}
-geo.loc[~geo.code_state.isin([12, 13, 15]), 'geometry'] = geo.geometry.translate(4.5, 0.5)
-
-${t("code_comments.geojson_3")}
-# geo.loc[~geo.code_state.isin([12, 13, 15]), 'geometry'] = geo.geometry.translate(9, 4.5)
-# MAPSIZE = [7,7]
-
-plt.rcParams.update({'font.size': 11,
-                     'font.family': 'sans-serif',
-                     'figure.figsize': MAPSIZE,
-                     'figure.autolayout': True })
-fig, ax = plt.subplots()
-
-ax.axis('off')
-ax.set_title('Your Map Title')
-geo.plot(facecolor='#ffffff', linewidth=0.5, edgecolor='black', ax=ax)`;
-
       default: // TIMESERIES | CHOROPLETH | TABLE
         return `# ${t("code_note")}: pip install pandas fastparquet
 import pandas as pd
@@ -70,22 +40,6 @@ print(df)`;
 
   const rTemplate = useMemo(() => {
     switch (type) {
-      case "GEOJSON":
-        return `# ${t(
-          "code_note",
-        )}: install.packages("geojsonio"); install.packages("sp")
-library(geojsonio, sp)
-
-${t("code_comments.geojson_1")}
-URL_GEOJSON = "https://storage.googleapis.com/dosm-public-geodata/admin_2_district.geojson"
-URL_GEOJSON_LIGHT = gsub(".geojson", "_light.geojson", URL_GEOJSON)
-
-spdf <- geojson_read(URL_GEOJSON,  what = "sp")
-
-par(mar=c(0,0,0,0))
-plot(spdf, col="grey")
-`;
-
       default: // TIMESERIES | CHOROPLETH | TABLE
         return `# ${t("code_note")}: install.packages("arrow")
 library(arrow)
