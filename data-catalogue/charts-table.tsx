@@ -53,13 +53,41 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
     );
   };
 
+  const MAPBOX_REGION_CENTER: Record<
+    string,
+    { mobile: [number, number]; desktop: [number, number]; zoom: number }
+  > = {
+    peninsular: { mobile: [102.5, 3.8], desktop: [109.5, 4.0], zoom: 5 },
+    sabah: { mobile: [117.0, 5.5], desktop: [117.0, 5.5], zoom: 5.5 },
+    sarawak: { mobile: [113.5, 2.5], desktop: [113.5, 2.5], zoom: 5 },
+  };
+
   const renderChart = () => {
     switch (dataset.type) {
-      case "MAPBOX":
-        return config.mapbox_key ? (
-          <DCMapbox mapboxKey={config.mapbox_key} />
-        ) : // <DCMapbox mapboxKey={"peninsular_1955_parlimen"} />
-        null;
+      case "MAPBOX": {
+        if (!config.mapbox_key) return null;
+        const region = config.mapbox_key.split("_")[0];
+        const { mobile, desktop, zoom } =
+          MAPBOX_REGION_CENTER[region] ?? MAPBOX_REGION_CENTER.peninsular;
+        return (
+          <>
+            <div className="block lg:hidden">
+              <DCMapbox
+                mapboxKey={config.mapbox_key}
+                center={mobile}
+                zoom={zoom}
+              />
+            </div>
+            <div className="hidden lg:block">
+              <DCMapbox
+                mapboxKey={config.mapbox_key}
+                center={desktop}
+                zoom={zoom}
+              />
+            </div>
+          </>
+        );
+      }
 
       default:
         return null;
@@ -95,10 +123,14 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
         date={data.data_as_of}
       >
         <div className="min-h-[350px] lg:min-h-[450px]">
+          {!router.isReady && (
+            <div className="flex h-[350px] w-full animate-pulse items-center justify-center rounded-md bg-bg-washed lg:h-[450px]" />
+          )}
           <div
             className={clx(
               dataset.type !== "TABLE" && "mx-auto max-h-[500px] overflow-auto",
               dataset.type === "TABLE" ? "block" : "hidden",
+              !router.isReady && "hidden",
             )}
           >
             <Table
@@ -127,7 +159,7 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
           <div
             className={clx(
               "space-y-2",
-              dataset.type === "TABLE" ? "hidden" : "block",
+              dataset.type === "TABLE" || !router.isReady ? "hidden" : "block",
             )}
           >
             {renderChart()}

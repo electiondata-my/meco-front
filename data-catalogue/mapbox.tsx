@@ -10,6 +10,7 @@ import useConfig from "next/config";
 import { GeoJSONFeature } from "mapbox-gl";
 import { ArrowsPointingInIcon } from "@heroicons/react/24/outline";
 import { MapIcon } from "@govtechmy/myds-react/icon";
+import { useMediaQuery } from "@hooks/useMediaQuery";
 
 type DCMapboxProps = {
   mapboxKey: string;
@@ -36,6 +37,11 @@ const DCMapbox: FC<DCMapboxProps> = ({
     longitude: number;
     latitude: number;
   } | null>(null);
+
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const initialCenter =
+    center ?? ((isMobile ? [108.0, 4.5] : [109.5, 4.0]) as [number, number]);
+  const initialZoom = zoom ?? (isMobile ? 4 : 5);
 
   const year = Number(
     mapboxKey.split("_").find((part) => /^\d{4}$/.test(part)),
@@ -79,8 +85,8 @@ const DCMapbox: FC<DCMapboxProps> = ({
 
   const handleReset = () => {
     mapRef.current?.flyTo({
-      center: center,
-      zoom,
+      center: initialCenter,
+      zoom: initialZoom,
       duration: 1000,
     });
   };
@@ -108,9 +114,9 @@ const DCMapbox: FC<DCMapboxProps> = ({
         reuseMaps={true}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
         initialViewState={{
-          longitude: center[0],
-          latitude: center[1],
-          zoom,
+          longitude: initialCenter[0],
+          latitude: initialCenter[1],
+          zoom: initialZoom,
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={styleUrl}
