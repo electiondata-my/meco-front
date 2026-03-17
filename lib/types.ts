@@ -82,7 +82,8 @@ export type DCChartKeys =
   | "SCATTER"
   | "STACKED_AREA"
   | "STACKED_BAR"
-  | "INTRADAY";
+  | "INTRADAY"
+  | "MAPBOX";
 export type DCPeriod = "YEARLY" | "QUARTERLY" | "MONTHLY" | "WEEKLY" | "DAILY";
 
 type BaseFilter = {

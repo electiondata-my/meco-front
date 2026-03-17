@@ -7,7 +7,7 @@ import { Checkbox } from "@govtechmy/myds-react/checkbox";
 import { useRouter } from "next/router";
 import { OptionType } from "@lib/types";
 import { useSearchParams } from "next/navigation";
-import { MapboxMapStyle } from "@lib/constants";
+import { MapboxMapStyle, MAPBOX_COLOR_INDEX } from "@lib/constants";
 import useConfig from "next/config";
 import LineageTable from "./lineage-table";
 import { GeoJSONFeature } from "mapbox-gl";
@@ -36,16 +36,6 @@ type MapboxProps = {
   seat_info?: Omit<OptionType, "contests" | "losses" | "wins"> & SeatOption;
   lineage?: Lineage;
 } & ConditionalMapboxProps;
-
-const COLOR_INDEX = [
-  ["rgba(255, 1, 0, 1)", "rgba(255, 194, 194, 0.5)"],
-  ["rgba(255, 128, 0, 1)", "rgba(255, 206, 157, 0.5)"],
-  ["rgba(255, 224, 50, 1)", "rgba(255, 241, 166, 0.5)"],
-  ["rgba(0, 255, 1, 1)", "rgba(162, 255, 162, 0.5)"],
-  ["rgba(1, 255, 255, 1)", "rgba(185, 255, 255, 0.5)"],
-  ["rgba(1, 128, 255, 1)", "rgba(194, 224, 255, 0.5)"],
-  ["rgba(255, 1, 255, 1)", "rgba(255, 191, 255, 0.5)"],
-];
 
 const MapboxMyArea: FC<MapboxProps> = ({
   type,
@@ -174,7 +164,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
                 type="line"
                 source-layer={id}
                 paint={{
-                  "line-color": COLOR_INDEX[index]?.[0] ?? "transparent",
+                  "line-color": MAPBOX_COLOR_INDEX[index]?.[0] ?? "transparent",
                   "line-width": 2,
                   "line-opacity": 1,
                 }}
@@ -192,7 +182,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
                 paint={{
                   "fill-color":
                     selectedBounds.length <= 2
-                      ? COLOR_INDEX[index]?.[1]
+                      ? MAPBOX_COLOR_INDEX[index]?.[1]
                       : "transparent",
                 }}
                 filter={[
@@ -219,7 +209,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
               >
                 <div
                   className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: COLOR_INDEX[index]?.[0] }}
+                  style={{ backgroundColor: MAPBOX_COLOR_INDEX[index]?.[0] }}
                 />
                 <p className="flex-1">{year}</p>
                 <Checkbox

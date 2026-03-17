@@ -5,6 +5,7 @@ import { CatalogueProvider, DatasetType } from "@lib/contexts/catalogue";
 import Card from "@components/Card";
 import { DCDataViz } from "@lib/types";
 import { clx, recurDataMapping } from "@lib/helpers";
+import { MapIcon } from "@heroicons/react/24/outline";
 
 /**
  * Catalogue Preview
@@ -38,8 +39,13 @@ const CataloguePreview: FunctionComponent<CataloguePreviewProps> = ({
   const router = useRouter();
 
   const renderChart = () => {
-    // TODO: render map from mapbox
-    return null;
+    switch (dataviz.chart_type) {
+      case "MAPBOX":
+        return <MapIcon className="size-24 stroke-[0.5px]" />;
+
+      default:
+        return null;
+    }
   };
 
   const extractChartDataset = (
@@ -68,7 +74,7 @@ const CataloguePreview: FunctionComponent<CataloguePreviewProps> = ({
         <Card
           key={`${dataviz.dataviz_id}`}
           className={clx(
-            "hover:bg-background h-[110px] min-h-[110px] w-full max-w-[200px] border-otl-gray-300 p-2 transition-colors hover:border-bg-black-400 lg:min-w-[calc(100%_/_5.5)]",
+            "hover:bg-background flex h-[110px] min-h-[110px] w-full max-w-[200px] items-center justify-center border-otl-gray-300 p-2 transition-colors hover:border-bg-black-400 lg:min-w-[calc(100%_/_5.5)]",
             selectedViz?.dataviz_id === dataviz.dataviz_id &&
               "border-otl-danger-300",
           )}
@@ -84,8 +90,7 @@ const CataloguePreview: FunctionComponent<CataloguePreviewProps> = ({
             scrollToChart();
           }}
         >
-          hi
-          {/* {renderChart()} */}
+          {renderChart()}
         </Card>
         <p className="text-center text-xs">{dataviz.title}</p>
       </div>

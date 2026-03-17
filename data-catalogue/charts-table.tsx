@@ -20,6 +20,7 @@ import { useRouter } from "next/router";
 import CataloguePreview from "./preview";
 
 const Table = dynamic(() => import("@charts/table"), { ssr: false });
+const DCMapbox = dynamic(() => import("./mapbox"), { ssr: false });
 
 type ChartTableProps = {
   scrollRef: RefObject<Record<string, HTMLElement | null>>;
@@ -34,7 +35,7 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
   selectedViz,
   setSelectedViz,
 }) => {
-  const { t, i18n } = useTranslation(["catalogue", "common"]);
+  const { t } = useTranslation(["catalogue", "common"]);
   const { dataset } = useContext(CatalogueContext);
   const { downloads, views } = useContext(AnalyticsContext);
   const { config } = selectedViz;
@@ -53,8 +54,16 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
   };
 
   const renderChart = () => {
-    // TODO: render map from mapbox
-    return null;
+    switch (dataset.type) {
+      case "MAPBOX":
+        return config.mapbox_key ? (
+          <DCMapbox mapboxKey={config.mapbox_key} />
+        ) : // <DCMapbox mapboxKey={"peninsular_1955_parlimen"} />
+        null;
+
+      default:
+        return null;
+    }
   };
 
   const scrollToChart = () => {
@@ -62,12 +71,8 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
       behavior: "smooth",
       block: "start",
     };
-    scrollRef.current[
-      i18n.language === "en-GB" ? "Table & Charts" : "Jadual & Carta"
-    ]?.scrollIntoView(scrollOptions);
+    scrollRef.current["charts_table"]?.scrollIntoView(scrollOptions);
   };
-
-  console.log(data.dataviz_set);
 
   return (
     <>
