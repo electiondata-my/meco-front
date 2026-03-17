@@ -5,16 +5,19 @@ import {
   SetStateAction,
   useContext,
 } from "react";
-import Dropdown from "@components/Dropdown";
 import Search from "@components/Search";
 import Section from "@components/Section";
-import { interpolate, numFormat } from "@lib/helpers";
+import { clx, interpolate, numFormat } from "@lib/helpers";
 import { CatalogueContext } from "@lib/contexts/catalogue";
 import { DCDataViz, DCVariable } from "@lib/types";
 import dynamic from "next/dynamic";
 import { UNIVERSAL_TABLE_SCHEMA } from "@lib/schema/data-catalogue";
 import { AnalyticsContext } from "@lib/contexts/analytics";
 import { useTranslation } from "@hooks/useTranslation";
+import Card from "@components/Card";
+import { TableCellsIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/router";
+import CataloguePreview from "./preview";
 
 const Table = dynamic(() => import("@charts/table"), { ssr: false });
 
@@ -29,11 +32,13 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
   scrollRef,
   data,
   selectedViz,
+  setSelectedViz,
 }) => {
-  const { t } = useTranslation(["catalogue", "common"]);
+  const { t, i18n } = useTranslation(["catalogue", "common"]);
   const { dataset } = useContext(CatalogueContext);
   const { downloads, views } = useContext(AnalyticsContext);
   const { config } = selectedViz;
+  const router = useRouter();
 
   const generateTableSchema = () => {
     const columns = Array.isArray(dataset.table)
@@ -51,6 +56,18 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
     // TODO: render map from mapbox
     return null;
   };
+
+  const scrollToChart = () => {
+    const scrollOptions: ScrollIntoViewOptions = {
+      behavior: "smooth",
+      block: "start",
+    };
+    scrollRef.current[
+      i18n.language === "en-GB" ? "Table & Charts" : "Jadual & Carta"
+    ]?.scrollIntoView(scrollOptions);
+  };
+
+  console.log(data.dataviz_set);
 
   return (
     <>
@@ -73,25 +90,43 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
         date={data.data_as_of}
       >
         <div className="min-h-[350px] lg:min-h-[450px]">
-          {dataset.type === "TABLE" ? (
+          <div
+            className={clx(
+              dataset.type !== "TABLE" && "mx-auto max-h-[500px] overflow-auto",
+              dataset.type === "TABLE" ? "block" : "hidden",
+            )}
+          >
             <Table
-              className="table-stripe table-default table-sticky-header"
+              className={clx("table-stripe table-default table-sticky-header")}
+              responsive={dataset.type === "TABLE"}
               data={dataset.table}
               freeze={config.freeze_columns}
               precision={config.precision}
-              search={(onSearch) => (
-                <Search
-                  className="w-full border-b lg:w-auto"
-                  onChange={(query) => onSearch(query ?? "")}
-                />
-              )}
+              search={
+                dataset.type === "TABLE"
+                  ? (onSearch) => (
+                      <Search
+                        className="w-full border-b lg:w-auto"
+                        onChange={(query) => onSearch(query ?? "")}
+                      />
+                    )
+                  : undefined
+              }
               config={generateTableSchema()}
-              enablePagination={15}
+              enablePagination={
+                ["TABLE", "GEOPOINT"].includes(dataset.type) ? 15 : false
+              }
               data-testid="catalogue-table"
             />
-          ) : (
-            renderChart()
-          )}
+          </div>
+          <div
+            className={clx(
+              "space-y-2",
+              dataset.type === "TABLE" ? "hidden" : "block",
+            )}
+          >
+            {renderChart()}
+          </div>
         </div>
 
         {/* Views / download count*/}
@@ -111,6 +146,59 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
             })}`}
           </span>
         </p>
+
+        {data.dataviz_set && data.dataviz_set.length > 1 && (
+          <Section>
+            <div className="hide-scrollbar relative flex h-full w-full items-stretch gap-[0.5rem] overflow-x-scroll">
+              <div className="sticky left-0 top-0 flex h-full w-[200px] max-w-[200px] flex-1 flex-col justify-start gap-2 lg:sticky lg:w-[calc(100%_/_5.5)] lg:flex-initial">
+                <Card
+                  className={clx(
+                    "hover:bg-background h-[110px] min-h-[110px] w-full max-w-[200px] border-otl-gray-300 p-2 transition-colors hover:border-otl-gray-200 lg:min-w-[calc(100%_/_5.5)]",
+                    selectedViz.chart_type === "TABLE" &&
+                      "border-otl-danger-300",
+                  )}
+                  onClick={() => {
+                    setSelectedViz(
+                      data.dataviz_set.find(
+                        (item) => item.chart_type === "TABLE",
+                      ) ?? data.dataviz_set[0],
+                    );
+                    router.replace(
+                      {
+                        query: { ...router.query, visual: "table" },
+                      },
+                      undefined,
+                      { shallow: true },
+                    );
+                    scrollToChart();
+                  }}
+                >
+                  <div className="flex h-full w-full items-center justify-center">
+                    <TableCellsIcon className="text-outlineHover-dark h-24 w-24 stroke-[0.5px]" />
+                  </div>
+                </Card>
+                <p className="h-full text-center text-xs">Table</p>
+              </div>
+              <div className="flex flex-1 gap-[0.5rem] overflow-x-auto pb-4">
+                {data.dataviz_set
+                  .filter((viz) => viz.chart_type !== "TABLE")
+                  .map((viz) => {
+                    return (
+                      <CataloguePreview
+                        key={viz.dataviz_id}
+                        dataviz={viz}
+                        dataset={dataset}
+                        translations={data.translations}
+                        selectedViz={selectedViz}
+                        setSelectedViz={setSelectedViz}
+                        scrollToChart={scrollToChart}
+                      />
+                    );
+                  })}
+              </div>
+            </div>
+          </Section>
+        )}
       </Section>
     </>
   );
