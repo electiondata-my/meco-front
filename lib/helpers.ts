@@ -576,7 +576,7 @@ export function formatBytes(bytes: number) {
   const sizes = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  const decimal = i > 0 ? 2 : 0;
+  const decimal = i >= 2 ? 1 : 0;
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(decimal)) + " " + sizes[i];
+  return (bytes / Math.pow(k, i)).toFixed(decimal) + " " + sizes[i];
 }

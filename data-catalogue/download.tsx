@@ -1,21 +1,38 @@
 import Card from "@components/Card";
 import Section from "@components/Section";
-import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { DownloadIcon } from "@govtechmy/myds-react/icon";
 import { useTranslation } from "@hooks/useTranslation";
+import {
+  ParquetIcon,
+  CSVIcon,
+  GeoJSONIcon,
+  TopoJSONIcon,
+  GeoParquetIcon,
+  FlatGeobufIcon,
+  KMLIcon,
+} from "@icons/files";
 import { AnalyticsContext } from "@lib/contexts/analytics";
 import { formatBytes, numFormat } from "@lib/helpers";
 import { DCDownload, DCDownloadType } from "@lib/types";
-import Image from "next/image";
-import { FunctionComponent, useContext, useMemo } from "react";
+import {
+  ComponentType,
+  FunctionComponent,
+  SVGProps,
+  useContext,
+  useMemo,
+} from "react";
 
-const FORMAT_ICONS: Record<DCDownloadType, string> = {
-  csv: "/static/images/icons/csv.png",
-  parquet: "/static/images/icons/parquet.png",
-  geojson: "/static/images/icons/geojson.png",
-  topojson: "/static/images/icons/topojson.png",
-  geoparquet: "/static/images/icons/geoparquet.png",
-  flatgeobuf: "/static/images/icons/flatgeobuf.png",
-  kml: "/static/images/icons/kml.png",
+const FORMAT_ICONS: Record<
+  DCDownloadType,
+  ComponentType<SVGProps<SVGSVGElement>>
+> = {
+  csv: CSVIcon,
+  parquet: ParquetIcon,
+  geojson: GeoJSONIcon,
+  topojson: TopoJSONIcon,
+  geoparquet: GeoParquetIcon,
+  flatgeobuf: FlatGeobufIcon,
+  kml: KMLIcon,
 };
 
 const TITLE: Record<DCDownloadType, string> = {
@@ -75,24 +92,21 @@ const DCDownloadSection: FunctionComponent<DCDownloadProps> = ({
               trackDownload(format);
               window.open(info.link, "_blank");
             }}
-            className="bg-background dark:border-outlineHover-dark dark:bg-washed-dark p-4.5"
+            className="bg-bg-white px-4.5 py-5"
           >
             <div className="flex items-center gap-4.5">
-              <Image
-                height={38}
-                width={38}
-                src={FORMAT_ICONS[format]}
-                className="object-contain"
-                alt={format}
-              />
+              {(() => {
+                const Icon = FORMAT_ICONS[format];
+                return <Icon className="size-14 text-txt-danger" />;
+              })()}
               <div className="block flex-grow">
                 <p className="font-medium">{TITLE[format]}</p>
                 <p className="text-xs text-txt-black-500">
-                  {`${info.n_rows ? `${info.n_rows} rows` : `${info.n_objects} objects`} · ${info.n_cols ? `${info.n_cols} cols` : `${info.n_attributes} attributes`} · ${formatBytes(info.size_bytes)}`}
+                  {`${info.n_rows ? `${info.n_rows} rows` : `${info.n_objects} objects`} x ${info.n_cols ? `${info.n_cols} cols` : `${info.n_attributes} attributes`} · ${formatBytes(info.size_bytes)}`}
                 </p>
               </div>
               <div className="space-y-1">
-                <ArrowDownTrayIcon className="size-8 text-txt-danger" />
+                <DownloadIcon className="size-8 text-txt-danger" />
                 <p className="text-center text-body-2xs text-txt-black-500">
                   {numFormat(views ?? 0, "compact")}
                 </p>
