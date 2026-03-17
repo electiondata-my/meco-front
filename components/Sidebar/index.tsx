@@ -13,6 +13,7 @@ interface SidebarProps {
   mobileOpen?: boolean;
   setMobileOpen?: (open: boolean) => void;
   mobileClassName?: string;
+  stickyClassName?: string;
   initialSelected?: string;
   sidebarTitle?: string;
 }
@@ -25,6 +26,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
   mobileOpen: mobileOpenProp,
   setMobileOpen: setMobileOpenProp,
   mobileClassName,
+  stickyClassName,
   initialSelected,
   sidebarTitle,
 }) => {
@@ -42,7 +44,12 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
       <div className="flex w-full flex-row gap-8">
         {/* Desktop */}
         <div className="xl:1/5 hidden lg:block lg:w-1/5">
-          <ul className="hide-scrollbar sticky top-20 flex h-[calc(100dvh-64px)] w-full flex-col gap-2 overflow-x-visible overflow-y-scroll">
+          <ul
+            className={clx(
+              "hide-scrollbar sticky top-36 flex h-[calc(100dvh-64px)] w-full flex-col gap-2 overflow-x-visible overflow-y-scroll",
+              stickyClassName,
+            )}
+          >
             <li className="px-1">
               <h5
                 className={clx(
@@ -122,7 +129,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
         {/* Mobile */}
         <div className="relative h-full w-full lg:w-4/5 xl:w-4/5">
           <>
-            <div className={clx("absolute block lg:hidden")}>
+            <div className={clx("absolute top-4 block lg:hidden")}>
               <Button
                 variant={"default-outline"}
                 onClick={() => setMobileOpen(true)}
@@ -138,7 +145,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
               show={mobileOpen}
               as="div"
               className={clx(
-                "shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r bg-bg-white p-4 shadow-context-menu sm:w-1/3",
+                "shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r bg-bg-white px-4 shadow-context-menu sm:w-1/3",
                 mobileClassName,
               )}
               enter="transition-opacity duration-75"
