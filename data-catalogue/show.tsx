@@ -51,7 +51,7 @@ const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
 }) => {
   const router = useRouter();
   const [selectedViz, setSelectedViz] = useState<DCDataViz>(
-    data.dataviz_set.find((item) => item.chart_type === "TABLE") ??
+    data.dataviz_set.find((item) => item.chart_type === "MAPBOX") ??
       data.dataviz_set[0],
   );
 

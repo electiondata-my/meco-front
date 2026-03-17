@@ -5,7 +5,7 @@ import { CatalogueProvider, DatasetType } from "@lib/contexts/catalogue";
 import Card from "@components/Card";
 import { DCDataViz } from "@lib/types";
 import { clx, recurDataMapping } from "@lib/helpers";
-import { MapIcon } from "@heroicons/react/24/outline";
+import { MapIcon, TableCellsIcon } from "@heroicons/react/24/outline";
 
 /**
  * Catalogue Preview
@@ -42,6 +42,11 @@ const CataloguePreview: FunctionComponent<CataloguePreviewProps> = ({
     switch (dataviz.chart_type) {
       case "MAPBOX":
         return <MapIcon className="size-24 stroke-[0.5px]" />;
+
+      case "TABLE":
+        return (
+          <TableCellsIcon className="text-outlineHover-dark h-24 w-24 stroke-[0.5px]" />
+        );
 
       default:
         return null;

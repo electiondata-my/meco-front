@@ -187,52 +187,19 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
         {data.dataviz_set && data.dataviz_set.length > 1 && (
           <Section>
             <div className="hide-scrollbar relative flex h-full w-full items-stretch gap-[0.5rem] overflow-x-scroll">
-              <div className="sticky left-0 top-0 flex h-full w-[200px] max-w-[200px] flex-1 flex-col justify-start gap-2 lg:sticky lg:w-[calc(100%_/_5.5)] lg:flex-initial">
-                <Card
-                  className={clx(
-                    "hover:bg-background h-[110px] min-h-[110px] w-full max-w-[200px] border-otl-gray-300 p-2 transition-colors hover:border-otl-gray-200 lg:min-w-[calc(100%_/_5.5)]",
-                    selectedViz.chart_type === "TABLE" &&
-                      "border-otl-danger-300",
-                  )}
-                  onClick={() => {
-                    setSelectedViz(
-                      data.dataviz_set.find(
-                        (item) => item.chart_type === "TABLE",
-                      ) ?? data.dataviz_set[0],
-                    );
-                    router.replace(
-                      {
-                        query: { ...router.query, visual: "table" },
-                      },
-                      undefined,
-                      { shallow: true },
-                    );
-                    scrollToChart();
-                  }}
-                >
-                  <div className="flex h-full w-full items-center justify-center">
-                    <TableCellsIcon className="text-outlineHover-dark h-24 w-24 stroke-[0.5px]" />
-                  </div>
-                </Card>
-                <p className="h-full text-center text-xs">Table</p>
-              </div>
-              <div className="flex flex-1 gap-[0.5rem] overflow-x-auto pb-4">
-                {data.dataviz_set
-                  .filter((viz) => viz.chart_type !== "TABLE")
-                  .map((viz) => {
-                    return (
-                      <CataloguePreview
-                        key={viz.dataviz_id}
-                        dataviz={viz}
-                        dataset={dataset}
-                        translations={data.translations}
-                        selectedViz={selectedViz}
-                        setSelectedViz={setSelectedViz}
-                        scrollToChart={scrollToChart}
-                      />
-                    );
-                  })}
-              </div>
+              {data.dataviz_set.map((viz) => {
+                return (
+                  <CataloguePreview
+                    key={viz.dataviz_id}
+                    dataviz={viz}
+                    dataset={dataset}
+                    translations={data.translations}
+                    selectedViz={selectedViz}
+                    setSelectedViz={setSelectedViz}
+                    scrollToChart={scrollToChart}
+                  />
+                );
+              })}
             </div>
           </Section>
         )}

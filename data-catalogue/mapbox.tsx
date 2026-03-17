@@ -58,6 +58,12 @@ const DCMapbox: FC<DCMapboxProps> = ({
     });
 
     if (features && features.length > 0) {
+      setPopupInfo({
+        feature: features[0],
+        longitude: e.lngLat.lng,
+        latitude: e.lngLat.lat,
+      });
+
       const bbox = features[0].geometry as GeoJSON.Geometry;
       if (bbox.type === "Polygon" || bbox.type === "MultiPolygon") {
         const coords =
@@ -80,6 +86,8 @@ const DCMapbox: FC<DCMapboxProps> = ({
           duration: 1000,
         });
       }
+    } else {
+      setPopupInfo(null);
     }
   };
 
@@ -89,22 +97,7 @@ const DCMapbox: FC<DCMapboxProps> = ({
       zoom: initialZoom,
       duration: 1000,
     });
-  };
-
-  const handleMouseMove = (e: mapboxgl.MapMouseEvent) => {
-    const features = mapRef.current?.queryRenderedFeatures(e.point, {
-      layers: [`${mapboxKey}-fill`, `${mapboxKey}-line`],
-    });
-
-    if (features && features.length > 0) {
-      setPopupInfo({
-        feature: features[0],
-        longitude: e.lngLat.lng,
-        latitude: e.lngLat.lat,
-      });
-    } else {
-      setPopupInfo(null);
-    }
+    setPopupInfo(null);
   };
 
   return (
@@ -122,7 +115,6 @@ const DCMapbox: FC<DCMapboxProps> = ({
         mapStyle={styleUrl}
         customAttribution={APP_NAME}
         interactiveLayerIds={[`${mapboxKey}-fill`]}
-        onMouseMove={handleMouseMove}
         onClick={handleClick}
       >
         <button
@@ -142,7 +134,7 @@ const DCMapbox: FC<DCMapboxProps> = ({
             type="fill"
             source-layer={mapboxKey}
             paint={{
-              "fill-color": ["coalesce", ["get", "colour"], "#0180ff"],
+              "fill-color": ["coalesce", ["get", "colour"], "transparent"],
               "fill-opacity": 0.8,
             }}
           />
