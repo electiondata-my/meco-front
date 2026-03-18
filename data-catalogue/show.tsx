@@ -75,7 +75,7 @@ const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
         desc: data.description,
       },
     };
-  }, [selectedViz]);
+  }, [selectedViz, data]);
 
   return (
     <AnalyticsProvider meta={meta}>
