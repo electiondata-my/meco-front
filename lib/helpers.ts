@@ -77,20 +77,20 @@ export const limitMax = (e: number, max: number = 100) => {
 export const minMax = (
   values: Array<number | null>,
 ): [min: number, max: number] => {
-  let min: number = 0;
-  let max: number = 0;
+  let min: number | null = null;
+  let max: number | null = null;
   for (let num of values) {
-    if (num !== null) {
-      if (num < min) {
-        min = num;
-      }
-      if (num > max) {
-        max = num;
-      }
+    if (num === null) continue;
+
+    if (min === null || num < min) {
+      min = num;
+    }
+    if (max === null || num > max) {
+      max = num;
     }
   }
 
-  return [min, max];
+  return [min ?? 0, max ?? 0];
 };
 
 /**
@@ -200,6 +200,11 @@ export const toDate = (
       .toFormat(
         `${locale === "ms-MY" ? "'ST'" : ""}q${locale === "ms-MY" ? "" : "Q"} yyyy`,
       );
+  } else if (/^\d{4}-\d{2}-\d{2}$/.test(timestamp)) {
+    // Format: YYYY-MM-DD
+    return DateTime.fromFormat(timestamp, "yyyy-MM-dd")
+      .setLocale(locale)
+      .toFormat("dd MMM yyyy");
   } else if (/^\d+$/.test(timestamp)) {
     // Format: YYYY
     return DateTime.fromFormat(timestamp, "yyyy")
@@ -279,21 +284,34 @@ export const copyClipboard = async (text: string): Promise<void> => {
 };
 
 /**
- * Returns indices of top n largest/smallest item from an array
+ * Sort and slice the array, with Malaysia ranked first if index is included,
+ * then return an array with the indices of each value from original array
+ * @param arr array of values
+ * @param n slice array to top n items
+ * @param desc sort in descending order if true
+ * @param mysIndex index of Malaysia in array
+ * @returns An array of top n sorted indices
  */
 export const getTopIndices = (
   arr: number[],
   n: number,
-  reverse = false,
+  desc = true,
+  mysIndex: number = -1,
 ): number[] => {
   // create an array of [value, index] pairs
   const pairs = arr.map((value, index) => [value, index]);
 
-  // sort the pairs by value (in descending or ascending order depending on the "reverse" flag)
-  pairs.sort((a, b) => (reverse ? b[0] - a[0] : a[0] - b[0]));
+  const hasMYS = mysIndex > -1;
+  const mys = hasMYS ? pairs[mysIndex] : null;
+  const _pairs = hasMYS ? pairs.filter((_, i) => i !== mysIndex) : pairs;
+
+  // sort the pairs by value (in descending or ascending order depending on the "desc" flag)
+  _pairs.sort((a, b) => (desc ? b[0] - a[0] : a[0] - b[0]));
+
+  if (hasMYS && mys !== null) _pairs.unshift(mys);
 
   // extract the first n indices from the sorted pairs
-  const topPairs = pairs.slice(0, n);
+  const topPairs = _pairs.slice(0, n);
 
   // extract the indices from the top pairs and return them
   return topPairs.map((pair) => pair[1]);
@@ -315,7 +333,7 @@ export const slugify = (value: string): string => {
 /**
  * Generic download helper function
  * @param url URL or URLData
- * @param callback Callback function
+ * @param title title
  */
 export const download = (url: string, title: string): void => {
   let v_anchor = document.createElement("a");
@@ -379,14 +397,19 @@ export const interpolate = (raw_text: string): string | ReactElement[] => {
 
   if (matches.length <= 1) return raw_text;
 
-  return matches.map((item) => {
+  return matches.map((item, idx) => {
     const match = item.split("](");
     if (match.length <= 1)
-      return createElement("span", { className: "text-inherit" }, item);
+      return createElement(
+        "span",
+        { key: `span-${idx}`, className: "text-inherit" },
+        item,
+      );
     const [text, url] = match;
     return createElement(
       "a",
       {
+        key: `link-${idx}-${text.replace(/\s+/g, "-").toLowerCase()}`,
         href: url,
         className:
           "text-primary dark:text-primary-dark hover:underline inline [text-underline-position:from-font]",
@@ -395,6 +418,20 @@ export const interpolate = (raw_text: string): string | ReactElement[] => {
       text,
     );
   }) as ReactElement[];
+};
+
+/**
+ * Check if the URL is correct
+ * @param {string} url URL to validate
+ * @returns {boolean} true | false
+ */
+export const isValidURL = (url: string): boolean => {
+  try {
+    new URL(url);
+    return true;
+  } catch (error) {
+    return false;
+  }
 };
 
 /**
@@ -412,6 +449,38 @@ export const parseCookies = (cookie: string) => {
   });
 
   return parsedCookies;
+};
+
+/**
+ * Take key and value parameter to create key-value array extracted from a dataset.
+ * @param {string} key The key string
+ * @param {string | string[]} value The value, in string or string[]
+ * @param {Record<string, any>[]} dataset The dataset to extract from
+ * @returns {(string | any[])[][]} Array with key-value array element
+ */
+export const recurDataMapping = (
+  key: string,
+  value: string | string[],
+  dataset: Record<string, any>[],
+) => {
+  const set = [];
+
+  if (Array.isArray(value)) {
+    value.map((val, index) => {
+      const res = recurDataMapping(`${key}${index + 1}`, val, dataset);
+      set.push(...res);
+    });
+  } else {
+    if (key === "date") {
+      set.push([
+        key,
+        dataset.map((item) => DateTime.fromISO(item[value]).toSeconds()),
+      ]);
+    }
+    set.push([key, dataset.map((item) => item[value])]);
+  }
+
+  return set;
 };
 
 export const enumify = <T extends string>(strings: T[]): KeyValueType<T> => {
@@ -497,4 +566,17 @@ export function fitGeoJSONBoundsToView(
     center: [centerLng, centerLat],
     zoom: Math.max(zoom, 0),
   };
+}
+
+export function formatBytes(bytes: number) {
+  if (bytes === 0) return "0 bytes";
+  if (bytes === 1) return "1 byte";
+
+  const k = 1000;
+  const sizes = ["bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const decimal = i >= 2 ? 1 : 0;
+
+  return (bytes / Math.pow(k, i)).toFixed(decimal) + " " + sizes[i];
 }

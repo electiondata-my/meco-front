@@ -11,10 +11,9 @@ interface CatalogueGeoChoroplethProps {
   config: any;
 }
 
-const CatalogueGeoChoropleth: FunctionComponent<CatalogueGeoChoroplethProps> = ({
-  className = "h-[350px] w-full lg:h-[450px]",
-  config,
-}) => {
+const CatalogueGeoChoropleth: FunctionComponent<
+  CatalogueGeoChoroplethProps
+> = ({ className = "h-[350px] w-full lg:h-[450px]", config }) => {
   const { bind, dataset } = useContext(CatalogueContext);
 
   return (

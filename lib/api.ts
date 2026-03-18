@@ -17,7 +17,7 @@ const instance = (base: BaseURL, headers: Record<string, string> = {}) => {
   const urls: Record<BaseURL, string> = {
     api_tb: process.env.NEXT_PUBLIC_API_URL_TB ?? "",
     api_s3: process.env.NEXT_PUBLIC_API_URL_S3 ?? "",
-    app: process.env.NEXT_PUBLIC_APP_URL ?? ""
+    app: process.env.NEXT_PUBLIC_APP_URL ?? "",
   };
 
   // Different authorization logic for each base
@@ -48,7 +48,7 @@ const instance = (base: BaseURL, headers: Record<string, string> = {}) => {
 export const get = (
   route: string,
   params?: Record<string, any>,
-  base: BaseURL = "api_s3"
+  base: BaseURL = "api_s3",
 ): Promise<AxiosResponse> => {
   return new Promise((resolve, reject) => {
     instance(base)
@@ -70,7 +70,7 @@ export const post = (
   route: string,
   payload?: any,
   base: BaseURL = "api_tb",
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
 ): Promise<AxiosResponse> => {
   return new Promise((resolve, reject) => {
     instance(base, headers)

@@ -192,7 +192,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
         pageId={routes.CANDIDATES}
       />
       <Container>
-        <SectionGrid className="space-y-6 pt-2 pb-6 lg:space-y-16 lg:pb-16">
+        <SectionGrid className="space-y-6 pb-6 pt-2 lg:space-y-16 lg:pb-16">
           <div className="mt-3 w-full">
             <div className="mx-auto w-full md:w-[727px]">
               <ComboBox
@@ -211,8 +211,8 @@ const ElectionCandidatesDashboard: FunctionComponent<
                 selected={
                   data.candidate_value
                     ? CANDIDATE_OPTIONS.find(
-                      (e) => e.value === data.candidate_value,
-                    )
+                        (e) => e.value === data.candidate_value,
+                      )
                     : null
                 }
                 onChange={(selected) => {
@@ -227,7 +227,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
               />
             </div>
           </div>
-          <div className="w-full min-h-[250px] space-y-6 pb-10 lg:pb-0">
+          <div className="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
             <Tabs
               title={
                 <p className="text-heading-2xs font-bold">

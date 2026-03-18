@@ -4,7 +4,6 @@ import { get } from "@lib/api";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { useTranslation } from "@hooks/useTranslation";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { MapProvider } from "react-map-gl/mapbox";
 import { useRouter } from "next/router";
@@ -28,7 +27,7 @@ const Home: Page = ({
   const isRootSeatsPath = router.asPath === "/seats"; // Check if path is /seats (root)
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={isRootSeatsPath ? "" : currentSeat.seat_name}
         description={t("hero.description", { ns: "seats" })}
@@ -53,7 +52,7 @@ const Home: Page = ({
           lineage={{ type: params.type, data: seat.lineage }}
         />
       </MapProvider>
-    </AnalyticsProvider>
+    </>
   );
 };
 

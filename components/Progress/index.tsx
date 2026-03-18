@@ -42,7 +42,7 @@ const Progress: FunctionComponent = () => {
       }, 450);
 
       if (opacity) {
-        gradualTimeout(progress => {
+        gradualTimeout((progress) => {
           setProgress(progress);
         });
       }

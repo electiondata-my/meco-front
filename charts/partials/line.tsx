@@ -24,24 +24,33 @@ const CatalogueLine: FunctionComponent<CatalogueLineProps> = ({
 }) => {
   const { bind, dataset } = useContext(CatalogueContext);
 
-  const getPrecision = (key: string, precision: number | Precision): number | [number, number] => {
+  const getPrecision = (
+    key: string,
+    precision: number | Precision,
+  ): number | [number, number] => {
     if (!precision) return [1, 0];
     else if (typeof precision === "number") return precision;
-    else if (precision.columns && key in precision.columns) return precision.columns[key];
+    else if (precision.columns && key in precision.columns)
+      return precision.columns[key];
     else return precision.default;
   };
 
   const getPrecisionMinMax = (precision: Precision): number => {
-    if (precision.columns) return Math.min(...Object.values(precision.columns), precision.default);
+    if (precision.columns)
+      return Math.min(...Object.values(precision.columns), precision.default);
     else return precision.default;
   };
 
   const _datasets = useMemo<ChartDataset<"line", any[]>[]>(() => {
-    const sets = Object.entries(dataset.chart).filter(([key, _]) => key !== "x");
+    const sets = Object.entries(dataset.chart).filter(
+      ([key, _]) => key !== "x",
+    );
 
     return sets.map(([key, y], index) => ({
       type: "line",
-      data: (y as number[]).map(e => numFormat(e, "standard", getPrecision(key, config.precision))),
+      data: (y as number[]).map((e) =>
+        numFormat(e, "standard", getPrecision(key, config.precision)),
+      ),
       label: translations[key] ?? key,
       fill: sets.length === 1,
       backgroundColor: CATALOGUE_COLORS[index].concat("1A"),
@@ -57,7 +66,7 @@ const CatalogueLine: FunctionComponent<CatalogueLineProps> = ({
   return (
     <Line
       className={className}
-      _ref={ref => bind.chartjs(ref)}
+      _ref={(ref) => bind.chartjs(ref)}
       precision={
         typeof config.precision === "number"
           ? config.precision

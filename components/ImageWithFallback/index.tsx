@@ -6,16 +6,19 @@ interface FallbackProps {
   children?: ReactNode;
   inline?: boolean;
 }
-const Fallback: FunctionComponent<FallbackProps> = ({ children, inline = false }) => {
+const Fallback: FunctionComponent<FallbackProps> = ({
+  children,
+  inline = false,
+}) => {
   return (
     <div
       className={clx(
-        "border-slate-200 dark:border-zinc-700 h-5 w-8 rounded border bg-white",
-        inline && "mr-2 inline-block"
+        "h-5 w-8 rounded border bg-bg-white",
+        inline && "mr-2 inline-block",
       )}
     >
       {children ?? (
-        <div className="flex h-full items-center justify-center text-sm font-zinc-900 text-zinc-900">
+        <div className="font-zinc-900 text-zinc-900 flex h-full items-center justify-center text-sm">
           ?
         </div>
       )}
@@ -34,7 +37,10 @@ const ImageWithFallback: FunctionComponent<ImageWithFallbackProps> = ({
   inline,
   ...props
 }) => {
-  const [error, setError] = useState<React.SyntheticEvent<HTMLImageElement, Event> | null>(null);
+  const [error, setError] = useState<React.SyntheticEvent<
+    HTMLImageElement,
+    Event
+  > | null>(null);
 
   useEffect(() => {
     setError(null);

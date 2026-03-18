@@ -1,6 +1,5 @@
 import Metadata from "@components/Metadata";
 import ElectionTriviaDashboard from "@dashboards/trivia";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { useTranslation } from "@hooks/useTranslation";
 import { get } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
@@ -18,7 +17,7 @@ const ElectionTriviaState: Page = ({
   const { t } = useTranslation("trivia");
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={CountryAndStates[params.state].concat(
           ` - ${t("hero.header", { ns: "trivia" })}`,
@@ -32,7 +31,7 @@ const ElectionTriviaState: Page = ({
         bar_parlimen={bar_parlimen}
         table={table}
       />
-    </AnalyticsProvider>
+    </>
   );
 };
 

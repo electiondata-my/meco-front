@@ -2,7 +2,6 @@ import Metadata from "@components/Metadata";
 import Hero from "@components/Hero";
 import Container from "@components/Container";
 import SectionGrid from "@components/Section/section-grid";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { useTranslation } from "@hooks/useTranslation";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
@@ -52,13 +51,14 @@ const PaperCard = ({ paper }: { paper: Paper }) => {
   const content = (
     <div
       className={clx(
-        "group flex h-full flex-col overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white transition dark:bg-zinc-900",
-        !isComingSoon && "cursor-pointer hover:shadow-lg hover:border-otl-gray-300",
+        "dark:bg-zinc-900 group flex h-full flex-col overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white transition",
+        !isComingSoon &&
+          "hover:shadow-lg cursor-pointer hover:border-otl-gray-300",
         isComingSoon && "opacity-75",
       )}
     >
       {/* A4 preview area */}
-      <div className="relative aspect-[1/0.707] w-full overflow-hidden bg-gray-50 sm:aspect-[1/1.414] dark:bg-zinc-800">
+      <div className="dark:bg-zinc-800 relative aspect-[1/0.707] w-full overflow-hidden bg-gray-50 sm:aspect-[1/1.414]">
         {paper.thumbnail ? (
           <Image
             src={paper.thumbnail}
@@ -68,8 +68,8 @@ const PaperCard = ({ paper }: { paper: Paper }) => {
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-            <DocumentIcon className="size-12 text-gray-300 dark:text-zinc-600" />
-            <p className="text-body-sm font-medium text-gray-400 dark:text-zinc-500">
+            <DocumentIcon className="dark:text-zinc-600 size-12 text-gray-300" />
+            <p className="dark:text-zinc-500 text-body-sm font-medium text-gray-400">
               {t("coming_soon")}
             </p>
           </div>
@@ -113,7 +113,7 @@ const ResearchPage: Page = ({
   const { t } = useTranslation("research");
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={t("hero.header")}
         description={t("hero.description")}
@@ -137,22 +137,19 @@ const ResearchPage: Page = ({
           </div>
         </SectionGrid>
       </Container>
-    </AnalyticsProvider>
+    </>
   );
 };
 
-export const getStaticProps: GetStaticProps = withi18n(
-  "research",
-  async () => {
-    return {
-      props: {
-        meta: {
-          id: "research",
-          type: "misc",
-        },
+export const getStaticProps: GetStaticProps = withi18n("research", async () => {
+  return {
+    props: {
+      meta: {
+        id: "research",
+        type: "misc",
       },
-    };
-  },
-);
+    },
+  };
+});
 
 export default ResearchPage;

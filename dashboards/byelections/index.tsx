@@ -81,8 +81,9 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
   const getStateCode = (state: string) =>
     state in CountryAndStates
       ? state
-      : Object.entries(CountryAndStates).find(([, name]) => name === state)?.[0] ??
-        state;
+      : (Object.entries(CountryAndStates).find(
+          ([, name]) => name === state,
+        )?.[0] ?? state);
 
   const statesWithByelections = Array.from(
     new Set(seats.map((s) => getStateCode(s.state))),
@@ -180,9 +181,14 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
     <>
       <Hero
         background="red"
-        category={[t("hero.category", { ns: "byelections" }), "text-txt-danger"]}
+        category={[
+          t("hero.category", { ns: "byelections" }),
+          "text-txt-danger",
+        ]}
         header={[t("hero.header", { ns: "byelections" })]}
-        description={[t("hero.description", { ns: "byelections", count: seats.length })]}
+        description={[
+          t("hero.description", { ns: "byelections", count: seats.length }),
+        ]}
         pageId={routes.BYELECTIONS}
       />
       <Container>
@@ -311,7 +317,7 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                             >
                               <div className="flex w-full items-center justify-between gap-2">
                                 <div className="flex min-w-0 flex-1 gap-2">
-                                  <span className="text-zinc-500 text-sm font-medium shrink-0">
+                                  <span className="text-zinc-500 shrink-0 text-sm font-medium">
                                     {seat.slice(0, 5)}
                                   </span>
                                   <span className="truncate font-medium">
@@ -319,7 +325,7 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                                   </span>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-1">
-                                  <span className="text-body-xs text-txt-black-400 uppercase">
+                                  <span className="text-txt-black-400 text-body-xs uppercase">
                                     {toDate(date, "dd MMM yyyy", i18n.language)}
                                   </span>
                                   <DrawerTrigger asChild>

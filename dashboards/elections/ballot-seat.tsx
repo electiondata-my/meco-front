@@ -303,8 +303,14 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                 {election && (
                   <div className="hide-scrollbar grid h-[394px] max-w-screen-sm grid-flow-col grid-rows-3 overflow-x-auto rounded-md sm:max-w-screen-md md:max-w-screen-lg lg:flex lg:h-full lg:w-full lg:flex-col lg:overflow-y-auto lg:px-0.5">
                     {filteredSeats.map((_seat) => {
-                      const { seat, name, majority, majority_perc, party, party_uid } =
-                        _seat;
+                      const {
+                        seat,
+                        name,
+                        majority,
+                        majority_perc,
+                        party,
+                        party_uid,
+                      } = _seat;
                       return (
                         <div
                           ref={(ref) => {

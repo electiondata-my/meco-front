@@ -10,8 +10,8 @@ const Spinner: FunctionComponent<SpinnerProps> = ({ loading, className }) => {
   return loading ? (
     <div
       className={clx(
-        "h-4 w-4 animate-spin rounded-[50%] border-2 border-gray-300 border-t-zinc-900",
-        className
+        "border-t-zinc-900 h-4 w-4 animate-spin rounded-[50%] border-2 border-gray-300",
+        className,
       )}
     />
   ) : (
@@ -36,7 +36,7 @@ const SpinnerBox: FunctionComponent<SpinnerBoxProps> = ({
         "flex items-center justify-center",
         height,
         width,
-        className
+        className,
       )}
     >
       <Spinner loading={true} />

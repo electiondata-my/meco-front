@@ -12,12 +12,15 @@ export const UNIVERSAL_TABLE_SCHEMA = (
   column: string[],
   translations: Record<string, string>,
   freezeKeys?: string[],
-  accessorFn?: (item: any, key: string) => string
+  accessorFn?: (item: any, key: string) => string,
 ): TableConfig[] => {
-  const yieldValue = (key: string) => (!isEmpty(translations) ? translations[key] ?? key : key);
+  const yieldValue = (key: string) =>
+    !isEmpty(translations) ? (translations[key] ?? key) : key;
 
   if (!freezeKeys)
-    return column.map((key: string) => generateSchema(key, yieldValue(key), accessorFn));
+    return column.map((key: string) =>
+      generateSchema(key, yieldValue(key), accessorFn),
+    );
 
   const [index_cols, rest]: [[string, string][], [string, string][]] = [[], []];
   column.forEach((key: string) => {
@@ -25,7 +28,9 @@ export const UNIVERSAL_TABLE_SCHEMA = (
     else rest.push([key, yieldValue(key)]);
   });
 
-  return index_cols.concat(rest).map(([key, value]) => generateSchema(key, value, accessorFn));
+  return index_cols
+    .concat(rest)
+    .map(([key, value]) => generateSchema(key, value, accessorFn));
 };
 
 /**
@@ -36,7 +41,7 @@ export const UNIVERSAL_TABLE_SCHEMA = (
  */
 export const METADATA_TABLE_SCHEMA = (
   t: (key: string, params?: any) => string,
-  isTable: boolean = false
+  isTable: boolean = false,
 ): TableConfig[] => {
   return [
     {
@@ -45,7 +50,7 @@ export const METADATA_TABLE_SCHEMA = (
       accessorFn({ variable, data_type }) {
         return `${variable}$$${data_type ? `(${data_type})` : ""}`;
       },
-      cell: value => {
+      cell: (value) => {
         const [variable, data_type] = value.getValue().split("$$");
         return (
           <p className="whitespace-normal font-mono text-sm">
@@ -59,10 +64,11 @@ export const METADATA_TABLE_SCHEMA = (
     {
       id: "variable_name",
       header: t("meta_variable"),
-      accessorFn: (item: any) => JSON.stringify({ uid: item.uid, name: item.variable_name }),
+      accessorFn: (item: any) =>
+        JSON.stringify({ uid: item.uid, name: item.variable_name }),
       className: "text-left min-w-[140px] whitespace-normal",
       enableSorting: false,
-      cell: value => {
+      cell: (value) => {
         const [item, index] = [JSON.parse(value.getValue()), value.row.index];
         return (
           <>
@@ -90,7 +96,7 @@ export const METADATA_TABLE_SCHEMA = (
       header: t("meta_definition"),
       accessorKey: "definition",
       className: "text-left leading-relaxed whitespace-normal",
-      cell: value => <p>{value.getValue()}</p>,
+      cell: (value) => <p>{value.getValue()}</p>,
       enableSorting: false,
     },
   ];
@@ -99,14 +105,16 @@ export const METADATA_TABLE_SCHEMA = (
 const generateSchema = (
   key: string,
   value: any,
-  accessorFn?: (item: any, key: string) => string
+  accessorFn?: (item: any, key: string) => string,
 ): TableConfig => {
   return {
     id: key,
     header: value,
     // Filter bug, cannot have number type in table: https://github.com/TanStack/table/issues/4280
     accessorKey: key,
-    accessorFn: accessorFn ? (item: any) => accessorFn(item, key) : (item: any) => item[key],
+    accessorFn: accessorFn
+      ? (item: any) => accessorFn(item, key)
+      : (item: any) => item[key],
   };
 };
 

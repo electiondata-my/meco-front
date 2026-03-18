@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Sabah", parlimen: "P.167 Kudat", code_state: 12, code_parlimen: "P.167" },
+  properties: {
+    state: "Sabah",
+    parlimen: "P.167 Kudat",
+    code_state: 12,
+    code_parlimen: "P.167",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

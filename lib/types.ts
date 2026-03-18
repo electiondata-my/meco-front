@@ -4,7 +4,8 @@ import type { AnnotationPluginOptions } from "chartjs-plugin-annotation";
 import type { NextPage } from "next";
 import { UserConfig } from "next-i18next";
 import type { AppProps } from "next/app";
-import type { JSX, ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { Periods } from "@charts/timeseries";
 
 export type AppPropsLayout = AppProps & {
   Component: Page;
@@ -55,27 +56,6 @@ export type TimeseriesOption = {
 
 export type DashboardPeriod = "daily_7d" | "daily" | "monthly" | "yearly";
 
-export type DownloadOption = {
-  id: string;
-  image: string | null | false | undefined;
-  title: ReactNode;
-  description: ReactNode;
-  icon: JSX.Element;
-  href: () => void;
-};
-
-export type DownloadOptions = {
-  chart: DownloadOption[];
-  data: DownloadOption[];
-};
-
-export interface AnalyticsEvent {
-  action: string;
-  category: string;
-  label: string;
-  value: string;
-}
-
 export type OptionType = {
   label: string;
   value: string;
@@ -102,12 +82,13 @@ export type DCChartKeys =
   | "SCATTER"
   | "STACKED_AREA"
   | "STACKED_BAR"
-  | "INTRADAY";
+  | "INTRADAY"
+  | "MAPBOX";
 export type DCPeriod = "YEARLY" | "QUARTERLY" | "MONTHLY" | "WEEKLY" | "DAILY";
 
 type BaseFilter = {
-  key: string;
-  default: string;
+  name: string;
+  selected: string;
   options: string[];
 };
 export type FilterDefault = BaseFilter & {
@@ -125,15 +106,6 @@ export type Precision = {
   columns?: Record<string, number>;
 };
 
-// DC Catalogue
-export type Catalogue = {
-  id: string;
-  title: string;
-  description?: string;
-  data_as_of?: string;
-};
-
-// Usage
 export type DCConfig = {
   context: {
     [key: string]: OptionType;
@@ -147,6 +119,110 @@ export type DCConfig = {
   line_variables?: Record<string, any>;
   exclude_openapi: boolean;
 };
+
+export type Catalogue = {
+  id: string;
+  title: string;
+  description?: string;
+  data_as_of?: string;
+};
+
+export type DCVariable = {
+  id: string;
+  title: string;
+  description: string;
+  notes: string;
+  download: DCDownload;
+  link_editions?: string[];
+  fields: Array<DCField>;
+  data_as_of: string;
+  last_updated: string;
+  next_update: string;
+  methodology: string;
+  caveat: string;
+  publication?: string;
+  translations: Record<string, string>;
+  dataviz_set: Array<DCDataViz>;
+  dropdown: Array<DCFilter>;
+  data: Array<Record<string, unknown>>;
+};
+
+export type DCField = {
+  name: string;
+  title: string;
+  description: string;
+};
+
+export type DCDataViz = {
+  dataviz_id: string;
+  chart_type: DCChartKeys;
+  title: string;
+  config: {
+    format: Record<"x" | "y", string | Array<string>>;
+    precision: number;
+    filter_columns?: Array<string>;
+    freeze_columns?: Array<string>;
+    operation?: string;
+    colors?: string;
+    geojson?: string;
+    slider?: {
+      key: string;
+      interval: Exclude<
+        Periods,
+        false | "millisecond" | "second" | "minute" | "week"
+      >;
+    };
+  } & DCMapboxDataVizConfig;
+};
+
+export type DCMapboxDataVizConfig = {
+  mapbox_key?: string;
+  fill_colour?: string | null;
+  fill_opacity?: number;
+  stroke_colour?: string | null;
+  stroke_opacity?: number;
+  stroke_width?: number;
+  zoom_desktop?: number;
+  zoom_mobile?: number;
+  center_desktop?: [number, number];
+  center_mobile?: [number, number];
+};
+
+export type DCDownloadType =
+  | "parquet"
+  | "csv"
+  | "geojson"
+  | "topojson"
+  | "geoparquet"
+  | "flatgeobuf"
+  | "kml";
+
+export type DCDownload = Record<
+  DCDownloadType,
+  {
+    link: string;
+    n_objects: number;
+    n_attributes: number;
+    size_bytes: number;
+    n_rows: number;
+    n_cols: number;
+  }
+>;
+
+export interface IDataViz {
+  translation_key: string;
+  chart_type: DCChartKeys;
+  chart_filters: {
+    SLICE_BY: Array<string>;
+    precision: number;
+  };
+  chart_variables: {
+    parents: Array<string>;
+    operation: string;
+    format: { x: string; y: Array<string> | string };
+    config?: Record<string, unknown>;
+  };
+}
 
 /*************************** MIXPANEL ***************************** */
 

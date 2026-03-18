@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Kedah", parlimen: "P.011 Pendang", code_state: 2, code_parlimen: "P.011" },
+  properties: {
+    state: "Kedah",
+    parlimen: "P.011 Pendang",
+    code_state: 2,
+    code_parlimen: "P.011",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

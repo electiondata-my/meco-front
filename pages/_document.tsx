@@ -35,18 +35,14 @@ class HTMLDocument extends Document {
             integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14="
             crossOrigin=""
           />
-
           {/* Tinybird Analytics */}
-          {process.env.APP_ENV === "production" && (
-            <Script
-              id="tinybird-script"
-              strategy="afterInteractive"
-              src="https://unpkg.com/@tinybirdco/flock.js"
-              data-token={process.env.NEXT_PUBLIC_TINYBIRD_TOKEN}
-              data-host="https://api.us-west-2.aws.tinybird.co"
-            />
-          )}
-
+          <Script
+            id="tinybird-script"
+            strategy="afterInteractive"
+            src="https://unpkg.com/@tinybirdco/flock.js"
+            data-token={process.env.NEXT_PUBLIC_TINYBIRD_TOKEN}
+            data-host={process.env.NEXT_PUBLIC_API_URL_TB}
+          />
           {/* PWA setting */}
           <meta name="application-name" content="ElectionData.MY" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -61,7 +57,6 @@ class HTMLDocument extends Document {
           <meta name="msapplication-TileColor" content="#2B5797" />
           <meta name="msapplication-tap-highlight" content="no" />
           <meta name="theme-color" content="#000000" />
-
           {/* Apple specific logo */}
           <link rel="apple-touch-icon" href="/static/logo/pwa/192.png" />
           {/* iPad (non-retina) */}
@@ -82,7 +77,6 @@ class HTMLDocument extends Document {
             sizes="167x167"
             href="/static/logo/pwa/192.png"
           />
-
           {/* Favicons  */}
           <link
             rel="icon"
@@ -98,7 +92,6 @@ class HTMLDocument extends Document {
           />
           <link rel="manifest" href="/manifest.json" />
           <link rel="shortcut icon" href="/favicon.ico" />
-
           {/* Apple Splash Screen */}
           <link
             rel="apple-touch-startup-image"

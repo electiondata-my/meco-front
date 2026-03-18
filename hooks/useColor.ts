@@ -121,9 +121,13 @@ export const useColor = (key: Color, domain: [min: number, max: number]) => {
     ylOrRd: interpolateYlOrRd,
   };
 
-  const normalize = (value: number): number => (value - domain[0]) / (domain[1] - domain[0]);
+  const normalize = (value: number): number =>
+    (value - domain[0]) / (domain[1] - domain[0]);
 
-  const interpolate = (value: number | null, normalized: boolean = false): string => {
+  const interpolate = (
+    value: number | null,
+    normalized: boolean = false,
+  ): string => {
     if (value === null || !value) return "#ffffff00"; // transparent
     return !normalized ? lookup[key](normalize(value)) : lookup[key](value);
   };

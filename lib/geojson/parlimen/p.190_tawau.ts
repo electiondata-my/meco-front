@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Sabah", parlimen: "P.190 Tawau", code_state: 12, code_parlimen: "P.190" },
+  properties: {
+    state: "Sabah",
+    parlimen: "P.190 Tawau",
+    code_state: 12,
+    code_parlimen: "P.190",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

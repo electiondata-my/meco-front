@@ -189,153 +189,158 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
         multiple={multiple}
         disabled={disabled}
       >
-        <div className="relative text-sm">
-          <Listbox.Button
-            className={clx(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 shadow-button",
-              "text-start text-body-sm font-medium text-txt-black-900",
-              "select-none bg-bg-white active:bg-bg-black-100",
-              "border border-otl-gray-200 outline-none hover:border-bg-black-400 hover:dark:border-bg-black-700",
-              disabled &&
-                "disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-otl-gray-200 disabled:bg-otl-gray-200 disabled:text-txt-black-disabled dark:disabled:text-txt-black-700",
-              width,
-              className,
-            )}
-          >
-            <>
-              {/* Icon */}
-              {icon}
-
-              {/* Sublabel */}
-              {sublabel && (
-                <span className="block w-fit min-w-min truncate text-txt-black-500">
-                  {sublabel}
-                </span>
-              )}
-
-              {/* Flag (selected) */}
-              {enableFlag && selected && (
-                <div className="self-center">
-                  <Image
-                    src={`/static/images/states/${(selected as OptionType).value}.jpeg`}
-                    width={20}
-                    height={12}
-                    alt={(selected as OptionType).label as string}
-                  />
-                </div>
-              )}
-
-              {/* Label */}
-              <span className="flex flex-grow truncate">
-                {multiple
-                  ? title
-                  : (selected as OptionType)?.label || placeholder || "Select"}
-              </span>
-              {/* Label (multiple) */}
-              {multiple && (selected as OptionType[])?.length > 0 && (
-                <span className="dark:bg-primary-dark bg-primary h-5 w-4.5 rounded-md text-center text-white">
-                  {selected && (selected as OptionType[]).length}
-                </span>
-              )}
-
-              {/* ChevronDown Icon */}
-              <ChevronDownIcon className="-mx-[5px] h-5 w-5" />
-            </>
-          </Listbox.Button>
-          <Transition
-            as={Fragment}
-            leave="transition ease-in duration-100"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Listbox.Options
-              ref={optionsRef}
+        {({ open }) => (
+          <div className="relative text-sm">
+            <Listbox.Button
               className={clx(
-                "shadow-floating absolute z-20 mt-1 min-w-full rounded-md bg-bg-white text-txt-black-900 ring-1 ring-otl-gray-200 ring-opacity-5 focus:outline-none",
-                availableOptions.length <= 100 && "max-h-60 overflow-auto",
-                anchor === "right"
-                  ? "right-0"
-                  : anchor === "left"
-                    ? "left-0"
-                    : anchor,
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 shadow-button",
+                "text-start text-body-sm font-medium text-txt-black-900",
+                "select-none bg-bg-white active:bg-bg-black-100",
+                "border outline-none hover:border-bg-black-400",
+                disabled &&
+                  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-otl-gray-200 disabled:text-txt-black-disabled",
+                width,
+                className,
               )}
             >
-              {/* Description - optional*/}
-              {description && (
-                <p className="px-3 pb-1 pt-2 text-xs text-txt-black-500">
-                  {description}
-                </p>
-              )}
+              <>
+                {/* Icon */}
+                {icon}
 
-              {/* Search - optional*/}
-              {enableSearch && (
-                <div className="dark:border-zinc-700 border-b pt-1">
-                  <Input
-                    type="search"
-                    icon={<MagnifyingGlassIcon className="h-4 w-4" />}
-                    value={search}
-                    className="border-none focus:ring-transparent"
-                    placeholder={t("common:placeholder.search") + "..."}
-                    onChange={(value) => setSearch(value)}
-                  />
-                </div>
-              )}
-              {/* Options */}
-              {availableOptions.length > 100 ? (
-                <FixedSizeList
-                  height={240}
-                  width={"100%"}
-                  itemCount={availableOptions.length}
-                  itemSize={36}
-                >
-                  {({
-                    index,
-                    style,
-                  }: {
-                    index: number;
-                    style: CSSProperties;
-                  }) => {
-                    const option = availableOptions[index];
-                    return (
+                {/* Sublabel */}
+                {sublabel && (
+                  <span className="block w-fit min-w-min truncate text-txt-black-500">
+                    {sublabel}
+                  </span>
+                )}
+
+                {/* Flag (selected) */}
+                {enableFlag && selected && (
+                  <div className="self-center">
+                    <Image
+                      src={`/static/images/states/${(selected as OptionType).value}.jpeg`}
+                      width={20}
+                      height={12}
+                      alt={(selected as OptionType).label as string}
+                    />
+                  </div>
+                )}
+
+                {/* Label */}
+                <span className="flex flex-grow truncate">
+                  {multiple
+                    ? title
+                    : (selected as OptionType)?.label ||
+                      placeholder ||
+                      "Select"}
+                </span>
+                {/* Label (multiple) */}
+                {multiple && (selected as OptionType[])?.length > 0 && (
+                  <span className="dark:bg-primary-dark bg-primary h-5 w-4.5 rounded-md text-center text-white">
+                    {selected && (selected as OptionType[]).length}
+                  </span>
+                )}
+
+                {/* ChevronDown Icon */}
+                <ChevronDownIcon className="-mx-[5px] h-5 w-5" />
+              </>
+            </Listbox.Button>
+            <Transition
+              show={open}
+              as={Fragment}
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Listbox.Options
+                ref={optionsRef}
+                className={clx(
+                  "shadow-floating absolute z-20 mt-1 min-w-full rounded-md bg-bg-white text-txt-black-900 ring-1 ring-otl-gray-200 ring-opacity-5 focus:outline-none",
+                  availableOptions.length <= 100 && "max-h-60 overflow-auto",
+                  anchor === "right"
+                    ? "right-0"
+                    : anchor === "left"
+                      ? "left-0"
+                      : anchor,
+                )}
+              >
+                {/* Description - optional*/}
+                {description && (
+                  <p className="px-3 pb-1 pt-2 text-xs text-txt-black-500">
+                    {description}
+                  </p>
+                )}
+
+                {/* Search - optional*/}
+                {enableSearch && (
+                  <div className="border-b pt-1">
+                    <Input
+                      type="search"
+                      icon={<MagnifyingGlassIcon className="h-4 w-4" />}
+                      value={search}
+                      className="border-none focus:ring-transparent"
+                      placeholder={t("common:placeholder.search") + "..."}
+                      onChange={(value) => setSearch(value)}
+                    />
+                  </div>
+                )}
+                {/* Options */}
+                {availableOptions.length > 100 ? (
+                  <FixedSizeList
+                    height={240}
+                    width={"100%"}
+                    itemCount={availableOptions.length}
+                    itemSize={36}
+                  >
+                    {({
+                      index,
+                      style,
+                    }: {
+                      index: number;
+                      style: CSSProperties;
+                    }) => {
+                      const option = availableOptions[index];
+                      return (
+                        <ListboxOption
+                          option={option}
+                          index={index}
+                          style={style}
+                        />
+                      );
+                    }}
+                  </FixedSizeList>
+                ) : (
+                  <>
+                    {availableOptions.map((option, index) => (
                       <ListboxOption
+                        key={index}
                         option={option}
                         index={index}
-                        style={style}
+                        style={null}
                       />
-                    );
-                  }}
-                </FixedSizeList>
-              ) : (
-                <>
-                  {availableOptions.map((option, index) => (
-                    <ListboxOption
-                      key={index}
-                      option={option}
-                      index={index}
-                      style={null}
-                    />
-                  ))}
-                </>
-              )}
+                    ))}
+                  </>
+                )}
 
-              {/* Clear / Reset */}
-              {enableClear && (
-                <button
-                  onClick={() =>
-                    multiple ? onChange([]) : onChange(undefined)
-                  }
-                  className="hover:bg-slate-100 dark:hover:bg-zinc-800 dark:border-zinc-800 group relative flex w-full cursor-default select-none items-center gap-2 border-t py-3 pl-10 pr-4 text-txt-black-500 disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={Array.isArray(selected) && selected.length === 0}
-                >
-                  <p>{t("common:clear")}</p>
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                    <XMarkIcon className="h-5 w-5" />
-                  </span>
-                </button>
-              )}
-            </Listbox.Options>
-          </Transition>
-        </div>
+                {/* Clear / Reset */}
+                {enableClear && (
+                  <button
+                    onClick={() =>
+                      multiple ? onChange([]) : onChange(undefined)
+                    }
+                    className="group relative flex w-full cursor-default select-none items-center gap-2 border-t py-3 pl-10 pr-4 text-txt-black-500 hover:bg-bg-black-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={Array.isArray(selected) && selected.length === 0}
+                  >
+                    <p>{t("common:clear")}</p>
+                    <span className="absolute inset-y-0 left-0 flex items-center pl-3">
+                      <XMarkIcon className="h-5 w-5" />
+                    </span>
+                  </button>
+                )}
+              </Listbox.Options>
+            </Transition>
+          </div>
+        )}
       </Listbox>
     </div>
   );

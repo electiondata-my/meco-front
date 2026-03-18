@@ -7,13 +7,17 @@ interface CardProps {
   onClick?: () => void;
 }
 
-const Card: FunctionComponent<CardProps> = ({ children, className, onClick }) => {
+const Card: FunctionComponent<CardProps> = ({
+  children,
+  className,
+  onClick,
+}) => {
   return (
     <div
       className={clx(
-        "border-slate-200 dark:border-zinc-800 rounded-xl border transition",
+        "rounded-xl border transition",
         onClick && "cursor-pointer transition",
-        className
+        className,
       )}
       tabIndex={onClick ? 0 : -1}
       onClick={onClick}

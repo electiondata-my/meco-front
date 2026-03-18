@@ -211,7 +211,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
         pageId={routes.PARTIES}
       />
       <Container>
-        <SectionGrid className="space-y-6 pt-2 pb-6 lg:space-y-16 lg:pb-16">
+        <SectionGrid className="space-y-6 pb-6 pt-2 lg:space-y-16 lg:pb-16">
           <div className="mt-3 w-full">
             <div className="mx-auto w-full md:w-[727px]">
               <ComboBox<PartyOption>
@@ -240,36 +240,38 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                 }}
                 format={(option) => {
                   const folder =
-                    option.party_type === "coalition" ? "coalitions" : "parties";
+                    option.party_type === "coalition"
+                      ? "coalitions"
+                      : "parties";
                   return (
-                  <>
-                    <div className="flex h-auto w-7 shrink-0 items-center justify-center">
-                      <ImageWithFallback
-                        className="border border-otl-gray-200"
-                        src={`/static/images/${folder}/${option.value}.png`}
-                        width={28}
-                        height={18}
-                        alt={option.party}
-                        style={{
-                          width: "auto",
-                          maxWidth: "28px",
-                          height: "auto",
-                          maxHeight: "18px",
-                        }}
-                      />
-                    </div>
-                    <span className="grow truncate">{option.label}</span>
-                    <span
-                      className={clx(
-                        "ml-auto shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium",
-                        option.party_type === "coalition"
-                          ? "border-blue-400 bg-blue-50/60 text-blue-600"
-                          : "border-red-400 bg-red-50/60 text-red-600",
-                      )}
-                    >
-                      {t(option.party_type, { ns: "parties" })}
-                    </span>
-                  </>
+                    <>
+                      <div className="flex h-auto w-7 shrink-0 items-center justify-center">
+                        <ImageWithFallback
+                          className="border border-otl-gray-200"
+                          src={`/static/images/${folder}/${option.value}.png`}
+                          width={28}
+                          height={18}
+                          alt={option.party}
+                          style={{
+                            width: "auto",
+                            maxWidth: "28px",
+                            height: "auto",
+                            maxHeight: "18px",
+                          }}
+                        />
+                      </div>
+                      <span className="grow truncate">{option.label}</span>
+                      <span
+                        className={clx(
+                          "ml-auto shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium",
+                          option.party_type === "coalition"
+                            ? "border-blue-400 bg-blue-50/60 text-blue-600"
+                            : "border-red-400 bg-red-50/60 text-red-600",
+                        )}
+                      >
+                        {t(option.party_type, { ns: "parties" })}
+                      </span>
+                    </>
                   );
                 }}
                 config={{
@@ -292,7 +294,8 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                     setData("loading", true);
                     setData("party_value", selected.value);
                     push(
-                      `${routes.PARTIES}/${selected.value}/${data.state ?? CURRENT_STATE
+                      `${routes.PARTIES}/${selected.value}/${
+                        data.state ?? CURRENT_STATE
                       }`,
                       undefined,
                       { scroll: false },
@@ -302,7 +305,7 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
               />
             </div>
           </div>
-          <div className="w-full min-h-[250px] space-y-6 pb-10 lg:pb-0">
+          <div className="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
             <Tabs
               title={
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-heading-2xs">
@@ -324,20 +327,21 @@ const ElectionPartiesDashboard: FunctionComponent<ElectionPartiesProps> = ({
                     </span>
                   </div>
                   <StateDropdown
-                      currentState={data.state ?? "mys"}
-                      onChange={(selected) => {
-                        setData("loading", true);
-                        setData("state", selected.value);
-                        push(
-                          `${routes.PARTIES}/${data.party_value ? data.party_value : DEFAULT_PARTY
-                          }/${selected.value}`,
-                          undefined,
-                          { scroll: false },
-                        );
-                      }}
-                      width="inline-flex"
-                      anchor="left"
-                    />
+                    currentState={data.state ?? "mys"}
+                    onChange={(selected) => {
+                      setData("loading", true);
+                      setData("state", selected.value);
+                      push(
+                        `${routes.PARTIES}/${
+                          data.party_value ? data.party_value : DEFAULT_PARTY
+                        }/${selected.value}`,
+                        undefined,
+                        { scroll: false },
+                      );
+                    }}
+                    width="inline-flex"
+                    anchor="left"
+                  />
                   {/* <Tooltip>
                     <TooltipTrigger className="h-6 w-6">
                       <QuestionCircleIcon className="h-4 w-4 text-txt-black-500" />

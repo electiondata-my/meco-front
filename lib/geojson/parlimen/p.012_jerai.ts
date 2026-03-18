@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Kedah", parlimen: "P.012 Jerai", code_state: 2, code_parlimen: "P.012" },
+  properties: {
+    state: "Kedah",
+    parlimen: "P.012 Jerai",
+    code_state: 2,
+    code_parlimen: "P.012",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

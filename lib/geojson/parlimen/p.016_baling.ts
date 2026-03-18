@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Kedah", parlimen: "P.016 Baling", code_state: 2, code_parlimen: "P.016" },
+  properties: {
+    state: "Kedah",
+    parlimen: "P.016 Baling",
+    code_state: 2,
+    code_parlimen: "P.016",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

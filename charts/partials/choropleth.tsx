@@ -19,7 +19,7 @@ const CatalogueChoropleth: FunctionComponent<CatalogueChoroplethProps> = ({
 
   return (
     <Choropleth
-      _ref={_ref => bind.chartjs(_ref)}
+      _ref={(_ref) => bind.chartjs(_ref)}
       className={className}
       data={{
         labels: dataset.chart.x,

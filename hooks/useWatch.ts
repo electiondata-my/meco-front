@@ -7,7 +7,11 @@ import { DependencyList, useEffect, useRef } from "react";
  * @param {boolean} [runOnMount=false] Runs on initial render
  * @returns
  */
-export const useWatch = (fn: Function, deps: DependencyList = [], runOnMount: boolean = false) => {
+export const useWatch = (
+  fn: Function,
+  deps: DependencyList = [],
+  runOnMount: boolean = false,
+) => {
   const firstRender = useRef(true);
 
   useEffect(() => {

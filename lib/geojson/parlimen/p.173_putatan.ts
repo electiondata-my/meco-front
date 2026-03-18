@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Sabah", parlimen: "P.173 Putatan", code_state: 12, code_parlimen: "P.173" },
+  properties: {
+    state: "Sabah",
+    parlimen: "P.173 Putatan",
+    code_state: 12,
+    code_parlimen: "P.173",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

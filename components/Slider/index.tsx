@@ -1,4 +1,10 @@
-import { FunctionComponent, ReactNode, useContext, useRef, useState } from "react";
+import {
+  FunctionComponent,
+  ReactNode,
+  useContext,
+  useRef,
+  useState,
+} from "react";
 import { PlayIcon, PauseIcon } from "@heroicons/react/20/solid";
 import { useTranslation } from "@hooks/useTranslation";
 import { useWatch } from "@hooks/useWatch";
@@ -11,7 +17,10 @@ type BaseProps = {
   className?: string;
   data?: Array<number | string>;
   parseAsDate?: boolean;
-  period?: Exclude<Periods, false | "millisecond" | "second" | "minute" | "week">;
+  period?: Exclude<
+    Periods,
+    false | "millisecond" | "second" | "minute" | "week"
+  >;
 };
 
 type RangeProps = BaseProps & {
@@ -85,16 +94,20 @@ const Slider: FunctionComponent<SliderProps> = ({
           value={[minmax as number]}
           max={data.length - 1}
           step={step}
-          onValueChange={e => setMinmax(e)}
+          onValueChange={(e) => setMinmax(e)}
           onValueCommit={(e: number[] & number) => onChange(e)}
         >
           <Track className="dark:bg-zinc-800 bg-slate-200 relative z-0 h-2 grow rounded-full">
-            <Range className="max-lg:group-focus-within:bg-primary dark:max-lg:group-focus-within:bg-primary-dark group-hover:bg-primary  dark:group-hover:bg-primary absolute z-0 h-full rounded-xl bg-[#A1A1AA]" />
+            <Range className="max-lg:group-focus-within:bg-primary dark:max-lg:group-focus-within:bg-primary-dark group-hover:bg-primary dark:group-hover:bg-primary absolute z-0 h-full rounded-xl bg-[#A1A1AA]" />
           </Track>
-          <Thumb className="max-lg:group-focus-within:border-primary max-lg:group-focus-within:ring-primary group-hover:border-primary group-hover:ring-primary shadow-button block h-5 w-5 cursor-pointer rounded-full border-2 border-[#A1A1AA] bg-white group-hover:ring-4 max-lg:group-focus-within:ring-4">
+          <Thumb className="max-lg:group-focus-within:border-primary max-lg:group-focus-within:ring-primary group-hover:border-primary group-hover:ring-primary block h-5 w-5 cursor-pointer rounded-full border-2 border-[#A1A1AA] bg-white shadow-button group-hover:ring-4 max-lg:group-focus-within:ring-4">
             <SliderTooltip>
               {parseAsDate
-                ? toDate(data[minmax as number], dateFormat[period], i18n.language)
+                ? toDate(
+                    data[minmax as number],
+                    dateFormat[period],
+                    i18n.language,
+                  )
                 : data[minmax as number]}
             </SliderTooltip>
           </Thumb>
@@ -138,9 +151,9 @@ const Slider: FunctionComponent<SliderProps> = ({
           onClick={togglePlayPause}
         >
           {play ? (
-            <PauseIcon className="h-4 w-4 text-zinc-900 dark:text-white" />
+            <PauseIcon className="text-zinc-900 h-4 w-4 dark:text-white" />
           ) : (
-            <PlayIcon className="h-4 w-4 text-zinc-900 dark:text-white" />
+            <PlayIcon className="text-zinc-900 h-4 w-4 dark:text-white" />
           )}
         </button>
       )}
@@ -152,11 +165,11 @@ const Slider: FunctionComponent<SliderProps> = ({
         value={minmax as number[]}
         min={0}
         max={data.length - 1}
-        onValueChange={e => {
+        onValueChange={(e) => {
           if (timer.current) cancelTimer();
           setMinmax(e);
         }}
-        onValueCommit={e => {
+        onValueCommit={(e) => {
           if (timer.current) cancelTimer();
           onChange(e);
         }}
@@ -165,31 +178,33 @@ const Slider: FunctionComponent<SliderProps> = ({
         <Track className="dark:bg-zinc-800 bg-slate-200 relative z-0 h-2 grow rounded-full">
           <Range className="max-lg:group-focus-within:bg-primary dark:max-lg:group-focus-within:bg-primary-dark group-hover:bg-primary dark:group-hover:bg-primary absolute z-0 h-full rounded-xl bg-[#A1A1AA]" />
         </Track>
-        <Thumb className="max-lg:group-focus-within:border-primary max-lg:group-focus-within:ring-primary group-hover:border-primary group-hover:ring-primary shadow-button block h-5 w-5 cursor-col-resize rounded-full border-2 border-[#A1A1AA] bg-white group-hover:ring-4 max-lg:group-focus-within:ring-4">
+        <Thumb className="max-lg:group-focus-within:border-primary max-lg:group-focus-within:ring-primary group-hover:border-primary group-hover:ring-primary block h-5 w-5 cursor-col-resize rounded-full border-2 border-[#A1A1AA] bg-white shadow-button group-hover:ring-4 max-lg:group-focus-within:ring-4">
           <SliderTooltip play={play}>
             {parseAsDate
               ? toDate(
                   data[Math.max(0, (minmax as number[])[0])],
                   dateFormat[period],
-                  i18n.language
+                  i18n.language,
                 )
               : data[(minmax as number[])[0]]}
           </SliderTooltip>
         </Thumb>
-        <Thumb className="max-lg:group-focus-within:border-primary max-lg:group-focus-within:ring-primary group-hover:border-primary group-hover:ring-primary shadow-button block h-5 w-5 cursor-col-resize rounded-full border-2 border-[#A1A1AA] bg-white group-hover:ring-4 max-lg:group-focus-within:ring-4">
+        <Thumb className="max-lg:group-focus-within:border-primary max-lg:group-focus-within:ring-primary group-hover:border-primary group-hover:ring-primary block h-5 w-5 cursor-col-resize rounded-full border-2 border-[#A1A1AA] bg-white shadow-button group-hover:ring-4 max-lg:group-focus-within:ring-4">
           <SliderTooltip play={play}>
             {parseAsDate
               ? toDate(
                   data[Math.min((minmax as number[])[1], data.length - 1)],
                   dateFormat[period],
-                  i18n.language
+                  i18n.language,
                 )
               : data[(minmax as number[])[1]]}
           </SliderTooltip>
         </Thumb>
       </Root>
       <p className="text-zinc-500 text-sm">
-        {parseAsDate ? toDate(data[data.length - 1], "yyyy", i18n.language) : data[data.length - 1]}
+        {parseAsDate
+          ? toDate(data[data.length - 1], "yyyy", i18n.language)
+          : data[data.length - 1]}
       </p>
     </div>
   );
@@ -200,19 +215,22 @@ interface SliderTooltipProps {
   children: ReactNode;
 }
 
-const SliderTooltip: FunctionComponent<SliderTooltipProps> = ({ play, children }) => {
+const SliderTooltip: FunctionComponent<SliderTooltipProps> = ({
+  play,
+  children,
+}) => {
   return (
     <div
       className={clx(
         "absolute bottom-8 left-1/2 flex -translate-x-1/2 transform flex-col items-center opacity-0 group-hover:flex group-hover:opacity-100",
         "transition-opacity delay-300 duration-300 group-hover:delay-0 max-lg:group-focus-within:opacity-100",
-        play ? "opacity-100" : "opacity-0"
+        play ? "opacity-100" : "opacity-0",
       )}
     >
-      <span className="shadow-floating relative z-10 whitespace-nowrap rounded-lg bg-zinc-900 px-3 py-1.5 text-sm text-white dark:bg-white dark:text-zinc-900">
+      <span className="shadow-floating bg-zinc-900 dark:text-zinc-900 relative z-10 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-white dark:bg-white">
         {children}
       </span>
-      <div className="absolute -bottom-1 h-2 w-2 rotate-45 bg-zinc-900 dark:bg-white"></div>
+      <div className="bg-zinc-900 absolute -bottom-1 h-2 w-2 rotate-45 dark:bg-white"></div>
     </div>
   );
 };

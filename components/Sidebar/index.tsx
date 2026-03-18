@@ -8,34 +8,55 @@ import { CrossIcon, HamburgerMenuIcon } from "@govtechmy/myds-react/icon";
 interface SidebarProps {
   children: ReactNode;
   categories: Array<[category: string, subcategory: string[]]>;
+  labels?: Record<string, string>;
   onSelect: (index: string) => void;
-  mobileOpen: boolean;
-  setMobileOpen: (open: boolean) => void;
+  mobileOpen?: boolean;
+  setMobileOpen?: (open: boolean) => void;
+  mobileClassName?: string;
+  stickyClassName?: string;
+  initialSelected?: string;
+  sidebarTitle?: string;
 }
 
 const Sidebar: FunctionComponent<SidebarProps> = ({
   children,
   categories,
+  labels,
   onSelect,
-  mobileOpen,
-  setMobileOpen,
+  mobileOpen: mobileOpenProp,
+  setMobileOpen: setMobileOpenProp,
+  mobileClassName,
+  stickyClassName,
+  initialSelected,
+  sidebarTitle,
 }) => {
   const { t } = useTranslation(["catalogue", "common"]);
-  const [selected, setSelected] = useState<string>(categories[0]?.[0] || "");
+  const [internalOpen, setInternalOpen] = useState<boolean>(false);
+  const mobileOpen = mobileOpenProp ?? internalOpen;
+  const setMobileOpen = setMobileOpenProp ?? setInternalOpen;
+  const [selected, setSelected] = useState<string>(
+    initialSelected ?? categories[0]?.[0] ?? "",
+  );
+  const label = (key: string) => labels?.[key] ?? key;
 
   return (
     <>
       <div className="flex w-full flex-row gap-8">
         {/* Desktop */}
         <div className="xl:1/5 hidden lg:block lg:w-1/5">
-          <ul className="hide-scrollbar sticky top-36 flex h-[90vh] w-full flex-col gap-6 overflow-x-visible overflow-y-scroll">
+          <ul
+            className={clx(
+              "hide-scrollbar sticky top-36 flex h-[calc(100dvh-64px)] w-full flex-col gap-2 overflow-x-visible overflow-y-scroll",
+              stickyClassName,
+            )}
+          >
             <li className="px-1">
               <h5
                 className={clx(
                   "w-full rounded-none text-start text-body-lg font-semibold leading-tight",
                 )}
               >
-                {t("category")}
+                {sidebarTitle ?? t("category")}
               </h5>
             </li>
             {categories.length > 0 ? (
@@ -56,15 +77,19 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                     )}
                     onClick={() => {
                       setSelected(category);
-                      onSelect(`${category}: ${subcategory[0]}`);
+                      onSelect(
+                        subcategory.length > 0
+                          ? `${category}: ${subcategory[0]}`
+                          : category,
+                      );
                     }}
                   >
-                    {category}
+                    {label(category)}
                   </Button>
-                  <ul className="space-y-1 px-1 pl-6">
-                    {subcategory.length &&
-                      subcategory.map((title) => (
-                        <li key={title} title={title}>
+                  {subcategory.length > 0 && (
+                    <ul className="space-y-1 px-1 pl-6">
+                      {subcategory.map((title) => (
+                        <li key={title} title={label(title)}>
                           <Button
                             variant={
                               selected === title
@@ -81,11 +106,12 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                               onSelect(`${category}: ${title}`);
                             }}
                           >
-                            {title}
+                            {label(title)}
                           </Button>
                         </li>
                       ))}
-                  </ul>
+                    </ul>
+                  )}
                 </li>
               ))
             ) : (
@@ -103,7 +129,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
         {/* Mobile */}
         <div className="relative h-full w-full lg:w-4/5 xl:w-4/5">
           <>
-            <div className={clx("absolute block lg:hidden")}>
+            <div className={clx("absolute top-4 block lg:hidden")}>
               <Button
                 variant={"default-outline"}
                 onClick={() => setMobileOpen(true)}
@@ -112,13 +138,16 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                 <ButtonIcon>
                   <HamburgerMenuIcon />
                 </ButtonIcon>
-                {t("category")}
+                {sidebarTitle ?? t("category")}
               </Button>
             </div>
             <Transition
               show={mobileOpen}
               as="div"
-              className="shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r border-otl-gray-200 bg-bg-white p-4 shadow-context-menu sm:w-1/3"
+              className={clx(
+                "shadow-floating fixed left-0 top-14 z-30 flex h-screen w-2/3 flex-col border border-r bg-bg-white px-4 shadow-context-menu sm:w-1/3",
+                mobileClassName,
+              )}
               enter="transition-opacity duration-75"
               enterFrom="opacity-0"
               enterTo="opacity-100"
@@ -133,7 +162,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                       "w-full rounded-none text-start text-body-lg font-semibold leading-tight",
                     )}
                   >
-                    {t("category")}
+                    {sidebarTitle ?? t("category")}
                   </h5>
 
                   <Button
@@ -166,16 +195,20 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                         )}
                         onClick={() => {
                           setSelected(category);
-                          onSelect(`${category}: ${subcategory[0]}`);
+                          onSelect(
+                            subcategory.length > 0
+                              ? `${category}: ${subcategory[0]}`
+                              : category,
+                          );
                           setMobileOpen(false);
                         }}
                       >
-                        {category}
+                        {label(category)}
                       </Button>
-                      <ul className="space-y-1 px-1 pl-6">
-                        {subcategory.length &&
-                          subcategory.map((title) => (
-                            <li key={title} title={title}>
+                      {subcategory.length > 0 && (
+                        <ul className="space-y-1 px-1 pl-6">
+                          {subcategory.map((title) => (
+                            <li key={title} title={label(title)}>
                               <Button
                                 variant={
                                   selected === title
@@ -193,11 +226,12 @@ const Sidebar: FunctionComponent<SidebarProps> = ({
                                   setMobileOpen(false);
                                 }}
                               >
-                                {title}
+                                {label(title)}
                               </Button>
                             </li>
                           ))}
-                      </ul>
+                        </ul>
+                      )}
                     </li>
                   ))
                 ) : (

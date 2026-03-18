@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Sarawak", parlimen: "P.220 Baram", code_state: 13, code_parlimen: "P.220" },
+  properties: {
+    state: "Sarawak",
+    parlimen: "P.220 Baram",
+    code_state: 13,
+    code_parlimen: "P.220",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

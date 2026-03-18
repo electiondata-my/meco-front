@@ -90,7 +90,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
   });
 
   const [language, setLanguage] = useState<(typeof LANGUAGE_OPTIONS)[number]>(
-    languageOptions[0]
+    languageOptions[0],
   );
   const [copyText, setCopyText] = useState<string>("copy");
 
@@ -111,7 +111,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
       hljs.highlight(children[language.value] ?? "", {
         language: language.value,
       }).value,
-    [language, children]
+    [language, children],
   );
 
   const handleCopy = () => {
@@ -122,8 +122,8 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
     }, 1000);
   };
   return (
-    <div className="dark:border-zinc-700 bg-slate-50 dark:bg-[#121212] h-fit rounded-xl border">
-      <div className="border-slate-400 flex justify-between border-b border-opacity-20 p-1">
+    <div className="h-fit rounded-xl border bg-bg-washed">
+      <div className="flex justify-between border-b border-otl-gray-300 border-opacity-20 p-1">
         <Dropdown
           className={clx(hidden ? "invisible" : "visible", "w-fit")}
           sublabel={<GlobeAltIcon className="mr-2 h-4 w-4" />}
@@ -133,7 +133,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
           width="w-min"
         />
         <button
-          className="btn text-zinc-500 hover:bg-washed/10 px-3 py-1.5"
+          className="hover:bg-washed/10 flex items-center gap-1 px-3 py-1.5 text-txt-black-500"
           onClick={handleCopy}
         >
           <DocumentDuplicateIcon className="h-4 w-4" />

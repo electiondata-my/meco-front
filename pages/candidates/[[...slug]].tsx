@@ -2,7 +2,6 @@ import Metadata from "@components/Metadata";
 import ElectionCandidatesDashboard from "@dashboards/candidates";
 import { useTranslation } from "@hooks/useTranslation";
 import { get } from "@lib/api";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import groupBy from "lodash/groupBy";
@@ -17,7 +16,7 @@ const ElectionCandidates: Page = ({
   const { t } = useTranslation("candidates");
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={t("hero.header", { ns: "candidates" })}
         description={t("hero.description", { ns: "candidates" })}
@@ -28,7 +27,7 @@ const ElectionCandidates: Page = ({
         params={params}
         selection={selection}
       />
-    </AnalyticsProvider>
+    </>
   );
 };
 

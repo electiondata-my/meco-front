@@ -83,7 +83,7 @@ const Line: FunctionComponent<LineProps> = ({
     ChartTooltip,
     CrosshairPlugin,
     AnnotationPlugin,
-    Legend
+    Legend,
   );
 
   const { theme } = useTheme();
@@ -124,7 +124,7 @@ const Line: FunctionComponent<LineProps> = ({
         callbacks: {
           label: tooltipCallback
             ? tooltipCallback
-            : item =>
+            : (item) =>
                 `${item.dataset.label as string}: ${
                   item.parsed.y !== undefined || item.parsed.y !== null
                     ? (prefixY ?? "") +
@@ -153,7 +153,9 @@ const Line: FunctionComponent<LineProps> = ({
           },
           padding: 6,
           callback: (value: string | number) =>
-            (prefixX ?? "") + numFormat(value as number, "compact", precision) + (unitX ?? ""),
+            (prefixX ?? "") +
+            numFormat(value as number, "compact", precision) +
+            (unitX ?? ""),
         },
       },
       y: {
@@ -171,7 +173,9 @@ const Line: FunctionComponent<LineProps> = ({
           },
           padding: 6,
           callback: (value: string | number) =>
-            (prefixY ?? "") + numFormat(value as number, "compact", precision) + (unitY ?? ""),
+            (prefixY ?? "") +
+            numFormat(value as number, "compact", precision) +
+            (unitY ?? ""),
         },
         min: minY,
         max: maxY,
@@ -184,7 +188,9 @@ const Line: FunctionComponent<LineProps> = ({
       {[title, menu, controls, subheader, stats].some(Boolean) && (
         <div className="flex flex-col gap-y-3">
           <ChartHeader title={title} menu={menu} controls={controls} />
-          {subheader && <div className="text-zinc-500 text-sm">{subheader}</div>}
+          {subheader && (
+            <div className="text-zinc-500 text-sm">{subheader}</div>
+          )}
           {stats && <Stats data={stats} />}
         </div>
       )}

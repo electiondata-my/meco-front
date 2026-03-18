@@ -5,8 +5,8 @@ import ThemeToggle from "./theme-toggle";
 import LocaleSwitch from "./locale-switch";
 import { useTranslation } from "@hooks/useTranslation";
 import Navbar, { Nav } from "../Navbar";
-import { useRouter } from "next/router";
-import { routes } from "@lib/routes";
+// import { useRouter } from "next/router";
+// import { routes } from "@lib/routes";
 import {
   ArrowDownTrayIcon,
   BoltIcon,
@@ -19,15 +19,11 @@ import { RedelineationIcon, SeatsIcon } from "@icons/index";
 
 export default function Header() {
   const { t } = useTranslation([]);
-  const router = useRouter();
+  // const router = useRouter();
 
   return (
     <Navbar
-      innerclassName={
-        router.pathname.includes(routes.DATA_CATALOGUE)
-          ? "max-w-screen-2xl"
-          : ""
-      }
+    // innerclassName={router.pathname === routes.DATA_CATALOGUE ? "" : ""}
     >
       <Link
         href={"/"}
@@ -62,7 +58,7 @@ export default function Header() {
               link="/candidates"
               onClick={close}
               icon={<UserIcon className="hidden size-8 max-lg:block" />}
-              className="lg:order-2"
+              className="text-center lg:order-2"
             />
             <Nav.Item
               key={"/seats"}
@@ -70,7 +66,7 @@ export default function Header() {
               link="/seats"
               onClick={close}
               icon={<SeatsIcon className="hidden size-8 max-lg:block" />}
-              className="lg:order-1"
+              className="text-center lg:order-1"
             />
             <Nav.Item
               key={"/parties"}
@@ -78,7 +74,7 @@ export default function Header() {
               link="/parties"
               onClick={close}
               icon={<FlagIcon className="hidden size-8 max-lg:block" />}
-              className="lg:order-3"
+              className="text-center lg:order-3"
             />
             <Nav.Item
               key={"/byelections"}
@@ -86,15 +82,17 @@ export default function Header() {
               link="/byelections"
               onClick={close}
               icon={<BoltIcon className="hidden size-8 max-lg:block" />}
-              className="lg:order-5"
+              className="text-center lg:order-5"
             />
             <Nav.Item
               key={"/elections"}
               title={t("common:nav.elections")}
               link="/elections"
               onClick={close}
-              icon={<ClipboardDocumentCheckIcon className="hidden size-8 max-lg:block" />}
-              className="lg:order-4"
+              icon={
+                <ClipboardDocumentCheckIcon className="hidden size-8 max-lg:block" />
+              }
+              className="text-center lg:order-4"
             />
 
             <Nav.Item
@@ -105,28 +103,27 @@ export default function Header() {
               icon={
                 <RedelineationIcon className="hidden size-8 max-lg:block" />
               }
-              className="lg:order-6"
+              className="text-center lg:order-6"
             />
-            <Nav.Item
+            {/* <Nav.Item
               key={"/map/explorer"}
               title={t("common:nav.map")}
               link="/map/explorer"
               onClick={close}
               icon={<MapIcon className="hidden size-8 max-lg:block" />}
-              className="lg:order-7"
-            />
-            {process.env.NEXT_PUBLIC_APP_ENV !== "production" && (
-              <Nav.Item
-                key={"/data-catalogue"}
-                title={t("common:nav.catalogue")}
-                link="/data-catalogue"
-                icon={
+              className="text-center lg:order-7"
+            /> */}
+
+            <Nav.Item
+              key={"/data-catalogue"}
+              title={t("common:nav.catalogue")}
+              link="/data-catalogue"
+              icon={
                 <ArrowDownTrayIcon className="hidden size-8 max-lg:block" />
               }
-                onClick={close}
-                className="lg:order-8"
-              />
-            )}
+              onClick={close}
+              className="whitespace-nowrap text-center lg:order-7"
+            />
           </>
         )}
       </Nav>
