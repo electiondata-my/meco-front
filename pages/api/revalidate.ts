@@ -41,7 +41,7 @@ export default async function handler(
     await Promise.all(
       routes.map(async (route) =>
         validate(route)
-          .then((valid_route) => rebuild(res, valid_route, routes))
+          .then(() => rebuild(res, route, routes))
           .catch((e) => {
             throw new Error(e);
           }),
@@ -65,7 +65,10 @@ export default async function handler(
 // Checks if route exists. Routes only valid for static pages
 const validate = (route: string): Promise<string> =>
   new Promise((resolve, reject) => {
-    if (static_routes.includes(route)) resolve(route);
+    const valid = static_routes.some(
+      (r) => route === r || route.startsWith(r + "/"),
+    );
+    if (valid) resolve(route);
     else
       reject(`Route does not exist or is not a static page. Route: ${route}`);
   });
