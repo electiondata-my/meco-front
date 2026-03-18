@@ -158,7 +158,6 @@ export type DCDataViz = {
   chart_type: DCChartKeys;
   title: string;
   config: {
-    mapbox_key?: string;
     format: Record<"x" | "y", string | Array<string>>;
     precision: number;
     filter_columns?: Array<string>;
@@ -173,7 +172,16 @@ export type DCDataViz = {
         false | "millisecond" | "second" | "minute" | "week"
       >;
     };
-  };
+  } & DCMapboxDataVizConfig;
+};
+
+export type DCMapboxDataVizConfig = {
+  mapbox_key?: string;
+  fll_colour?: string | null | Record<string, Record<string, string>>;
+  fill_opacity?: number;
+  stroke_colour?: string | null | Record<string, Record<string, string>>;
+  stroke_opacity?: number;
+  stroke_width?: number;
 };
 
 export type DCDownloadType =

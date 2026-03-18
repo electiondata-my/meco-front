@@ -80,11 +80,7 @@ const CatalogueShowWrapper: FunctionComponent<CatalogueShowWrapperProps> = ({
   return (
     <AnalyticsProvider meta={meta}>
       <Metadata
-        title={
-          selectedViz.chart_type !== "TABLE"
-            ? selectedViz.title
-            : dataset.meta.title
-        }
+        title={dataset.meta.title}
         description={dataset.meta.desc.replace(/^(.*?)]/, "")}
         keywords={""}
       />
@@ -219,7 +215,7 @@ const SIDEBAR_CATEGORIES: Array<[key: string, subcategories: string[]]> = [
   ["charts_table", []],
   ["metadata", ["notes", "variables", "next_update", "license"]],
   ["download", []],
-  ["programmatic_access", ["full_dataset"]],
+  ["programmatic_access", []],
 ];
 
 const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
@@ -232,7 +228,6 @@ const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
     license: "License",
     download: "Download",
     programmatic_access: "Programmatic Access",
-    full_dataset: "Full dataset",
   },
   "ms-MY": {
     charts_table: "Jadual & Carta",
@@ -243,7 +238,6 @@ const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
     license: "Lesen",
     download: "Muat Turun",
     programmatic_access: "Akses Programatif",
-    full_dataset: "Dataset penuh",
   },
 };
 

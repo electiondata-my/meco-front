@@ -7,20 +7,44 @@ import {
   getMapboxColorIndex,
 } from "@lib/constants";
 import useConfig from "next/config";
-import { GeoJSONFeature } from "mapbox-gl";
+import { ExpressionSpecification, GeoJSONFeature } from "mapbox-gl";
 import { ArrowsPointingInIcon } from "@heroicons/react/24/outline";
 import { MapIcon } from "@govtechmy/myds-react/icon";
 import { useMediaQuery } from "@hooks/useMediaQuery";
+import { DCMapboxDataVizConfig } from "@lib/types";
 
-type DCMapboxProps = {
-  mapboxKey: string;
+// Returns a Mapbox paint color value: transparent, hex, column lookup, or match expression
+const resolveColor = (
+  value: string | null | Record<string, Record<string, string>>,
+): string | ExpressionSpecification => {
+  if (value === null) return "transparent";
+  if (typeof value === "string") {
+    if (value.startsWith("#")) return value;
+    return ["coalesce", ["get", value], "transparent"];
+  }
+  // object: { colname: { key: color, ... } } → match expression
+  const [col, mapping] = Object.entries(value)[0];
+  return [
+    "match",
+    ["get", col],
+    ...Object.entries(mapping).flat(),
+    "transparent",
+  ];
+};
+
+type DCMapboxProps = Required<DCMapboxDataVizConfig> & {
   center?: [number, number];
   zoom?: number;
   className?: string;
 };
 
 const DCMapbox: FC<DCMapboxProps> = ({
-  mapboxKey,
+  mapbox_key: mapboxKey,
+  fll_colour,
+  fill_opacity,
+  stroke_colour,
+  stroke_opacity,
+  stroke_width,
   center = [109.5, 4.0],
   zoom = 5,
   className = "h-[350px] w-full lg:h-[450px]",
@@ -134,8 +158,11 @@ const DCMapbox: FC<DCMapboxProps> = ({
             type="fill"
             source-layer={mapboxKey}
             paint={{
-              "fill-color": ["coalesce", ["get", "colour"], "transparent"],
-              "fill-opacity": 0.8,
+              "fill-color":
+                fll_colour !== undefined
+                  ? resolveColor(fll_colour)
+                  : ["coalesce", ["get", "colour"], "transparent"],
+              "fill-opacity": fill_opacity ?? 0.8,
             }}
           />
           <Layer
@@ -143,9 +170,9 @@ const DCMapbox: FC<DCMapboxProps> = ({
             type="line"
             source-layer={mapboxKey}
             paint={{
-              "line-color": "#3f3f46",
-              "line-width": 1,
-              "line-opacity": 0.4,
+              "line-color": resolveColor(stroke_colour ?? null),
+              "line-width": stroke_width ?? 1,
+              "line-opacity": stroke_opacity ?? 0.4,
             }}
           />
         </Source>

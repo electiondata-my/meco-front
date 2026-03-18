@@ -16,16 +16,29 @@ const CatalogueCode: FunctionComponent<CatalogueCodeProps> = ({
 
   const pythonTemplate = useMemo(() => {
     switch (type) {
+      case "MAPBOX":
+        return `# ${t("code_note")}: pip install geopandas pyarrow
+# however, you should consider using uv for package management!
+
+import geopandas as gpd
+
+URL_MAP = "${url}"
+
+g = gpd.read_parquet(URL_MAP)
+
+# ----- add your code here -----`;
+
       default: // TIMESERIES | CHOROPLETH | TABLE
-        return `# ${t("code_note")}: pip install pandas fastparquet
+        return `# ${t("code_note")}: pip install pandas pyarrow
+# however, you should consider using uv for package management!
+
 import pandas as pd
 
-URL_DATA = '${url}'
+URL_DATA = "${url}"
 
 df = pd.read_parquet(URL_DATA)
-if 'date' in df.columns: df['date'] = pd.to_datetime(df['date'])
 
-print(df)`;
+# ----- add your code here -----`;
     }
   }, [type]);
 

@@ -298,3 +298,12 @@ export const MAPBOX_ELECTION_YEAR_COLOR: number[][] = [
 // Helper: look up color index for a given year
 export const getMapboxColorIndex = (year: number): number =>
   MAPBOX_ELECTION_YEAR_COLOR.findIndex((years) => years.includes(year));
+
+export const MAPBOX_REGION_CENTER: Record<
+  string,
+  { mobile: [number, number]; desktop: [number, number]; zoom: number }
+> = {
+  peninsular: { mobile: [102.5, 3.8], desktop: [109.5, 4.0], zoom: 5 },
+  sabah: { mobile: [117.0, 5.5], desktop: [117.0, 5.5], zoom: 5.5 },
+  sarawak: { mobile: [113.5, 2.5], desktop: [113.5, 2.5], zoom: 5 },
+};

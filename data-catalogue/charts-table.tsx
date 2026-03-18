@@ -9,13 +9,12 @@ import Search from "@components/Search";
 import Section from "@components/Section";
 import { clx, interpolate, numFormat } from "@lib/helpers";
 import { CatalogueContext } from "@lib/contexts/catalogue";
-import { DCDataViz, DCVariable } from "@lib/types";
+import { DCDataViz, DCMapboxDataVizConfig, DCVariable } from "@lib/types";
 import dynamic from "next/dynamic";
 import { UNIVERSAL_TABLE_SCHEMA } from "@lib/schema/data-catalogue";
+import { MAPBOX_REGION_CENTER } from "@lib/constants";
 import { AnalyticsContext } from "@lib/contexts/analytics";
 import { useTranslation } from "@hooks/useTranslation";
-import Card from "@components/Card";
-import { TableCellsIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/router";
 import CataloguePreview from "./preview";
 
@@ -53,37 +52,26 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
     );
   };
 
-  const MAPBOX_REGION_CENTER: Record<
-    string,
-    { mobile: [number, number]; desktop: [number, number]; zoom: number }
-  > = {
-    peninsular: { mobile: [102.5, 3.8], desktop: [109.5, 4.0], zoom: 5 },
-    sabah: { mobile: [117.0, 5.5], desktop: [117.0, 5.5], zoom: 5.5 },
-    sarawak: { mobile: [113.5, 2.5], desktop: [113.5, 2.5], zoom: 5 },
-  };
+  const isMapboxConfig = (
+    c: typeof config,
+  ): c is typeof config & Required<DCMapboxDataVizConfig> =>
+    typeof c.mapbox_key === "string";
 
   const renderChart = () => {
     switch (dataset.type) {
       case "MAPBOX": {
-        if (!config.mapbox_key) return null;
-        const region = config.mapbox_key.split("_")[0];
+        if (!isMapboxConfig(config)) return null;
+        const mapboxConfig = config;
+        const region = mapboxConfig.mapbox_key.split("_")[0];
         const { mobile, desktop, zoom } =
           MAPBOX_REGION_CENTER[region] ?? MAPBOX_REGION_CENTER.peninsular;
         return (
           <>
             <div className="block lg:hidden">
-              <DCMapbox
-                mapboxKey={config.mapbox_key}
-                center={mobile}
-                zoom={zoom}
-              />
+              <DCMapbox {...mapboxConfig} center={mobile} zoom={zoom} />
             </div>
             <div className="hidden lg:block">
-              <DCMapbox
-                mapboxKey={config.mapbox_key}
-                center={desktop}
-                zoom={zoom}
-              />
+              <DCMapbox {...mapboxConfig} center={desktop} zoom={zoom} />
             </div>
           </>
         );
