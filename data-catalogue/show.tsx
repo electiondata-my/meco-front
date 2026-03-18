@@ -180,8 +180,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
                 fields: data.fields,
                 last_updated: data.last_updated,
                 next_update: data.next_update,
-                link_csv: data.download?.csv?.link,
-                link_parquet: data.download?.parquet?.link,
+                download: data.download,
               }}
             />
             {/* Download */}

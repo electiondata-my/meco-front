@@ -7,16 +7,18 @@ import { AnalyticsContext } from "@lib/contexts/analytics";
 import { interpolate, toDate } from "@lib/helpers";
 import Table from "@charts/table";
 import { METADATA_TABLE_SCHEMA } from "@lib/schema/data-catalogue";
-import { DCVariable } from "@lib/types";
+import { DCDownloadType, DCVariable } from "@lib/types";
 type MetadataProps = {
   scrollRef: RefObject<Record<string, HTMLElement | null>>;
   metadata: Pick<
     DCVariable,
-    "description" | "fields" | "notes" | "last_updated" | "next_update"
-  > & {
-    link_csv?: string;
-    link_parquet?: string;
-  };
+    | "description"
+    | "fields"
+    | "notes"
+    | "last_updated"
+    | "next_update"
+    | "download"
+  >;
 };
 
 const DCMetadata: FunctionComponent<MetadataProps> = ({
@@ -119,26 +121,21 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
             </div>
 
             {/* URLs to dataset */}
-            {metadata.link_csv && metadata.link_parquet && (
+            {metadata.download && Object.keys(metadata.download).length > 0 && (
               <div className="space-y-3">
                 <h5>{t("meta_url")}</h5>
                 <ul className="ml-6 list-outside list-disc text-txt-black-500">
-                  {Object.entries({
-                    csv: metadata.link_csv,
-                    parquet: metadata.link_parquet,
-                  }).map(([key, url]: [string, string]) =>
-                    url ? (
-                      <li key={url}>
+                  {Object.entries(metadata.download).map(([key, { link }]) =>
+                    link ? (
+                      <li key={link}>
                         <a
-                          href={url}
+                          href={link}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="break-all text-txt-danger [text-underline-position:from-font] hover:underline"
-                          onClick={() =>
-                            trackDownload(key as "parquet" | "csv")
-                          }
+                          onClick={() => trackDownload(key as DCDownloadType)}
                         >
-                          {url}
+                          {link}
                         </a>
                       </li>
                     ) : null,
