@@ -13,23 +13,13 @@ import { MapIcon } from "@govtechmy/myds-react/icon";
 import { useMediaQuery } from "@hooks/useMediaQuery";
 import { DCMapboxDataVizConfig } from "@lib/types";
 
-// Returns a Mapbox paint color value: transparent, hex, column lookup, or match expression
+// Returns a Mapbox paint color value: transparent, hex, or a feature-property expression
 const resolveColor = (
-  value: string | null | Record<string, Record<string, string>>,
+  value: string | null,
 ): string | ExpressionSpecification => {
   if (value === null) return "transparent";
-  if (typeof value === "string") {
-    if (value.startsWith("#")) return value;
-    return ["coalesce", ["get", value], "transparent"];
-  }
-  // object: { colname: { key: color, ... } } → match expression
-  const [col, mapping] = Object.entries(value)[0];
-  return [
-    "match",
-    ["get", col],
-    ...Object.entries(mapping).flat(),
-    "transparent",
-  ];
+  if (value.startsWith("#")) return value;
+  return ["coalesce", ["get", value], "transparent"];
 };
 
 type DCMapboxProps = Required<DCMapboxDataVizConfig> & {

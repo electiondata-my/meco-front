@@ -177,9 +177,9 @@ export type DCDataViz = {
 
 export type DCMapboxDataVizConfig = {
   mapbox_key?: string;
-  fll_colour?: string | null | Record<string, Record<string, string>>;
+  fll_colour?: string | null;
   fill_opacity?: number;
-  stroke_colour?: string | null | Record<string, Record<string, string>>;
+  stroke_colour?: string | null;
   stroke_opacity?: number;
   stroke_width?: number;
 };
