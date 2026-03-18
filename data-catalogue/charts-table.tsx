@@ -12,7 +12,6 @@ import { CatalogueContext } from "@lib/contexts/catalogue";
 import { DCDataViz, DCMapboxDataVizConfig, DCVariable } from "@lib/types";
 import dynamic from "next/dynamic";
 import { UNIVERSAL_TABLE_SCHEMA } from "@lib/schema/data-catalogue";
-import { MAPBOX_REGION_CENTER } from "@lib/constants";
 import { AnalyticsContext } from "@lib/contexts/analytics";
 import { useTranslation } from "@hooks/useTranslation";
 import { useRouter } from "next/router";
@@ -60,21 +59,9 @@ const DCChartsAndTable: FunctionComponent<ChartTableProps> = ({
   const renderChart = () => {
     switch (dataset.type) {
       case "MAPBOX": {
-        if (!isMapboxConfig(config)) return null;
+        if (!isMapboxConfig(config) || !router.isReady) return null;
         const mapboxConfig = config;
-        const region = mapboxConfig.mapbox_key.split("_")[0];
-        const { mobile, desktop, zoom } =
-          MAPBOX_REGION_CENTER[region] ?? MAPBOX_REGION_CENTER.peninsular;
-        return (
-          <>
-            <div className="block lg:hidden">
-              <DCMapbox {...mapboxConfig} center={mobile} zoom={zoom} />
-            </div>
-            <div className="hidden lg:block">
-              <DCMapbox {...mapboxConfig} center={desktop} zoom={zoom} />
-            </div>
-          </>
-        );
+        return <DCMapbox key={router.locale} {...mapboxConfig} />;
       }
 
       default:

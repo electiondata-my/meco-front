@@ -4,14 +4,15 @@ import { useTheme } from "next-themes";
 import {
   MapboxMapStyle,
   MAPBOX_COLOR_INDEX,
+  MAPBOX_REGION_CENTER,
   getMapboxColorIndex,
 } from "@lib/constants";
 import useConfig from "next/config";
 import { ExpressionSpecification, GeoJSONFeature } from "mapbox-gl";
 import { ArrowsPointingInIcon } from "@heroicons/react/24/outline";
 import { MapIcon } from "@govtechmy/myds-react/icon";
-import { useMediaQuery } from "@hooks/useMediaQuery";
 import { DCMapboxDataVizConfig } from "@lib/types";
+import { clx } from "@lib/helpers";
 
 // Returns a Mapbox paint color value: transparent, hex, or a feature-property expression
 const resolveColor = (
@@ -23,20 +24,45 @@ const resolveColor = (
 };
 
 type DCMapboxProps = Required<DCMapboxDataVizConfig> & {
-  center?: [number, number];
-  zoom?: number;
   className?: string;
 };
 
-const DCMapbox: FC<DCMapboxProps> = ({
+type MapInstanceProps = DCMapboxProps & {
+  center: [number, number];
+  zoom: number;
+};
+
+const DCMapbox: FC<DCMapboxProps> = (props) => {
+  const { mapbox_key: mapboxKey } = props;
+  const region = mapboxKey.split("_")[0];
+  const fallback =
+    MAPBOX_REGION_CENTER[region] ?? MAPBOX_REGION_CENTER.peninsular;
+  const mobile = props.center_mobile ?? fallback.mobile;
+  const desktop = props.center_desktop ?? fallback.desktop;
+  const zoomMobile = props.zoom_mobile ?? fallback.zoom;
+  const zoomDesktop = props.zoom_desktop ?? fallback.zoom;
+
+  return (
+    <>
+      <div className="block lg:hidden">
+        <MapInstance {...props} center={mobile} zoom={zoomMobile} />
+      </div>
+      <div className="hidden lg:block">
+        <MapInstance {...props} center={desktop} zoom={zoomDesktop} />
+      </div>
+    </>
+  );
+};
+
+const MapInstance: FC<MapInstanceProps> = ({
   mapbox_key: mapboxKey,
-  fll_colour,
+  fill_colour,
   fill_opacity,
   stroke_colour,
   stroke_opacity,
   stroke_width,
-  center = [109.5, 4.0],
-  zoom = 5,
+  center,
+  zoom,
   className = "h-[350px] w-full lg:h-[450px]",
 }) => {
   const { LIGHT_STYLE, DARK_STYLE } = MapboxMapStyle;
@@ -51,11 +77,6 @@ const DCMapbox: FC<DCMapboxProps> = ({
     longitude: number;
     latitude: number;
   } | null>(null);
-
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const initialCenter =
-    center ?? ((isMobile ? [108.0, 4.5] : [109.5, 4.0]) as [number, number]);
-  const initialZoom = zoom ?? (isMobile ? 4 : 5);
 
   const year = Number(
     mapboxKey.split("_").find((part) => /^\d{4}$/.test(part)),
@@ -107,23 +128,23 @@ const DCMapbox: FC<DCMapboxProps> = ({
 
   const handleReset = () => {
     mapRef.current?.flyTo({
-      center: initialCenter,
-      zoom: initialZoom,
+      center,
+      zoom,
       duration: 1000,
     });
     setPopupInfo(null);
   };
 
   return (
-    <div className={className}>
+    <div className={clx("h-full", "w-full", className)}>
       <Map
         ref={mapRef}
         reuseMaps={true}
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
         initialViewState={{
-          longitude: initialCenter[0],
-          latitude: initialCenter[1],
-          zoom: initialZoom,
+          longitude: center[0],
+          latitude: center[1],
+          zoom,
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={styleUrl}
@@ -149,8 +170,8 @@ const DCMapbox: FC<DCMapboxProps> = ({
             source-layer={mapboxKey}
             paint={{
               "fill-color":
-                fll_colour !== undefined
-                  ? resolveColor(fll_colour)
+                fill_colour !== undefined
+                  ? resolveColor(fill_colour)
                   : ["coalesce", ["get", "colour"], "transparent"],
               "fill-opacity": fill_opacity ?? 0.8,
             }}
@@ -188,7 +209,7 @@ const DCMapbox: FC<DCMapboxProps> = ({
                 <span className="font-semibold">{mapboxKey}</span>
               </div>
               {Object.entries(popupInfo.feature.properties ?? {})
-                .filter(([k]) => k !== "colour")
+                .filter(([k]) => !/colou?r/i.test(k))
                 .map(([k, v]) => (
                   <div
                     key={k}

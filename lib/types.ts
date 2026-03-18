@@ -177,11 +177,15 @@ export type DCDataViz = {
 
 export type DCMapboxDataVizConfig = {
   mapbox_key?: string;
-  fll_colour?: string | null;
+  fill_colour?: string | null;
   fill_opacity?: number;
   stroke_colour?: string | null;
   stroke_opacity?: number;
   stroke_width?: number;
+  zoom_desktop?: number;
+  zoom_mobile?: number;
+  center_desktop?: [number, number];
+  center_mobile?: [number, number];
 };
 
 export type DCDownloadType =
