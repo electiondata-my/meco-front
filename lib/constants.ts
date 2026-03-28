@@ -273,3 +273,37 @@ export const MapboxMapStyle = {
   LIGHT_STYLE: "mapbox://styles/mapbox/light-v11",
   DARK_STYLE: "mapbox://styles/mapbox/dark-v11",
 };
+
+export const MAPBOX_COLOR_INDEX: [string, string][] = [
+  ["rgba(255, 1, 0, 1)", "rgba(255, 194, 194, 0.5)"],
+  ["rgba(255, 128, 0, 1)", "rgba(255, 206, 157, 0.5)"],
+  ["rgba(255, 224, 50, 1)", "rgba(255, 241, 166, 0.5)"],
+  ["rgba(0, 255, 1, 1)", "rgba(162, 255, 162, 0.5)"],
+  ["rgba(1, 255, 255, 1)", "rgba(185, 255, 255, 0.5)"],
+  ["rgba(1, 128, 255, 1)", "rgba(194, 224, 255, 0.5)"],
+  ["rgba(255, 1, 255, 1)", "rgba(255, 191, 255, 0.5)"],
+];
+
+// Each array of years maps to the corresponding MAPBOX_COLOR_INDEX position
+export const MAPBOX_ELECTION_YEAR_COLOR: number[][] = [
+  [2018, 2019, 2015], // → color index 0
+  [2003, 2005], // → color index 1
+  [1994, 1996], // → color index 2
+  [1984, 1987], // → color index 3
+  [1974, 1977], // → color index 4
+  [1959, 1966, 1968], // → color index 5
+  [1955], // → color index 6
+];
+
+// Helper: look up color index for a given year
+export const getMapboxColorIndex = (year: number): number =>
+  MAPBOX_ELECTION_YEAR_COLOR.findIndex((years) => years.includes(year));
+
+export const MAPBOX_REGION_CENTER: Record<
+  string,
+  { mobile: [number, number]; desktop: [number, number]; zoom: number }
+> = {
+  peninsular: { mobile: [102.5, 3.8], desktop: [109.5, 4.0], zoom: 5 },
+  sabah: { mobile: [117.0, 5.5], desktop: [117.0, 5.5], zoom: 5.5 },
+  sarawak: { mobile: [113.5, 2.5], desktop: [113.5, 2.5], zoom: 5 },
+};

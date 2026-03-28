@@ -40,9 +40,11 @@ export default async function handler(
 
     await Promise.all(
       routes.map(async (route) =>
-        rebuild(res, route, routes).catch((e) => {
-          throw new Error(e);
-        }),
+        validate(route)
+          .then(() => rebuild(res, route, routes))
+          .catch((e) => {
+            throw new Error(e);
+          }),
       ),
     );
 
@@ -63,7 +65,10 @@ export default async function handler(
 // Checks if route exists. Routes only valid for static pages
 const validate = (route: string): Promise<string> =>
   new Promise((resolve, reject) => {
-    if (static_routes.includes(route)) resolve(route);
+    const valid = static_routes.some(
+      (r) => route === r || route.startsWith(r + "/"),
+    );
+    if (valid) resolve(route);
     else
       reject(`Route does not exist or is not a static page. Route: ${route}`);
   });
@@ -78,14 +83,6 @@ const rebuild = async (res: NextApiResponse, route: string, routes: string[]) =>
         await res.revalidate(route);
         const result = revalidateWithStates(res, route);
         routes.push.apply(routes, result);
-        resolve(true);
-        break;
-      // For /data-catalogue with prefix /state route
-      case "/data-catalogue":
-      case "/ms-MY/data-catalogue":
-        await res.revalidate(route);
-        const result2 = revalidateWithStates(res, route, "state");
-        routes.push.apply(routes, result2);
         resolve(true);
         break;
 

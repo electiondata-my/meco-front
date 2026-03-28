@@ -8,15 +8,15 @@ import domtoimage from "dom-to-image";
  */
 export const useExport = (
   mounted: boolean,
-  id: string
+  id: string,
 ): { png: string | undefined; svg: string | undefined } => {
   const [png, setPNG] = useState<string | undefined>(undefined);
   const [svg, setSvg] = useState<string | undefined>(undefined);
   useEffect(() => {
     const element = document.getElementById(id);
     if (element !== null) {
-      domtoimage.toPng(element).then(dataURL => setPNG(dataURL));
-      domtoimage.toSvg(element).then(dataURL => setSvg(dataURL));
+      domtoimage.toPng(element).then((dataURL) => setPNG(dataURL));
+      domtoimage.toSvg(element).then((dataURL) => setSvg(dataURL));
     }
   }, [mounted, id]);
 

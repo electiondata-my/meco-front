@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Kelantan", parlimen: "P.030 Jeli", code_state: 3, code_parlimen: "P.030" },
+  properties: {
+    state: "Kelantan",
+    parlimen: "P.030 Jeli",
+    code_state: 3,
+    code_parlimen: "P.030",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

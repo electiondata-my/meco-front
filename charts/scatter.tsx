@@ -70,14 +70,14 @@ const Scatter: FunctionComponent<ScatterProps> = ({
     ChartTooltip,
     AnnotationPlugin,
     CrosshairPlugin,
-    Legend
+    Legend,
   );
   const { theme } = useTheme();
 
   const display = (
     value: number,
     type: "compact" | "standard",
-    precision: number | [number, number]
+    precision: number | [number, number],
   ): string => {
     return (prefixY ?? "") + numFormat(value, type, precision) + (unitY ?? "");
   };
@@ -93,7 +93,9 @@ const Scatter: FunctionComponent<ScatterProps> = ({
     },
   });
 
-  const yieldRegressionYs = (_data: ChartDataset<"scatter", any[]>): [min: number, max: number] => {
+  const yieldRegressionYs = (
+    _data: ChartDataset<"scatter", any[]>,
+  ): [min: number, max: number] => {
     const { data } = _data;
     let xSum = 0,
       ySum = 0,
@@ -102,7 +104,7 @@ const Scatter: FunctionComponent<ScatterProps> = ({
       ySquare = 0;
 
     if (data?.length) {
-      data.forEach(datum => {
+      data.forEach((datum) => {
         if (datum.y === null) return;
         xySum += datum.x * datum.y;
         xSum += datum.x;
@@ -157,7 +159,7 @@ const Scatter: FunctionComponent<ScatterProps> = ({
             return `${item.dataset.label!}: (${display(
               item.parsed.x,
               "compact",
-              [1, 1]
+              [1, 1],
             )}, ${display(item.parsed.y, "compact", [1, 1])})`;
           },
         },
@@ -183,17 +185,20 @@ const Scatter: FunctionComponent<ScatterProps> = ({
             common: {
               drawTime: "afterDatasetsDraw",
             },
-            annotations: data.map(set => {
+            annotations: data.map((set) => {
               return {
                 id: set.label,
                 type: "line",
                 scaleID: set.label,
                 yMin: yieldRegressionYs(set)[0],
                 yMax: yieldRegressionYs(set)[1],
-                borderColor: set.backgroundColor ? set.backgroundColor + "cc" : "black",
+                borderColor: set.backgroundColor
+                  ? set.backgroundColor + "cc"
+                  : "black",
                 display(ctx) {
-                  return !ctx.chart.legend?.legendItems?.find(item => item.text === set.label)
-                    ?.hidden;
+                  return !ctx.chart.legend?.legendItems?.find(
+                    (item) => item.text === set.label,
+                  )?.hidden;
                 },
                 borderWidth: 2,
               };
@@ -351,11 +356,13 @@ const Scatter: FunctionComponent<ScatterProps> = ({
         <ScatterCanvas
           ref={_ref}
           data={{
-            datasets: data.map(({ label, data, ...rest }: ChartDataset<"scatter", any[]>) => ({
-              label,
-              data,
-              ...rest,
-            })),
+            datasets: data.map(
+              ({ label, data, ...rest }: ChartDataset<"scatter", any[]>) => ({
+                label,
+                data,
+                ...rest,
+              }),
+            ),
             //   ...(enableRegression
             //     ? data.map((set: ChartDataset<"scatter", any>) => yieldRegressionLine(set))
             //     : [{ data: [] }]),
@@ -456,7 +463,9 @@ const externalTooltipHandler = (context: { chart: any; tooltip: any }) => {
       const tdExtra = document.createElement("td");
       tdExtra.style.borderWidth = "0";
       tdExtra.style.fontSize = "14px";
-      const textExtra = document.createTextNode(`and ${bodyLines.length - 5} more.`);
+      const textExtra = document.createTextNode(
+        `and ${bodyLines.length - 5} more.`,
+      );
       tdExtra.appendChild(textExtra);
       trExtra.appendChild(tdExtra);
       tableBody.appendChild(trExtra);
@@ -509,7 +518,8 @@ const externalTooltipHandler = (context: { chart: any; tooltip: any }) => {
   tooltipEl.style.left = positionX + tooltip.caretX + "px";
   tooltipEl.style.top = positionY + tooltip.caretY + "px";
   tooltipEl.style.font = tooltip.options.bodyFont.string;
-  tooltipEl.style.padding = tooltip.options.padding + "px " + tooltip.options.padding + "px";
+  tooltipEl.style.padding =
+    tooltip.options.padding + "px " + tooltip.options.padding + "px";
 };
 
 const dummy: ScatterData[] = [

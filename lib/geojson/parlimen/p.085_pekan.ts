@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Pahang", parlimen: "P.085 Pekan", code_state: 6, code_parlimen: "P.085" },
+  properties: {
+    state: "Pahang",
+    parlimen: "P.085 Pekan",
+    code_state: 6,
+    code_parlimen: "P.085",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

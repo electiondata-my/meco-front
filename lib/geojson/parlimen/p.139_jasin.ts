@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Melaka", parlimen: "P.139 Jasin", code_state: 4, code_parlimen: "P.139" },
+  properties: {
+    state: "Melaka",
+    parlimen: "P.139 Jasin",
+    code_state: 4,
+    code_parlimen: "P.139",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

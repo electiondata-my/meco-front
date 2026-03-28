@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Perak", parlimen: "P.060 Taiping", code_state: 8, code_parlimen: "P.060" },
+  properties: {
+    state: "Perak",
+    parlimen: "P.060 Taiping",
+    code_state: 8,
+    code_parlimen: "P.060",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Sabah", parlimen: "P.179 Ranau", code_state: 12, code_parlimen: "P.179" },
+  properties: {
+    state: "Sabah",
+    parlimen: "P.179 Ranau",
+    code_state: 12,
+    code_parlimen: "P.179",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

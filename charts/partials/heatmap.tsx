@@ -30,7 +30,7 @@ const CatalogueHeatmap: FunctionComponent<CatalogueHeatmapProps> = ({
 
   return (
     <Heatmap
-      _ref={ref => bind.chartjs(ref)}
+      _ref={(ref) => bind.chartjs(ref)}
       className={className}
       data={_datasets}
       color={config.color}

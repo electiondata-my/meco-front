@@ -1,6 +1,12 @@
 import type { ScriptableContext } from "chart.js";
 import { FunctionComponent, ReactNode, useCallback, useMemo } from "react";
-import { Chart as ChartJS, LinearScale, PointElement, LineElement, Tooltip } from "chart.js";
+import {
+  Chart as ChartJS,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+} from "chart.js";
 import { Bubble } from "react-chartjs-2";
 import { default as ChartHeader, ChartHeaderProps } from "./chart-header";
 import { COLOR, CountryAndStates } from "@lib/constants";
@@ -76,7 +82,12 @@ const Jitterplot: FunctionComponent<JitterplotProps> = ({
   ChartJS.register(LinearScale, PointElement, LineElement, Tooltip);
   const { theme } = useTheme();
   const DEFAULT_STYLE = {
-    backgroundColor: theme === "dark" ? "#27272A" : data.data.length < 20 ? "#E0E0E0" : "#EEEEEE",
+    backgroundColor:
+      theme === "dark"
+        ? "#27272A"
+        : data.data.length < 20
+          ? "#E0E0E0"
+          : "#EEEEEE",
     radius: 5,
     hoverRadius: 1,
   };
@@ -136,15 +147,17 @@ const Jitterplot: FunctionComponent<JitterplotProps> = ({
     }
   >(
     ({ raw }: ScriptableContext<"bubble">) => {
-      if (active.toLowerCase().includes((raw as JitterDatum)?.area.toLowerCase()))
+      if (
+        active.toLowerCase().includes((raw as JitterDatum)?.area.toLowerCase())
+      )
         return {
           backgroundColor: theme === "light" ? COLOR.BLACK : COLOR.GREEN,
           radius: 6,
           hoverRadius: 1,
         };
 
-      const index = actives.findIndex(item =>
-        item.toLowerCase().includes((raw as JitterDatum).area.toLowerCase())
+      const index = actives.findIndex((item) =>
+        item.toLowerCase().includes((raw as JitterDatum).area.toLowerCase()),
       );
 
       switch (index) {
@@ -158,7 +171,7 @@ const Jitterplot: FunctionComponent<JitterplotProps> = ({
           return DEFAULT_STYLE;
       }
     },
-    [actives, active, theme]
+    [actives, active, theme],
   );
 
   const _data = useMemo<Record<string, JitterDatum[]>>(() => {
@@ -167,8 +180,12 @@ const Jitterplot: FunctionComponent<JitterplotProps> = ({
       default: [],
     };
 
-    data.data.forEach(item => {
-      if ([active, ...actives].some(raw => raw.split(",")[0].includes(item.area))) {
+    data.data.forEach((item) => {
+      if (
+        [active, ...actives].some((raw) =>
+          raw.split(",")[0].includes(item.area),
+        )
+      ) {
         result.actives.push(item);
       } else {
         result.default.push(item);
@@ -182,7 +199,7 @@ const Jitterplot: FunctionComponent<JitterplotProps> = ({
     <>
       {data.data[0].x !== null && (
         <div className="grid w-full grid-cols-1 items-center gap-1 lg:grid-cols-4">
-          <div className="dark:bg-[#121212] z-10 bg-white">
+          <div className="z-10 bg-white dark:bg-[#121212]">
             {formatTitle ? formatTitle(data.key) : data.key}
           </div>
           <div className="col-span-1 overflow-visible lg:col-span-3">
@@ -233,10 +250,15 @@ const dummy: JitterDatum[] = Array(Object.keys(CountryAndStates).length)
       y: Math.floor(Math.random() * 100 + 0),
       area: Object.values(CountryAndStates)[index],
       tooltip: 1,
-    })
+    }),
   );
 
-const dummy_keys = ["Land area", "Population Density", "Household income", "Access to electricity"];
+const dummy_keys = [
+  "Land area",
+  "Population Density",
+  "Household income",
+  "Access to electricity",
+];
 const dummies: JitterData[] = Array(dummy_keys.length)
   .fill(0)
   .map((_, index) => ({ key: dummy_keys[index], data: dummy }));
@@ -326,7 +348,9 @@ const externalTooltipHandler = (context: { chart: any; tooltip: any }) => {
       const tdExtra = document.createElement("td");
       tdExtra.style.borderWidth = "0";
       tdExtra.style.fontSize = "14px";
-      const textExtra = document.createTextNode(`and ${bodyLines.length - 5} more.`);
+      const textExtra = document.createTextNode(
+        `and ${bodyLines.length - 5} more.`,
+      );
       tdExtra.appendChild(textExtra);
       trExtra.appendChild(tdExtra);
       tableBody.appendChild(trExtra);
@@ -371,5 +395,6 @@ const externalTooltipHandler = (context: { chart: any; tooltip: any }) => {
   tooltipEl.style.left = positionX + tooltip.caretX + "px";
   tooltipEl.style.top = positionY + tooltip.caretY + "px";
   tooltipEl.style.font = tooltip.options.bodyFont.string;
-  tooltipEl.style.padding = tooltip.options.padding + "px " + tooltip.options.padding + "px";
+  tooltipEl.style.padding =
+    tooltip.options.padding + "px " + tooltip.options.padding + "px";
 };

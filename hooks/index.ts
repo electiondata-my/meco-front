@@ -1,4 +1,3 @@
-export { useAnalytics } from "./useAnalytics";
 export { useCache } from "./useCache";
 export { useColor } from "./useColor";
 export type { Color } from "./useColor";

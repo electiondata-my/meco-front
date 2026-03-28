@@ -161,7 +161,10 @@ const ElectionFullResults = ({
       </div>
     ) : (
       <div className="hide-scrollbar flex-1 overflow-y-scroll">
-        <ElectionOverviewTable data={(data.results?.data ?? []) as any} className="pt-0" />
+        <ElectionOverviewTable
+          data={(data.results?.data ?? []) as any}
+          className="pt-0"
+        />
       </div>
     );
 

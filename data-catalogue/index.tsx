@@ -1,4 +1,4 @@
-import { Container, Hero, Sidebar, StateDropdown } from "@components/index";
+import { Container, Hero, Sidebar } from "@components/index";
 import SectionGrid from "@components/Section/section-grid";
 import { useTranslation } from "@hooks/useTranslation";
 import { BREAKPOINTS } from "@lib/constants";
@@ -24,7 +24,6 @@ import {
 } from "@govtechmy/myds-react/search-bar";
 import { Pill } from "@govtechmy/myds-react/pill";
 import { useData } from "@hooks/useData";
-import useFocus from "@hooks/useFocus";
 import { clx, toDate } from "@lib/helpers";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -111,7 +110,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
         setMobileOpen={(open) => setOpen(open)}
       />
       <Container>
-        <SectionGrid className="max-w-screen-2xl justify-start py-6 lg:py-16">
+        <SectionGrid className="max-w-screen-xl justify-start py-6 lg:py-16">
           <Sidebar
             categories={groupedSubcategories}
             onSelect={(selected) =>
@@ -194,9 +193,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
   const searchRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const { focused } = useFocus(searchRef);
   const { query, replace, pathname, isReady } = useRouter();
-  const { size } = useContext(WindowContext);
 
   const search = typeof query.search === "string" ? query.search : "";
   const { data, setData } = useData({
@@ -205,7 +202,6 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
   });
 
   const { isStick, input } = data;
-  const currentState = (query?.state as string) || "mys";
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -291,7 +287,7 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
           className={clx(
             "flex w-full flex-col items-center gap-6 px-4.5 md:px-0",
             isStick &&
-              "mx-auto max-w-screen-2xl flex-row justify-between gap-3 px-4.5 py-0 md:px-6 2xl:px-0",
+              "mx-auto max-w-screen-xl flex-row justify-between gap-3 px-4.5 py-0 md:px-6 2xl:px-0",
           )}
         >
           <SearchBar
@@ -341,36 +337,6 @@ const CatalogueFilter: FunctionComponent<CatalogueFilterProps> = ({
               />
             </SearchBarInputContainer>
           </SearchBar>
-          <div className="flex w-fit items-center justify-center gap-2">
-            {/* <Button
-              variant={"default-outline"}
-              onClick={() => setMobileOpen(true)}
-              className="lg:hidden"
-            >
-              <ButtonIcon>
-                <HamburgerMenuIcon />
-              </ButtonIcon>
-              {t("category")}
-            </Button> */}
-            <StateDropdown
-              anchor={isStick ? "right" : "right-1/2 translate-x-1/2"}
-              width="w-fit self-center"
-              currentState={currentState}
-              onChange={(selected) => {
-                if (selected.value === "mys") {
-                  replace(routes.DATA_CATALOGUE, undefined, { scroll: false });
-                  return;
-                }
-                replace(
-                  `${routes.DATA_CATALOGUE}/state/${selected.value}`,
-                  undefined,
-                  {
-                    scroll: false,
-                  },
-                );
-              }}
-            />
-          </div>
         </div>
       </div>
     </>

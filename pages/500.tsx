@@ -11,7 +11,7 @@ const Error500: Page = () => {
   return (
     <>
       <Metadata title={t("500.title")} keywords={""} />
-      <Container className="min-h-[76vh] pt-7 text-zinc-900">
+      <Container className="text-zinc-900 min-h-[76vh] pt-7">
         <ErrorStatus
           title={t("500.title")}
           description={t("500.description")}

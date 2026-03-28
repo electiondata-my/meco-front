@@ -26,7 +26,7 @@ type ResolvedProps<T> = GetStaticPropsResult<T> & GetServerSidePropsResult<T>;
 export const withi18n = <T extends Context>(
   namespace: string | string[] | null,
   getProps: (ctx: T) => Promise<ResolvedProps<MetaPage>>,
-  option?: { cache_expiry: number }
+  option?: { cache_expiry: number },
 ): ((ctx: T) => Promise<ResolvedProps<MetaPage>>) => {
   return async (context: T) => {
     const config = await readNextI18nConfig();
@@ -37,8 +37,8 @@ export const withi18n = <T extends Context>(
       namespace === null
         ? autoloadNs
         : Array.isArray(namespace)
-        ? namespace.concat(autoloadNs)
-        : [namespace].concat(autoloadNs);
+          ? namespace.concat(autoloadNs)
+          : [namespace].concat(autoloadNs);
 
     const [i18n, props] = await Promise.all([
       serverSideTranslations(context.locale!, namespaces, userConfig),
@@ -46,10 +46,14 @@ export const withi18n = <T extends Context>(
     ]);
 
     // Cache content to browser for getServerSideProps operations (production only)
-    if ("res" in context && option && process.env.NEXT_PUBLIC_APP_ENV === "production")
+    if (
+      "res" in context &&
+      option &&
+      process.env.NEXT_PUBLIC_APP_ENV === "production"
+    )
       context.res.setHeader(
         "Cache-Control",
-        `public, s-maxage=${option.cache_expiry}, stale-while-revalidate=${option.cache_expiry}`
+        `public, s-maxage=${option.cache_expiry}, stale-while-revalidate=${option.cache_expiry}`,
       );
 
     return merge(props, { props: i18n });
@@ -61,6 +65,8 @@ const readNextI18nConfig = async (): Promise<I18nConfig | undefined> => {
   const path = resolve(DEFAULT_CONFIG_PATH);
 
   if (existsSync(path))
-    return import(/* webpackIgnore: true */ path).then(config => config.default ?? config);
+    return import(/* webpackIgnore: true */ path).then(
+      (config) => config.default ?? config,
+    );
   return undefined;
 };

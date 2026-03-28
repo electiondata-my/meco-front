@@ -1,6 +1,11 @@
 import { CSSProperties, FunctionComponent, useRef } from "react";
 import { Transition, Popover } from "@headlessui/react";
-import { CheckCircleIcon, ChevronDownIcon, ClockIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import {
+  CheckCircleIcon,
+  ChevronDownIcon,
+  ClockIcon,
+  XMarkIcon,
+} from "@heroicons/react/20/solid";
 import { useTranslation } from "next-i18next";
 import { clx } from "@lib/helpers";
 import { FixedSizeList as List } from "react-window";
@@ -57,16 +62,25 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
       style={style}
       className={clx(
         "flex select-none items-center justify-between px-4 py-1.5",
-        (type === "begin" && year === selectedStart) || (type === "end" && year === selectedEnd)
+        (type === "begin" && year === selectedStart) ||
+          (type === "end" && year === selectedEnd)
           ? "bg-slate-100 dark:bg-zinc-800"
           : "bg-inherit",
         isDisabled(type, year, type === "begin" ? selectedEnd : selectedStart)
-          ? "text-slate-200 dark:text-zinc-700 cursor-not-allowed hover:bg-white dark:hover:bg-zinc-900"
-          : "hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer text-zinc-900 dark:text-white"
+          ? "text-slate-200 dark:text-zinc-700 dark:hover:bg-zinc-900 cursor-not-allowed hover:bg-white"
+          : "hover:bg-slate-100 dark:hover:bg-zinc-800 text-zinc-900 cursor-pointer dark:text-white",
       )}
       onClick={() => {
-        if (!isDisabled(type, year, type === "begin" ? selectedEnd : selectedStart)) {
-          onChange(type === "begin" ? [year, selectedEnd] : [selectedStart, year]);
+        if (
+          !isDisabled(
+            type,
+            year,
+            type === "begin" ? selectedEnd : selectedStart,
+          )
+        ) {
+          onChange(
+            type === "begin" ? [year, selectedEnd] : [selectedStart, year],
+          );
         }
       }}
     >
@@ -78,7 +92,11 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
     </li>
   );
 
-  const isDisabled = (type: "begin" | "end", value: string, selected?: string) => {
+  const isDisabled = (
+    type: "begin" | "end",
+    value: string,
+    selected?: string,
+  ) => {
     if (!selected) return false;
     if (type === "begin") return +value > +selected;
     return +value < +selected;
@@ -87,26 +105,32 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
   return (
     <Popover className="relative">
       {({ open }) => {
-        if (open && selectedStart && selectedEnd && startRef.current && endRef.current) {
+        if (
+          open &&
+          selectedStart &&
+          selectedEnd &&
+          startRef.current &&
+          endRef.current
+        ) {
           startRef.current.scrollToItem(
-            YEAR_OPTIONS.findIndex(e => e === selectedStart),
-            "smart"
+            YEAR_OPTIONS.findIndex((e) => e === selectedStart),
+            "smart",
           );
           endRef.current.scrollToItem(
-            YEAR_OPTIONS.findIndex(e => e === selectedEnd),
-            "smart"
+            YEAR_OPTIONS.findIndex((e) => e === selectedEnd),
+            "smart",
           );
         }
         return (
           <>
             <Popover.Button
               className={clx(
-                "shadow-button flex items-center gap-1.5 rounded-md px-3 py-1.5 text-start text-sm font-medium text-zinc-900 dark:text-white",
-                "active:bg-slate-100 hover:dark:bg-zinc-800/50 active:dark:bg-zinc-800 select-none bg-white dark:bg-zinc-900",
-                "border-slate-200 dark:border-zinc-800 hover:border-slate-400 hover:dark:border-zinc-700 border outline-none",
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-start text-sm font-medium text-txt-black-900 shadow-button",
+                "select-none bg-bg-white active:bg-bg-black-100",
+                "hover:border-otl-gray-400 border outline-none",
                 disabled &&
-                  "disabled:bg-slate-200 dark:disabled:bg-zinc-800 disabled:border-slate-200 dark:disabled:border-zinc-800 disabled:text-slate-400 dark:disabled:text-zinc-700 disabled:pointer-events-none disabled:cursor-not-allowed",
-                className
+                  "disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-otl-gray-200 disabled:text-txt-black-disabled",
+                className,
               )}
               disabled={disabled}
             >
@@ -114,9 +138,13 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
               <p className="text-sm">
                 {selectedStart ?? t("begin")} - {selectedEnd ?? t("end")}
               </p>
-              <ChevronDownIcon className="-mx-[5px] h-5 w-5" aria-hidden="true" />
+              <ChevronDownIcon
+                className="-mx-[5px] h-5 w-5"
+                aria-hidden="true"
+              />
             </Popover.Button>
             <Transition
+              show={open}
               as={"div"}
               leave="transition ease-in duration-100"
               leaveFrom="opacity-100"
@@ -124,21 +152,30 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
             >
               <Popover.Panel
                 className={clx(
-                  "max-h-100 dark:ring-slate-800  shadow-floating absolute z-20 mt-1 min-w-full overflow-clip rounded-md bg-white text-sm ring-1 ring-zinc-900 ring-opacity-5 focus:outline-none dark:bg-zinc-900",
-                  anchor === "right" ? "right-0" : anchor === "left" ? "left-0" : anchor
+                  "max-h-100 dark:ring-slate-800 shadow-floating ring-zinc-900 dark:bg-zinc-900 absolute z-20 mt-1 min-w-full overflow-clip rounded-md bg-white text-sm ring-1 ring-opacity-5 focus:outline-none",
+                  anchor === "right"
+                    ? "right-0"
+                    : anchor === "left"
+                      ? "left-0"
+                      : anchor,
                 )}
               >
                 <div>
-                  <div className="dark:border-zinc-800 sticky top-0 z-20 grid w-[250px] grid-cols-2 border-b bg-white px-4 py-3 dark:bg-zinc-900">
+                  <div className="sticky top-0 z-20 grid w-[250px] grid-cols-2 border-b bg-bg-white px-4 py-3">
                     <p className="text-zinc-500">
                       {t("begin")}:{" "}
-                      <span className="text-zinc-900 dark:text-white">{selectedStart}</span>
+                      <span className="text-zinc-900 dark:text-white">
+                        {selectedStart}
+                      </span>
                     </p>
                     <p className="text-zinc-500">
-                      {t("end")}: <span className="text-zinc-900 dark:text-white">{selectedEnd}</span>
+                      {t("end")}:{" "}
+                      <span className="text-zinc-900 dark:text-white">
+                        {selectedEnd}
+                      </span>
                     </p>
                   </div>
-                  <div className="dark:border-zinc-800 grid h-full grid-cols-2 overflow-auto border-b">
+                  <div className="grid h-full grid-cols-2 overflow-auto border-b">
                     <List
                       ref={startRef}
                       height={320}
@@ -146,7 +183,13 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
                       itemCount={endYear - startYear + 1}
                       itemSize={32}
                     >
-                      {({ index, style }: { index: number; style: CSSProperties }) => {
+                      {({
+                        index,
+                        style,
+                      }: {
+                        index: number;
+                        style: CSSProperties;
+                      }) => {
                         const year = YEAR_OPTIONS[index];
                         return (
                           <DateOption
@@ -167,7 +210,13 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
                       itemCount={endYear - startYear + 1}
                       itemSize={32}
                     >
-                      {({ index, style }: { index: number; style: CSSProperties }) => {
+                      {({
+                        index,
+                        style,
+                      }: {
+                        index: number;
+                        style: CSSProperties;
+                      }) => {
                         const year = YEAR_OPTIONS[index];
                         return (
                           <DateOption
@@ -184,7 +233,7 @@ const YearRange: FunctionComponent<DaterangeProps> = ({
                   </div>
                 </div>
                 <Button
-                  className="btn text-zinc-500 w-full px-4 py-3 hover:text-zinc-900 dark:hover:text-white"
+                  className="btn text-zinc-500 hover:text-zinc-900 w-full px-4 py-3 dark:hover:text-white"
                   onClick={onReset}
                   disabled={!selectedStart || !selectedEnd}
                 >

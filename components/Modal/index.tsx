@@ -47,7 +47,7 @@ const Modal: ForwardRefExoticComponent<ModalProps> = forwardRef(
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <div className="fixed inset-0 bg-zinc-900 bg-opacity-25" />
+              <div className="bg-zinc-900 fixed inset-0 bg-opacity-25" />
             </Transition.Child>
 
             <div className="fixed inset-0 flex items-end justify-center lg:items-center">
@@ -63,11 +63,14 @@ const Modal: ForwardRefExoticComponent<ModalProps> = forwardRef(
                 <Dialog.Panel
                   className={clx(
                     "flex h-full w-full max-w-5xl flex-col overflow-auto rounded-t-xl font-sans lg:h-fit lg:justify-center lg:rounded-xl",
-                    className
+                    className,
                   )}
                 >
-                  <div onClick={close} className="min-h-[15vh] grow lg:hidden"></div>
-                  <div className="dark:border-zinc-800 relative flex w-full items-center justify-between rounded-t-xl border-b bg-white p-3 dark:bg-zinc-900">
+                  <div
+                    onClick={close}
+                    className="min-h-[15vh] grow lg:hidden"
+                  ></div>
+                  <div className="relative flex w-full items-center justify-between rounded-t-xl border-b bg-bg-white p-3">
                     <Dialog.Title as="div" className="mr-9 flex grow">
                       {title}
                     </Dialog.Title>
@@ -76,7 +79,7 @@ const Modal: ForwardRefExoticComponent<ModalProps> = forwardRef(
                       className="hover:bg-slate-100 dark:hover:bg-zinc-800 group absolute right-1 rounded-full p-2"
                       onClick={() => setShow(false)}
                     >
-                      <XMarkIcon className="text-zinc-500 mx-auto h-5 w-5 group-hover:text-zinc-900 group-hover:dark:text-white" />
+                      <XMarkIcon className="text-zinc-500 group-hover:text-zinc-900 mx-auto h-5 w-5 group-hover:dark:text-white" />
                     </Button>
                   </div>
                   <>{children(close)}</>
@@ -87,7 +90,7 @@ const Modal: ForwardRefExoticComponent<ModalProps> = forwardRef(
         </Transition>
       </>
     );
-  }
+  },
 );
 Modal.displayName = "Modal";
 

@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Sarawak", parlimen: "P.209 Julau", code_state: 13, code_parlimen: "P.209" },
+  properties: {
+    state: "Sarawak",
+    parlimen: "P.209 Julau",
+    code_state: 13,
+    code_parlimen: "P.209",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

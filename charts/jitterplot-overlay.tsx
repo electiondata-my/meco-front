@@ -5,7 +5,9 @@ interface JitterplotOverlayProps {
   labels: [left: string, center: string, right: string];
 }
 
-const JitterplotOverlay: FunctionComponent<JitterplotOverlayProps> = ({ labels }) => {
+const JitterplotOverlay: FunctionComponent<JitterplotOverlayProps> = ({
+  labels,
+}) => {
   return (
     <>
       <div className="pointer-events-none absolute left-0 top-0 flex h-full w-full">
@@ -16,7 +18,9 @@ const JitterplotOverlay: FunctionComponent<JitterplotOverlayProps> = ({ labels }
               <ChevronLeftIcon className="h-4 w-4" />
               {labels[0]}
             </p>
-            <p className="text-center text-sm font-medium lg:text-lg">{labels[1]}</p>
+            <p className="text-center text-sm font-medium lg:text-lg">
+              {labels[1]}
+            </p>
             <p className="text-zinc-500 flex items-center gap-2 text-end text-sm lg:text-base">
               {labels[2]}
               <ChevronRightIcon className="h-4 w-4" />
@@ -50,10 +54,10 @@ const JitterplotOverlay: FunctionComponent<JitterplotOverlayProps> = ({ labels }
                     index === 8
                       ? "border-zinc-500/20 bg-zinc-500/5 w-full border-r"
                       : index <= 7 && index >= 5
-                      ? "bg-zinc-500/5 w-full"
-                      : index === 4
-                      ? "border-zinc-500/20 bg-zinc-500/5 w-full border-l"
-                      : ""
+                        ? "bg-zinc-500/5 w-full"
+                        : index === 4
+                          ? "border-zinc-500/20 bg-zinc-500/5 w-full border-l"
+                          : ""
                   }
                 />
               ))}

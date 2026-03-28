@@ -66,51 +66,53 @@ const FullResultContent = ({
         />
       </div>
 
-      {showVotingStats && <div className="space-y-3 pt-4">
-        <p className="font-bold">{t("voting_statistics")}</p>
-        {votes && votes.length > 0 ? (
-          <div className="flex flex-col gap-3 text-sm">
-            {votes.map(({ x, abs, perc }, i: number) =>
-              loading ? (
-                <Skeleton
-                  key={i}
-                  className={clx(
-                    votes.length > 2
-                      ? { 0: "w-48", 1: "w-64", 2: "w-56" }[i]
-                      : { 0: "w-64", 1: "w-56" }[i],
-                  )}
-                />
-              ) : (
-                <div
-                  className="flex w-[245px] flex-col gap-3 whitespace-nowrap"
-                  key={x}
-                >
-                  <div className="flex items-center justify-between gap-3 text-body-sm text-txt-black-500">
-                    <p className="w-28 md:w-fit">{t(x)}:</p>
-                    <p className="text-txt-black-700">{`${abs !== null ? numFormat(abs, "standard") : "—"} ${
-                      perc !== null
-                        ? `(${numFormat(perc, "compact", [1, 1])}%)`
-                        : "(—)"
-                    }`}</p>
+      {showVotingStats && (
+        <div className="space-y-3 pt-4">
+          <p className="font-bold">{t("voting_statistics")}</p>
+          {votes && votes.length > 0 ? (
+            <div className="flex flex-col gap-3 text-sm">
+              {votes.map(({ x, abs, perc }, i: number) =>
+                loading ? (
+                  <Skeleton
+                    key={i}
+                    className={clx(
+                      votes.length > 2
+                        ? { 0: "w-48", 1: "w-64", 2: "w-56" }[i]
+                        : { 0: "w-64", 1: "w-56" }[i],
+                    )}
+                  />
+                ) : (
+                  <div
+                    className="flex w-[245px] flex-col gap-3 whitespace-nowrap"
+                    key={x}
+                  >
+                    <div className="flex items-center justify-between gap-3 text-body-sm text-txt-black-500">
+                      <p className="w-28 md:w-fit">{t(x)}:</p>
+                      <p className="text-txt-black-700">{`${abs !== null ? numFormat(abs, "standard") : "—"} ${
+                        perc !== null
+                          ? `(${numFormat(perc, "compact", [1, 1])}%)`
+                          : "(—)"
+                      }`}</p>
+                    </div>
+                    <BarPerc hidden value={perc} size={"h-[5px] w-[245px]"} />
                   </div>
-                  <BarPerc hidden value={perc} size={"h-[5px] w-[245px]"} />
-                </div>
-              ),
-            )}
-          </div>
-        ) : (
-          <div className="flex h-full flex-col gap-3 text-sm">
-            {Array(3)
-              .fill(null)
-              .map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className={{ 0: "w-48", 1: "w-64", 2: "w-56" }[i]}
-                />
-              ))}
-          </div>
-        )}
-      </div>}
+                ),
+              )}
+            </div>
+          ) : (
+            <div className="flex h-full flex-col gap-3 text-sm">
+              {Array(3)
+                .fill(null)
+                .map((_, i) => (
+                  <Skeleton
+                    key={i}
+                    className={{ 0: "w-48", 1: "w-64", 2: "w-56" }[i]}
+                  />
+                ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

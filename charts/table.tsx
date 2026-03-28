@@ -178,7 +178,9 @@ const Table: FunctionComponent<TableProps> = ({
           {search && search(onSearch)}
         </div>
       )}
-      <div className={clx(responsive && "relative overflow-x-auto [&::-webkit-scrollbar]:hidden")}>
+      <div
+        className={clx(responsive && "hide-scrollbar relative overflow-x-auto")}
+      >
         <table
           className={clx(
             "relative mx-auto w-full table-auto border-separate border-spacing-0 whitespace-nowrap md:w-fit",

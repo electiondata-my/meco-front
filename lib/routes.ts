@@ -18,10 +18,8 @@ export const routes = {
 
 export const static_routes: string[] = (() => {
   let s_routes = Object.values(routes).filter(
+    // all pages static
     (route) => ![""].includes(route),
-    // !["/data-catalogue", "/data_request", "/community-products"].includes(
-    //   route,
-    // ),
   );
 
   s_routes.forEach((route) => {

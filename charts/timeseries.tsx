@@ -80,7 +80,7 @@ export interface TimeseriesProps extends ChartHeaderProps {
     this: Scale,
     tickValue: number | string,
     index: number,
-    ticks: Tick[]
+    ticks: Tick[],
   ) => string | string[] | number | number[] | null | undefined;
   gridOffsetX?: boolean;
   tooltipCallback?: (item: TooltipItem<"line">) => string | string[];
@@ -90,9 +90,11 @@ export interface TimeseriesProps extends ChartHeaderProps {
   displayNumFormat?: (
     value: number,
     type: "compact" | "standard" | "scientific" | "engineering" | undefined,
-    precision: number | [min: number, max: number]
+    precision: number | [min: number, max: number],
   ) => string;
-  _ref?: ForwardedRef<ChartJSOrUndefined<keyof ChartTypeRegistry, any[], unknown>>;
+  _ref?: ForwardedRef<
+    ChartJSOrUndefined<keyof ChartTypeRegistry, any[], unknown>
+  >;
 }
 
 const Timeseries: FunctionComponent<TimeseriesProps> = ({
@@ -152,7 +154,7 @@ const Timeseries: FunctionComponent<TimeseriesProps> = ({
     Filler,
     ChartTooltip,
     CrosshairPlugin,
-    AnnotationPlugin
+    AnnotationPlugin,
   );
 
   const { theme = "light" } = useTheme();
@@ -160,9 +162,11 @@ const Timeseries: FunctionComponent<TimeseriesProps> = ({
   const display = (
     value: number,
     type: typeof displayType,
-    precision: number | [min: number, max: number]
+    precision: number | [min: number, max: number],
   ): string => {
-    return (prefixY ?? "") + displayNumFormat(value, type, precision) + (unitY ?? "");
+    return (
+      (prefixY ?? "") + displayNumFormat(value, type, precision) + (unitY ?? "")
+    );
   };
   const options = useCallback((): ChartCrosshairOption<"line"> => {
     return {
@@ -246,7 +250,10 @@ const Timeseries: FunctionComponent<TimeseriesProps> = ({
                   hour: data.labels!.length - 1,
                   day: data.labels!.length - 1,
                 };
-                const xIndex = round && round !== "auto" ? INDEXES[round] : data.labels!.length - 1;
+                const xIndex =
+                  round && round !== "auto"
+                    ? INDEXES[round]
+                    : data.labels!.length - 1;
                 const yIndex = data.labels!.length - 1;
 
                 return {
@@ -274,12 +281,17 @@ const Timeseries: FunctionComponent<TimeseriesProps> = ({
                   },
                   xAdjust: 0,
                   xValue: data.labels![xIndex] as string | number,
-                  yAdjust: (data.datasets as any[]).reduce((prev: any, current: any) => {
-                    if (Math.abs(current.data[yIndex] - set.data[yIndex]) < 3) {
-                      return prev + 1;
-                    }
-                    return prev;
-                  }, -1) as number,
+                  yAdjust: (data.datasets as any[]).reduce(
+                    (prev: any, current: any) => {
+                      if (
+                        Math.abs(current.data[yIndex] - set.data[yIndex]) < 3
+                      ) {
+                        return prev + 1;
+                      }
+                      return prev;
+                    },
+                    -1,
+                  ) as number,
                   yValue: set.data[yIndex],
                 } as AnnotationOptions;
               }),
@@ -322,16 +334,18 @@ const Timeseries: FunctionComponent<TimeseriesProps> = ({
             },
             tooltipFormat: tooltipFormat
               ? tooltipFormat
-              : ["year", "month", "quarter", "day", "minute", "hour"].includes(interval as string)
-              ? {
-                  quarter: "qQ yyyy",
-                  month: "MMM yyyy",
-                  year: "yyyy",
-                  day: "dd MMM yyyy",
-                  minute: "dd MMM yyyy HH:mm",
-                  hour: "dd MMM yyyy HH:mm",
-                }[interval as string]
-              : "dd MMM yyyy",
+              : ["year", "month", "quarter", "day", "minute", "hour"].includes(
+                    interval as string,
+                  )
+                ? {
+                    quarter: "qQ yyyy",
+                    month: "MMM yyyy",
+                    year: "yyyy",
+                    day: "dd MMM yyyy",
+                    minute: "dd MMM yyyy HH:mm",
+                    hour: "dd MMM yyyy HH:mm",
+                  }[interval as string]
+                : "dd MMM yyyy",
           },
           grid: {
             offset: gridOffsetX,
@@ -414,8 +428,14 @@ const Timeseries: FunctionComponent<TimeseriesProps> = ({
     };
   }, [data, interval, theme]);
 
-  const autoScale = useMemo(() => (data.labels!.length > 200 ? "month" : "day"), [data.labels]);
-  const autoRound = useMemo(() => (data.labels!.length > 720 ? "week" : "day"), [data.labels]);
+  const autoScale = useMemo(
+    () => (data.labels!.length > 200 ? "month" : "day"),
+    [data.labels],
+  );
+  const autoRound = useMemo(
+    () => (data.labels!.length > 720 ? "week" : "day"),
+    [data.labels],
+  );
 
   return (
     <div>
@@ -455,15 +475,17 @@ const Timeseries: FunctionComponent<TimeseriesProps> = ({
           </div>
         </div>
       )}
-      {description && <p className="text-zinc-500 pt-4 text-sm">{description}</p>}
+      {description && (
+        <p className="text-zinc-500 pt-4 text-sm">{description}</p>
+      )}
     </div>
   );
 };
 
 const dummy: ChartData = {
   labels: [
-    0, 300000, 600000, 900000, 1200000, 1500000, 1800000, 2100000, 2400000, 2700000, 3000000,
-    3300000, 3600000,
+    0, 300000, 600000, 900000, 1200000, 1500000, 1800000, 2100000, 2400000,
+    2700000, 3000000, 3300000, 3600000,
   ], //[1111111111111, 1579478400000], // x-values - must be epoch millis eg. [168231311000, 16856172321, ...] etc
   // labels: [1111111111111, 1579478400000], // x-values - must be epoch millis eg. [168231311000, 16856172321, ...] etc
   datasets: [
@@ -518,7 +540,7 @@ export const Stats: FunctionComponent<StatsProps> = ({ data, className }) => {
           <p className="text-zinc-500 text-sm">{title}</p>
           {tooltip ? (
             <Tooltip tip={tooltip}>
-              {open => (
+              {(open) => (
                 <>
                   <p
                     className="font-medium underline decoration-dashed [text-underline-position:from-font]"
@@ -530,7 +552,9 @@ export const Stats: FunctionComponent<StatsProps> = ({ data, className }) => {
               )}
             </Tooltip>
           ) : (
-            value && <p className="text-lg font-medium dark:text-white">{value}</p>
+            value && (
+              <p className="text-lg font-medium dark:text-white">{value}</p>
+            )
           )}
         </div>
       ))}

@@ -6,7 +6,10 @@ interface SidebarProps {
   children: (close: () => void) => ReactNode;
 }
 
-const Sidebar: FunctionComponent<SidebarProps> = ({ mobileTrigger, children }) => {
+const Sidebar: FunctionComponent<SidebarProps> = ({
+  mobileTrigger,
+  children,
+}) => {
   const [show, setShow] = useState<boolean>(false);
   const [touch, setTouch] = useState<number>(0);
 
@@ -25,7 +28,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({ mobileTrigger, children }) =
   return (
     <>
       {/* Desktop */}
-      <div className="dark:border-r-slate-800  hidden border-r lg:block lg:w-1/4 xl:w-1/5">
+      <div className="hidden border-r lg:block lg:w-1/4 xl:w-1/5">
         {children(close)}
       </div>
 
@@ -35,7 +38,7 @@ const Sidebar: FunctionComponent<SidebarProps> = ({ mobileTrigger, children }) =
         <Transition
           show={show}
           as="div"
-          className="dark:border-zinc-800 shadow-floating fixed left-0 top-14 z-30 flex h-screen w-4/5 flex-col border border-r bg-white dark:bg-zinc-900 sm:w-1/3"
+          className="shadow-floating fixed left-0 top-14 z-30 flex h-screen w-4/5 flex-col border border-r bg-bg-white sm:w-1/3"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
           enter="transition-transform duration-75"

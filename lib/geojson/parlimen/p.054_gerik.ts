@@ -1,6 +1,11 @@
 export default {
   type: "Feature",
-  properties: { state: "Perak", parlimen: "P.054 Gerik", code_state: 8, code_parlimen: "P.054" },
+  properties: {
+    state: "Perak",
+    parlimen: "P.054 Gerik",
+    code_state: 8,
+    code_parlimen: "P.054",
+  },
   geometry: {
     type: "MultiPolygon",
     coordinates: [

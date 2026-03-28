@@ -14,7 +14,9 @@ export const SliderContext = createContext<SliderContextProps>({
   setPlaying: () => {},
 });
 
-export const SliderProvider: FunctionComponent<SliderProviderProps> = ({ children }) => {
+export const SliderProvider: FunctionComponent<SliderProviderProps> = ({
+  children,
+}) => {
   const [play, setPlaying] = useState<boolean>(false);
 
   const contextValue: SliderContextProps = {
@@ -22,5 +24,9 @@ export const SliderProvider: FunctionComponent<SliderProviderProps> = ({ childre
     setPlaying,
   };
 
-  return <SliderContext.Provider value={contextValue}>{children(play)}</SliderContext.Provider>;
+  return (
+    <SliderContext.Provider value={contextValue}>
+      {children(play)}
+    </SliderContext.Provider>
+  );
 };

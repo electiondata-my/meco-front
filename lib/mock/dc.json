@@ -1,0 +1,144 @@
+{
+  "id": "population_malaysia",
+  "exclude_openapi": false,
+  "manual_trigger": "",
+  "title": "Population Table: Malaysia",
+  "description": "Population at national level from 1970 to 2025, by sex, age group and ethnicity. The preview table shows data for the latest year only, but you may download the data in full.",
+  "link_parquet": "https://storage.dosm.gov.my/population/population_malaysia.parquet",
+  "link_csv": "https://storage.dosm.gov.my/population/population_malaysia.csv",
+  "link_preview": "https://storage.dosm.gov.my/population/population_malaysia_latest.parquet",
+  "link_editions": null,
+  "frequency": "YEARLY",
+  "data_source": ["DOSM"],
+  "fields": [
+    {
+      "name": "date",
+      "title": "Date",
+      "description": "[Date] The date in YYYY-MM-DD format, with MM-DD set to 01-01 as this is annual data"
+    },
+    {
+      "name": "sex",
+      "title": "Sex",
+      "description": "[Categorical] Either both sexes ('both'), male ('male') or female ('female')"
+    },
+    {
+      "name": "age",
+      "title": "Age Group",
+      "description": "[Categorical] Either all age groups ('overall') or five-year age groups e.g. 0-4, 5-9, 10-14, etc. 85+ is the oldest category."
+    },
+    {
+      "name": "ethnicity",
+      "title": "Ethnicity",
+      "description": "[Categorical] All ethnic groups ('overall'), Malay ('bumi_malay'), other Bumiputera ('bumi_other'), Chinese ('chinese'), Indian ('indian'), other citizens ('other_citizen'), or non-citizen residents ('other_noncitizen')."
+    },
+    {
+      "name": "population",
+      "title": "Population ('000)",
+      "description": "[Float] Thousands of people ('000 people)"
+    }
+  ],
+  "data_as_of": "2025",
+  "last_updated": "2025-07-31 12:00",
+  "next_update": "2026-07-31 12:00",
+  "methodology": "Values for 1970, 1980, 1991, 2000, 2010 and 2020 are based on adjusted data from the Population Censuses conducted in those years. Values for all other years are intercensal mid-year population estimates. The intercensal estimates were generated using the cohort-component method, which estimates the latest year's population by taking the previous year's value, then adding births, subtracting deaths, and adding net migration. For a deeper understanding of the methodology, please refer to the [Technical Notes](https://open.dosm.gov.my/publications/technical-notes/population-technotes).",
+  "caveat": "Values for breakdowns may be slightly different to totals when summed, due to rounding to one decimal place. Furthermore, caution should be exercised when using the dataset in full because the granularity of Malaysia's population data has been deepened over the years. Specficially, there are 3 differing ranges of granularity as follows:\n - The data from 1991 onwards is the most granular, with ethnic group breakdowns providing differentiation between Malay and Other Bumiputera, as well as Other Citizen and Other Non-Citizen. Furthermore, the oldest age category is 85+, i.e. 85 years and above.\n - The data from 1980-1990 contains a breakdown by ethnic group, but without differentiation between Malay and Other Bumiputera (i.e. there is only one Bumiputera category), or Other Citizen and Other Non-Citizen (i.e. there is only one residual category, Other). Furthermore, the 85+ age group is not present; the oldest age category is 80+. \n - For data from 1970-1979, there is no breakdown by ethnic group. Furthermore, the 75+, 80+ and 85+ age groups are not present; the oldest age category is 70+.",
+  "publication": "OpenDOSM features a [dashboard on the population of Malaysia](https://open.dosm.gov.my/dashboard/population).",
+  "translations": {
+    "x": "Age",
+    "y1": "Male",
+    "y2": "Female",
+    "age": "Age",
+    "sex": "Sex",
+    "date": "Date",
+    "male": "Male",
+    "state": "State",
+    "female": "Female",
+    "indian": "Indian",
+    "chinese": "Chinese",
+    "district": "District",
+    "ethnicity": "Ethnicity",
+    "bumi_malay": "Malay",
+    "bumi_other": "Other Bumiputera",
+    "population": "Population ('000)",
+    "overall_age": "All ages",
+    "overall_sex": "Both sexes",
+    "other_citizen": "Other (citizen)",
+    "other_noncitizen": "Other (non-citizen)",
+    "overall_ethnicity": "All ethnicities"
+  },
+  "related_datasets": [],
+  "dataviz_set": [
+    {
+      "dataviz_id": "table",
+      "title": "Table",
+      "chart_type": "TABLE",
+      "config": { "precision": 1, "filter_columns": [], "freeze_columns": [] }
+    }
+  ],
+  "dropdown": [],
+  "data": [
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "overall",
+      "ethnicity": "overall",
+      "population": 34231.7
+    },
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "overall",
+      "ethnicity": "bumi_malay",
+      "population": 17981.2
+    },
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "overall",
+      "ethnicity": "bumi_other",
+      "population": 3779.8
+    },
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "overall",
+      "ethnicity": "chinese",
+      "population": 6849.6
+    },
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "overall",
+      "ethnicity": "indian",
+      "population": 2006.1
+    },
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "overall",
+      "ethnicity": "other_citizen",
+      "population": 234.3
+    },
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "overall",
+      "ethnicity": "other_noncitizen",
+      "population": 3380.7
+    },
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "0-4",
+      "ethnicity": "overall",
+      "population": 2306.7
+    },
+    {
+      "date": "2025-01-01",
+      "sex": "both",
+      "age": "0-4",
+      "ethnicity": "bumi_malay",
+      "population": 1459.2
+    }
+  ]
+}

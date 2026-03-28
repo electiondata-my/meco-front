@@ -3,7 +3,6 @@ import ElectionPartiesDashboard from "@dashboards/parties";
 import { useTranslation } from "@hooks/useTranslation";
 import { get } from "@lib/api";
 import { CountryAndStates } from "@lib/constants";
-import { AnalyticsProvider } from "@lib/contexts/analytics";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
@@ -17,7 +16,7 @@ const ElectionParties: Page = ({
   const { t } = useTranslation("parties");
 
   return (
-    <AnalyticsProvider meta={meta}>
+    <>
       <Metadata
         title={t("hero.header", { ns: "parties" })}
         description={t("hero.description", { ns: "parties" })}
@@ -28,7 +27,7 @@ const ElectionParties: Page = ({
         params={params}
         selection={selection}
       />
-    </AnalyticsProvider>
+    </>
   );
 };
 

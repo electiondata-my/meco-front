@@ -10,7 +10,7 @@ const Fallback: Page = () => {
     <>
       <Metadata title={"Oops, You are offline!"} keywords={""} />
 
-      <Container className="min-h-[76vh] pt-7 text-zinc-900">
+      <Container className="text-zinc-900 min-h-[76vh] pt-7">
         <ErrorStatus
           title="You are offline."
           description="You are offline. Please connect to the internet"

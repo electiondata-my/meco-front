@@ -62,18 +62,18 @@ const Heatmap: FunctionComponent<HeatmapProps> = ({
     CategoryScale,
     TimeScale,
     Tooltip,
-    ChartDataLabels
+    ChartDataLabels,
   );
   const [min, max, uniqueXs, uniqueYs] = useMemo<
     [number, number, Array<string | number>, Array<string | number>]
   >(() => {
     if (!data) return [0, 1, [], []];
-    const [min, max] = minMax(data.map(item => item!.z));
+    const [min, max] = minMax(data.map((item) => item!.z));
     return [
       min,
       max,
-      [...new Set(data.map(item => item.x))],
-      [...new Set(data.map(item => item.y))],
+      [...new Set(data.map((item) => item.x))],
+      [...new Set(data.map((item) => item.y))],
     ];
   }, [data]);
 
@@ -82,7 +82,7 @@ const Heatmap: FunctionComponent<HeatmapProps> = ({
   const display = (
     value: number,
     type: "compact" | "standard",
-    precision: number | [min: number, max: number]
+    precision: number | [min: number, max: number],
   ): string => {
     return (prefix ?? "") + numFormat(value, type, precision) + (unit ?? "");
   };
@@ -236,10 +236,14 @@ const Heatmap: FunctionComponent<HeatmapProps> = ({
               {
                 data: data,
                 backgroundColor(ctx: ScriptableContext<"matrix">) {
-                  return interpolate((ctx.dataset.data[ctx.dataIndex] as HeatmapDatum).z);
+                  return interpolate(
+                    (ctx.dataset.data[ctx.dataIndex] as HeatmapDatum).z,
+                  );
                 },
-                width: ({ chart }) => (chart.chartArea || {}).width / uniqueXs.length - 1,
-                height: ({ chart }) => (chart.chartArea || {}).height / uniqueYs.length - 1,
+                width: ({ chart }) =>
+                  (chart.chartArea || {}).width / uniqueXs.length - 1,
+                height: ({ chart }) =>
+                  (chart.chartArea || {}).height / uniqueYs.length - 1,
               },
             ],
           }}

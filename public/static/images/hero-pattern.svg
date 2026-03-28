@@ -1,12 +1,9 @@
-export default function HeroPattern({ ...props }) {
-  return (
-    <svg
+<svg
       width="1512"
       height="378"
       viewBox="0 0 1512 378"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      {...props}
     >
       <g clipPath="url(#clip0_7181_41994)">
         <path
@@ -32,5 +29,3 @@ export default function HeroPattern({ ...props }) {
         </clipPath>
       </defs>
     </svg>
-  );
-}
