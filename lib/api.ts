@@ -23,7 +23,7 @@ const instance = (base: BaseURL, headers: Record<string, string> = {}) => {
   // Different authorization logic for each base
   let authorization = "";
   if (base === "api_tb") {
-    authorization = `Bearer ${process.env.NEXT_PUBLIC_API_TOKEN_TB}`;
+    authorization = `Bearer ${process.env.NEXT_PUBLIC_TINYBIRD_TOKEN}`;
   } else if (base === "app") {
     authorization = `Bearer ${process.env.NEXT_PUBLIC_AUTHORIZATION_TOKEN}`;
   }

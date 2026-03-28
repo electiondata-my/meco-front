@@ -11,7 +11,7 @@ import {
 
 const TB_BASE = process.env.NEXT_PUBLIC_API_URL_TB;
 const TB_INGEST_TOKEN = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
-const TB_READ_TOKEN = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN_READ;
+const TB_READ_TOKEN = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
 
 export type Meta = Omit<MetaPage["meta"], "type"> & {
   type: "dashboard" | "data-catalogue";

@@ -14,9 +14,7 @@ declare namespace NodeJS {
     PROTECT_DEPLOYMENT: boolean;
 
     NEXT_PUBLIC_API_URL_TB: string;
-    NEXT_PUBLIC_API_TOKEN_TB: string;
     NEXT_PUBLIC_TINYBIRD_TOKEN: string;
-    NEXT_PUBLIC_TINYBIRD_TOKEN_READ: string;
   }
 }
 

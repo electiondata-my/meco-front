@@ -59,7 +59,7 @@ const Hero: FunctionComponent<HeroProps> = ({
     const fetchViews = async () => {
       setLoading(true);
       try {
-        const token = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN_READ;
+        const token = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
         const url = `https://api.us-west-2.aws.tinybird.co/v0/pipes/views_by_page.json?token=${token}&page_id=${pageId}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Network response was not ok");
