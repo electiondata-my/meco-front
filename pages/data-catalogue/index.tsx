@@ -16,8 +16,8 @@ const CatalogueIndex: Page = ({
   return (
     <>
       <Metadata
-        title={t("header")}
-        description={t("description")}
+        title={t("hero.header")}
+        description={t("hero.description")}
         keywords={""}
       />
       <WindowProvider>
