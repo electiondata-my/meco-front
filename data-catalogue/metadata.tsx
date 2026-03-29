@@ -151,16 +151,16 @@ const DCMetadata: FunctionComponent<MetadataProps> = ({
                 scrollRef.current["metadata: license"] = ref;
               }}
             >
-              <h5>{t("meta_license")}</h5>
+              <h5>{t("meta_terms_of_use")}</h5>
               <p className="text-txt-black-500">
                 {t("license_text")}{" "}
                 <a
                   className="lowercase text-txt-danger [text-underline-position:from-font] hover:underline"
                   target="_blank"
                   rel="noopener"
-                  href="https://creativecommons.org/licenses/by/4.0/"
+                  href="https://creativecommons.org/publicdomain/zero/1.0/deed.en"
                 >
-                  {t("common:common.here")}.
+                  {t("here")}
                 </a>
               </p>
             </div>

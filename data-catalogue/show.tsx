@@ -140,7 +140,16 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
       <SectionGrid className="items-start">
         <Sidebar
           categories={SIDEBAR_CATEGORIES}
-          labels={SIDEBAR_LABELS[i18n.language]}
+          labels={{
+            charts_table: t("catalogue:sidebar_preview"),
+            metadata: t("catalogue:sidebar_metadata"),
+            notes: t("catalogue:sidebar_methodology"),
+            variables: t("catalogue:sidebar_variables"),
+            next_update: t("catalogue:sidebar_update_schedule"),
+            license: t("catalogue:sidebar_terms"),
+            download: t("catalogue:sidebar_download"),
+            programmatic_access: t("catalogue:sidebar_code"),
+          }}
           onSelect={(selected) => {
             scrollRef.current[selected]?.scrollIntoView({
               behavior: "smooth",
@@ -150,9 +159,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
           }}
           initialSelected="charts_table"
           stickyClassName="top-24"
-          sidebarTitle={
-            i18n.language === "en-GB" ? "On this page" : "Kandungan"
-          }
+          sidebarTitle={t("catalogue:sidebar_title")}
         >
           <div className="mx-auto flex-1 p-2 py-6 pt-10 lg:max-w-screen-lg lg:p-7 lg:pb-6">
             {/* Chart & Table */}
@@ -190,7 +197,7 @@ const CatalogueShow: FunctionComponent<CatalogueShowProps> = ({
             <Section
               title={t("code")}
               ref={(ref) => {
-                scrollRef.current["programmatic_access: full_dataset"] = ref;
+                scrollRef.current["programmatic_access"] = ref;
               }}
               description={t("code_desc")}
               className="mx-auto w-full py-12"
@@ -217,27 +224,5 @@ const SIDEBAR_CATEGORIES: Array<[key: string, subcategories: string[]]> = [
   ["programmatic_access", []],
 ];
 
-const SIDEBAR_LABELS: Record<string, Record<string, string>> = {
-  "en-GB": {
-    charts_table: "Table & Charts",
-    metadata: "Metadata",
-    notes: "Notes on this Dataset",
-    variables: "Variables",
-    next_update: "Next update",
-    license: "License",
-    download: "Download",
-    programmatic_access: "Programmatic Access",
-  },
-  "ms-MY": {
-    charts_table: "Jadual & Carta",
-    metadata: "Metadata",
-    notes: "Nota untuk Dataset ini",
-    variables: "Pembolehubah",
-    next_update: "Kemaskini seterusnya",
-    license: "Lesen",
-    download: "Muat Turun",
-    programmatic_access: "Akses Programatif",
-  },
-};
 
 export default CatalogueShowWrapper;

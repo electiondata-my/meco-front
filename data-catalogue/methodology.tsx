@@ -18,7 +18,7 @@ const DCMethodology: FunctionComponent<MethodologyProps> = ({
   return (
     <div className="space-y-8 max-lg:py-8 lg:pb-16">
       <Section
-        title={t("header_4")} // Notes on this dataset
+        title={t("header_1")}
         ref={(ref) => {
           scrollRef.current["metadata: notes"] = ref;
         }}

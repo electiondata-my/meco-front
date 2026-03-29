@@ -98,9 +98,9 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
     <>
       <Hero
         background="red"
-        category={[t("category"), "text-txt-danger"]}
-        header={[t("header")]}
-        description={[<Trans>{t("description")}</Trans>]}
+        category={[t("hero.category"), "text-txt-danger"]}
+        header={[t("hero.header")]}
+        description={[<Trans>{t("hero.description")}</Trans>]}
         pageId={routes.DATA_CATALOGUE}
         sectionGridClassName="max-w-screen-2xl"
       />
