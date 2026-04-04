@@ -11,6 +11,7 @@ import {
   ArrowDownTrayIcon,
   BoltIcon,
   ClipboardDocumentCheckIcon,
+  CodeBracketIcon,
   FlagIcon,
   MapIcon,
   UserIcon,
@@ -123,6 +124,16 @@ export default function Header() {
               }
               onClick={close}
               className="whitespace-nowrap text-center lg:order-7"
+            />
+            <Nav.Item
+              key={"/openapi"}
+              title={t("common:nav.openapi")}
+              link="/openapi"
+              icon={
+                <CodeBracketIcon className="hidden size-8 max-lg:block" />
+              }
+              onClick={close}
+              className="whitespace-nowrap text-center lg:order-8"
             />
           </>
         )}

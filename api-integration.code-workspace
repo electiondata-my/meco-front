@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../meco-api"
+		},
+		{
+			"path": "../meco-tb"
+		}
+	],
+	"settings": {}
+}
