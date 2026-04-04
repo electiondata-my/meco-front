@@ -5,6 +5,7 @@ const namespaces = [
   "candidates",
   "catalogue",
   "common",
+  "console",
   "election",
   "elections",
   "error",

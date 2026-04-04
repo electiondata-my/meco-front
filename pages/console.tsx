@@ -17,7 +17,7 @@ const ConsolePage: Page = () => {
   );
 };
 
-export const getStaticProps: GetStaticProps = withi18n(null, async () => ({
+export const getStaticProps: GetStaticProps = withi18n("console", async () => ({
   props: { meta: { id: "console", type: "misc" } },
 }));
 

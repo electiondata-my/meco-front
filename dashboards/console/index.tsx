@@ -1,5 +1,7 @@
 import { Button, Card } from "@components/index";
+import Dropdown from "@components/Dropdown";
 import Container from "@components/Container";
+import { useTranslation } from "@hooks/useTranslation";
 import { clx } from "@lib/helpers";
 import { COLOR } from "@lib/constants";
 import {
@@ -52,10 +54,14 @@ const PERIOD_INTERVAL: Record<Period, string> = {
 };
 
 // Chart-specific colors — cleaner than global COLOR constants
-const CHART_ORANGE = "#F97316";
-const CHART_ORANGE_H = "#F9731620";
-const CHART_RED = "#EF4444";
-const CHART_RED_H = "#EF444420";
+const CHART_GREEN = "#16a34a";
+const CHART_GREEN_H = "#16a34a28";
+const CHART_GREY = "#a1a1aa";
+const CHART_GREY_H = "#a1a1aa28";
+const CHART_RED = "#dc2626";
+const CHART_RED_H = "#dc262628";
+const CHART_CRIMSON = "#be123c";
+const CHART_CRIMSON_H = "#be123c18";
 
 interface AnalyticsTotals {
   total_requests: number;
@@ -244,13 +250,29 @@ function StatusBadge({ code }: { code: number }) {
   );
 }
 
+
+// Forces the legend block to a fixed height on every chart so both plot areas are pixel-identical
+const fixedLegendPlugin = {
+  id: "fixedLegend",
+  beforeInit(chart: ChartJS) {
+    const legend = chart.legend as any;
+    if (!legend) return;
+    const originalFit = legend.fit?.bind(legend);
+    if (!originalFit) return;
+    legend.fit = function () {
+      originalFit();
+      this.height = 36;
+    };
+  },
+};
+
 const CHART_OPTIONS_BASE = {
   responsive: true,
   maintainAspectRatio: false,
-  layout: { padding: { left: -8 } },
-  plugins: { legend: { position: "bottom" as const } },
+  interaction: { mode: "index" as const, intersect: false },
+  plugins: { legend: { position: "top" as const } },
   scales: {
-    y: { grid: { color: "#F1F5F9" } },
+    y: { grid: { color: "rgba(128,128,128,0.15)" } },
   },
 };
 
@@ -291,6 +313,7 @@ function timeXAxis(period: Period) {
 // --------------- Main Dashboard ---------------
 
 export default function ConsoleDashboard() {
+  const { t } = useTranslation("console");
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
@@ -306,6 +329,7 @@ export default function ConsoleDashboard() {
   const [newKeyNameError, setNewKeyNameError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null);
 
   // Raw logs filters
   const [logsErrorsOnly, setLogsErrorsOnly] = useState(false);
@@ -339,6 +363,61 @@ export default function ConsoleDashboard() {
       .finally(() => setAnalyticsLoading(false));
   }, []);
 
+  // On initial load: try 1h, then use last_request_at from 30d to pick the right period
+  const fetchAnalyticsWithFallback = useCallback(async () => {
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+    try {
+      // Step 1: fetch 1h
+      const r1h = await fetch(`${AUTH_URL}/analytics/me?hours=1&interval=1m`, { credentials: "include" });
+      if (!r1h.ok) throw new Error("Failed to load analytics");
+      const data1h: AnalyticsData = await r1h.json();
+
+      if ((data1h.totals?.[0]?.total_requests ?? 0) > 0) {
+        setPeriod("1h");
+        setAnalytics(data1h);
+        return;
+      }
+
+      // Step 2: fetch 30d to find last_request_at
+      const r30d = await fetch(`${AUTH_URL}/analytics/me?hours=720&interval=1d`, { credentials: "include" });
+      if (!r30d.ok) throw new Error("Failed to load analytics");
+      const data30d: AnalyticsData = await r30d.json();
+
+      const lastAt = data30d.totals?.[0]?.last_request_at;
+      if (!lastAt) {
+        // New user — stay on 1h with empty data
+        setPeriod("1h");
+        setAnalytics(data1h);
+        return;
+      }
+
+      // Step 3: compute the minimal period that covers the last request
+      const normalized = /[Zz]|[+-]\d{2}:?\d{2}$/.test(lastAt) ? lastAt : lastAt + "Z";
+      const hoursSince = (Date.now() - new Date(normalized).getTime()) / (1000 * 60 * 60);
+
+      if (hoursSince <= 24) {
+        const r = await fetch(`${AUTH_URL}/analytics/me?hours=24&interval=10m`, { credentials: "include" });
+        if (!r.ok) throw new Error("Failed to load analytics");
+        setPeriod("24h");
+        setAnalytics(await r.json());
+      } else if (hoursSince <= 168) {
+        const r = await fetch(`${AUTH_URL}/analytics/me?hours=168&interval=1h`, { credentials: "include" });
+        if (!r.ok) throw new Error("Failed to load analytics");
+        setPeriod("7d");
+        setAnalytics(await r.json());
+      } else {
+        // Already have the data
+        setPeriod("30d");
+        setAnalytics(data30d);
+      }
+    } catch (e: any) {
+      setAnalyticsError(e.message);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, []);
+
   const fetchKeys = useCallback(() => {
     setKeysLoading(true);
     fetch(`${AUTH_URL}/keys`, { credentials: "include" })
@@ -350,14 +429,9 @@ export default function ConsoleDashboard() {
 
   useEffect(() => {
     if (!sessionChecked) return;
-    fetchAnalytics(period);
+    fetchAnalyticsWithFallback();
     fetchKeys();
   }, [sessionChecked]);
-
-  useEffect(() => {
-    if (!sessionChecked) return;
-    fetchAnalytics(period);
-  }, [period, sessionChecked]);
 
   const handleLogout = async () => {
     await fetch(`${AUTH_URL}/logout`, {
@@ -369,10 +443,10 @@ export default function ConsoleDashboard() {
 
   const handleGenerateKey = async () => {
     const trimmed = newKeyName.trim();
-    if (!trimmed) { setNewKeyNameError("Key name is required"); return; }
-    if (!/^[a-z0-9-]+$/.test(trimmed)) { setNewKeyNameError("Lowercase letters, numbers and dashes only"); return; }
-    if (trimmed.length > 40) { setNewKeyNameError("40 characters max"); return; }
-    if (keys.some(k => k.name === trimmed)) { setNewKeyNameError("A key with that name already exists"); return; }
+    if (!trimmed) { setNewKeyNameError(t("error.name_required")); return; }
+    if (!/^[a-z0-9-]+$/.test(trimmed)) { setNewKeyNameError(t("error.name_format")); return; }
+    if (trimmed.length > 40) { setNewKeyNameError(t("error.name_length")); return; }
+    if (keys.some(k => k.name === trimmed)) { setNewKeyNameError(t("error.name_duplicate")); return; }
 
     setNewKeyNameError(null);
     setGenerating(true);
@@ -385,21 +459,27 @@ export default function ConsoleDashboard() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        setNewKeyNameError(err.error ?? "Failed to generate key");
+        setNewKeyNameError(err.error ?? t("error.generate_failed"));
         return;
       }
       setNewKeyName("");
       fetchKeys();
       fetchAnalytics(period);
     } catch {
-      setNewKeyNameError("Failed to generate key");
+      setNewKeyNameError(t("error.generate_failed"));
     } finally {
       setGenerating(false);
     }
   };
 
   const handleDeleteKey = async (key: ApiKey) => {
-    if (!confirm(`Revoke "${key.name}"? This cannot be undone.`)) return;
+    setRevokeTarget(key);
+  };
+
+  const confirmRevoke = async () => {
+    if (!revokeTarget) return;
+    const key = revokeTarget;
+    setRevokeTarget(null);
     await fetch(`${AUTH_URL}/keys/${encodeURIComponent(key.key)}`, {
       method: "DELETE",
       credentials: "include",
@@ -447,45 +527,47 @@ export default function ConsoleDashboard() {
         <div className="flex flex-col items-center gap-8 text-center">
           <div className="flex max-w-[727px] flex-col items-center space-y-4 lg:space-y-6">
             <h1 className="font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
-              API Console
+              {t("header")}
             </h1>
             <p className="text-body-sm text-txt-black-700 lg:text-body-md">
-            Manage your API keys and monitor usage in real time. You can generate up to 15 keys, giving you enough to run five separate dev-test-prod pipelines. There's no hard rate limit and no charge for access, but all requests are logged and monitored—please use the API responsibly.
+              {t("description")}
             </p>
           </div>
 
           {/* Time window toggle + sign out */}
           <div className="flex flex-col items-center gap-1.5">
-            <div className="flex items-center gap-3">
-              <div className="flex rounded-lg border border-otl-gray-200 p-0.5">
-                {(["1h", "24h", "7d", "30d"] as Period[]).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPeriod(p)}
-                    className={clx(
-                      "rounded-md px-3 py-1 text-body-sm font-medium transition",
-                      period === p
-                        ? "bg-bg-black-900 text-txt-white"
-                        : "text-txt-black-500 hover:text-txt-black-900",
-                    )}
-                  >
-                    {p}
-                  </button>
-                ))}
+            <div className="flex items-start gap-3">
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex rounded-lg border border-otl-gray-200 p-0.5">
+                  {(["1h", "24h", "7d", "30d"] as Period[]).map(p => (
+                    <button
+                      key={p}
+                      onClick={() => { setPeriod(p); fetchAnalytics(p); }}
+                      className={clx(
+                        "rounded-md px-3 py-1 text-body-sm font-medium transition",
+                        period === p
+                          ? "bg-bg-black-900 text-txt-white"
+                          : "text-txt-black-500 hover:text-txt-black-900",
+                      )}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+                <span className={clx("text-body-xs text-txt-black-500 transition-opacity", analyticsLoading ? "opacity-100" : "opacity-0")}>
+                  {t("loading")}
+                </span>
               </div>
               <Button variant="default" onClick={handleLogout}>
-                Sign out
+                {t("sign_out")}
               </Button>
             </div>
-            <span className={clx("text-body-xs text-txt-black-500 transition-opacity", analyticsLoading ? "opacity-100" : "opacity-0")}>
-              Loading…
-            </span>
           </div>
         </div>
 
         {/* ── Key Management ── */}
         <section>
-          <SectionHeader title="API Keys" />
+          <SectionHeader title={t("section.keys")} />
 
           {keys.length < MAX_KEYS && (
             <div className="mb-4">
@@ -495,7 +577,7 @@ export default function ConsoleDashboard() {
                   value={newKeyName}
                   onChange={e => { setNewKeyName(e.target.value); setNewKeyNameError(null); }}
                   onKeyDown={e => e.key === "Enter" && handleGenerateKey()}
-                  placeholder="key-name (letters, numbers, dashes)"
+                  placeholder={t("key_placeholder")}
                   className="w-72 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 text-body-sm text-txt-black-900 outline-none focus:border-otl-gray-400"
                 />
                 <Button
@@ -504,41 +586,41 @@ export default function ConsoleDashboard() {
                   onClick={handleGenerateKey}
                   className="shrink-0 border-transparent bg-bg-black-900 text-txt-white shadow-none hover:border-transparent hover:bg-red-600 active:bg-red-700"
                 >
-                  {generating ? "Generating…" : "Generate key"}
+                  {generating ? t("generating") : t("generate_key")}
                 </Button>
               </div>
               {newKeyNameError && (
-                <p className="mt-1.5 text-body-xs text-txt-danger">{newKeyNameError}</p>
+                <p className="mt-1.5 pl-3 text-body-xs text-txt-danger">{newKeyNameError}</p>
               )}
             </div>
           )}
 
           {keys.length >= MAX_KEYS && (
             <p className="mb-3 text-body-xs text-txt-black-500">
-              Maximum of {MAX_KEYS} keys reached. Revoke a key to generate a new one.
+              {t("max_keys_reached", { count: MAX_KEYS })}
             </p>
           )}
 
           {keysLoading ? (
-            <p className="text-body-sm text-txt-black-500">Loading keys…</p>
+            <p className="text-body-sm text-txt-black-500">{t("loading_keys")}</p>
           ) : keys.length === 0 ? (
             <Card className="p-6 text-center">
               <p className="text-body-sm text-txt-black-500">
-                No API keys yet. Generate one to get started.
+                {t("no_keys")}
               </p>
             </Card>
           ) : (
             <TableWrapper>
               <thead>
                 <tr>
-                  <Th>Name</Th>
-                  <Th>Actions</Th>
-                  <Th right>Requests</Th>
-                  <Th right>Success Rate</Th>
-                  <Th right>P50 Latency</Th>
-                  <Th right>P95 Latency</Th>
-                  <Th right>P99 Latency</Th>
-                  <Th right>Last Used</Th>
+                  <Th>{t("table.name")}</Th>
+                  <Th>{t("table.actions")}</Th>
+                  <Th right>{t("table.requests")}</Th>
+                  <Th right>{t("table.success_rate")}</Th>
+                  <Th right>{t("table.p50_latency")}</Th>
+                  <Th right>{t("table.p95_latency")}</Th>
+                  <Th right>{t("table.p99_latency")}</Th>
+                  <Th right>{t("table.last_used")}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -558,13 +640,13 @@ export default function ConsoleDashboard() {
                                 : "border border-otl-gray-200 text-txt-black-700 hover:bg-bg-black-100",
                             )}
                           >
-                            {copiedKey === key.key ? "Copied!" : "Copy"}
+                            {copiedKey === key.key ? t("copied") : t("copy")}
                           </button>
                           <button
                             onClick={() => handleDeleteKey(key)}
                             className="rounded px-2 py-1 text-body-xs font-medium text-txt-danger transition hover:bg-bg-danger-100"
                           >
-                            Revoke
+                            {t("revoke")}
                           </button>
                         </div>
                       </Td>
@@ -584,7 +666,7 @@ export default function ConsoleDashboard() {
                         <span style={latencyStyle(stat?.p99_latency_ms ?? NaN, 500, 1000)}>{fmtMs(stat?.p99_latency_ms ?? NaN)}</span>
                       </Td>
                       <Td right mono>
-                        {stat?.last_used_at ? fmtDate(stat.last_used_at) : "Not used"}
+                        {stat?.last_used_at ? fmtDate(stat.last_used_at) : t("not_used")}
                       </Td>
                     </tr>
                   );
@@ -602,54 +684,61 @@ export default function ConsoleDashboard() {
 
         {/* ── Overview Stats + Charts ── */}
         <section>
-          <SectionHeader title="Overview" />
+          <SectionHeader title={t("section.health")} />
 
           {mounted && (
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Request volume */}
             <Card className="flex flex-col gap-4 p-5">
               <div>
-                <h4 className="mb-3 text-body-lg font-semibold text-txt-black-900">Request Volume</h4>
+                <h4 className="mb-3 text-body-lg font-semibold text-txt-black-900">{t("chart.request_volume")}</h4>
                 <div className="flex gap-12">
                   <div>
-                    <p className="text-body-xs text-txt-black-500">Total Requests</p>
+                    <p className="text-body-xs text-txt-black-500">{t("stat.total_requests")}</p>
                     <p className="font-heading text-body-lg font-semibold text-txt-black-900">
                       {totals ? fmtNum(totals.total_requests) : "—"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-body-xs text-txt-black-500">Success Rate</p>
+                    <p className="text-body-xs text-txt-black-500">{t("stat.success_rate")}</p>
                     <p className="font-heading text-body-lg font-semibold text-txt-black-900">
                       {successRatePct}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="h-56">
+              <div className="h-72">
                 {analytics?.daily_status?.length ? (
                   <Bar
                     data={{
                       datasets: [
                         {
-                          label: "Successful",
+                          label: t("chart.successful"),
                           data: analytics.daily_status.map(d => ({ x: toUtcIso(d.date), y: d.successful_requests })),
-                          backgroundColor: COLOR.SUCCESS,
+                          backgroundColor: CHART_GREEN_H,
+                          borderColor: CHART_GREEN,
+                          borderWidth: 1,
                           stack: "a",
                         },
                         {
-                          label: "Client Errors",
+                          label: t("chart.client_errors"),
                           data: analytics.daily_status.map(d => ({ x: toUtcIso(d.date), y: d.client_errors })),
-                          backgroundColor: CHART_ORANGE,
+                          backgroundColor: CHART_GREY_H,
+                          borderColor: CHART_GREY,
+                          borderWidth: 1,
                           stack: "a",
                         },
                         {
-                          label: "Server Errors",
+                          label: t("chart.server_errors"),
                           data: analytics.daily_status.map(d => ({ x: toUtcIso(d.date), y: d.server_errors })),
-                          backgroundColor: CHART_RED,
+                          backgroundColor: CHART_RED_H,
+                          borderColor: CHART_RED,
+                          borderWidth: 1,
                           stack: "a",
                         },
                       ],
                     }}
+                    plugins={[fixedLegendPlugin]}
                     options={{
                       ...CHART_OPTIONS_BASE,
                       scales: {
@@ -660,7 +749,7 @@ export default function ConsoleDashboard() {
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-body-sm text-txt-black-500">
-                    No data for this period
+                    {t("no_data")}
                   </div>
                 )}
               </div>
@@ -669,7 +758,7 @@ export default function ConsoleDashboard() {
             {/* Latency percentiles */}
             <Card className="flex flex-col gap-4 p-5">
               <div>
-                <h4 className="mb-3 text-body-lg font-semibold text-txt-black-900">Latency (ms)</h4>
+                <h4 className="mb-3 text-body-lg font-semibold text-txt-black-900">{t("chart.median_tail_latency")}</h4>
                 <div className="flex gap-12">
                   {(["p50", "p95", "p99"] as const).map(key => {
                     const val = analytics?.daily_latency?.length
@@ -677,7 +766,7 @@ export default function ConsoleDashboard() {
                       : NaN;
                     return (
                       <div key={key}>
-                        <p className="text-body-xs text-txt-black-500">{key.toUpperCase()} Latency</p>
+                        <p className="text-body-xs text-txt-black-500">{t(`table.${key}_latency`)}</p>
                         <p className="font-heading text-body-lg font-semibold text-txt-black-900">
                           {fmtMs(val)}
                         </p>
@@ -686,51 +775,83 @@ export default function ConsoleDashboard() {
                   })}
                 </div>
               </div>
-              <div className="h-56">
+              <div className="h-72">
                 {analytics?.daily_latency?.length ? (
                   <Line
                     data={{
                       datasets: [
                         {
-                          label: "p50",
+                          label: t("chart.median_p50"),
                           data: analytics.daily_latency.map(d => ({ x: toUtcIso(d.date), y: d.p50 })),
                           borderColor: COLOR.PRIMARY,
                           backgroundColor: COLOR.PRIMARY_H,
-                          fill: false,
-                          tension: 0.3,
-                          pointRadius: 2,
+                          fill: "start",
+                          tension: 0,
+                          borderWidth: 1.5,
+                          pointRadius: 0,
+                          pointStyle: "circle" as const,
                         },
                         {
-                          label: "p95",
+                          label: t("chart.near_tail_p95"),
                           data: analytics.daily_latency.map(d => ({ x: toUtcIso(d.date), y: d.p95 })),
-                          borderColor: CHART_ORANGE,
-                          backgroundColor: CHART_ORANGE_H,
+                          borderColor: CHART_GREY,
+                          backgroundColor: "transparent",
                           fill: false,
-                          tension: 0.3,
-                          pointRadius: 2,
+                          tension: 0,
+                          borderWidth: 1.5,
+                          pointRadius: 0,
+                          pointStyle: "circle" as const,
                         },
                         {
-                          label: "p99",
+                          label: t("chart.tail_p99"),
                           data: analytics.daily_latency.map(d => ({ x: toUtcIso(d.date), y: d.p99 })),
-                          borderColor: CHART_RED,
-                          backgroundColor: CHART_RED_H,
+                          borderColor: CHART_CRIMSON,
+                          backgroundColor: CHART_CRIMSON_H,
                           fill: false,
-                          tension: 0.3,
-                          pointRadius: 2,
+                          tension: 0,
+                          borderWidth: 1.5,
+                          pointRadius: 0,
+                          pointStyle: "circle" as const,
                         },
                       ],
                     }}
+                    plugins={[fixedLegendPlugin]}
                     options={{
                       ...CHART_OPTIONS_BASE,
+                      plugins: {
+                        ...CHART_OPTIONS_BASE.plugins,
+                        legend: {
+                          position: "top" as const,
+                          labels: { usePointStyle: true, pointStyle: "circle" as const, boxWidth: 6, boxHeight: 6, padding: 10 },
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: ctx => `${ctx.dataset.label}: ${Math.round(ctx.parsed.y)}ms`,
+                          },
+                        },
+                      },
                       scales: {
-                        x: timeXAxis(period),
-                        y: CHART_OPTIONS_BASE.scales.y,
+                        x: {
+                          ...timeXAxis(period),
+                          afterDataLimits: (scale: any) => {
+                            const pad = (scale.max - scale.min) * 0.01;
+                            scale.min -= pad;
+                            scale.max += pad;
+                          },
+                        },
+                        y: {
+                          grid: { color: "rgba(128,128,128,0.15)" },
+                          ticks: {
+                            maxTicksLimit: 4,
+                            callback: (val: string | number) => `${val}ms`,
+                          },
+                        },
                       },
                     }}
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-body-sm text-txt-black-500">
-                    No data for this period
+                    {t("no_data")}
                   </div>
                 )}
               </div>
@@ -741,16 +862,16 @@ export default function ConsoleDashboard() {
 
         {/* ── Endpoint Health ── */}
         <section>
-          <SectionHeader title="Endpoint Health" />
+          <SectionHeader title={t("section.endpoint_health")} />
           <TableWrapper>
             <thead>
               <tr>
-                <Th>Endpoint</Th>
-                <Th right>Requests</Th>
-                <Th right>Success Rate</Th>
-                <Th right>P50 Latency</Th>
-                <Th right>P95 Latency</Th>
-                <Th right>P99 Latency</Th>
+                <Th>{t("table.endpoint")}</Th>
+                <Th right>{t("table.requests")}</Th>
+                <Th right>{t("table.success_rate")}</Th>
+                <Th right>{t("table.p50_latency")}</Th>
+                <Th right>{t("table.p95_latency")}</Th>
+                <Th right>{t("table.p99_latency")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -774,7 +895,7 @@ export default function ConsoleDashboard() {
               ) : (
                 <tr>
                   <td colSpan={6} className="px-4 py-6 text-center text-body-sm text-txt-black-500">
-                    No health data for this period
+                    {t("no_health_data")}
                   </td>
                 </tr>
               )}
@@ -784,7 +905,7 @@ export default function ConsoleDashboard() {
 
         {/* ── Raw Logs ── */}
         <section>
-          <SectionHeader title="Raw Logs" />
+          <SectionHeader title={t("section.raw_logs")} />
           <div className="mb-3 flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-1.5 text-body-sm text-txt-black-700">
               <input
@@ -793,7 +914,7 @@ export default function ConsoleDashboard() {
                 onChange={e => setLogsErrorsOnly(e.target.checked)}
                 className="rounded"
               />
-              Errors only
+              {t("filter.errors_only")}
             </label>
             <label className="flex items-center gap-1.5 text-body-sm text-txt-black-700">
               <input
@@ -802,39 +923,36 @@ export default function ConsoleDashboard() {
                 onChange={e => setLogsSlowOnly(e.target.checked)}
                 className="rounded"
               />
-              Slow only (&gt;500ms)
+              {t("filter.slow_only")}
             </label>
             {keys.length > 0 && (
-              <select
-                value={logsKeyFilter}
-                onChange={e => setLogsKeyFilter(e.target.value)}
-                className="rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 text-body-xs text-txt-black-900 outline-none focus:border-otl-gray-400"
-              >
-                <option value="">All keys</option>
-                {keys.map(k => (
-                  <option key={k.key} value={k.key}>
-                    {k.name}
-                  </option>
-                ))}
-              </select>
+              <Dropdown
+                width="w-fit"
+                placeholder={t("filter.all_keys")}
+                options={keys.map(k => ({ label: k.name, value: k.key }))}
+                selected={logsKeyFilter ? { label: keys.find(k => k.key === logsKeyFilter)?.name ?? logsKeyFilter, value: logsKeyFilter } : undefined}
+                onChange={opt => setLogsKeyFilter(opt?.value ?? "")}
+                anchor="left"
+                enableClear
+              />
             )}
           </div>
 
           <TableWrapper>
             <thead>
               <tr>
-                <Th>Timestamp</Th>
-                <Th>Key</Th>
-                <Th>Endpoint</Th>
-                <Th>Params</Th>
-                <Th center>Status</Th>
-                <Th right>Latency</Th>
-                <Th center>Country</Th>
+                <Th>{t("table.timestamp")}</Th>
+                <Th>{t("table.key")}</Th>
+                <Th>{t("table.endpoint")}</Th>
+                <Th>{t("table.params")}</Th>
+                <Th center>{t("table.status")}</Th>
+                <Th right>{t("table.latency")}</Th>
+                <Th center>{t("table.country")}</Th>
               </tr>
             </thead>
             <tbody>
               {filteredLogs.length ? (
-                filteredLogs.slice(0, 200).map((log, i) => (
+                filteredLogs.map((log, i) => (
                   <tr key={i} className="hover:bg-bg-black-50">
                     <Td mono>{fmtDate(log.timestamp)}</Td>
                     <Td mono>{keyNameMap.get(log.api_key) ?? truncateKey(log.api_key)}</Td>
@@ -855,20 +973,44 @@ export default function ConsoleDashboard() {
                     colSpan={7}
                     className="px-4 py-6 text-center text-body-sm text-txt-black-500"
                   >
-                    {analyticsLoading ? "Loading logs…" : "No logs match the current filters"}
+                    {analyticsLoading ? t("loading_logs") : t("no_logs")}
                   </td>
                 </tr>
               )}
             </tbody>
           </TableWrapper>
 
-          {filteredLogs.length > 200 && (
-            <p className="mt-2 text-body-xs text-txt-black-500">
-              Showing 200 of {filteredLogs.length} logs
-            </p>
-          )}
         </section>
       </div>
+
+      {/* Revoke confirmation modal */}
+      {revokeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setRevokeTarget(null)}>
+          <div
+            className="w-full max-w-sm rounded-xl border border-otl-gray-200 bg-bg-white p-6 shadow-lg"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="mb-2 font-heading text-body-lg font-semibold text-txt-black-900">
+              {t("revoke_modal.title", { name: revokeTarget.name })}
+            </h3>
+            <p className="mb-6 text-body-sm text-txt-black-500">
+              {t("revoke_modal.description")}
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="default" onClick={() => setRevokeTarget(null)}>
+                {t("cancel")}
+              </Button>
+              <Button
+                variant="default"
+                onClick={confirmRevoke}
+                className="border-transparent bg-txt-danger text-txt-white shadow-none hover:border-transparent hover:bg-red-700 active:bg-red-800"
+              >
+                {t("revoke")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Container>
   );
 }
