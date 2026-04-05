@@ -7,7 +7,13 @@ import { interpolate } from "@lib/helpers";
  * @returns t, i18n
  */
 export const useTranslation = (namespace?: string[] | string) => {
-  const { t, i18n } = _useTranslation(namespace ?? "common");
+  // `[]` is truthy, so `?? "common"` would not run; react-i18next then uses
+  // namespaces[0] === undefined and breaks keys like "common:nav.*" on the client.
+  const ns =
+    Array.isArray(namespace) && namespace.length === 0
+      ? "common"
+      : (namespace ?? "common");
+  const { t, i18n } = _useTranslation(ns);
   const _t = (key: string, params?: any): string | any => {
     return interpolate(t<string, any>(key, params));
   };

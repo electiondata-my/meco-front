@@ -11,6 +11,7 @@ import {
   ArrowDownTrayIcon,
   BoltIcon,
   ClipboardDocumentCheckIcon,
+  CodeBracketIcon,
   FlagIcon,
   MapIcon,
   UserIcon,
@@ -18,7 +19,7 @@ import {
 import { RedelineationIcon, SeatsIcon } from "@icons/index";
 
 export default function Header() {
-  const { t } = useTranslation([]);
+  const { t } = useTranslation();
   // const router = useRouter();
 
   return (
@@ -123,6 +124,17 @@ export default function Header() {
               }
               onClick={close}
               className="whitespace-nowrap text-center lg:order-7"
+            />
+            <Nav.Item
+              key={"/openapi"}
+              title={t("common:nav.openapi")}
+              link="/openapi/introduction"
+              locale="en-GB"
+              icon={
+                <CodeBracketIcon className="hidden size-8 max-lg:block" />
+              }
+              onClick={close}
+              className="whitespace-nowrap text-center lg:order-8"
             />
           </>
         )}

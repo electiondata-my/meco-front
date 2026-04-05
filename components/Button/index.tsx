@@ -22,7 +22,7 @@ const style = {
   default:
     "border hover:border-otl-gray-400 active:bg-bg-black-100 bg-bg-white text-txt-black-900",
   primary:
-    "from-primary to-primary-dark shadow-button bg-gradient-to-t text-white hover:to-[#5B8EFF]",
+    "bg-gradient-to-t from-bg-primary-600 to-bg-primary-700 shadow-button text-white hover:to-bg-primary-600",
   ghost: "hover:bg-bg-black-100 text-txt-black-500 hover:text-txt-black-900",
 };
 

@@ -8,6 +8,7 @@ export const routes = {
   DUN_SEATS: "/dun",
   ELECTIONS: "/elections",
   MAP_EXPLORER: "/map/explorer",
+  OPENAPI: "/openapi",
   PARLIMEN_SEATS: "/parlimen",
   PARTIES: "/parties",
   REDELINEATION: "/redelineation",
