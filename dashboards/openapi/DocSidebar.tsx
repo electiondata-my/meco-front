@@ -124,7 +124,7 @@ const DocSidebar: FunctionComponent<DocSidebarProps> = ({
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block">
+      <aside className="hidden shrink-0 lg:block">
         <div className="sticky top-16 h-[calc(100vh-4rem)] w-60 overflow-y-auto border-r border-otl-gray-200 pb-10 pr-4 pt-6">
           <SidebarContent currentPath={currentPath} />
         </div>

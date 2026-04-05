@@ -1,5 +1,6 @@
 import { FunctionComponent, useEffect, useRef, useState } from "react";
 import { clx } from "@lib/helpers";
+import { useApiKey } from "@dashboards/openapi/ApiKeyContext";
 import { GithubThemes } from "@components/CodeBlock/theme";
 import { useTheme } from "next-themes";
 import hljs from "highlight.js/lib/core";
@@ -28,7 +29,12 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
 }) => {
   const { theme = "light" } = useTheme();
   const [params, setParams] = useState<Record<string, string>>(defaultParams);
+  const { apiKey: contextApiKey } = useApiKey();
   const [apiKey, setApiKey] = useState("");
+
+  useEffect(() => {
+    setApiKey(contextApiKey);
+  }, [contextApiKey]);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [copied, setCopied] = useState(false);

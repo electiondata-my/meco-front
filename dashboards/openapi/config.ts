@@ -19,10 +19,9 @@ export const NAV_SECTIONS: NavSection[] = [
     group: "General",
     items: [
       { label: "Introduction", href: "/openapi/introduction" },
-      { label: "API vs Data Lake", href: "/openapi/when-to-use" },
+      { label: "Versioning", href: "/openapi/versioning" },
       { label: "Authentication", href: "/openapi/authentication" },
       { label: "Errors", href: "/openapi/errors" },
-      { label: "Versioning", href: "/openapi/versioning" },
     ],
   },
   {

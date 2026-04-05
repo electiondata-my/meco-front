@@ -18,7 +18,7 @@ const EndpointBadge: FunctionComponent<EndpointBadgeProps> = ({
       <span className="shrink-0 rounded bg-bg-danger-100 px-2 py-0.5 font-mono text-body-xs font-semibold uppercase tracking-wider text-txt-danger">
         {method}
       </span>
-      <code className="font-mono text-body-sm text-txt-black-900">{url}</code>
+      <code className="font-mono text-body-xs text-txt-black-900">{url}</code>
     </div>
   );
 };

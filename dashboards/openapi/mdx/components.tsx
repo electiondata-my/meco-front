@@ -5,11 +5,13 @@ import type { DocLang } from "@dashboards/openapi/DocCodeBlock";
 import { slugify, textContent } from "@lib/docs-utils";
 import Callout from "./Callout";
 import EndpointBadge from "./EndpointBadge";
+import EndpointCard from "./EndpointCard";
 import FieldTable from "./FieldTable";
 import GrayList from "./GrayList";
 import ParamTable from "./ParamTable";
 import StatusTable from "./StatusTable";
 import TabCode from "./TabCode";
+import TokenInput from "./TokenInput";
 import DocApiTester from "@dashboards/openapi/DocApiTester";
 
 // ---------------------------------------------------------------------------
@@ -180,10 +182,12 @@ export const mdxComponents = {
   // Custom MDX components — available globally in all doc pages
   Callout,
   EndpointBadge,
+  EndpointCard,
   FieldTable,
   GrayList,
   ParamTable,
   StatusTable,
   TabCode,
+  TokenInput,
   ApiTester: DocApiTester,
 };

@@ -11,39 +11,21 @@ The API uses standard HTTP status codes to indicate the success or failure of a 
 
 <StatusTable codes={[
   { code: "200", name: "OK", description: "Request succeeded.", color: "green" },
-  { code: "400", name: "Bad Request", description: "Missing or invalid parameters.", color: "amber" },
+  { code: "400", name: "Bad Request", description: "Missing or invalid parameters, or missing version prefix.", color: "amber" },
   { code: "401", name: "Unauthorized", description: "Missing or invalid API key.", color: "red" },
-  { code: "404", name: "Not Found", description: "The requested resource does not exist.", color: "amber" },
-  { code: "429", name: "Too Many Requests", description: "You have exceeded the soft rate limit.", color: "amber" },
-  { code: "500", name: "Internal Server Error", description: "Something went wrong on our end.", color: "red" },
+  { code: "404", name: "Not Found", description: "Unknown endpoint, or no data found for the given parameters.", color: "amber" },
+  { code: "405", name: "Method Not Allowed", description: "Only GET requests are supported.", color: "amber" },
+  { code: "500", name: "Internal Server Error", description: "Something went wrong on our end (rare).", color: "red" },
 ]} />
 
 ## Error Response Format
 
-All error responses return a JSON body with a single `error` field containing a human-readable description of what went wrong:
+All error responses return a JSON body with a single `error` field containing a human-readable description of what went wrong. For example, a request missing a version prefix will return the following:
 
 ```json
+HTTP/2 400
+
 {
-  "error": "A human-readable description of the error"
-}
-```
-
-### Example: Missing parameter
-
-When a required query parameter is omitted:
-
-```json
-{
-  "error": "Missing required parameter: id"
-}
-```
-
-### Example: Invalid API key
-
-When the `Authorization` header is missing or the key is not recognised:
-
-```json
-{
-  "error": "Invalid or missing API key"
+  "error": "API version required. Use /vN/ prefix, e.g. /v1/candidates"
 }
 ```

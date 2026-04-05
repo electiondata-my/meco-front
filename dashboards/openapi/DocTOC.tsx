@@ -38,11 +38,11 @@ const DocTOC: FunctionComponent<DocTOCProps> = ({ toc }) => {
   }, [toc]);
 
   if (toc.length === 0) {
-    return <div className="hidden w-48 shrink-0 xl:block" />;
+    return <div className="hidden w-56 shrink-0 xl:block" />;
   }
 
   return (
-    <aside className="hidden w-48 shrink-0 xl:block">
+    <aside className="hidden w-56 shrink-0 xl:block">
       <div className="sticky top-16 overflow-y-auto pt-8 pl-6">
         <h5 className="mb-3 text-body-xs font-semibold uppercase tracking-widest text-txt-black-400">
           On This Page

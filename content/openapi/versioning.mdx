@@ -7,17 +7,26 @@ keywords: "API, versioning, breaking changes, election data"
 
 ## Current Version
 
-The API is currently **unversioned**. There is no `/v1/` prefix in the URL. All endpoints are served directly from the base URL:
+The API is currently at **v1**. All requests must include the version prefix in the URL:
 
 ```
-https://api.electiondata.my
+https://api.electiondata.my/v1
 ```
 
-This means you can call endpoints like `https://api.electiondata.my/candidates?id=YQJ5S` without any version segment. If and when a versioned API is introduced, existing unversioned URLs will continue to work to preserve backwards compatibility.
+For example: `https://api.electiondata.my/v1/candidates?id=YQJ5S`
 
-## Stability & Breaking Changes
+Requests without a version prefix will receive a `400 Bad Request` response.
 
-We aim to maintain backwards compatibility wherever possible. The following are considered **non-breaking** changes and may happen at any time without notice:
+## Breaking Changes
+
+All changes within the same version will be backwards compatible, so you can be confident that your products won't break. The following are considered **breaking** changes and will be versioned, with advance notice:
+
+- Removing or renaming existing fields from response objects.
+- Changing the type or format of existing response fields.
+- Removing or renaming existing endpoints.
+- Making previously optional parameters required.
+
+The following are considered **non-breaking** changes and may happen at any time without notice:
 
 <GrayList items={[
   "Adding new optional query parameters to existing endpoints.",
@@ -26,11 +35,10 @@ We aim to maintain backwards compatibility wherever possible. The following are 
   "Improving error messages or adding additional detail to existing error responses.",
 ]} />
 
-The following are considered **breaking** changes and will be announced in advance:
 
-- Removing or renaming existing fields from response objects.
-- Changing the type or format of existing response fields.
-- Removing or renaming existing endpoints.
-- Making previously optional parameters required.
 
-<Callout label="Note">A changelog and announcement mechanism is planned. Check back here or watch the [GitHub repository](https://github.com/electiondata-my/meco-front) for updates.</Callout>
+## Yes, this isn't REST
+
+Using a `/v1/` prefix is a REST anti-pattern—a true REST API would rely on [HATEOAS](https://en.wikipedia.org/wiki/HATEOAS) (Hypermedia as the Engine of Application State) to communicate resource locations and transitions, rather than encoding a version in the path.
+
+This is a deliberate design choice. The primary consumers of this API include journalists, civic society organisations, and developers doing work in support of core public-interest functions. For these users, simplicity and predictability matter more than architectural purity. A URL that says `/v1/candidates` is immediately understandable. HATEOAS is not.

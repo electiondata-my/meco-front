@@ -6,6 +6,10 @@ import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 import bash from "highlight.js/lib/languages/bash";
 import json from "highlight.js/lib/languages/json";
+import python from "highlight.js/lib/languages/python";
+import typescript from "highlight.js/lib/languages/typescript";
+import r from "highlight.js/lib/languages/r";
+import go from "highlight.js/lib/languages/go";
 import {
   DocumentDuplicateIcon,
   CheckIcon,
@@ -14,8 +18,12 @@ import {
 hljs.registerLanguage("javascript", javascript);
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("json", json);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("typescript", typescript);
+hljs.registerLanguage("r", r);
+hljs.registerLanguage("go", go);
 
-export type DocLang = "bash" | "javascript" | "json";
+export type DocLang = "bash" | "javascript" | "json" | "python" | "typescript" | "r" | "go";
 
 interface DocCodeBlockProps {
   code: string;
