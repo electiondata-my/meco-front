@@ -128,7 +128,7 @@ export default function Header() {
             <Nav.Item
               key={"/openapi"}
               title={t("common:nav.openapi")}
-              link="/openapi"
+              link="/openapi/introduction"
               icon={
                 <CodeBracketIcon className="hidden size-8 max-lg:block" />
               }
