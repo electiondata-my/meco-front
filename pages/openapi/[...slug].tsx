@@ -52,11 +52,15 @@ export const getStaticProps: GetStaticProps = withi18n(
     const slugParts = params?.slug as string[];
     const { content, frontmatter } = readDocFile(slugParts);
 
+    // next-mdx-remote v6 defaults blockJS: true, which strips JSX expressions from
+    // custom components (e.g. <GrayList items={[...]} /> becomes <GrayList />).
+    // Our MDX is trusted (repo content only); allow expressions so props serialize.
     const source = await serialize(content, {
       mdxOptions: {
         remarkPlugins: [],
         rehypePlugins: [],
       },
+      blockJS: false,
     });
 
     const toc = extractToc(content);

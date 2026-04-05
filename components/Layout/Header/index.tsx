@@ -19,7 +19,7 @@ import {
 import { RedelineationIcon, SeatsIcon } from "@icons/index";
 
 export default function Header() {
-  const { t } = useTranslation([]);
+  const { t } = useTranslation();
   // const router = useRouter();
 
   return (

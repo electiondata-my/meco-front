@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, useEffect, useRef, useState } from "react";
 import { clx } from "@lib/helpers";
 import { GithubThemes } from "@components/CodeBlock/theme";
 import { useTheme } from "next-themes";
@@ -7,8 +7,6 @@ import json from "highlight.js/lib/languages/json";
 import { DocumentDuplicateIcon, CheckIcon } from "@heroicons/react/24/outline";
 
 hljs.registerLanguage("json", json);
-
-const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL ?? "/api/auth";
 
 interface ApiTesterProps {
   endpoint: string;
@@ -34,16 +32,8 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [copied, setCopied] = useState(false);
-
-  // Try to pull first saved API key from the auth service for convenience
-  useEffect(() => {
-    fetch(`${AUTH_URL}/keys`, { credentials: "include" })
-      .then(r => (r.ok ? r.json() : null))
-      .then(data => {
-        if (data?.keys?.[0]?.key) setApiKey(data.keys[0].key);
-      })
-      .catch(() => {});
-  }, []);
+  const sendGenerationRef = useRef(0);
+  const inFlightRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const head = document.head;
@@ -64,15 +54,24 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
   const constructedUrl = `https://api.electiondata.my${endpoint}${queryString ? `?${queryString}` : ""}`;
 
   const handleSend = async () => {
+    inFlightRef.current?.abort();
+    const generation = ++sendGenerationRef.current;
+    const ac = new AbortController();
+    inFlightRef.current = ac;
+
     setLoading(true);
     setResponse(null);
     const start = Date.now();
     try {
       const res = await fetch(constructedUrl, {
+        signal: ac.signal,
+        cache: "no-store",
         headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
       });
+      if (generation !== sendGenerationRef.current) return;
       const latencyMs = Date.now() - start;
       const text = await res.text();
+      if (generation !== sendGenerationRef.current) return;
       let pretty = text;
       try {
         pretty = JSON.stringify(JSON.parse(text), null, 2);
@@ -82,12 +81,16 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
       const highlighted = hljs.highlight(pretty, { language: "json" }).value;
       setResponse({ status: res.status, latencyMs, body: pretty, highlighted });
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (generation !== sendGenerationRef.current) return;
       const latencyMs = Date.now() - start;
       const body = JSON.stringify({ error: "Network error — could not reach the API." }, null, 2);
       const highlighted = hljs.highlight(body, { language: "json" }).value;
       setResponse({ status: 0, latencyMs, body, highlighted });
     } finally {
-      setLoading(false);
+      if (generation === sendGenerationRef.current) {
+        setLoading(false);
+      }
     }
   };
 
@@ -143,7 +146,7 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
               type="text"
               value={apiKey}
               onChange={e => setApiKey(e.target.value)}
-              placeholder="your-api-key"
+              placeholder="Generate a key via the API Console"
               className="flex-1 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 font-mono text-body-xs text-txt-black-900 outline-none transition focus:border-txt-danger focus:ring-1 focus:ring-txt-danger"
             />
           </div>
@@ -162,7 +165,7 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
         {/* Send button */}
         <div className="px-4 py-3">
           <button
-            onClick={handleSend}
+            onClick={() => void handleSend()}
             disabled={loading}
             className={clx(
               "rounded-md px-4 py-2 text-body-xs font-semibold text-white transition",

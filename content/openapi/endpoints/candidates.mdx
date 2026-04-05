@@ -28,20 +28,13 @@ Results are returned as a JSON array, ordered from most recent to oldest. Each o
 
 Candidate IDs can be found via the [Candidates](https://electiondata.my/candidates) section of the website, or by referencing the downloadable candidate datasets in the [Data Catalogue](https://electiondata.my/data-catalogue).
 
-## Try it
-
-<ApiTester
-  endpoint="/candidates"
-  defaultParams={{ id: "YQJ5S" }}
-  paramDescriptions={{ id: "candidate identifier" }}
-/>
-
 ## Example Request
 
 <TabCode
   curl={`curl -X GET "https://api.electiondata.my/candidates?id=YQJ5S" \\\n  -H "Authorization: Bearer <your-api-key>"`}
   javascript={`const response = await fetch(\n  "https://api.electiondata.my/candidates?id=YQJ5S",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
 />
+
 
 ## Response Fields
 
@@ -59,3 +52,11 @@ A successful `200 OK` response returns a JSON array of result objects, containin
   { name: "result", type: "string", description: '"won" or "lost".' },
   { name: "majority", type: "number", description: "Vote majority (positive if won, negative if lost)." },
 ]} />
+
+## Live Tester
+
+<ApiTester
+  endpoint="/candidates"
+  defaultParams={{ id: "YQJ5S" }}
+  paramDescriptions={{ id: "candidate identifier" }}
+/>
