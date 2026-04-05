@@ -68,6 +68,7 @@ type NavItemProps = {
   icon?: ReactNode;
   title: string;
   link: string;
+  locale?: string;
   onClick: () => void;
   className?: string;
 };
@@ -79,6 +80,7 @@ type NavFunctionComponent = FunctionComponent<NavRootProps> & {
 
 const Item: FunctionComponent<NavItemProps> = ({
   link,
+  locale,
   onClick,
   className,
   icon,
@@ -97,7 +99,7 @@ const Item: FunctionComponent<NavItemProps> = ({
         className,
       )}
     >
-      <Link href={link} scroll={false} onClick={onClick}>
+      <Link href={link} locale={locale} scroll={false} onClick={onClick}>
         <span className="nav-mobile-icon lg:hidden">{icon}</span>
         {title}
       </Link>

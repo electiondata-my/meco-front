@@ -52,7 +52,7 @@ const SidebarContent: FunctionComponent<SidebarContentProps> = ({
           target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
-          className="flex items-center gap-2 rounded-lg bg-bg-danger-50 px-3 py-2 text-body-sm font-medium text-txt-danger transition-colors hover:bg-bg-danger-100"
+          className="flex items-center gap-2 rounded-lg border border-otl-danger-200 bg-bg-danger-50 px-3 py-2 text-body-sm font-medium text-txt-danger transition-colors hover:bg-bg-danger-100"
         >
           <KeyIcon className="h-4 w-4 shrink-0" />
           Get a Token

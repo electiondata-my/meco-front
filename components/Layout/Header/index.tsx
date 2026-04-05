@@ -129,6 +129,7 @@ export default function Header() {
               key={"/openapi"}
               title={t("common:nav.openapi")}
               link="/openapi/introduction"
+              locale="en-GB"
               icon={
                 <CodeBracketIcon className="hidden size-8 max-lg:block" />
               }

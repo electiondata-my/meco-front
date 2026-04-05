@@ -43,38 +43,9 @@ Candidate IDs can be found via the [Candidates](https://electiondata.my/candidat
   javascript={`const response = await fetch(\n  "https://api.electiondata.my/candidates?id=YQJ5S",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
 />
 
-## Example Response
+## Response Fields
 
-A successful `200 OK` response returns a JSON array of result objects. The example below uses candidate `YQJ5S`:
-
-```json
-[
-  {
-    "election": "GE-15",
-    "date": "2022-11-19",
-    "seat": "P128-Lembah Pantai",
-    "seat_type": "parlimen",
-    "state": "Wilayah Persekutuan Kuala Lumpur",
-    "party": "PKR",
-    "coalition": "Pakatan Harapan",
-    "votes": 31827,
-    "result": "won",
-    "majority": 8921
-  },
-  {
-    "election": "GE-14",
-    "date": "2018-05-09",
-    "seat": "P128-Lembah Pantai",
-    "seat_type": "parlimen",
-    "state": "Wilayah Persekutuan Kuala Lumpur",
-    "party": "PKR",
-    "coalition": "Pakatan Harapan",
-    "votes": 29154,
-    "result": "won",
-    "majority": 6083
-  }
-]
-```
+A successful `200 OK` response returns a JSON array of result objects, containing the following data:
 
 <FieldTable fields={[
   { name: "election", type: "string", description: 'Election identifier, e.g. "GE-15" or "BE-2023-08".' },

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// These paths are English-only — redirect ms-MY visitors to en-GB
+const ENGLISH_ONLY_PATHS = ["/openapi", "/signin", "/console"];
+
 export const config = {
   matcher: [
     // Match all pathnames except for
@@ -17,6 +20,20 @@ export async function middleware(request: NextRequest) {
   const purpose = headers.get("purpose");
   if (purpose && purpose.match(/prefetch/i))
     headers.delete("x-middleware-prefetch"); // empty json bugfix (in the browser headers still show, but here it is gone)
+
+  // Redirect ms-MY visitors on English-only pages to the en-GB equivalent
+  const pathname = request.nextUrl.pathname;
+  if (pathname.startsWith("/ms-MY/") || pathname === "/ms-MY") {
+    const pathWithoutLocale = pathname.slice("/ms-MY".length) || "/";
+    const isEnglishOnly = ENGLISH_ONLY_PATHS.some(
+      p => pathWithoutLocale === p || pathWithoutLocale.startsWith(p + "/"),
+    );
+    if (isEnglishOnly) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/en-GB" + pathWithoutLocale;
+      return NextResponse.redirect(url);
+    }
+  }
 
   // Request authenticated
   response = NextResponse.next({ request: { headers } });
