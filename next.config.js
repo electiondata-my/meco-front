@@ -19,6 +19,15 @@ const withPWA = require("next-pwa")({
  * */
 const nextConfig = {
   i18n,
+  transpilePackages: ["chartjs-adapter-luxon"],
+  async rewrites() {
+    return [
+      {
+        source: "/api/auth/:path*",
+        destination: "https://auth.electiondata.my/:path*",
+      },
+    ];
+  },
   reactStrictMode: true,
   typescript: {
     ignoreBuildErrors: true,

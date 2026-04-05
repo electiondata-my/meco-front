@@ -1,0 +1,31 @@
+---
+title: "Errors"
+breadcrumb: "General"
+description: "HTTP status codes and error response format for the ElectionData.MY API."
+keywords: "API, errors, HTTP status codes, election data"
+---
+
+## HTTP Status Codes
+
+The API uses standard HTTP status codes to indicate the success or failure of a request. Codes in the `2xx` range indicate success; codes in the `4xx` range indicate a client error; codes in the `5xx` range indicate a server-side problem.
+
+<StatusTable codes={[
+  { code: "200", name: "OK", description: "Request succeeded.", color: "green" },
+  { code: "400", name: "Bad Request", description: "Missing or invalid parameters, or missing version prefix.", color: "amber" },
+  { code: "401", name: "Unauthorized", description: "Missing or invalid API key.", color: "red" },
+  { code: "404", name: "Not Found", description: "Unknown endpoint, or no data found for the given parameters.", color: "amber" },
+  { code: "405", name: "Method Not Allowed", description: "Only GET requests are supported.", color: "amber" },
+  { code: "500", name: "Internal Server Error", description: "Something went wrong on our end (rare).", color: "red" },
+]} />
+
+## Error Response Format
+
+All error responses return a JSON body with a single `error` field containing a human-readable description of what went wrong. For example, a request missing a version prefix will return the following:
+
+```json
+HTTP/2 400
+
+{
+  "error": "API version required. Use /vN/ prefix, e.g. /v1/candidates"
+}
+```

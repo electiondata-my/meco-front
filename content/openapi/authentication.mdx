@@ -1,0 +1,51 @@
+---
+title: "Authentication"
+breadcrumb: "General"
+description: "Learn how to authenticate your requests to the ElectionData.MY API."
+keywords: "API, authentication, API key, election data"
+---
+
+## API Keys
+
+All requests to the ElectionData.MY API must be authenticated using a Bearer token in the `Authorization` header. Requests without a valid API key will receive a `401 Unauthorized` response.
+
+```bash
+Authorization: Bearer <your-api-key>
+```
+
+We do not allow unauthorised access for one reason only—we built ElectionData.MY to be a serious public good, and therefore need a verified mechanism to contact API users in the event that there are urgent operational issues to resolve (e.g. on election night). This is also why we only ask for an email address (which you can anonymise) and nothing more—we do not need to know who you are or why you want to use the API. If you prefer not to register (and to take responsibility for your own backend), all datasets are available via the [Data Catalogue](/data-catalogue) with options for manual download or unauthorised programmatic access via our open data lake.
+
+## Getting an API Key
+
+API keys are generated through the [API Console](/console). The process takes under a minute:
+
+1. Sign in with your email address—a one-time passcode (OTP) will be sent to your inbox.
+2. Once signed in, click **Generate Key**, give it a descriptive name (e.g. _prod-site_ or _local-dev_), and copy it.
+3. Include the key as a `Bearer` token in the `Authorization` header of every API request.
+
+<Callout label="Note">You can generate up to **15 API keys** per account—more than enough to maintain separate keys for development, staging, and production.</Callout>
+
+## Sample Request
+
+Here is a complete example showing how to pass your API key:
+
+```bash
+curl -X GET "https://api.electiondata.my/v1/candidates?id=YQJ5S" \
+  -H "Authorization: Bearer your-api-key-here"
+```
+
+## Guard your Keys
+
+AI is awesome, but it has also made credential leakage dramatically easier—code gets written faster, pasted more freely, and pushed to public repos without a second thought. In this particular instance, there is no particular risk to us from you leaking your keys (because the API is intentionally not rate-limited), but we will hold you accountable for any authenticated requests made using your keys. This means that if your keys are being used to abuse the API, we reserve the right to revoke them and blacklist your IP/email.
+
+Some simple practices you should abide by:
+- Do not commit your API key to public repositories. Use environment variables or a secrets manager instead.
+- If a key is compromised, revoke it immediately from the API Console and generate a replacement.
+- Avoid making API calls directly from client-side code where possible—network requests are visible to anyone with DevTools open. 
+- If a backend (even a serverless one) is impractical or unfeasible for you, just be aware that your key will be visible in browser requests and rotate it if you suspect misuse.
+
+## Why no Rate Limit?
+
+Most APIs rate-limit to protect infrastructure costs or enforce tiered pricing. ElectionData.MY has neither concern—the API sits in front of a highly-optimised static data lake, so the marginal cost per query is negligible. Aggressive usage is unlikely to degrade the service for others.
+
+We also think rate limits are the wrong default for a public good. Journalists, researchers, and developers building civic tools should not have to worry about hitting a ceiling on election night. So even if you are querying at scale, if the API suits your workflow, use it freely.

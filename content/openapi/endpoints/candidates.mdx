@@ -1,0 +1,94 @@
+---
+title: "Candidates"
+breadcrumb: "Endpoints"
+description: "Query election results for any candidate across every contest they have stood in."
+keywords: "API, candidates, election data, Malaysia"
+---
+
+## Use Case
+
+Use these endpoints to build a candidate lookup feature—something like the [Candidates dashboard](https://www.electiondata.my/candidates) on this site. A user searches for a candidate by name, selects one, and gets back every election result for that candidate, spanning both general elections (Parliament and State) and by-elections.
+
+There are two endpoints involved in this workflow, and they are designed to be used in sequence.
+
+## Step 0: Get a Token
+
+All requests to this API require a Bearer token. Paste yours below now—every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
+
+<TokenInput />
+
+## Step 1: List of Candidates
+
+To let users search for a candidate, you first need a list of all candidates and their unique IDs.
+
+<EndpointBadge method="GET" url="https://api.electiondata.my/v1/candidates/dropdown" />
+
+This endpoint takes no parameters. We recommend fetching this once and caching it—the list only changes when new election data is added, so there is no need to query it on every user interaction.
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/v1/candidates/dropdown" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates/dropdown",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates/dropdown",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface Candidate {\n  id: string;\n  name: string;\n  c: number;\n  w: number;\n  l: number;\n}\n\nconst data: Candidate[] = await response.json();\nconsole.log(data);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/candidates/dropdown",\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()\nprint(data)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/candidates/dropdown") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)\nprint(data)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/candidates/dropdown", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar data any\n\tjson.Unmarshal(body, &data)\n\tfmt.Println(data)\n}`}
+/>
+
+A successful `200 OK` response returns a JSON array of every candidate in the database, in descending order of the number of elections they have contested. Each object in the response contains:
+
+<FieldTable fields={[
+  { name: "id", type: "string", description: "Unique candidate identifier. Use this in Step 2." },
+  { name: "name", type: "string", description: "Candidate's full name." },
+  { name: "c", type: "integer", description: "Total contests stood in." },
+  { name: "w", type: "integer", description: "Total contests won." },
+  { name: "l", type: "integer", description: "Total contests lost." },
+]} />
+
+## Step 2: Specific Candidate
+
+Once the user has selected a candidate, pass their `id` to retrieve their election results.
+
+<EndpointCard method="GET" url="https://api.electiondata.my/v1/candidates" params={[
+  {
+    name: "id",
+    type: "string",
+    required: true,
+    description: <>Unique identifier derived from the dropdown.</>
+  }
+]} />
+
+The `id` parameter is mandatory; requests without this parameter will return a `400 Bad Request` error, while requests with an invalid `id` will return a `404 Not Found` error.
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/v1/candidates?id=YQJ5S" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates?id=YQJ5S",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates?id=YQJ5S",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface CandidateResult {\n  name: string;\n  election_name: string;\n  type: "parlimen" | "dun";\n  date: string;\n  seat: string;\n  party: string;\n  party_uid: string;\n  coalition: string | null;\n  coalition_uid: number | null;\n  votes: number;\n  votes_perc: number;\n  result: "won" | "won_uncontested" | "lost" | "lost_deposit";\n}\n\nconst data: CandidateResult[] = await response.json();\nconsole.log(data);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/candidates",\n    params={"id": "YQJ5S"},\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()\nprint(data)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/candidates") |>\n  req_url_query(id = "YQJ5S") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)\nprint(data)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/candidates?id=YQJ5S", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar data any\n\tjson.Unmarshal(body, &data)\n\tfmt.Println(data)\n}`}
+/>
+
+A successful `200 OK` response returns a JSON array of election results, ordered from most recent to oldest. Each object in the response contains:
+
+<FieldTable fields={[
+  { name: "name", type: "string", description: "Candidate's full name (e.g. 'Lim Kit Siang')." },
+  { name: "election_name", type: "string", description: "Human-readable election name (e.g. 'GE-14')." },
+  { name: "type", type: "string", description: "'parlimen' for parliamentary seats or 'dun' for state seats." },
+  { name: "date", type: "date", description: "Polling day in ISO 8601 format (YYYY-MM-DD)." },
+  { name: "seat", type: "string", description: "Constituency name including code and state, e.g. ('P.162 Iskandar Puteri, Johor')." },
+  { name: "party", type: "string", description: "Acronym of the candidate's party the candidate (e.g. 'DAP')." },
+  { name: "party_uid", type: "string", description: "Unique party identifier e.g. '021-DAP'." },
+  { name: "coalition", type: "string", description: "Coalitional affiliation of the party, if any (e.g. 'PH')." },
+  { name: "coalition_uid", type: "number", description: "Unique coalition identifier, if any." },
+  { name: "votes", type: "integer", description: "Total votes received by the candidate." },
+  { name: "votes_perc", type: "float", description: "Percentage of total valid votes gained by the candidate." },
+  { name: "result", type: "string", description: "One of: 'won', 'won_uncontested', 'lost', or 'lost_deposit'." },
+]} />
+
+## Try It Out!
+
+<ApiTester
+  endpoint="/v1/candidates"
+  defaultParams={{ id: "YQJ5S" }}
+  paramDescriptions={{ id: "candidate identifier" }}
+/>
