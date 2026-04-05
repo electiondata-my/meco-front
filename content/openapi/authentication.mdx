@@ -1,0 +1,41 @@
+---
+title: "Authentication"
+breadcrumb: "General"
+description: "Learn how to authenticate your requests to the ElectionData.MY API."
+keywords: "API, authentication, API key, election data"
+---
+
+## API Keys
+
+All requests to the ElectionData.MY API must be authenticated using a Bearer token in the `Authorization` header. Requests without a valid API key will receive a `401 Unauthorized` response.
+
+```bash
+Authorization: Bearer <your-api-key>
+```
+
+## Getting an API Key
+
+API keys are generated through the [API Console](/console). The process takes under a minute:
+
+1. Visit the [API Console](/console).
+2. Sign in with your email address — a one-time passcode (OTP) will be sent to your inbox.
+3. Once signed in, click **Generate Key**, give it a descriptive name (e.g. _production-pipeline_ or _local-dev_), and copy it.
+4. Include the key as a `Bearer` token in the `Authorization` header of every API request.
+
+<Callout label="Note">You can generate up to **15 API keys** per account — more than enough to maintain separate keys for development, staging, and production.</Callout>
+
+## Example authenticated request
+
+Here is a complete example showing how to pass your API key:
+
+```bash
+curl -X GET "https://api.electiondata.my/candidates?id=YQJ5S" \
+  -H "Authorization: Bearer your-api-key-here"
+```
+
+## Security
+
+- Treat your API key like a password. Anyone with the key can make authenticated requests on your behalf.
+- Do not commit your API key to public repositories. Use environment variables or a secrets manager instead.
+- If a key is compromised, revoke it immediately from the API Console and generate a replacement.
+- All API requests are logged. Please use the API responsibly and in accordance with the data's CC0 licence.

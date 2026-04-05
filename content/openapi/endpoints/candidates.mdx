@@ -1,0 +1,90 @@
+---
+title: "Candidates"
+breadcrumb: "Endpoints"
+description: "Query election results for any candidate across every contest they have stood in."
+keywords: "API, candidates, election data, Malaysia"
+---
+
+## Overview
+
+The `/candidates` endpoint returns all election results for a specific candidate across every contest they have ever stood in — covering both parliamentary (_parlimen_) and state (_DUN_) elections, and spanning all general elections and by-elections in the database.
+
+Results are returned as a JSON array, ordered from most recent to oldest. Each object represents one electoral contest and includes the seat, party, coalition, vote count, and outcome.
+
+## Endpoint
+
+<EndpointBadge method="GET" url="https://api.electiondata.my/candidates" />
+
+## Parameters
+
+<ParamTable params={[
+  {
+    name: "id",
+    type: "string",
+    required: true,
+    description: <>The unique candidate identifier (e.g. <code>YQJ5S</code>).</>
+  }
+]} />
+
+Candidate IDs can be found via the [Candidates](https://electiondata.my/candidates) section of the website, or by referencing the downloadable candidate datasets in the [Data Catalogue](https://electiondata.my/data-catalogue).
+
+## Try it
+
+<ApiTester
+  endpoint="/candidates"
+  defaultParams={{ id: "YQJ5S" }}
+  paramDescriptions={{ id: "candidate identifier" }}
+/>
+
+## Example Request
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/candidates?id=YQJ5S" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/candidates?id=YQJ5S",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
+/>
+
+## Example Response
+
+A successful `200 OK` response returns a JSON array of result objects. The example below uses candidate `YQJ5S`:
+
+```json
+[
+  {
+    "election": "GE-15",
+    "date": "2022-11-19",
+    "seat": "P128-Lembah Pantai",
+    "seat_type": "parlimen",
+    "state": "Wilayah Persekutuan Kuala Lumpur",
+    "party": "PKR",
+    "coalition": "Pakatan Harapan",
+    "votes": 31827,
+    "result": "won",
+    "majority": 8921
+  },
+  {
+    "election": "GE-14",
+    "date": "2018-05-09",
+    "seat": "P128-Lembah Pantai",
+    "seat_type": "parlimen",
+    "state": "Wilayah Persekutuan Kuala Lumpur",
+    "party": "PKR",
+    "coalition": "Pakatan Harapan",
+    "votes": 29154,
+    "result": "won",
+    "majority": 6083
+  }
+]
+```
+
+<FieldTable fields={[
+  { name: "election", type: "string", description: 'Election identifier, e.g. "GE-15" or "BE-2023-08".' },
+  { name: "date", type: "string", description: "Polling day in ISO 8601 format (YYYY-MM-DD)." },
+  { name: "seat", type: "string", description: 'Seat code and name, e.g. "P128-Lembah Pantai".' },
+  { name: "seat_type", type: "string", description: '"parlimen" for parliamentary seats, "dun" for state seats.' },
+  { name: "state", type: "string", description: "State or federal territory where the seat is located." },
+  { name: "party", type: "string", description: "Acronym of the party the candidate contested under." },
+  { name: "coalition", type: "string", description: "Coalition the party was part of for this election, if any." },
+  { name: "votes", type: "number", description: "Total votes received by the candidate." },
+  { name: "result", type: "string", description: '"won" or "lost".' },
+  { name: "majority", type: "number", description: "Vote majority (positive if won, negative if lost)." },
+]} />

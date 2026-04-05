@@ -1,0 +1,31 @@
+---
+title: "Introduction"
+breadcrumb: "General"
+description: "Programmatic access to Malaysian election data — candidates, seats, parties, and results."
+keywords: "API, election data, Malaysia, introduction"
+---
+
+## ElectionData.MY API
+
+Welcome to the ElectionData.MY API — the programmatic interface to Malaysia's most comprehensive election data archive. The API gives you structured, machine-readable access to election results spanning parliamentary (_parlimen_) and state (_DUN_) contests across every general election and by-election in our database.
+
+Whether you're querying individual candidates, looking up historical seat results, or building a data pipeline that ingests fresh results as they're published, the API provides a consistent, versioned interface. All data is released under **CC0 (No Rights Reserved)** — you are free to use it for any purpose, commercial or otherwise, without attribution.
+
+The API is free to access. You'll need an API key, which you can generate in seconds from the [Authentication](/openapi/authentication) page. The service is built and maintained by the team behind [electiondata.my](https://electiondata.my).
+
+## Who is this for?
+
+- Developers building civic tech applications, election dashboards, or data visualisations.
+- Journalists and researchers doing data-driven analysis of Malaysian electoral trends.
+- Educators creating interactive tools or study materials about Malaysian democracy.
+- Citizens curious about candidate histories, seat trajectories, and party performance over time.
+
+## Base URL
+
+All API requests are made to the following base URL:
+
+```
+https://api.electiondata.my
+```
+
+Append the endpoint path and query parameters to construct a full request URL. For example: `https://api.electiondata.my/candidates?id=YQJ5S`.
