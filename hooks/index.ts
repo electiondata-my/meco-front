@@ -1,6 +1,7 @@
 export { useCache } from "./useCache";
 export { useColor } from "./useColor";
 export type { Color } from "./useColor";
+export { useCopyToClipboard } from "./useCopyToClipboard";
 export { useData } from "./useData";
 export { useExport } from "./useExport";
 export { useFilter } from "./useFilter";

@@ -272,18 +272,6 @@ export const sortMulti = <T extends number>(
 };
 
 /**
- * Copies text to OS clipboard
- * @param text Text to copy
- */
-export const copyClipboard = async (text: string): Promise<void> => {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch (err) {
-    console.error("Failed to copy: ", err);
-  }
-};
-
-/**
  * Sort and slice the array, with Malaysia ranked first if index is included,
  * then return an array with the indices of each value from original array
  * @param arr array of values
