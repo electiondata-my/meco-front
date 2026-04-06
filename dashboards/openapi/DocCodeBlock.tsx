@@ -1,4 +1,5 @@
-import { FunctionComponent, useEffect, useMemo, useState } from "react";
+import { FunctionComponent, useEffect, useMemo } from "react";
+import { useCopyToClipboard } from "@hooks/useCopyToClipboard";
 import { clx } from "@lib/helpers";
 import { GithubThemes } from "@components/CodeBlock/theme";
 import { useTheme } from "next-themes";
@@ -10,10 +11,7 @@ import python from "highlight.js/lib/languages/python";
 import typescript from "highlight.js/lib/languages/typescript";
 import r from "highlight.js/lib/languages/r";
 import go from "highlight.js/lib/languages/go";
-import {
-  DocumentDuplicateIcon,
-  CheckIcon,
-} from "@heroicons/react/24/outline";
+import { DocumentDuplicateIcon, CheckIcon } from "@heroicons/react/24/outline";
 
 hljs.registerLanguage("javascript", javascript);
 hljs.registerLanguage("bash", bash);
@@ -23,7 +21,14 @@ hljs.registerLanguage("typescript", typescript);
 hljs.registerLanguage("r", r);
 hljs.registerLanguage("go", go);
 
-export type DocLang = "bash" | "javascript" | "json" | "python" | "typescript" | "r" | "go";
+export type DocLang =
+  | "bash"
+  | "javascript"
+  | "json"
+  | "python"
+  | "typescript"
+  | "r"
+  | "go";
 
 interface DocCodeBlockProps {
   code: string;
@@ -37,7 +42,7 @@ const DocCodeBlock: FunctionComponent<DocCodeBlockProps> = ({
   className,
 }) => {
   const { theme = "light" } = useTheme();
-  const [copied, setCopied] = useState(false);
+  const { copy, isCopied } = useCopyToClipboard(1500);
 
   useEffect(() => {
     const head = document.head;
@@ -58,12 +63,6 @@ const DocCodeBlock: FunctionComponent<DocCodeBlockProps> = ({
     }
   }, [code, lang]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code.trim()).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-
   return (
     <div
       className={clx(
@@ -72,13 +71,13 @@ const DocCodeBlock: FunctionComponent<DocCodeBlockProps> = ({
       )}
     >
       <button
-        onClick={handleCopy}
+        onClick={() => copy(code.trim())}
         aria-label="Copy code"
-        className="absolute right-3 top-3 flex items-center gap-1 rounded-md border border-otl-gray-200 bg-bg-white px-2 py-1 text-body-xs text-txt-black-400 opacity-0 transition-opacity hover:text-txt-black-700 group-hover:opacity-100"
+        className="text-txt-black-400 absolute right-3 top-3 flex items-center gap-1 rounded-md border border-otl-gray-200 bg-bg-white px-2 py-1 text-body-xs opacity-0 transition-opacity hover:text-txt-black-700 group-hover:opacity-100"
       >
-        {copied ? (
+        {isCopied ? (
           <>
-            <CheckIcon className="h-3.5 w-3.5 text-green-600" />
+            <CheckIcon className="text-green-600 h-3.5 w-3.5" />
             Copied
           </>
         ) : (

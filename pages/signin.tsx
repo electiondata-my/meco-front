@@ -11,16 +11,6 @@ import Container from "@components/Container";
 
 const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL ?? "/api/auth";
 
-declare global {
-  interface Window {
-    turnstile: {
-      render: (container: string | HTMLElement, options: Record<string, unknown>) => string;
-      execute: (widgetId: string) => void;
-      reset: (widgetId: string) => void;
-    };
-  }
-}
-
 const SignInPage: Page = () => {
   const router = useRouter();
   const [step, setStep] = useState<"email" | "otp">("email");
@@ -39,7 +29,7 @@ const SignInPage: Page = () => {
   // Redirect to /console if already signed in
   useEffect(() => {
     fetch(`${AUTH_URL}/me`, { credentials: "include" })
-      .then(r => {
+      .then((r) => {
         if (r.ok) router.replace("/console");
         else setCheckingSession(false);
       })
@@ -84,7 +74,9 @@ const SignInPage: Page = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message ?? "Failed to send OTP. Please try again.");
+        throw new Error(
+          data.message ?? "Failed to send OTP. Please try again.",
+        );
       }
       setStep("otp");
     } catch (err: unknown) {
@@ -107,7 +99,9 @@ const SignInPage: Page = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message ?? "Invalid or expired OTP. Please try again.");
+        throw new Error(
+          data.message ?? "Invalid or expired OTP. Please try again.",
+        );
       }
       router.replace("/console");
     } catch (err: unknown) {
@@ -151,7 +145,10 @@ const SignInPage: Page = () => {
             </div>
 
             {step === "email" ? (
-              <form onSubmit={handleEmailSubmit} className="flex flex-col gap-4">
+              <form
+                onSubmit={handleEmailSubmit}
+                className="flex flex-col gap-4"
+              >
                 <div className="flex flex-col gap-1.5">
                   <label
                     htmlFor="email"
@@ -166,13 +163,13 @@ const SignInPage: Page = () => {
                     autoComplete="email"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                     className={clx(
                       "w-full rounded-md border px-3 py-2 text-body-sm text-txt-black-900",
                       "bg-bg-white outline-none transition",
                       "placeholder:text-txt-black-500",
-                      "focus:border-otl-gray-400 focus:ring-2 focus:ring-primary/20",
-                      error ? "border-txt-danger" : "border-otl-gray-200"
+                      "focus:border-otl-gray-400 focus:ring-primary/20 focus:ring-2",
+                      error ? "border-txt-danger" : "border-otl-gray-200",
                     )}
                   />
                 </div>
@@ -210,13 +207,13 @@ const SignInPage: Page = () => {
                     autoComplete="one-time-code"
                     placeholder="123456"
                     value={otp}
-                    onChange={e => setOtp(e.target.value.replace(/\D/g, ""))}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                     className={clx(
                       "w-full rounded-md border px-3 py-2 text-body-sm text-txt-black-900",
                       "bg-bg-white outline-none transition",
                       "placeholder:text-txt-black-500",
-                      "focus:border-otl-gray-400 focus:ring-2 focus:ring-primary/20",
-                      error ? "border-txt-danger" : "border-otl-gray-200"
+                      "focus:border-otl-gray-400 focus:ring-primary/20 focus:ring-2",
+                      error ? "border-txt-danger" : "border-otl-gray-200",
                     )}
                   />
                 </div>

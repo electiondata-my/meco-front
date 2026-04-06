@@ -1,4 +1,5 @@
 import { FunctionComponent, useEffect, useRef, useState } from "react";
+import { useCopyToClipboard } from "@hooks/useCopyToClipboard";
 import { clx } from "@lib/helpers";
 import { useApiKey } from "@dashboards/openapi/ApiKeyContext";
 import { GithubThemes } from "@components/CodeBlock/theme";
@@ -37,7 +38,7 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
   }, [contextApiKey]);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ApiResponse | null>(null);
-  const [copied, setCopied] = useState(false);
+  const { copy, isCopied } = useCopyToClipboard(1500);
   const sendGenerationRef = useRef(0);
   const inFlightRef = useRef<AbortController | null>(null);
 
@@ -90,7 +91,11 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
       if (err instanceof DOMException && err.name === "AbortError") return;
       if (generation !== sendGenerationRef.current) return;
       const latencyMs = Date.now() - start;
-      const body = JSON.stringify({ error: "Network error — could not reach the API." }, null, 2);
+      const body = JSON.stringify(
+        { error: "Network error — could not reach the API." },
+        null,
+        2,
+      );
       const highlighted = hljs.highlight(body, { language: "json" }).value;
       setResponse({ status: 0, latencyMs, body, highlighted });
     } finally {
@@ -98,13 +103,6 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
         setLoading(false);
       }
     }
-  };
-
-  const handleCopyResponse = () => {
-    if (!response) return;
-    navigator.clipboard.writeText(response.body).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
   };
 
   const statusColor =
@@ -120,7 +118,7 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
     <div className="overflow-hidden rounded-xl border border-otl-gray-200">
       {/* Header */}
       <div className="border-b border-otl-gray-200 bg-bg-washed px-4 py-3">
-        <p className="text-body-xs font-semibold uppercase tracking-widest text-txt-black-400">
+        <p className="text-txt-black-400 text-body-xs font-semibold uppercase tracking-widest">
           Try it
         </p>
       </div>
@@ -136,8 +134,8 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
               <input
                 type="text"
                 value={value}
-                onChange={e =>
-                  setParams(prev => ({ ...prev, [key]: e.target.value }))
+                onChange={(e) =>
+                  setParams((prev) => ({ ...prev, [key]: e.target.value }))
                 }
                 placeholder={paramDescriptions[key] ?? key}
                 className="flex-1 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 font-mono text-body-xs text-txt-black-900 outline-none transition focus:border-txt-danger focus:ring-1 focus:ring-txt-danger"
@@ -151,7 +149,7 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
             <input
               type="text"
               value={apiKey}
-              onChange={e => setApiKey(e.target.value)}
+              onChange={(e) => setApiKey(e.target.value)}
               placeholder="Generate a key via the API Console"
               className="flex-1 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 font-mono text-body-xs text-txt-black-900 outline-none transition focus:border-txt-danger focus:ring-1 focus:ring-txt-danger"
             />
@@ -175,7 +173,7 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
             disabled={loading}
             className={clx(
               "rounded-md px-4 py-2 text-body-xs font-semibold text-white transition",
-              "bg-txt-danger hover:bg-red-700 active:bg-red-800",
+              "hover:bg-red-700 active:bg-red-800 bg-txt-danger",
               "disabled:cursor-not-allowed disabled:opacity-60",
             )}
           >
@@ -188,23 +186,28 @@ const DocApiTester: FunctionComponent<ApiTesterProps> = ({
           <div>
             <div className="flex items-center justify-between border-b border-otl-gray-200 px-4 py-3">
               <div className="flex items-center gap-4">
-                <span className={clx("font-mono text-body-xs font-semibold", statusColor)}>
+                <span
+                  className={clx(
+                    "font-mono text-body-xs font-semibold",
+                    statusColor,
+                  )}
+                >
                   {response.status === 0 ? "Error" : `${response.status}`}
                 </span>
-                <span className="text-body-xs text-txt-black-400">
+                <span className="text-txt-black-400 text-body-xs">
                   {response.latencyMs} ms
                 </span>
               </div>
               <button
-                onClick={handleCopyResponse}
-                className="flex items-center gap-1 rounded-md px-2 py-1 text-body-xs text-txt-black-400 hover:text-txt-black-700"
+                onClick={() => response && copy(response.body)}
+                className="text-txt-black-400 flex items-center gap-1 rounded-md px-2 py-1 text-body-xs hover:text-txt-black-700"
               >
-                {copied ? (
-                  <CheckIcon className="h-3.5 w-3.5 text-green-600" />
+                {isCopied ? (
+                  <CheckIcon className="text-green-600 h-3.5 w-3.5" />
                 ) : (
                   <DocumentDuplicateIcon className="h-3.5 w-3.5" />
                 )}
-                {copied ? "Copied" : "Copy"}
+                {isCopied ? "Copied" : "Copy"}
               </button>
             </div>
             <div className="max-h-96 overflow-auto bg-bg-washed p-4 text-xs">

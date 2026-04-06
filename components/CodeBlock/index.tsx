@@ -1,6 +1,7 @@
 import Dropdown from "@components/Dropdown";
 import { useTranslation } from "@hooks/useTranslation";
-import { clx, copyClipboard } from "@lib/helpers";
+import { clx } from "@lib/helpers";
+import { useCopyToClipboard } from "@hooks/useCopyToClipboard";
 import { GithubThemes } from "./theme";
 import {
   DocumentDuplicateIcon,
@@ -92,7 +93,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
   const [language, setLanguage] = useState<(typeof LANGUAGE_OPTIONS)[number]>(
     languageOptions[0],
   );
-  const [copyText, setCopyText] = useState<string>("copy");
+  const { copy, isCopied } = useCopyToClipboard(1000);
 
   useEffect(() => {
     const head = document.head;
@@ -115,11 +116,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
   );
 
   const handleCopy = () => {
-    copyClipboard(children[language.value] ?? "");
-    setCopyText("copied");
-    setTimeout(() => {
-      setCopyText("copy");
-    }, 1000);
+    copy(children[language.value] ?? "");
   };
   return (
     <div className="h-fit rounded-xl border bg-bg-washed">
@@ -137,7 +134,7 @@ const CodeBlock: FunctionComponent<CodeBlockProps> = ({
           onClick={handleCopy}
         >
           <DocumentDuplicateIcon className="h-4 w-4" />
-          {t(copyText, { ns: "common" })}
+          {t(isCopied ? "copied" : "copy", { ns: "common" })}
         </button>
       </div>
       <div className="p-3 text-xs">
