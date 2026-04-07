@@ -73,6 +73,8 @@ const SignInPage: Page = () => {
         body: JSON.stringify({ email, turnstile_token }),
       });
       if (!res.ok) {
+        if (res.status === 429)
+          throw new Error("Rate limited. Please wait 2 minutes.");
         const data = await res.json().catch(() => ({}));
         throw new Error(
           data.message ?? "Failed to send OTP. Please try again.",
@@ -119,11 +121,13 @@ const SignInPage: Page = () => {
         keywords=""
       />
 
-      <Script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-        strategy="afterInteractive"
-        onLoad={handleScriptLoad}
-      />
+      {!checkingSession && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="afterInteractive"
+          onLoad={handleScriptLoad}
+        />
+      )}
 
       <Container
         as="main"

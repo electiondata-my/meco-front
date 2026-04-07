@@ -6,7 +6,7 @@ import { clx } from "@lib/helpers";
 import { COLOR } from "@lib/constants";
 import { Bar, Line } from "react-chartjs-2";
 import { useRouter } from "next/router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useCopyToClipboard } from "@hooks/useCopyToClipboard";
 
 import {
@@ -51,6 +51,7 @@ export default function ConsoleDashboard() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(true);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [keysLoading, setKeysLoading] = useState(true);
@@ -76,22 +77,19 @@ export default function ConsoleDashboard() {
       .catch(() => router.replace("/signin"));
   }, []);
 
-  const fetchAnalytics = useCallback((p: Period) => {
-    setAnalyticsLoading(true);
-    setAnalyticsError(null);
+  const fetchAnalytics = useCallback((p: Period, silent = false) => {
+    if (!silent) { setAnalyticsLoading(true); setAnalyticsError(null); }
     fetch(
       `${AUTH_URL}/analytics/me?hours=${PERIOD_HOURS[p]}&interval=${PERIOD_INTERVAL[p]}`,
-      {
-        credentials: "include",
-      },
+      { credentials: "include" },
     )
       .then(async (r) => {
         if (!r.ok) throw new Error("Failed to load analytics");
         return r.json();
       })
       .then((data) => setAnalytics(data))
-      .catch((e) => setAnalyticsError(e.message))
-      .finally(() => setAnalyticsLoading(false));
+      .catch((e) => { if (!silent) setAnalyticsError(e.message); })
+      .finally(() => { if (!silent) setAnalyticsLoading(false); });
   }, []);
 
   const fetchAnalyticsWithFallback = useCallback(async () => {
@@ -175,6 +173,12 @@ export default function ConsoleDashboard() {
     fetchAnalyticsWithFallback();
     fetchKeys();
   }, [sessionChecked]);
+
+  useEffect(() => {
+    if (!sessionChecked) return;
+    pollIntervalRef.current = setInterval(() => fetchAnalytics(period, true), 60_000);
+    return () => { if (pollIntervalRef.current) clearInterval(pollIntervalRef.current); };
+  }, [sessionChecked, period]);
 
   const handleLogout = async () => {
     await fetch(`${AUTH_URL}/logout`, {
@@ -561,9 +565,10 @@ export default function ConsoleDashboard() {
                   <div className="flex gap-12">
                     {(["p50", "p95", "p99"] as const).map((key) => {
                       const val = analytics?.daily_latency?.length
-                        ? analytics.daily_latency[
-                            analytics.daily_latency.length - 1
-                          ][key]
+                        ? analytics.daily_latency.reduce(
+                            (sum, d) => sum + d[key],
+                            0
+                          ) / analytics.daily_latency.length
                         : NaN;
                       return (
                         <div key={key}>
