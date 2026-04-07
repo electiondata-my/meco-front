@@ -6,6 +6,8 @@ import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
+import Link from "next/link";
+import { ChevronRightIcon } from "@heroicons/react/20/solid";
 
 /**
  * Homepage
@@ -33,6 +35,23 @@ const HomePage: Page = ({
         category={[t("hero.category"), "text-txt-danger"]}
         header={[t("hero.header")]}
         description={[t("hero.description")]}
+        action={
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Link
+              href="/openapi"
+              className="flex items-center gap-1.5 rounded-md bg-txt-black-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-txt-black-700"
+            >
+              {t("hero.api_docs")}
+              <ChevronRightIcon className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/data-catalogue"
+              className="flex items-center gap-1.5 rounded-md border border-otl-gray-300 bg-bg-white px-4 py-2 text-sm font-medium text-txt-black-900 transition hover:border-otl-gray-400 hover:bg-bg-black-50"
+            >
+              {t("hero.data_catalogue")}
+            </Link>
+          </div>
+        }
       />
       <HomeDashboard
         selection={selection}

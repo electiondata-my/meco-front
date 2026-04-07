@@ -1,5 +1,5 @@
 ---
-title: "ElectionData.MY Open API"
+title: "Open Election API"
 breadcrumb: "General"
 description: "Programmatic access to Malaysian election data—candidates, seats, parties, and results."
 keywords: "API, election data, Malaysia, introduction"
@@ -7,37 +7,29 @@ keywords: "API, election data, Malaysia, introduction"
 
 ## What is it?
 
-This is the dynamic, programmatic interface to the datasets made available and visualised on the site. All data is dedicated to the public domain (marked with **CC0 1.0 Universal**)—so you are free to use this API for any purpose, commercial or otherwise, with or without attribution.
+ElectionData.MY curates and publishes comprehensive data on Malaysian elections from 1954 to the present, covering every single person or party that has ever contested an election in Malaysia. This API is the programmatic interface to that data, specifically for developers who want to query it on demand rather than download static files.
+
+All data is dedicated to the public domain (marked with CC0 1.0 Universal), so you are free to use this API for any purpose, commercial or otherwise, with or without attribution.
 
 The API is free to access. There is no rate limit and therefore no premium tier. All you need is an API key, which you can generate in seconds from the [API Console](/console).
 
 ## Do I need this?
 
-ElectionData.MY offers two methods to programmatically access the data: Direct access to entire files via the open data lake (use the links provided via the [Data Catalogue](/data-catalogue)), or this open API.
+ElectionData.MY offers two methods to programmatically access the data: Direct access to static files via the open data lake (use the links provided via the [Data Catalogue](/data-catalogue)), or this open API.
 
 The API and the data lake serve different use cases. To put it simply, use this API if you want to build public-facing products and don't want to build/host your own backend; use the data lake if you want the entire dataset for analysis, local use, or to spin up your own backend (although you will hopefully first explore this API, which has been built to industry-grade specifications).
 
 To put it more thoroughly, use the API if…
 
-- You are building a dynamic application that queries election data on demand—e.g. a candidate lookup tool or a live election dashboard.
+- You are building a dynamic application that queries election data on demand, e.g. a candidate lookup tool or a live election dashboard.
 - You are embedding election data into another product, such as a news app, civic platform, or data pipeline.
 - You need a stable, versioned interface with consistent response schemas, rather than writing custom parsing logic against raw files that may change structure over time.
 
-Use the data lake instead if…
+Use the data lake (static files) instead if…
 
 <GrayList items={[
-  "You need bulk data for analysis—for instance for a research project.",
+  "You need bulk data for analysis and research.",
   "You are working in Python, R, or a BI tool and prefer direct file downloads over API calls.",
-  "You need geospatial or boundary data—these are better served as static files (e.g. GeoJSON, GeoParquet, FlatGeobuf) than as API responses.",
+  "You need geospatial or boundary data—we do not expose these via the API, as they are better served as static files (e.g. GeoJSON, GeoParquet, FlatGeobuf).",
   "You want to explore all available datasets interactively before deciding what to build.",
 ]} />
-
-## Base URL
-
-All API requests are made to the following base URL:
-
-```
-https://api.electiondata.my
-```
-
-Append the endpoint path, version, and query parameters to construct a full request URL. For example: `https://api.electiondata.my/v1/candidates?id=YQJ5S`.

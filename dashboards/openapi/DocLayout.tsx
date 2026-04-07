@@ -32,7 +32,8 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
     currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-screen-xl min-h-[calc(100vh-4rem)] px-4.5 md:px-6">
+    <div className="px-4.5 md:px-6">
+    <div className="mx-auto flex w-full max-w-screen-xl min-h-[calc(100vh-4rem)]">
       {/* ── Left sidebar (desktop sticky + mobile drawer) ── */}
       <DocSidebar
         currentPath={currentPath}
@@ -107,6 +108,7 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
         {/* Right TOC (xl+) */}
         <DocTOC toc={toc} />
       </div>
+    </div>
     </div>
   );
 };

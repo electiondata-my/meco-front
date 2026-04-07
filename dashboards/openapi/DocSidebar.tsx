@@ -38,7 +38,7 @@ const SidebarContent: FunctionComponent<SidebarContentProps> = ({
       {/* ── Action buttons ── */}
       <div className="flex flex-col gap-2">
         <Link
-          href="/console"
+          href="/signin"
           target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
