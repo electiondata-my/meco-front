@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-table";
 import BarPerc from "@charts/bar-perc";
 import { ImageWithFallback, Skeleton } from "@components/index";
-import { clx, numFormat, toDate } from "@lib/helpers";
+import { clx, numFormat } from "@lib/helpers";
 import { useTranslation } from "@hooks/useTranslation";
 import { FunctionComponent, ReactNode } from "react";
 export interface ElectionTableProps {
@@ -72,7 +72,7 @@ const formatElectionDisplay = (
   locale: string,
 ): string => {
   const isMalay = locale?.startsWith("ms");
-  const year = date ? toDate(date, "yyyy", locale) : "";
+  const year = date ? date.substring(0, 4) : "";
   const suffix = year ? ` (${year})` : "";
 
   if (electionName === "By-Election") {

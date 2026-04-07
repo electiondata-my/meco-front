@@ -16,7 +16,7 @@ interface ParamTableProps {
  *
  * Usage in MDX:
  * <ParamTable params={[
- *   { name: "id", type: "string", required: true, description: <>The candidate ID (e.g. <code>YQJ5S</code>).</> },
+ *   { name: "id", type: "string", required: true, description: <>The candidate ID (e.g. <code>CMVBA</code>).</> },
  * ]} />
  */
 const ParamTable: FunctionComponent<ParamTableProps> = ({ params }) => {

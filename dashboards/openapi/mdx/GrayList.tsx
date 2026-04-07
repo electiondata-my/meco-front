@@ -16,7 +16,7 @@ interface GrayListProps {
  */
 const GrayList: FunctionComponent<GrayListProps> = ({ items }) => {
   return (
-    <ul className="my-4 space-y-2 text-body-sm text-txt-black-700">
+    <ul className="my-4 space-y-2 pl-4 text-body-sm text-txt-black-700">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-3 leading-relaxed">
           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-bg-black-400" />

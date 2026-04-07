@@ -20,7 +20,6 @@ import { FunctionComponent, useMemo, useRef } from "react";
 import Overview from "./overview";
 import { useRouter } from "next/router";
 import { routes } from "@lib/routes";
-import { toDate } from "@lib/helpers";
 import SectionGrid from "@components/Section/section-grid";
 import {
   Drawer,
@@ -101,7 +100,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
 
   const GE_OPTIONS: Array<OptionType> = selection["Malaysia"]
     .map(({ election, date }) => ({
-      label: `${t(election, { ns: "election" })} (${toDate(date, "yyyy")})`,
+      label: `${t(election, { ns: "election" })} (${date.substring(0, 4)})`,
       value: election,
     }))
     .reverse();
@@ -112,7 +111,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
       options = selection[CountryAndStates[data.state]]
         .filter(({ election }) => !election.startsWith("GE-"))
         .map(({ election, date }) => ({
-          label: `${t(election, { ns: "election" })} (${toDate(date, "yyyy")})`,
+          label: `${t(election, { ns: "election" })} (${date.substring(0, 4)})`,
           value: election,
         }))
         .reverse();

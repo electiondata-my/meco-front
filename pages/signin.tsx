@@ -111,8 +111,6 @@ const SignInPage: Page = () => {
     }
   };
 
-  if (checkingSession) return null;
-
   return (
     <>
       <Metadata
@@ -133,6 +131,12 @@ const SignInPage: Page = () => {
       >
         <div className="col-span-full flex w-full max-w-md flex-col items-center">
           <Card className="w-full p-8">
+            {checkingSession ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-otl-gray-200 border-t-txt-black-900" />
+              </div>
+            ) : (
+            <>
             <div className="mb-8 flex flex-col gap-2">
               <h1 className="font-heading text-heading-sm font-semibold text-txt-black-900">
                 {step === "email" ? "Sign in" : "Check your email"}
@@ -205,11 +209,11 @@ const SignInPage: Page = () => {
                     inputMode="numeric"
                     required
                     autoComplete="one-time-code"
-                    placeholder="123456"
+                    placeholder="11235813"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                     className={clx(
-                      "w-full rounded-md border px-3 py-2 text-body-sm text-txt-black-900",
+                      "w-full rounded-md border px-3 py-2 font-mono tracking-widest text-body-sm text-txt-black-900",
                       "bg-bg-white outline-none transition",
                       "placeholder:text-txt-black-500",
                       "focus:border-otl-gray-400 focus:ring-primary/20 focus:ring-2",
@@ -243,6 +247,8 @@ const SignInPage: Page = () => {
                   Use a different email
                 </button>
               </form>
+            )}
+            </>
             )}
           </Card>
         </div>

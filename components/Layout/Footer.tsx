@@ -59,11 +59,16 @@ const LayoutFooter = () => {
                 {t("footer.open_data")}
               </p>
               <Link
-                target="_blank"
-                href="https://doi.org/10.7910/DVN/O4CRXK"
+                href="/data-catalogue"
                 className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
               >
                 {t("footer.download")}
+              </Link>
+              <Link
+                href="/openapi"
+                className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
+              >
+                {t("footer.open_api")}
               </Link>
               <Link
                 href="/research"

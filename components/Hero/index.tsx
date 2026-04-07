@@ -153,6 +153,7 @@ const Hero: FunctionComponent<HeroProps> = ({
             ) : (
               description
             )}
+            {action && action}
             <p
               className="flex gap-0.5 text-body-sm text-txt-black-500"
               data-testid="hero-views"
@@ -164,8 +165,6 @@ const Hero: FunctionComponent<HeroProps> = ({
                   ? `${numFormat(views, "standard")} ${t("common:views", { count: views })}`
                   : "---"}
             </p>
-
-            {action}
           </div>
         </SectionGrid>
       )}

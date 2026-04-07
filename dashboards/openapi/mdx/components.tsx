@@ -131,7 +131,7 @@ const Ul: FunctionComponent<{ children?: ReactNode }> = ({ children }) => {
     .filter(Boolean);
 
   return (
-    <ul className="my-4 space-y-2 text-body-sm text-txt-black-700">
+    <ul className="my-4 space-y-2 pl-4 text-body-sm text-txt-black-700">
       {items.map((content, i) => (
         <li key={i} className="flex items-start gap-3 leading-relaxed">
           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-txt-danger" />
@@ -149,7 +149,7 @@ const Ol: FunctionComponent<{ children?: ReactNode }> = ({ children }) => {
     .filter(Boolean);
 
   return (
-    <ol className="my-4 space-y-3 text-body-sm text-txt-black-700">
+    <ol className="my-4 space-y-3 pl-4 text-body-sm text-txt-black-700">
       {items.map((content, i) => (
         <li key={i} className="flex items-start gap-3 leading-relaxed">
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-bg-danger-100 font-mono text-body-2xs font-semibold text-txt-danger">

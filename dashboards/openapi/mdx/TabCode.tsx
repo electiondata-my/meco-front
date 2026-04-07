@@ -29,7 +29,7 @@ const TAB_CONFIG: { key: Tab; label: string; lang: DocLang }[] = [
  *
  * Usage in MDX:
  * <TabCode
- *   curl={`curl -X GET "https://api.electiondata.my/candidates?id=YQJ5S" \
+ *   curl={`curl -X GET "https://api.electiondata.my/candidates?id=CMVBA" \
  *   -H "Authorization: Bearer <your-api-key>"`}
  *   javascript={`const res = await fetch(...);`}
  *   python={`import requests\n...`}

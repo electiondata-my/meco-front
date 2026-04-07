@@ -15,7 +15,7 @@ const TokenInput: FunctionComponent = () => {
       </div>
       <div className="flex items-center gap-3 px-4 py-4">
         <label className="w-24 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">
-          API Key
+          Bearer
         </label>
         <input
           type="text"
