@@ -20,7 +20,7 @@ The API uses standard HTTP status codes to indicate the success or failure of a 
 
 ## Error Response Format
 
-All error responses return a JSON body with a single `error` field containing a human-readable description of what went wrong. For example, a request missing a version prefix will return the following:
+All error responses return the relevant HTTP status code along with a JSON body with a single `error` field containing a human-readable description of what went wrong. For example, a request missing a version prefix will return the following:
 
 ```json
 HTTP/2 400

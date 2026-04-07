@@ -44,7 +44,7 @@ const StatusTable: FunctionComponent<StatusTableProps> = ({ codes }) => {
               <td className="px-4 py-3">
                 <code
                   className={clx(
-                    "rounded px-1.5 py-0.5 font-mono text-body-xs font-semibold",
+                    "rounded px-1.5 py-0.5 font-mono text-body-xs",
                     row.color === "green" && "bg-green-50 text-green-700",
                     row.color === "amber" && "bg-amber-50 text-amber-700",
                     row.color === "red" &&
@@ -54,7 +54,7 @@ const StatusTable: FunctionComponent<StatusTableProps> = ({ codes }) => {
                   {row.code}
                 </code>
               </td>
-              <td className="px-4 py-3 font-medium text-txt-black-900">
+              <td className="px-4 py-3 text-txt-black-900">
                 {row.name}
               </td>
               <td className="px-4 py-3 text-txt-black-600">
