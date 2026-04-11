@@ -384,7 +384,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
           />
         </SectionGrid>
 
-        <SectionGrid className="space-y-6 lg:space-y-10">
+        <SectionGrid className="space-y-6 pb-10 lg:space-y-10 lg:pb-0">
           <h2 className="text-center font-heading text-heading-2xs font-semibold">
             {t("breakdown_voters", {
               ns: "seats",
@@ -393,8 +393,8 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             <span className="text-txt-danger">{SELECTED_SEATS?.label}</span>
           </h2>
 
-          <div className="flex w-full flex-col gap-6 xl:flex-row">
-            <div className="flex flex-col items-start justify-start gap-6 xl:flex-[0.70]">
+          <div className="flex w-full flex-col gap-6 md:flex-row">
+            <div className="flex flex-col items-start justify-start gap-6 md:flex-[0.45] xl:flex-[0.70]">
               {pyramid && (
                 <Pyramid
                   title={
@@ -402,7 +402,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                       {t("gender_age_distr", { ns: "seats" })}
                     </h6>
                   }
-                  className="h-[500px] w-full xl:h-[95%]"
+                  className="h-[500px] w-full md:h-[95%]"
                   customTooltip={pyramidPopulationTooltip}
                   data={{
                     labels: pyramid["ages"].map((age, index, arr) => {
@@ -431,11 +431,11 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
                 />
               )}
             </div>
-            <div className="flex w-full flex-1 flex-row flex-wrap gap-6 pt-8 lg:pt-0 xl:flex-1">
+            <div className="flex w-full flex-1 flex-row flex-wrap gap-x-6 gap-y-10 pt-8 md:pt-0 md:flex-1">
               {barmeter_data.map(([type, data]) => (
                 <div
                   key={type as string}
-                  className="flex w-full flex-col justify-start gap-6 xl:w-[345px]"
+                  className="flex w-full flex-col justify-start gap-6 md:w-[calc(50%-0.75rem)] xl:w-[345px]"
                 >
                   <BarMeter
                     layout="horizontal"
