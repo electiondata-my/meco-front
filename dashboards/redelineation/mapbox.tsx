@@ -207,16 +207,26 @@ const MapboxRedelineation: FC<Props> = ({
             {t("common:constituency")}
           </p>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="h-0.5 w-2 bg-bg-black-900" />
+            <div className="h-0.5 w-2 shrink-0 bg-bg-black-900" />
             <p>
               {t(mapLabel[0])} ({year[0]})
             </p>
           </div>
           <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div
-              className="size-2 rounded-full"
-              style={{ background: SHADED_COLOR_INDEX[0] }}
-            />
+            <div className="grid grid-cols-2 gap-0.5">
+              {(Array.isArray(useShaded) ? useShaded : [useShaded]).map(
+                (seat, i) => (
+                  <div
+                    key={seat}
+                    className="size-2 rounded-full ring-[0.5px] ring-gray-300"
+                    style={{
+                      background:
+                        SHADED_COLOR_INDEX[i % SHADED_COLOR_INDEX.length],
+                    }}
+                  />
+                ),
+              )}
+            </div>
             <p>
               {t(mapLabel[1])} ({year[1]})
             </p>

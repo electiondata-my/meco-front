@@ -6,6 +6,8 @@ import { CountryAndStates } from "@lib/constants";
 import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
+import { useRouter } from "next/router";
+import { SpinnerBox } from "@components/Spinner";
 
 const ElectionParties: Page = ({
   meta,
@@ -14,6 +16,9 @@ const ElectionParties: Page = ({
   elections,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { t } = useTranslation("parties");
+  const router = useRouter();
+
+  if (router.isFallback) return <SpinnerBox className="min-h-screen" />;
 
   return (
     <>
@@ -34,7 +39,7 @@ const ElectionParties: Page = ({
 export const getStaticPaths: GetStaticPaths = () => {
   return {
     paths: [],
-    fallback: "blocking",
+    fallback: true,
   };
 };
 
