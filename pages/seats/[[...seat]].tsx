@@ -7,6 +7,7 @@ import { useTranslation } from "@hooks/useTranslation";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
 import { MapProvider } from "react-map-gl/mapbox";
 import { useRouter } from "next/router";
+import { SpinnerBox } from "@components/Spinner";
 
 /**
  * Seats Dashboard
@@ -21,6 +22,9 @@ const Home: Page = ({
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { t } = useTranslation("seats");
   const router = useRouter();
+
+  if (router.isFallback) return <SpinnerBox className="min-h-screen" />;
+
   const currentSeat = selection.find(
     (seats: any) => seats.slug === params.seat_name,
   );
@@ -59,7 +63,7 @@ const Home: Page = ({
 export const getStaticPaths: GetStaticPaths = () => {
   return {
     paths: [],
-    fallback: "blocking",
+    fallback: true,
   };
 };
 

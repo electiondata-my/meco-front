@@ -6,6 +6,8 @@ import { withi18n } from "@lib/decorators";
 import { Page } from "@lib/types";
 import groupBy from "lodash/groupBy";
 import { GetStaticPaths, GetStaticProps, InferGetStaticPropsType } from "next";
+import { useRouter } from "next/router";
+import { SpinnerBox } from "@components/Spinner";
 
 const ElectionCandidates: Page = ({
   elections,
@@ -14,6 +16,9 @@ const ElectionCandidates: Page = ({
   selection,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   const { t } = useTranslation("candidates");
+  const router = useRouter();
+
+  if (router.isFallback) return <SpinnerBox className="min-h-screen" />;
 
   return (
     <>
@@ -34,7 +39,7 @@ const ElectionCandidates: Page = ({
 export const getStaticPaths: GetStaticPaths = () => {
   return {
     paths: [],
-    fallback: "blocking",
+    fallback: true,
   };
 };
 
