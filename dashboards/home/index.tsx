@@ -251,6 +251,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             {data.tab_index === 0 && (
               <ComboBox<SeatOption>
                 placeholder={t("search_seat", { ns: "seats" })}
+                loading={data.loading}
                 options={SEAT_OPTIONS}
                 config={{
                   baseSort: (a: any, b: any) => {
@@ -292,6 +293,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             {data.tab_index === 1 && (
               <ComboBox
                 placeholder={t("search_candidate", { ns: "candidates" })}
+                loading={data.loading}
                 options={CANDIDATE_OPTIONS}
                 config={{
                   baseSort: (a: any, b: any) => {
@@ -323,6 +325,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             {data.tab_index === 3 && (
               <ComboBox<ElectionOption>
                 placeholder={t("search_election", { ns: "home" })}
+                loading={data.loading}
                 options={ELECTION_OPTIONS}
                 config={{
                   keys: ["label", "election", "stateName"],
@@ -364,6 +367,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             {data.tab_index === 2 && (
               <ComboBox<PartyOption>
                 placeholder={t("search_party", { ns: "parties" })}
+                loading={data.loading}
                 image={(value: string) => {
                   const opt = PARTY_OPTIONS.find((e) => e.value === value);
                   const folder =

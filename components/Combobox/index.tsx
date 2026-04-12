@@ -212,7 +212,11 @@ const ComboBox = <T extends unknown>({
           <XMarkIcon className="absolute right-1.5 h-5 w-5 text-txt-black-500 group-hover:text-txt-black-900" />
         </Button>
       )}
-      {image && selected ? (
+      {loading ? (
+        <span className="mr-2 flex h-8 max-h-8 w-8 shrink-0 items-center justify-center self-center rounded-full border border-otl-danger-300 bg-gray-400 bg-gradient-to-b from-danger-400 to-danger-600">
+          <Spinner loading={true} className="border-t-white" />
+        </span>
+      ) : image && selected ? (
         <span className="mr-4 flex h-8 max-h-8 w-8 shrink-0 items-center justify-center self-center">
           {image(selected.value)}
         </span>
