@@ -306,17 +306,14 @@ export const getTopIndices = (
 };
 
 /**
- * Slugify a given string
- * @param value String to slugify
+ * Slugify a seat name for use in URLs (removes dots/apostrophes, replaces spaces with dashes)
+ * @param name Seat name to slugify
  */
-export const slugify = (value: string): string => {
-  return value
-    .trim()
+export const seatSlug = (name: string) =>
+  name
     .toLowerCase()
-    .replace(/[^a-z0-9 ]/g, "") // remove all chars not letters, numbers and spaces (to be replaced)
-    .replace(/\s+/g, "-") // separator
-    .replace(/-+/g, "-"); // collapse dashes
-};
+    .replace(/[.']/g, "")
+    .replace(/\s+/g, "-");
 
 /**
  * Generic download helper function

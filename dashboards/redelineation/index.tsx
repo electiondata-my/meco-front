@@ -10,7 +10,7 @@ import {
 } from "@govtechmy/myds-react/tooltip";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
-import { clx } from "@lib/helpers";
+import { clx, seatSlug } from "@lib/helpers";
 import dynamic from "next/dynamic";
 import { FunctionComponent, useEffect } from "react";
 import {
@@ -33,6 +33,7 @@ import {
 import { routes } from "@lib/routes";
 import { useTheme } from "next-themes";
 import { Theme } from "@lib/types";
+import { useRouter } from "next/router";
 
 const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
@@ -55,6 +56,8 @@ interface RedelineationProps {
     type: string;
     year: string;
     election_type: ElectionType;
+    toggle_state?: string | null;
+    seat_slug?: string | null;
   };
   yearOptions: yearOptions;
   data: RedelineationData;
@@ -70,12 +73,21 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   const theme = (resolvedTheme || "light") as Theme;
 
   const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const { replace } = useRouter();
 
-  const { type, year, election_type } = params;
+  const { type, year, election_type, toggle_state: param_toggle, seat_slug } =
+    params;
+
+  const initial_toggle: ToggleState = (param_toggle as ToggleState) || "new";
+  const initial_seat = seat_slug
+    ? ((data[initial_toggle].find(
+        (d: any) => seatSlug(d[`seat_${initial_toggle}`]) === seat_slug,
+      ) as any)?.[`seat_${initial_toggle}`] ?? "")
+    : "";
 
   const { data: _data, setData } = useData({
-    seat_value: "",
-    toggle_state: "new" as ToggleState,
+    seat_value: initial_seat,
+    toggle_state: initial_toggle,
   });
 
   const { seat_value, toggle_state } = _data;
@@ -146,16 +158,31 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   const { redelineation_map } = useMap();
 
   useEffect(() => {
-    setData("seat_value", current_seat[`seat_${toggle_state}`] as string);
+    const target_toggle: ToggleState =
+      (param_toggle as ToggleState) || "new";
+    const target_seat_value = seat_slug
+      ? ((data[target_toggle].find(
+          (d: any) => seatSlug(d[`seat_${target_toggle}`]) === seat_slug,
+        ) as any)?.[`seat_${target_toggle}`] ??
+        (data[target_toggle][0] as any)[`seat_${target_toggle}`])
+      : (data[target_toggle][0] as any)[`seat_${target_toggle}`];
+
+    setData("toggle_state", target_toggle);
+    setData("seat_value", target_seat_value);
+
+    const target_seat =
+      (data[target_toggle].find(
+        (d: any) => d[`seat_${target_toggle}`] === target_seat_value,
+      ) as any) || data[target_toggle][0];
 
     if (redelineation_map) {
       redelineation_map.flyTo({
-        center: current_seat.center,
-        zoom: current_seat.zoom,
+        center: target_seat.center,
+        zoom: target_seat.zoom,
         duration: 2000,
       });
 
-      if (toggle_state === "new") {
+      if (target_toggle === "new") {
         redelineation_map.moveLayer(`${data.map_new}-line`);
         redelineation_map.moveLayer(`${data.map_new}-fill`);
       } else {
@@ -170,6 +197,39 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
 
   const old_year =
     data["map_old"].split("_").find((part) => /^\d{4}$/.test(part)) || "";
+
+  const handleToggleChange = (value: string) => {
+    const newToggle = value as ToggleState;
+    setData("toggle_state", newToggle);
+
+    const newSeatValue = (
+      current_seat[`seat_${newToggle}`] as string[]
+    )[0];
+    setData("seat_value", newSeatValue);
+
+    if (seat_slug) {
+      replace(
+        `${routes.REDELINEATION}/${type}/${year}/${newToggle}/${seatSlug(newSeatValue)}`,
+        undefined,
+        { scroll: false },
+      );
+    }
+
+    if (redelineation_map) {
+      redelineation_map.flyTo({
+        center: current_seat.center,
+        zoom: current_seat.zoom,
+        duration: 2000,
+      });
+      if (newToggle === "new") {
+        redelineation_map.moveLayer(`${data.map_new}-line`);
+        redelineation_map.moveLayer(`${data.map_new}-fill`);
+      } else {
+        redelineation_map.moveLayer(`${data.map_old}-line`);
+        redelineation_map.moveLayer(`${data.map_old}-fill`);
+      }
+    }
+  };
 
   return (
     <>
@@ -201,30 +261,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               variant="enclosed"
               className="space-y-6 lg:space-y-8"
               value={toggle_state}
-              onValueChange={(value) => {
-                setData("toggle_state", value as "new" | "old");
-
-                setData(
-                  "seat_value",
-                  current_seat[`seat_${value as "old" | "new"}`][0],
-                );
-
-                if (redelineation_map) {
-                  redelineation_map.flyTo({
-                    center: current_seat.center,
-                    zoom: current_seat.zoom,
-                    duration: 2000,
-                  });
-
-                  if (value === "new") {
-                    redelineation_map.moveLayer(`${data.map_new}-line`);
-                    redelineation_map.moveLayer(`${data.map_new}-fill`);
-                  } else {
-                    redelineation_map.moveLayer(`${data.map_old}-line`);
-                    redelineation_map.moveLayer(`${data.map_old}-fill`);
-                  }
-                }
-              }}
+              onValueChange={handleToggleChange}
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new" className="">
@@ -263,14 +300,26 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   onChange={(selected) => {
                     if (selected) {
                       setData("seat_value", selected.value);
-                      if (!redelineation_map) return;
-
-                      redelineation_map.flyTo({
-                        center: selected.center,
-                        zoom: selected.zoom,
-                        duration: 1500,
-                      });
-                    } else setData("seat_value", "");
+                      replace(
+                        `${routes.REDELINEATION}/${type}/${year}/${toggle_state}/${seatSlug(selected.value)}`,
+                        undefined,
+                        { scroll: false },
+                      );
+                      if (redelineation_map) {
+                        redelineation_map.flyTo({
+                          center: selected.center,
+                          zoom: selected.zoom,
+                          duration: 1500,
+                        });
+                      }
+                    } else {
+                      setData("seat_value", "");
+                      replace(
+                        `${routes.REDELINEATION}/${type}/${year}/${election_type}`,
+                        undefined,
+                        { scroll: false },
+                      );
+                    }
                   }}
                 />
               </div>
@@ -278,9 +327,9 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 <div className="relative mx-auto flex h-[400px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[846px]">
                   <Mapbox
                     initialState={{
-                      longitude: data[toggle_state][0].center[0],
-                      latitude: data[toggle_state][0].center[1],
-                      zoom: data[toggle_state][0].zoom,
+                      longitude: current_seat.center[0],
+                      latitude: current_seat.center[1],
+                      zoom: current_seat.zoom,
                     }}
                     toggle_state={toggle_state}
                     sources={
@@ -345,28 +394,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               variant="enclosed"
               className="space-y-6 lg:space-y-8"
               value={toggle_state}
-              onValueChange={(value) => {
-                setData("toggle_state", value as "new" | "old");
-                setData(
-                  "seat_value",
-                  current_seat[`seat_${value as "old" | "new"}`][0],
-                );
-
-                if (redelineation_map) {
-                  redelineation_map.flyTo({
-                    center: current_seat.center,
-                    zoom: current_seat.zoom,
-                    duration: 2000,
-                  });
-                  if (value === "new") {
-                    redelineation_map.moveLayer(`${data.map_new}-line`);
-                    redelineation_map.moveLayer(`${data.map_new}-fill`);
-                  } else {
-                    redelineation_map.moveLayer(`${data.map_old}-line`);
-                    redelineation_map.moveLayer(`${data.map_old}-fill`);
-                  }
-                }
-              }}
+              onValueChange={handleToggleChange}
             >
               <TabsList className="mx-auto space-x-0 !py-0">
                 <TabsTrigger value="new" className="">
