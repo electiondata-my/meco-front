@@ -194,6 +194,10 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
     });
   };
 
+  const filteredElections = elections.filter(
+    (election) => !("change_en" in election),
+  );
+
   const seat_schema = generateSchema<Seat>([
     {
       key: "election_name",
@@ -219,8 +223,8 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
       header: "",
       cell: ({ row }) => (
         <FullResults
-          options={elections.filter((election) => !("change_en" in election))}
-          currentIndex={row.index}
+          options={filteredElections}
+          currentIndex={filteredElections.indexOf(row.original as Seat)}
           onChange={(option: Seat) =>
             fetchFullResult(
               option.election_name,
