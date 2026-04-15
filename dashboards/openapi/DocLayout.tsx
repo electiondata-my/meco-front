@@ -22,7 +22,7 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
   children,
 }) => {
   const router = useRouter();
-  const currentPath = router.asPath.split("?")[0];
+  const currentPath = router.asPath.split("?")[0].split("#")[0];
 
   const [mobileOpen, setMobileOpen] = useState(false);
 

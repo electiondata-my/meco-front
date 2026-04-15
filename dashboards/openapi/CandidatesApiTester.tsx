@@ -229,7 +229,7 @@ const CandidatesApiTester: FunctionComponent = () => {
                   )}
                   {!apiKey && dropdownStatus === "idle" && (
                     <p className="pl-0.5 text-body-2xs text-txt-black-400">
-                      Paste your Bearer token first.
+                      Paste your Bearer token to enable
                     </p>
                   )}
                 </div>
@@ -268,7 +268,7 @@ const CandidatesApiTester: FunctionComponent = () => {
               placeholder={
                 dropdownStatus === "success"
                   ? "Select a candidate above"
-                  : "Load the list of candidates first"
+                  : "Auto-filled once you load the candidates"
               }
               className="flex-1 cursor-default rounded-md border border-otl-gray-200 bg-bg-washed px-3 py-1.5 font-mono text-body-xs text-txt-black-500 outline-none"
             />
