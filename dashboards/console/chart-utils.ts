@@ -61,13 +61,13 @@ export function timeXAxis(period: Period) {
   const unit: Record<Period, "minute" | "hour" | "day"> = {
     "1h": "minute",
     "24h": "hour",
-    "7d": "hour",
+    "7d": "day",
     "30d": "day",
   };
   const fmt: Record<Period, string> = {
     "1h": "HH:mm",
     "24h": "HH:mm",
-    "7d": "d MMM HH:mm",
+    "7d": "d MMM",
     "30d": "d MMM",
   };
   const u = unit[period];
@@ -79,6 +79,6 @@ export function timeXAxis(period: Period) {
       tooltipFormat: "d MMM yyyy, HH:mm",
     },
     grid: { display: false },
-    ticks: { maxRotation: 0 },
+    ticks: { maxRotation: 0, maxTicksLimit: 8 },
   };
 }

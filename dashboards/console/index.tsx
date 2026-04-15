@@ -543,7 +543,15 @@ export default function ConsoleDashboard() {
                       options={{
                         ...CHART_OPTIONS_BASE,
                         scales: {
-                          x: { ...timeXAxis(period), stacked: true },
+                          x: {
+                            ...timeXAxis(period),
+                            stacked: true,
+                            afterDataLimits: (scale: any) => {
+                              const pad = (scale.max - scale.min) * 0.01;
+                              scale.min -= pad;
+                              scale.max += pad;
+                            },
+                          },
                           y: { ...CHART_OPTIONS_BASE.scales.y, stacked: true },
                         },
                       }}
@@ -564,12 +572,8 @@ export default function ConsoleDashboard() {
                   </h4>
                   <div className="flex gap-12">
                     {(["p50", "p95", "p99"] as const).map((key) => {
-                      const val = analytics?.daily_latency?.length
-                        ? analytics.daily_latency.reduce(
-                            (sum, d) => sum + d[key],
-                            0
-                          ) / analytics.daily_latency.length
-                        : NaN;
+                      const summary = analytics?.latency_summary?.[0];
+                      const val = summary ? summary[key] : NaN;
                       return (
                         <div key={key}>
                           <p className="text-body-xs text-txt-black-500">
