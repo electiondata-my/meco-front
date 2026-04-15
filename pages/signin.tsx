@@ -19,6 +19,26 @@ const SignInPage: Page = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  // Tick the countdown down every second while rate-limited
+  useEffect(() => {
+    if (!rateLimitedUntil) return;
+    const tick = () => {
+      const remaining = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setCountdown(0);
+        setRateLimitedUntil(null);
+        setError(null);
+      } else {
+        setCountdown(remaining);
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [rateLimitedUntil]);
 
   const turnstileWidgetRef = useRef<string | null>(null);
   const turnstileCallbackRef = useRef<{
@@ -73,8 +93,10 @@ const SignInPage: Page = () => {
         body: JSON.stringify({ email, turnstile_token }),
       });
       if (!res.ok) {
-        if (res.status === 429)
-          throw new Error("Rate limited. Please wait 2 minutes.");
+        if (res.status === 429) {
+          setRateLimitedUntil(Date.now() + 60_000);
+          return;
+        }
         const data = await res.json().catch(() => ({}));
         throw new Error(
           data.message ?? "Failed to send OTP. Please try again.",
@@ -192,10 +214,14 @@ const SignInPage: Page = () => {
                 <Button
                   type="submit"
                   variant="primary"
-                  disabled={loading || !email}
+                  disabled={loading || !email || !!rateLimitedUntil}
                   className="w-full justify-center py-2"
                 >
-                  {loading ? "Sending…" : "Send code"}
+                  {loading
+                    ? "Sending…"
+                    : rateLimitedUntil
+                    ? `Rate limited | Retry in ${countdown}s`
+                    : "Send code"}
                 </Button>
               </form>
             ) : (

@@ -39,7 +39,7 @@ const HomePage: Page = ({
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Link
               href="/openapi"
-              className="flex items-center gap-1.5 rounded-md bg-txt-black-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-txt-black-700"
+              className="flex items-center gap-1.5 rounded-md bg-bg-black-900 px-4 py-2 text-sm font-medium text-txt-white transition hover:bg-bg-black-700"
             >
               {t("hero.api_docs")}
               <ChevronRightIcon className="h-4 w-4" />

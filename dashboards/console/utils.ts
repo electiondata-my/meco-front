@@ -73,10 +73,17 @@ export interface KeyStat {
   p99_latency_ms?: number;
 }
 
+export interface LatencySummary {
+  p50: number;
+  p95: number;
+  p99: number;
+}
+
 export interface AnalyticsData {
   totals: AnalyticsTotals[];
   daily_status: DailyStatus[];
   daily_latency: DailyLatency[];
+  latency_summary: LatencySummary[];
   by_endpoint: EndpointStat[];
   endpoint_health: EndpointHealth[];
   by_country: CountryStat[];
