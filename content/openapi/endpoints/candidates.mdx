@@ -13,7 +13,7 @@ Just follow the 3 simple steps below, and you'll be up and running!
 
 ## Step 0: Generate token
 
-All requests to this API require a Bearer token. Requests without a token (or with an invalid one) will return a `401 Unauthorized` error. Paste yours below now—every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
+All requests to this API require a Bearer token. Requests without a token (or with an invalid one) will return a `401 Unauthorized` error. Paste yours below—every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
 
 <TokenInput />
 
@@ -57,7 +57,7 @@ Once the user has selected a candidate, pass their `id` to retrieve their electi
   }
 ]} />
 
-The `id` parameter is mandatory; requests without this parameter will return a `400 Bad Request` error, while requests with an invalid `id` will return a `404 Not Found` error.
+The id parameter is mandatory; requests without this parameter will return a `400 Bad Request` error, while requests with an invalid id will return a `404 Not Found` error.
 
 <TabCode
   curl={`curl -X GET "https://api.electiondata.my/v1/candidates?id=CMVBA" \\\n  -H "Authorization: Bearer <your-api-key>"`}
@@ -85,6 +85,8 @@ A successful `200 OK` response returns a JSON array of election results, ordered
   { name: "result", type: "string", description: "One of: 'won', 'won_uncontested', 'lost', or 'lost_deposit'." },
 ]} />
 
-## Try It Out!
+## Try It Out
+
+Load the candidate list, pick a name, and fire a live request—all with your real API key.
 
 <CandidatesApiTester />
