@@ -13,7 +13,7 @@ Just follow the 3 simple steps below, and you'll be up and running!
 
 ## Step 0: Generate token
 
-All requests to this API require a Bearer token. Paste yours below now—every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
+All requests to this API require a Bearer token. Requests without a token (or with an invalid one) will return a `401 Unauthorized` error. Paste yours below now—every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
 
 <TokenInput />
 
@@ -87,8 +87,4 @@ A successful `200 OK` response returns a JSON array of election results, ordered
 
 ## Try It Out!
 
-<ApiTester
-  endpoint="/v1/candidates"
-  defaultParams={{ id: "CMVBA" }}
-  paramDescriptions={{ id: "candidate identifier" }}
-/>
+<CandidatesApiTester />

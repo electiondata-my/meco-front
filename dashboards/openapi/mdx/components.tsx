@@ -13,6 +13,7 @@ import StatusTable from "./StatusTable";
 import TabCode from "./TabCode";
 import TokenInput from "./TokenInput";
 import DocApiTester from "@dashboards/openapi/DocApiTester";
+import CandidatesApiTester from "@dashboards/openapi/CandidatesApiTester";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -36,7 +37,7 @@ const H2: FunctionComponent<{ children?: ReactNode }> = ({ children }) => {
   return (
     <h2
       id={id}
-      className="mb-4 mt-10 font-poppins text-xl font-semibold text-txt-black-900 first:mt-0"
+      className="scroll-mt-24 mb-4 mt-10 font-poppins text-xl font-semibold text-txt-black-900 first:mt-0"
     >
       {children}
     </h2>
@@ -48,7 +49,7 @@ const H3: FunctionComponent<{ children?: ReactNode }> = ({ children }) => {
   return (
     <h3
       id={id}
-      className="mb-3 mt-8 font-poppins text-base font-semibold text-txt-black-900"
+      className="scroll-mt-24 mb-3 mt-8 font-poppins text-base font-semibold text-txt-black-900"
     >
       {children}
     </h3>
@@ -190,4 +191,5 @@ export const mdxComponents = {
   TabCode,
   TokenInput,
   ApiTester: DocApiTester,
+  CandidatesApiTester,
 };
