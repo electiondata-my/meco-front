@@ -20,10 +20,20 @@ const ElectionCandidates: Page = ({
 
   if (router.isFallback) return <SpinnerBox className="min-h-screen" />;
 
+  const candidateName =
+    params.candidate &&
+    selection.find(
+      (e: { name: string; slug: string }) => e.slug === params.candidate,
+    )?.name;
+
   return (
     <>
       <Metadata
-        title={t("hero.header", { ns: "candidates" })}
+        title={
+          candidateName
+            ? candidateName
+            : t("hero.header", { ns: "candidates" })
+        }
         description={t("hero.description", { ns: "candidates" })}
         keywords=""
       />
