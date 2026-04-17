@@ -20,10 +20,14 @@ const ElectionParties: Page = ({
 
   if (router.isFallback) return <SpinnerBox className="min-h-screen" />;
 
+  const partyName = selection.find(
+    (e: { party_uid: string; party: string }) => e.party_uid === params.party,
+  )?.party;
+
   return (
     <>
       <Metadata
-        title={t("hero.header", { ns: "parties" })}
+        title={partyName ?? t("hero.header", { ns: "parties" })}
         description={t("hero.description", { ns: "parties" })}
         keywords=""
       />

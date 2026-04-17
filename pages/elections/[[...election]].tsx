@@ -23,10 +23,15 @@ const ElectionExplorerIndex: Page = ({
 
   if (router.isFallback) return <SpinnerBox className="min-h-screen" />;
 
+  const electionTitle =
+    params.election && params.state
+      ? `${params.election} (${CountryAndStates[params.state]})`
+      : null;
+
   return (
     <>
       <Metadata
-        title={t("hero.header", { ns: "elections" })}
+        title={electionTitle ?? t("hero.header", { ns: "elections" })}
         description={t("hero.description", { ns: "elections" })}
         keywords=""
       />
