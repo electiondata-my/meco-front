@@ -27,7 +27,7 @@ const HomePage: Page = ({
     <>
       <Metadata
         title={t("hero.header")}
-        description={t("hero.description")}
+        description={t("hero.og_description")}
         keywords=""
       />
       <Hero
