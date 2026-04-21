@@ -18,6 +18,7 @@ import {
   DrawerContent,
   DrawerClose,
   DrawerHeader,
+  DrawerTitle,
   DrawerTrigger,
   DrawerFooter,
 } from "@components/drawer";
@@ -243,7 +244,7 @@ const FullResults = <T extends Candidate | Seat>({
         <DrawerHeader className="flex w-full flex-col items-start px-4 py-3 uppercase">
           <div className="flex w-full items-center justify-between">
             <div className="flex flex-wrap items-center gap-x-2 text-lg">
-              <h5 className="text-body-lg font-semibold">{data.area}</h5>
+              <DrawerTitle className="text-body-lg font-semibold">{data.area}</DrawerTitle>
               <span className="text-txt-black-500">{data.state}</span>
             </div>
             <DrawerClose>

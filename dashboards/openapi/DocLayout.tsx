@@ -1,11 +1,12 @@
-import { FunctionComponent, ReactNode, useState } from "react";
+import { FunctionComponent, ReactNode, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { clx } from "@lib/helpers";
+import { clx, numFormat } from "@lib/helpers";
 import { ALL_PAGES, TocItem } from "./config";
 import DocSidebar from "./DocSidebar";
 import DocTOC from "./DocTOC";
 import { Bars3Icon } from "@heroicons/react/24/outline";
+import { BoltIcon } from "@heroicons/react/20/solid";
 import { ApiKeyProvider } from "./ApiKeyContext";
 
 interface DocLayoutProps {
@@ -25,6 +26,17 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
   const currentPath = router.asPath.split("?")[0].split("#")[0];
 
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isIntroduction = currentPath === "/openapi/introduction";
+  const [apiStats, setApiStats] = useState<{ total_hits: number; total_users: number } | null>(null);
+  useEffect(() => {
+    if (!isIntroduction) return;
+    const token = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
+    fetch(`https://api.us-west-2.aws.tinybird.co/v0/pipes/api_stats_summary.json?token=${token}`)
+      .then(r => r.json())
+      .then(d => setApiStats(d?.data?.[0] ?? null))
+      .catch(() => setApiStats(null));
+  }, [isIntroduction]);
 
   const currentIndex = ALL_PAGES.findIndex(p => p.href === currentPath);
   const prev = currentIndex > 0 ? ALL_PAGES[currentIndex - 1] : null;
@@ -65,9 +77,19 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
           </p>
 
           {/* H1 */}
-          <h1 className="mb-8 font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]">
+          <h1 className={clx("font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]", isIntroduction ? "mb-3" : "mb-8")}>
             {title}
           </h1>
+
+          {/* API stats (introduction page only) */}
+          {isIntroduction && (
+            <p className="mb-8 flex items-center gap-1 text-body-sm text-txt-black-500">
+              <BoltIcon className="h-4 w-4 shrink-0" />
+              {apiStats
+                ? `${numFormat(apiStats.total_hits, "standard")} requests served · ${numFormat(apiStats.total_users, "standard")} users and counting`
+                : "..."}
+            </p>
+          )}
 
           {/* Page body */}
           <ApiKeyProvider>{children}</ApiKeyProvider>

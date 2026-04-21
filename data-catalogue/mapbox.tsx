@@ -7,7 +7,7 @@ import {
   MAPBOX_REGION_CENTER,
   getMapboxColorIndex,
 } from "@lib/constants";
-import useConfig from "next/config";
+import { APP_NAME } from "@lib/config";
 import { ExpressionSpecification, GeoJSONFeature } from "mapbox-gl";
 import { ArrowsPointingInIcon } from "@heroicons/react/24/outline";
 import { MapIcon } from "@govtechmy/myds-react/icon";
@@ -68,9 +68,6 @@ const MapInstance: FC<MapInstanceProps> = ({
   const { LIGHT_STYLE, DARK_STYLE } = MapboxMapStyle;
   const { resolvedTheme } = useTheme();
   const [styleUrl, setStyleUrl] = useState(LIGHT_STYLE);
-  const {
-    publicRuntimeConfig: { APP_NAME },
-  } = useConfig();
   const mapRef = useRef<MapRef | null>(null);
   const [popupInfo, setPopupInfo] = useState<{
     feature: GeoJSONFeature;

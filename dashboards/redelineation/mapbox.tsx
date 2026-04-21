@@ -1,7 +1,7 @@
 import { MapboxMapStyle } from "@lib/constants";
 import { useTheme } from "next-themes";
 import { FC, useEffect, useRef, useState } from "react";
-import useConfig from "next/config";
+import { APP_NAME } from "@lib/config";
 import { GeoJSONFeature } from "mapbox-gl";
 import Map, {
   Layer,
@@ -53,9 +53,6 @@ const MapboxRedelineation: FC<Props> = ({
   const { resolvedTheme } = useTheme();
   const { t } = useTranslation(["redelineation", "common", "home"]);
 
-  const {
-    publicRuntimeConfig: { APP_NAME },
-  } = useConfig();
   const [popupInfo, setPopupInfo] = useState<{
     feature: GeoJSONFeature & { year: string };
     longitude: number;

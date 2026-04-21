@@ -35,15 +35,6 @@ const nextConfig = {
   images: {
     domains: ["api.mapbox.com", "static.electiondata.my"],
   },
-  publicRuntimeConfig: {
-    APP_NAME: "ElectionData.MY",
-    META_AUTHOR: "electiondata-my",
-    META_THEME: "",
-    META_KEYWORDS: "open data statistics election malaysia",
-    META_DOMAIN: "ElectionData.MY",
-    META_URL: process.env.NEXT_PUBLIC_APP_URL,
-    META_IMAGE: `${process.env.NEXT_PUBLIC_APP_URL}/static/images/og_{{lang}}.png`,
-  },
   webpack: (config) => {
     config.module.rules.push({
       test: /components|hooks\/index.ts/i,

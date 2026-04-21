@@ -44,6 +44,7 @@ const DrawerContent = React.forwardRef<
         "fixed inset-x-0 bottom-0 z-50 flex max-h-[90dvh] flex-col rounded-t-xl border border-otl-gray-200 bg-bg-white",
         className,
       )}
+      aria-describedby={undefined}
       onCloseAutoFocus={(e) => e.preventDefault()}
       {...props}
     >

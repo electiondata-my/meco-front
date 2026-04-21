@@ -5,6 +5,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import Image from "next/image";
 import Container from "@components/Container";
 import { clx, numFormat } from "@lib/helpers";
 import { useTranslation } from "next-i18next";
@@ -101,7 +102,7 @@ const Hero: FunctionComponent<HeroProps> = ({
     >
       {withPattern && (
         <div className="absolute flex h-full w-full justify-center overflow-hidden">
-          <img
+          <Image
             src="/static/images/hero-pattern.svg"
             alt=""
             aria-hidden="true"

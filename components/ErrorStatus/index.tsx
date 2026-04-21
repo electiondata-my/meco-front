@@ -1,6 +1,6 @@
 import { useTranslation } from "@hooks/useTranslation";
 import { FunctionComponent } from "react";
-import useConfig from "next/config";
+import { APP_NAME } from "@lib/config";
 
 interface ErrorStatusProps {
   title: string;
@@ -16,10 +16,6 @@ const ErrorStatus: FunctionComponent<ErrorStatusProps> = ({
   reason,
 }) => {
   const { t } = useTranslation("error");
-  const {
-    publicRuntimeConfig: { APP_NAME },
-  } = useConfig();
-
   return (
     <>
       <div className="flex flex-col space-y-10">

@@ -13,6 +13,7 @@ import { useTranslation } from "@hooks/useTranslation";
 import { StateKeyByName, STATES } from "@lib/constants";
 import { routes } from "@lib/routes";
 import { clx } from "@lib/helpers";
+import { SpinnerBox } from "@components/Spinner";
 import { FunctionComponent, useMemo } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -113,6 +114,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
       candidates.map(({ name, slug, c, w, l }) => ({
         label: `${name} (W${w}, L${l})`,
         value: slug,
+        name,
         contests: Number(c),
         wins: Number(w),
         losses: Number(l),
@@ -235,10 +237,21 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
     party_value: "",
     election_value: "",
     loading: false,
+    loading_label: "",
   });
 
   return (
     <>
+      {data.loading && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-sm dark:bg-black/80">
+          <SpinnerBox className="min-h-fit" />
+          {data.loading_label && (
+            <p className="text-body-md font-semibold text-txt-black-900 dark:text-white">
+              {data.loading_label}
+            </p>
+          )}
+        </div>
+      )}
       <Container className="pb-8 pt-4 lg:pb-12 lg:pt-6">
         <SectionGrid className="items-start gap-3">
           <div className="mx-auto flex w-full max-w-[727px] flex-col gap-6">
@@ -281,6 +294,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 onChange={(selected) => {
                   if (selected) {
                     setData("loading", true);
+                    setData("loading_label", `${selected.seat}, ${selected.state}`);
                     setData("seat_value", selected.value);
                     const [type, seat] = selected.value.split("_");
                     push(`${routes.SEATS}/${type}/${seat}`).finally(() =>
@@ -314,6 +328,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 onChange={(selected) => {
                   if (selected) {
                     setData("loading", true);
+                    setData("loading_label", selected.name);
                     setData("candidate_value", selected.value);
                     push(`${routes.CANDIDATES}/${selected.value}`).finally(() =>
                       setData("loading", false),
@@ -356,6 +371,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 onChange={(selected) => {
                   if (selected) {
                     setData("loading", true);
+                    setData("loading_label", selected.label);
                     setData("election_value", selected.value);
                     push(
                       `${routes.ELECTIONS}/${selected.state}/${selected.election}`,
@@ -444,6 +460,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
                 onChange={(selected) => {
                   if (selected) {
                     setData("loading", true);
+                    setData("loading_label", selected.party);
                     setData("party_value", selected.value);
                     push(`${routes.PARTIES}/${selected.value}/mys`).finally(
                       () => setData("loading", false),
@@ -455,7 +472,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           </div>
         </SectionGrid>
 
-        <SectionGrid className="gap-6 py-8 lg:gap-12 lg:py-16">
+        <SectionGrid className="gap-6 py-8 lg:gap-12 lg:py-10">
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("latest.title", { ns: "home" })}
           </h2>
@@ -498,7 +515,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
             ))}
           </div>
         </SectionGrid>
-        <SectionGrid className="gap-4 py-8 lg:gap-12 lg:py-16">
+        <SectionGrid className="gap-4 py-8 lg:gap-12 lg:py-10">
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("explore.title", { ns: "home" })}
           </h2>
@@ -535,7 +552,7 @@ const HomeDashboard: FunctionComponent<HomeDashboardProps> = ({
           </div>
         </SectionGrid>
         {/* Election data you can trust */}
-        <SectionGrid className="gap-6 pb-8 pt-4 lg:gap-12 lg:pb-[120px]">
+        <SectionGrid className="gap-6 pb-8 pt-4 lg:gap-12 lg:pb-16">
           <h2 className="text-center font-poppins text-2xl font-semibold">
             {t("trust.title", { ns: "home" })}
           </h2>
