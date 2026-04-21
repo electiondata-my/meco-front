@@ -1,7 +1,15 @@
 import NextHead from "next/head";
 import { FunctionComponent } from "react";
 import { useTranslation } from "next-i18next";
-import useConfig from "next/config";
+import {
+  APP_NAME,
+  META_AUTHOR,
+  META_THEME,
+  META_DOMAIN,
+  META_URL,
+  META_IMAGE,
+  META_KEYWORDS,
+} from "@lib/config";
 
 interface MetadataProps {
   title?: string | null;
@@ -17,17 +25,6 @@ const Metadata: FunctionComponent<MetadataProps> = ({
   image,
 }) => {
   const { t, i18n } = useTranslation();
-  const {
-    publicRuntimeConfig: {
-      APP_NAME,
-      META_AUTHOR,
-      META_THEME,
-      META_DOMAIN,
-      META_URL,
-      META_IMAGE,
-      META_KEYWORDS,
-    },
-  } = useConfig();
 
   const META = {
     title: title ? title.concat(" | ", APP_NAME) : APP_NAME,

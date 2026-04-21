@@ -8,7 +8,7 @@ import { useRouter } from "next/router";
 import { OptionType } from "@lib/types";
 import { useSearchParams } from "next/navigation";
 import { MapboxMapStyle, MAPBOX_COLOR_INDEX } from "@lib/constants";
-import useConfig from "next/config";
+import { APP_NAME } from "@lib/config";
 import LineageTable from "./lineage-table";
 import { GeoJSONFeature } from "mapbox-gl";
 import { maxBy } from "lodash";
@@ -48,9 +48,6 @@ const MapboxMyArea: FC<MapboxProps> = ({
   const { resolvedTheme } = useTheme();
   const [styleUrl, setStyleUrl] = useState(LIGHT_STYLE);
   const { t } = useTranslation(["common", "seats"]);
-  const {
-    publicRuntimeConfig: { APP_NAME },
-  } = useConfig();
   const [popupInfo, setPopupInfo] = useState<{
     feature: GeoJSONFeature & { year: string };
     longitude: number;
