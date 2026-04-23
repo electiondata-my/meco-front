@@ -38,3 +38,8 @@ declare module "geojson-bbox" {
     geojson: GeoJSONObject,
   ): [number, number, number, number] {}
 }
+
+declare module "*.md" {
+  const content: string;
+  export default content;
+}
