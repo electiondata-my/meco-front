@@ -436,6 +436,7 @@ export default function QueryBuilderDashboard() {
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
   const [queryCount, setQueryCount] = useState<number | null>(null);
   const [hasHydratedSharedQuery, setHasHydratedSharedQuery] = useState(false);
+  const [shouldSyncQueryToUrl, setShouldSyncQueryToUrl] = useState(false);
   const deferredQueryText = useDeferredValue(queryText);
   const getDatasetPreviewQuery = useCallback(
     (dataset: DatasetKey) => `SELECT *\nFROM ${dataset}\nLIMIT 30`,
@@ -502,6 +503,7 @@ export default function QueryBuilderDashboard() {
         setQueryText(decodeQuery(qp));
         setActiveSource("workspace");
         setActiveSample(null);
+        setShouldSyncQueryToUrl(true);
         shouldAutoRunSharedQueryRef.current = true;
       } catch {
         // malformed share link — ignore
@@ -511,7 +513,8 @@ export default function QueryBuilderDashboard() {
   }, [router.isReady, router.query]);
 
   useEffect(() => {
-    if (!router.isReady || !hasHydratedSharedQuery) return;
+    if (!router.isReady || !hasHydratedSharedQuery || !shouldSyncQueryToUrl)
+      return;
 
     const currentQuery =
       typeof router.query.query === "string" ? router.query.query : "";
@@ -525,7 +528,7 @@ export default function QueryBuilderDashboard() {
       undefined,
       { shallow: true },
     );
-  }, [encodedQuery, hasHydratedSharedQuery, router]);
+  }, [encodedQuery, hasHydratedSharedQuery, router, shouldSyncQueryToUrl]);
 
   const extensions = useMemo(
     () => [
@@ -548,6 +551,7 @@ export default function QueryBuilderDashboard() {
   }, []);
 
   const handleQueryChange = useCallback((value: string) => {
+    setShouldSyncQueryToUrl(true);
     setQueryText(value);
     setActiveSource("workspace");
     setActiveSample(null);
