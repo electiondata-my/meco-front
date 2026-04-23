@@ -36,10 +36,15 @@ const nextConfig = {
     domains: ["api.mapbox.com", "static.electiondata.my"],
   },
   webpack: (config) => {
-    config.module.rules.push({
-      test: /components|hooks\/index.ts/i,
-      sideEffects: false,
-    });
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+      syncWebAssembly: true,
+    };
+    config.module.rules.push(
+      { test: /components|hooks\/index.ts/i, sideEffects: false },
+      { test: /\.wasm$/, type: "webassembly/async" }
+    );
     return config;
   },
 };
