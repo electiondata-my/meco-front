@@ -9,7 +9,7 @@ const QueryBuilderPage: Page = () => {
     <>
       <Metadata
         title="Query Builder"
-        description="Run live SQL queries against ElectionData.MY datasets directly in your browser. Powered by DuckDB WASM — no API keys needed."
+        description="Run customised queries directly in your browser. No Excel files, coding, or data skills needed. All you need is a question you want answered. "
         keywords="sql, query, election data, duckdb, data explorer"
       />
       <QueryBuilderDashboard />

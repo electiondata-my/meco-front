@@ -11,6 +11,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import Script from "next/script";
 import { Transition } from "@headlessui/react";
 import { clx, numFormat } from "@lib/helpers";
 import { sql as sqlLang, StandardSQL } from "@codemirror/lang-sql";
@@ -43,6 +44,7 @@ const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), {
 });
 
 const MAX_DISPLAY_ROWS = 500;
+const QUERY_SHORTENER_URL = "https://querybuilder.electiondata.my";
 
 interface QueryResult {
   columns: string[];
@@ -148,7 +150,7 @@ function QueryBuilderSidebar({
           onClick={onMobileClose}
           className="group flex items-center gap-2 rounded-lg border border-otl-gray-200 px-3 py-2 text-body-sm font-medium text-txt-black-700 transition-colors hover:border-otl-danger-200 hover:bg-bg-danger-50 hover:text-txt-danger"
         >
-          <ChatBubbleLeftRightIcon className="h-4 w-4 shrink-0 text-txt-black-400 transition-colors group-hover:text-txt-danger" />
+          <ChatBubbleLeftRightIcon className="text-txt-black-400 h-4 w-4 shrink-0 transition-colors group-hover:text-txt-danger" />
           Get help: User group
         </Link>
       </div>
@@ -180,7 +182,7 @@ function QueryBuilderSidebar({
                     className={clx(
                       "group w-full rounded-xl border px-3 py-2 text-left transition-colors",
                       activeSample === q.question
-                        ? "bg-bg-danger-50 border-otl-danger-200 text-txt-black-900"
+                        ? "border-otl-danger-200 bg-bg-danger-50 text-txt-black-900"
                         : "border-transparent text-txt-black-700 hover:border-otl-gray-200 hover:bg-bg-black-50 hover:text-txt-black-900",
                     )}
                   >
@@ -223,7 +225,11 @@ function QueryBuilderSidebar({
           {sidebarContent}
         </div>
       </aside>
-      <Transition show={mobileOpen} as="div" className="fixed inset-0 z-50 lg:hidden">
+      <Transition
+        show={mobileOpen}
+        as="div"
+        className="fixed inset-0 z-50 lg:hidden"
+      >
         <Transition.Child
           as="div"
           enter="transition-opacity duration-200"
@@ -232,7 +238,7 @@ function QueryBuilderSidebar({
           leave="transition-opacity duration-200"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
-          className="absolute inset-0 bg-black/40"
+          className="bg-black/40 absolute inset-0"
           onClick={onMobileClose}
         />
         <Transition.Child
@@ -243,7 +249,7 @@ function QueryBuilderSidebar({
           leave="transition-transform duration-300 ease-in"
           leaveFrom="translate-x-0"
           leaveTo="-translate-x-full"
-          className="absolute inset-y-0 left-0 w-72 overflow-y-auto border-r border-otl-gray-200 bg-bg-white px-3 pb-10 pt-6 shadow-lg sm:px-4"
+          className="shadow-lg absolute inset-y-0 left-0 w-72 overflow-y-auto border-r border-otl-gray-200 bg-bg-white px-3 pb-10 pt-6 sm:px-4"
         >
           <div className="mb-5 flex items-center justify-between">
             <span className="font-poppins text-body-sm font-semibold text-txt-black-900">
@@ -251,7 +257,7 @@ function QueryBuilderSidebar({
             </span>
             <button
               onClick={onMobileClose}
-              className="rounded-md p-1 text-txt-black-400 hover:text-txt-black-700"
+              className="text-txt-black-400 rounded-md p-1 hover:text-txt-black-700"
               aria-label="Close sample queries"
             >
               <XMarkIcon className="h-5 w-5" />
@@ -384,7 +390,7 @@ const QueryResults = memo(function QueryResults({
                 {result.rows.map((row, ri) => (
                   <tr
                     key={ri}
-                    className="border-otl-gray-100 hover:bg-bg-black-50/60 border-b transition-colors last:border-0"
+                    className="border-otl-gray-100 border-b transition-colors last:border-0 hover:bg-bg-black-50/60"
                   >
                     {row.map((cell, ci) => (
                       <td
@@ -423,6 +429,11 @@ export default function QueryBuilderDashboard() {
   const defaultQuestion = INTERESTING_QUESTIONS[0];
   const hasAppliedSharedQueryRef = useRef(false);
   const shouldAutoRunSharedQueryRef = useRef(false);
+  const turnstileWidgetRef = useRef<string | null>(null);
+  const turnstileCallbackRef = useRef<{
+    resolve: (token: string) => void;
+    reject: (err: Error) => void;
+  } | null>(null);
 
   const [queryText, setQueryText] = useState(defaultQuestion.sql);
   const [activeDataset, setActiveDataset] = useState<DatasetKey>(
@@ -440,9 +451,13 @@ export default function QueryBuilderDashboard() {
   );
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
+  const [shortenState, setShortenState] = useState<
+    "idle" | "validating" | "shortening"
+  >("idle");
+  const [shortenError, setShortenError] = useState<string | null>(null);
+  const [shortQueryId, setShortQueryId] = useState<string | null>(null);
   const [queryCount, setQueryCount] = useState<number | null>(null);
   const [hasHydratedSharedQuery, setHasHydratedSharedQuery] = useState(false);
-  const [shouldSyncQueryToUrl, setShouldSyncQueryToUrl] = useState(false);
   const deferredQueryText = useDeferredValue(queryText);
   const getDatasetPreviewQuery = useCallback(
     (dataset: DatasetKey) => `SELECT *\nFROM ${dataset}\nLIMIT 30`,
@@ -466,12 +481,20 @@ export default function QueryBuilderDashboard() {
 
     const basePath = router.asPath.split("?")[0] || router.pathname;
     if (typeof window === "undefined") {
+      if (shortQueryId) return `${basePath}?id=${shortQueryId}`;
       return encodedQuery ? `${basePath}?query=${encodedQuery}` : basePath;
     }
 
     const baseUrl = `${window.location.origin}${basePath}`;
+    if (shortQueryId) return `${baseUrl}?id=${shortQueryId}`;
     return encodedQuery ? `${baseUrl}?query=${encodedQuery}` : baseUrl;
-  }, [encodedQuery, router.asPath, router.isReady, router.pathname]);
+  }, [
+    encodedQuery,
+    router.asPath,
+    router.isReady,
+    router.pathname,
+    shortQueryId,
+  ]);
 
   const groupedQuestions = useMemo(() => {
     const groupOrder: InterestingQuestion["group"][] = [
@@ -498,18 +521,71 @@ export default function QueryBuilderDashboard() {
       .catch(() => setQueryCount(null));
   }, []);
 
+  const handleTurnstileScriptLoad = useCallback(() => {
+    if (typeof window === "undefined" || !window.turnstile) return;
+    if (turnstileWidgetRef.current) return;
+
+    turnstileWidgetRef.current = window.turnstile.render(
+      "#query-builder-turnstile",
+      {
+        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
+        callback: (token: string) =>
+          turnstileCallbackRef.current?.resolve(token),
+        "error-callback": () =>
+          turnstileCallbackRef.current?.reject(
+            new Error("Verification failed"),
+          ),
+        size: "invisible",
+        execution: "execute",
+      },
+    );
+  }, []);
+
+  const getTurnstileToken = useCallback((): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!turnstileWidgetRef.current || !window.turnstile) {
+        reject(new Error("Verification not available"));
+        return;
+      }
+
+      turnstileCallbackRef.current = { resolve, reject };
+      window.turnstile.reset(turnstileWidgetRef.current);
+      window.turnstile.execute(turnstileWidgetRef.current);
+    });
+  }, []);
+
   // Decode shared query from URL on mount
   useEffect(() => {
     if (!router.isReady || hasAppliedSharedQueryRef.current) return;
     hasAppliedSharedQueryRef.current = true;
 
-    const { query: qp } = router.query;
+    const { query: qp, id } = router.query;
+    if (typeof id === "string" && id) {
+      fetch(`${QUERY_SHORTENER_URL}/q/${encodeURIComponent(id)}`)
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || typeof data.query !== "string") {
+            throw new Error("Could not load the short query link.");
+          }
+
+          setQueryText(data.query);
+          setActiveSource("workspace");
+          setActiveSample(null);
+          setShortQueryId(id);
+          shouldAutoRunSharedQueryRef.current = true;
+        })
+        .catch(() => {
+          setQueryError("Could not load the short query link.");
+        })
+        .finally(() => setHasHydratedSharedQuery(true));
+      return;
+    }
+
     if (typeof qp === "string" && qp) {
       try {
         setQueryText(decodeQuery(qp));
         setActiveSource("workspace");
         setActiveSample(null);
-        setShouldSyncQueryToUrl(true);
         shouldAutoRunSharedQueryRef.current = true;
       } catch {
         // malformed share link — ignore
@@ -517,24 +593,6 @@ export default function QueryBuilderDashboard() {
     }
     setHasHydratedSharedQuery(true);
   }, [router.isReady, router.query]);
-
-  useEffect(() => {
-    if (!router.isReady || !hasHydratedSharedQuery || !shouldSyncQueryToUrl)
-      return;
-
-    const currentQuery =
-      typeof router.query.query === "string" ? router.query.query : "";
-    if (currentQuery === (encodedQuery || "")) return;
-
-    void router.replace(
-      {
-        pathname: router.pathname,
-        query: encodedQuery ? { query: encodedQuery } : {},
-      },
-      undefined,
-      { shallow: true },
-    );
-  }, [encodedQuery, hasHydratedSharedQuery, router, shouldSyncQueryToUrl]);
 
   const extensions = useMemo(
     () => [
@@ -549,23 +607,53 @@ export default function QueryBuilderDashboard() {
     [activeDataset],
   );
 
-  const loadQuestion = useCallback((q: InterestingQuestion) => {
-    setQueryText(q.sql);
-    setActiveDataset(q.dataset);
-    setActiveSource("workspace");
-    setActiveSample(q.question);
-  }, []);
+  const clearShareParamsFromUrl = useCallback(() => {
+    if (!router.isReady) return;
+    if (!("query" in router.query) && !("id" in router.query)) return;
 
-  const handleQueryChange = useCallback((value: string) => {
-    setShouldSyncQueryToUrl(true);
-    setQueryText(value);
-    setActiveSource("workspace");
-    setActiveSample(null);
-  }, []);
+    const nextQuery = { ...router.query };
+    delete nextQuery.query;
+    delete nextQuery.id;
+
+    void router.replace(
+      {
+        pathname: router.pathname,
+        query: nextQuery,
+      },
+      undefined,
+      { shallow: true },
+    );
+  }, [router]);
+
+  const loadQuestion = useCallback(
+    (q: InterestingQuestion) => {
+      clearShareParamsFromUrl();
+      setQueryText(q.sql);
+      setActiveDataset(q.dataset);
+      setActiveSource("workspace");
+      setActiveSample(q.question);
+      setShortQueryId(null);
+      setShortenError(null);
+    },
+    [clearShareParamsFromUrl],
+  );
+
+  const handleQueryChange = useCallback(
+    (value: string) => {
+      clearShareParamsFromUrl();
+      setQueryText(value);
+      setActiveSource("workspace");
+      setActiveSample(null);
+      setShortQueryId(null);
+      setShortenError(null);
+    },
+    [clearShareParamsFromUrl],
+  );
 
   const handleFormat = useCallback(() => {
     if (!activeQueryText.trim()) return;
     try {
+      clearShareParamsFromUrl();
       setQueryText(
         compactFormattedSql(
           formatSql(activeQueryText, {
@@ -579,8 +667,10 @@ export default function QueryBuilderDashboard() {
       );
       setActiveSource("workspace");
       setActiveSample(null);
+      setShortQueryId(null);
+      setShortenError(null);
     } catch {}
-  }, [activeQueryText]);
+  }, [activeQueryText, clearShareParamsFromUrl]);
 
   const handleCopy = useCallback(async () => {
     if (!activeQueryText.trim()) return;
@@ -605,7 +695,7 @@ export default function QueryBuilderDashboard() {
   const runQuery = useCallback(
     async (queryOverride?: string) => {
       const sqlToRun = (queryOverride ?? activeQueryText).trim();
-      if (!db || running || !sqlToRun) return;
+      if (!db || running || !sqlToRun) return false;
       setRunning(true);
       setQueryError(null);
       setResult(null);
@@ -637,8 +727,10 @@ export default function QueryBuilderDashboard() {
           totalRows: arrowResult.numRows,
           truncated: arrowResult.numRows > MAX_DISPLAY_ROWS,
         });
+        return true;
       } catch (err) {
         setQueryError(err instanceof Error ? err.message : String(err));
+        return false;
       } finally {
         setRunning(false);
       }
@@ -646,11 +738,85 @@ export default function QueryBuilderDashboard() {
     [activeQueryText, db, running],
   );
 
-  const handleDatasetClick = useCallback((key: DatasetKey) => {
-    setActiveDataset(key);
-    setActiveSource(key);
-    setActiveSample(null);
-  }, []);
+  const handleDatasetClick = useCallback(
+    (key: DatasetKey) => {
+      clearShareParamsFromUrl();
+      setActiveDataset(key);
+      setActiveSource(key);
+      setActiveSample(null);
+      setShortQueryId(null);
+      setShortenError(null);
+    },
+    [clearShareParamsFromUrl],
+  );
+
+  const handleShortenLink = useCallback(async () => {
+    const sqlToShorten = activeQueryText.trim();
+    if (!sqlToShorten || !db || running || shortenState !== "idle") return;
+
+    setShortenError(null);
+    setShortenState("validating");
+    const isValid = await runQuery(sqlToShorten);
+    if (!isValid) {
+      setQueryError("Invalid Query");
+      setShortenError("Invalid Query");
+      setShortenState("idle");
+      return;
+    }
+
+    setShortenState("shortening");
+    try {
+      const turnstile_token = await getTurnstileToken();
+      const res = await fetch(`${QUERY_SHORTENER_URL}/shorten`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: sqlToShorten, turnstile_token }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || typeof data.id !== "string") {
+        throw new Error("Could not shorten this link. Please try again.");
+      }
+
+      setShortQueryId(data.id);
+      void router.replace(
+        {
+          pathname: router.pathname,
+          query: { id: data.id },
+        },
+        undefined,
+        { shallow: true },
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "";
+      if (message === "Verification not available") {
+        setShortenError(
+          "The query is valid, but the Turnstile is not available yet. Try again shortly.",
+        );
+      } else if (message === "Verification failed") {
+        setShortenError(
+          "The query is valid, but Turnstile verification failed. Please try again.",
+        );
+      } else if (message === "Failed to fetch") {
+        setShortenError(
+          "The query is valid, but the link shortening service could not be reached from this page.",
+        );
+      } else {
+        setShortenError(
+          message || "The query is valid, but the link could not be shortened.",
+        );
+      }
+    } finally {
+      setShortenState("idle");
+    }
+  }, [
+    activeQueryText,
+    db,
+    getTurnstileToken,
+    router,
+    runQuery,
+    running,
+    shortenState,
+  ]);
 
   useEffect(() => {
     if (
@@ -690,6 +856,11 @@ export default function QueryBuilderDashboard() {
 
   return (
     <div className="px-3 sm:px-4.5 md:px-6">
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="afterInteractive"
+        onLoad={handleTurnstileScriptLoad}
+      />
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-screen-xl">
         <QueryBuilderSidebar
           groupedQuestions={groupedQuestions}
@@ -704,7 +875,7 @@ export default function QueryBuilderDashboard() {
           <div className="mb-5 flex items-center gap-2 lg:hidden">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="flex items-center gap-1.5 text-body-sm text-txt-black-600 hover:text-txt-black-900"
+              className="text-txt-black-600 flex items-center gap-1.5 text-body-sm hover:text-txt-black-900"
               aria-label="Open sample queries"
             >
               <Bars3Icon className="h-5 w-5" />
@@ -716,7 +887,7 @@ export default function QueryBuilderDashboard() {
           <h1 className="mb-2 font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]">
             Query Builder
           </h1>
-          <p className="mb-12 flex items-center gap-1.5 text-body-sm text-txt-black-500">
+          <p className="mb-8 flex items-center gap-1.5 text-body-sm text-txt-black-500">
             <SparklesIcon className="h-4 w-4 shrink-0" />
             {queryCount !== null
               ? `${numFormat(queryCount, "standard")} queries built so far`
@@ -733,7 +904,7 @@ export default function QueryBuilderDashboard() {
               needed for you to get an answer, if the data contains it.
             </p>
             <button
-              className="hover:bg-bg-black-50 inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors hover:bg-bg-black-50"
               onClick={handleCopyPrompt}
               title={
                 promptCopyState === "copied" ? "Prompt copied!" : "Copy prompt"
@@ -762,7 +933,8 @@ export default function QueryBuilderDashboard() {
             >
               <div className="space-y-3">
                 <p className="max-w-2xl text-body-sm text-txt-black-700">
-                  Start writing your own custom query, or pick a dataset to inspect.
+                  Start writing your own custom query, or pick a dataset to
+                  inspect.
                 </p>
 
                 <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -773,7 +945,7 @@ export default function QueryBuilderDashboard() {
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
                       activeSource === "workspace"
                         ? "border-otl-danger-200 bg-bg-danger-50"
-                        : "hover:bg-bg-black-50 border-otl-gray-200 bg-bg-white hover:border-otl-danger-200",
+                        : "border-otl-gray-200 bg-bg-white hover:border-otl-danger-200 hover:bg-bg-black-50",
                     )}
                   >
                     <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
@@ -793,7 +965,7 @@ export default function QueryBuilderDashboard() {
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
                         activeSource === key
                           ? "border-otl-danger-200 bg-bg-danger-50"
-                          : "hover:bg-bg-black-50 border-otl-gray-200 bg-bg-white hover:border-otl-danger-200",
+                          : "border-otl-gray-200 bg-bg-white hover:border-otl-danger-200 hover:bg-bg-black-50",
                       )}
                     >
                       <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
@@ -816,7 +988,7 @@ export default function QueryBuilderDashboard() {
                     <button
                       onClick={handleFormat}
                       disabled={!activeQueryText.trim()}
-                      className="hover:bg-bg-washed-active flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors disabled:opacity-40"
+                      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors hover:bg-bg-washed-active disabled:opacity-40"
                     >
                       <WrenchScrewdriverIcon className="h-3.5 w-3.5" />
                       Format
@@ -825,7 +997,7 @@ export default function QueryBuilderDashboard() {
                       onClick={handleCopy}
                       disabled={!activeQueryText.trim()}
                       title={copyState === "copied" ? "Copied!" : "Copy SQL"}
-                      className="hover:bg-bg-washed-active flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors disabled:opacity-40"
+                      className="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active disabled:opacity-40"
                     >
                       {copyState === "copied" ? (
                         <>
@@ -928,30 +1100,78 @@ export default function QueryBuilderDashboard() {
           <section className="mb-12">
             <StepLabel n={3} label="Share your Query" />
             <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
-              Want to send your work to someone else or save it for later?
-              Use this shareable link that encodes the current SQL in your workspace, 
-              so anyone opening it lands straight in the editor with the
-              query ready to run. We do not store your generated link; your work
-              is as private as you want it to be.
+              Want to share your findings or save it for later? Use this
+              shareable link that encodes your current SQL query. Anyone who
+              clicks it will land on this page with the exact query ready to
+              run. We do not store the generated link, so even if your research
+              is top-secret, it remains as private as you want it to be.
             </p>
-            <div className="bg-bg-washed mb-4 max-w-2xl rounded-lg border border-otl-gray-200 px-3 py-2">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
-                Shareable link preview
-              </p>
+            <div className="mb-4 max-w-2xl rounded-lg border border-otl-gray-200 bg-bg-washed px-3 py-2">
+              <div className="mb-1 flex items-center justify-between gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
+                  Shareable link
+                </p>
+                <button
+                  onClick={handleShare}
+                  disabled={!shareUrl}
+                  title={
+                    shareState === "copied" ? "Copied!" : "Copy share link"
+                  }
+                  className="flex shrink-0 items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active disabled:opacity-40"
+                >
+                  {shareState === "copied" ? (
+                    <>
+                      <ClipboardDocumentCheckIcon className="text-green-600 h-3.5 w-3.5" />
+                      <span className="text-green-600">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardDocumentIcon className="h-3.5 w-3.5" />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
               <p className="break-all font-mono text-[12px] leading-5 text-txt-black-700">
                 {shareUrl}
               </p>
             </div>
-            <button
-              onClick={handleShare}
-              disabled={!shareUrl}
-              className={clx(
-                "hover:bg-bg-black-50 inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-              )}
-            >
-              {shareState === "copied" ? "Copied!" : "Copy Link"}
-            </button>
+            <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
+              The link above might be a little long, depending on your query.
+              Unfortunately, it has to be in order to encode the entire SQL
+              query. If you want a beautiful short link to share, and don't mind
+              us storing your query (probably the case for 99% of users), just
+              click the 'Shorten Link' button below. All we store is the SQL
+              query; we do not know or store your identity.
+            </p>
+            <div id="query-builder-turnstile" className="hidden" />
+            {shortenError ? (
+              <p className="mb-3 text-body-sm text-txt-danger">
+                {shortenError}
+              </p>
+            ) : null}
+            <div>
+              <button
+                onClick={handleShortenLink}
+                disabled={
+                  !shareUrl ||
+                  !db ||
+                  initializing ||
+                  running ||
+                  shortenState !== "idle"
+                }
+                className={clx(
+                  "inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors hover:bg-bg-black-50",
+                  "disabled:cursor-not-allowed disabled:opacity-50",
+                )}
+              >
+                {shortenState === "validating"
+                  ? "Checking Query..."
+                  : shortenState === "shortening"
+                    ? "Shortening..."
+                    : "Shorten Link"}
+              </button>
+            </div>
           </section>
         </main>
       </div>
