@@ -12,11 +12,21 @@ import {
 import { useLanguage } from "@hooks/useLanguage";
 import { languages } from "@lib/options";
 
-const ENGLISH_ONLY_PATHS = ["/openapi", "/query-builder", "/signin", "/console"];
+// TEMPORARY TRANSLATION FREEZE:
+// Set this back to false when Malay translations are ready. That will restore
+// the normal site-wide language selector while preserving ENGLISH_ONLY_PATHS
+// for pages that should remain English-only.
+const LANGUAGE_SWITCH_FROZEN = true;
+const ENGLISH_ONLY_PATHS = [
+  "/openapi",
+  "/query-builder",
+  "/signin",
+  "/console",
+];
 
 function isEnglishOnlyPath(asPath: string) {
   return ENGLISH_ONLY_PATHS.some(
-    p => asPath === p || asPath.startsWith(p + "/"),
+    (p) => asPath === p || asPath.startsWith(p + "/"),
   );
 }
 
@@ -25,17 +35,21 @@ export default function LocaleSwitch() {
   const { asPath, locale, push, pathname, query } = useRouter();
 
   const englishOnly = isEnglishOnlyPath(asPath.split("?")[0]);
+  // When LANGUAGE_SWITCH_FROZEN is true, every route behaves like an
+  // English-only route: the selector is disabled and ms-MY URLs are redirected
+  // to en-GB. To undo the freeze, flip LANGUAGE_SWITCH_FROZEN to false.
+  const forceEnglish = LANGUAGE_SWITCH_FROZEN || englishOnly;
   // Stable display value — avoid returning null during locale transitions
   const displayLanguage = language ?? "en-GB";
 
-  // Redirect ms-MY visitors to en-GB on English-only pages
+  // Temporarily keep the site in English until translations are ready.
   useEffect(() => {
-    if (englishOnly && locale === "ms-MY") {
+    if (forceEnglish && locale === "ms-MY") {
       push({ pathname, query }, asPath, { locale: "en-GB", scroll: false });
     }
-  }, [englishOnly, locale, asPath, pathname, query, push]);
+  }, [forceEnglish, locale, asPath, pathname, query, push]);
 
-  if (englishOnly) {
+  if (forceEnglish) {
     return (
       <div className="pointer-events-none opacity-40">
         <Select
