@@ -1,30 +1,123 @@
-import { Suspense } from "react";
+import { Fragment, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Menu, Transition } from "@headlessui/react";
+import { useRouter } from "next/router";
+import { clx } from "@lib/helpers";
 import ThemeToggle from "./theme-toggle";
 import LocaleSwitch from "./locale-switch";
 import { useTranslation } from "@hooks/useTranslation";
 import Navbar, { Nav } from "../Navbar";
-// import { useRouter } from "next/router";
-// import { routes } from "@lib/routes";
 import {
   ArrowDownTrayIcon,
   BoltIcon,
+  CircleStackIcon,
+  ChevronDownIcon,
   ClipboardDocumentCheckIcon,
   CodeBracketIcon,
   FlagIcon,
-  MapIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
 import { RedelineationIcon, SeatsIcon } from "@icons/index";
 
+type DesktopNavItem = {
+  title: string;
+  link: string;
+  locale?: string;
+};
+
+function isNavItemActive(currentPath: string, link: string) {
+  const normalizedLink = link.replace(/\/introduction$/u, "");
+  return currentPath === link || currentPath.startsWith(`${normalizedLink}/`);
+}
+
+function DesktopDropdown({
+  label,
+  items,
+  currentPath,
+}: {
+  label: string;
+  items: DesktopNavItem[];
+  currentPath: string;
+}) {
+  const hasActiveItem = items.some((item) => isNavItemActive(currentPath, item.link));
+
+  return (
+    <Menu as="div" className="relative hidden lg:block">
+      <Menu.Button
+        className={clx(
+          "flex items-center gap-1 rounded-md px-2.5 py-1.5 text-body-sm font-semibold text-txt-black-700 transition-colors hover:text-txt-black-900",
+          hasActiveItem && "bg-bg-washed-active text-txt-black-900",
+        )}
+      >
+        {label}
+        <ChevronDownIcon className="h-4 w-4" />
+      </Menu.Button>
+
+      <Transition
+        as={Fragment}
+        enter="transition duration-150 ease-out"
+        enterFrom="translate-y-1 opacity-0"
+        enterTo="translate-y-0 opacity-100"
+        leave="transition duration-100 ease-in"
+        leaveFrom="translate-y-0 opacity-100"
+        leaveTo="translate-y-1 opacity-0"
+      >
+        <Menu.Items className="absolute left-0 top-full z-50 mt-2 min-w-[13rem] rounded-xl border border-otl-gray-200 bg-bg-white p-2 shadow-button focus:outline-none">
+          <div className="flex flex-col gap-1">
+            {items.map((item) => {
+              const active = isNavItemActive(currentPath, item.link);
+
+              return (
+                <Menu.Item key={item.link} as={Fragment}>
+                  {({ close }) => (
+                    <Link
+                      href={item.link}
+                      locale={item.locale}
+                      scroll={false}
+                      onClick={() => close()}
+                      className={clx(
+                        "rounded-lg px-3 py-2 text-body-sm transition-colors",
+                        active
+                          ? "bg-bg-danger-50 font-medium text-txt-danger"
+                          : "text-txt-black-700 hover:bg-bg-black-50 hover:text-txt-black-900",
+                      )}
+                    >
+                      {item.title}
+                    </Link>
+                  )}
+                </Menu.Item>
+              );
+            })}
+          </div>
+        </Menu.Items>
+      </Transition>
+    </Menu>
+  );
+}
+
 export default function Header() {
   const { t } = useTranslation();
-  // const router = useRouter();
+  const router = useRouter();
+  const currentPath = router.asPath.split("?")[0].split("#")[0];
+
+  const dashboardItems: DesktopNavItem[] = [
+    { title: t("common:nav.seats"), link: "/seats" },
+    { title: t("common:nav.candidates"), link: "/candidates" },
+    { title: t("common:nav.parties"), link: "/parties" },
+    { title: t("common:nav.elections"), link: "/elections" },
+    { title: t("common:nav.byelections"), link: "/byelections" },
+    { title: t("common:nav.redelineation"), link: "/redelineation" },
+  ];
+
+  const toolItems: DesktopNavItem[] = [
+    { title: t("common:nav.catalogue"), link: "/data-catalogue" },
+    { title: t("common:nav.openapi"), link: "/openapi/introduction", locale: "en-GB" },
+    { title: "Query Builder", link: "/query-builder", locale: "en-GB" },
+  ];
 
   return (
     <Navbar
-    // innerclassName={router.pathname === routes.DATA_CATALOGUE ? "" : ""}
     >
       <Link
         href={"/"}
@@ -53,13 +146,24 @@ export default function Header() {
       >
         {(close) => (
           <>
+            <DesktopDropdown
+              label="Dashboards"
+              items={dashboardItems}
+              currentPath={currentPath}
+            />
+            <DesktopDropdown
+              label="Tools"
+              items={toolItems}
+              currentPath={currentPath}
+            />
+
             <Nav.Item
               key={"/candidates"}
               title={t("common:nav.candidates")}
               link="/candidates"
               onClick={close}
               icon={<UserIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:order-2"
+              className="text-center lg:hidden"
             />
             <Nav.Item
               key={"/seats"}
@@ -67,7 +171,7 @@ export default function Header() {
               link="/seats"
               onClick={close}
               icon={<SeatsIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:order-1"
+              className="text-center lg:hidden"
             />
             <Nav.Item
               key={"/parties"}
@@ -75,7 +179,7 @@ export default function Header() {
               link="/parties"
               onClick={close}
               icon={<FlagIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:order-3"
+              className="text-center lg:hidden"
             />
             <Nav.Item
               key={"/byelections"}
@@ -83,7 +187,7 @@ export default function Header() {
               link="/byelections"
               onClick={close}
               icon={<BoltIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:order-5"
+              className="text-center lg:hidden"
             />
             <Nav.Item
               key={"/elections"}
@@ -93,7 +197,7 @@ export default function Header() {
               icon={
                 <ClipboardDocumentCheckIcon className="hidden size-8 max-lg:block" />
               }
-              className="text-center lg:order-4"
+              className="text-center lg:hidden"
             />
 
             <Nav.Item
@@ -104,16 +208,8 @@ export default function Header() {
               icon={
                 <RedelineationIcon className="hidden size-8 max-lg:block" />
               }
-              className="text-center lg:order-6"
+              className="text-center lg:hidden"
             />
-            {/* <Nav.Item
-              key={"/map/explorer"}
-              title={t("common:nav.map")}
-              link="/map/explorer"
-              onClick={close}
-              icon={<MapIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:order-7"
-            /> */}
 
             <Nav.Item
               key={"/data-catalogue"}
@@ -123,7 +219,7 @@ export default function Header() {
                 <ArrowDownTrayIcon className="hidden size-8 max-lg:block" />
               }
               onClick={close}
-              className="whitespace-nowrap text-center lg:order-7"
+              className="whitespace-nowrap text-center lg:hidden"
             />
             <Nav.Item
               key={"/openapi"}
@@ -134,7 +230,16 @@ export default function Header() {
                 <CodeBracketIcon className="hidden size-8 max-lg:block" />
               }
               onClick={close}
-              className="whitespace-nowrap text-center lg:order-8"
+              className="whitespace-nowrap text-center lg:hidden"
+            />
+            <Nav.Item
+              key={"/query-builder"}
+              title="Query Builder"
+              link="/query-builder"
+              locale="en-GB"
+              icon={<CircleStackIcon className="hidden size-8 max-lg:block" />}
+              onClick={close}
+              className="whitespace-nowrap text-center lg:hidden"
             />
           </>
         )}

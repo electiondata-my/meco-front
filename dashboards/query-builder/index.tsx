@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/router";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { Transition } from "@headlessui/react";
 import { clx, numFormat } from "@lib/helpers";
 import { sql as sqlLang, StandardSQL } from "@codemirror/lang-sql";
 import { format as formatSql } from "sql-formatter";
@@ -21,6 +22,7 @@ import {
   WrenchScrewdriverIcon,
   SparklesIcon,
 } from "@heroicons/react/20/solid";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 import {
   DATASETS,
@@ -113,6 +115,150 @@ function StepLabel({ n, label }: { n: number; label: string }) {
         {label}
       </h2>
     </div>
+  );
+}
+
+interface QueryBuilderSidebarProps {
+  groupedQuestions: Array<{
+    group: InterestingQuestion["group"];
+    questions: InterestingQuestion[];
+  }>;
+  activeSample: string | null;
+  loadQuestion: (question: InterestingQuestion) => void;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+function QueryBuilderSidebar({
+  groupedQuestions,
+  activeSample,
+  loadQuestion,
+  mobileOpen,
+  onMobileClose,
+}: QueryBuilderSidebarProps) {
+  const sidebarContent = (
+    <>
+      <div className="mb-5 flex flex-col gap-2">
+        <Link
+          href="https://t.me/myelectiondata"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onMobileClose}
+          className="group flex items-center gap-2 rounded-lg border border-otl-gray-200 px-3 py-2 text-body-sm font-medium text-txt-black-700 transition-colors hover:border-otl-danger-200 hover:bg-bg-danger-50 hover:text-txt-danger"
+        >
+          <ChatBubbleLeftRightIcon className="h-4 w-4 shrink-0 text-txt-black-400 transition-colors group-hover:text-txt-danger" />
+          Get help: User group
+        </Link>
+      </div>
+
+      <div className="mb-4 border-t border-otl-gray-200" />
+
+      <div className="mb-4">
+        <p className="text-txt-black-800 mb-1.5 text-[15px] font-semibold leading-6">
+          Sample Queries
+        </p>
+        <p className="text-[13px] leading-5 text-txt-black-500">
+          Get a feel for how to build queries and answer a question
+        </p>
+      </div>
+      <div className="space-y-4">
+        {groupedQuestions.map(({ group, questions }) => (
+          <div key={group}>
+            <p className="text-txt-black-400 mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-[0.14em]">
+              {getQuestionGroupLabel(group)}
+            </p>
+            <ul className="space-y-1">
+              {questions.map((q) => (
+                <li key={q.question}>
+                  <button
+                    onClick={() => {
+                      loadQuestion(q);
+                      onMobileClose();
+                    }}
+                    className={clx(
+                      "group w-full rounded-xl border px-3 py-2 text-left transition-colors",
+                      activeSample === q.question
+                        ? "bg-black-50 border-otl-danger-200 text-txt-black-900"
+                        : "border-transparent text-txt-black-700 hover:border-otl-gray-200 hover:bg-bg-black-50 hover:text-txt-black-900",
+                    )}
+                  >
+                    <div className="flex items-start gap-2">
+                      <span
+                        className={clx(
+                          "pt-0.5 text-[14px] leading-5 transition-colors",
+                          activeSample === q.question
+                            ? "text-danger-600"
+                            : "text-txt-black-300 group-hover:text-txt-black-500",
+                        )}
+                      >
+                        &rarr;
+                      </span>
+                      <p
+                        className={clx(
+                          "text-[14px] font-normal leading-5",
+                          activeSample === q.question
+                            ? "text-txt-black-900"
+                            : "text-inherit",
+                        )}
+                      >
+                        {q.question}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      <aside className="hidden w-60 shrink-0 self-stretch border-r border-otl-gray-200 lg:block">
+        <div className="hide-scrollbar sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto pb-10 pr-4 pt-8">
+          {sidebarContent}
+        </div>
+      </aside>
+      <Transition show={mobileOpen} as="div" className="fixed inset-0 z-50 lg:hidden">
+        <Transition.Child
+          as="div"
+          enter="transition-opacity duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="transition-opacity duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+          className="absolute inset-0 bg-black/40"
+          onClick={onMobileClose}
+        />
+        <Transition.Child
+          as="aside"
+          enter="transition-transform duration-300 ease-out"
+          enterFrom="-translate-x-full"
+          enterTo="translate-x-0"
+          leave="transition-transform duration-300 ease-in"
+          leaveFrom="translate-x-0"
+          leaveTo="-translate-x-full"
+          className="absolute inset-y-0 left-0 w-72 overflow-y-auto border-r border-otl-gray-200 bg-bg-white px-3 pb-10 pt-6 shadow-lg sm:px-4"
+        >
+          <div className="mb-5 flex items-center justify-between">
+            <span className="font-poppins text-body-sm font-semibold text-txt-black-900">
+              Query Builder
+            </span>
+            <button
+              onClick={onMobileClose}
+              className="rounded-md p-1 text-txt-black-400 hover:text-txt-black-700"
+              aria-label="Close sample queries"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
+          {sidebarContent}
+        </Transition.Child>
+      </Transition>
+    </>
   );
 }
 
@@ -269,6 +415,7 @@ const QueryResults = memo(function QueryResults({
 
 export default function QueryBuilderDashboard() {
   const router = useRouter();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { db, initializing, error: dbError } = useDuckDB();
   const defaultQuestion = INTERESTING_QUESTIONS[0];
   const hasAppliedSharedQueryRef = useRef(false);
@@ -526,85 +673,29 @@ export default function QueryBuilderDashboard() {
   })();
 
   return (
-    <div className="px-4.5 md:px-6">
+    <div className="px-3 sm:px-4.5 md:px-6">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-screen-xl">
-        {/* ── Left sidebar ─────────────────────────────────── */}
-        <aside className="hidden w-60 shrink-0 self-stretch border-r border-otl-gray-200 lg:block">
-          <div className="hide-scrollbar sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto pb-10 pr-4 pt-8">
-            <div className="mb-5 flex flex-col gap-2">
-              <Link
-                href="https://t.me/myelectiondata"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg border border-otl-danger-200 bg-bg-danger-50 px-3 py-2.5 text-[15px] font-medium leading-6 text-txt-danger transition-colors hover:bg-bg-danger-100"
-              >
-                <ChatBubbleLeftRightIcon className="h-4 w-4 shrink-0" />
-                Get help: User group
-              </Link>
-            </div>
-
-            <div className="mb-4 border-t border-otl-gray-200" />
-
-            <div className="mb-4">
-              <p className="text-txt-black-800 mb-1.5 text-[15px] font-semibold leading-6">
-                Sample Queries
-              </p>
-              <p className="text-[13px] leading-5 text-txt-black-500">
-                Get a feel for how to build queries and answer a question
-              </p>
-            </div>
-            <div className="space-y-4">
-              {groupedQuestions.map(({ group, questions }) => (
-                <div key={group}>
-                  <p className="text-txt-black-400 mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-[0.14em]">
-                    {getQuestionGroupLabel(group)}
-                  </p>
-                  <ul className="space-y-1">
-                    {questions.map((q) => (
-                      <li key={q.question}>
-                        <button
-                          onClick={() => loadQuestion(q)}
-                          className={clx(
-                            "group w-full rounded-xl border px-3 py-2 text-left transition-colors",
-                            activeSample === q.question
-                              ? "bg-black-50 border-otl-danger-200 text-txt-black-900"
-                              : "border-transparent text-txt-black-700 hover:border-otl-gray-200 hover:bg-bg-black-50 hover:text-txt-black-900",
-                          )}
-                        >
-                          <div className="flex items-start gap-2">
-                            <span
-                              className={clx(
-                                "pt-0.5 text-[14px] leading-5 transition-colors",
-                                activeSample === q.question
-                                  ? "text-danger-600"
-                                  : "text-txt-black-300 group-hover:text-txt-black-500",
-                              )}
-                            >
-                              &rarr;
-                            </span>
-                            <p
-                              className={clx(
-                                "text-[14px] font-normal leading-5",
-                                activeSample === q.question
-                                  ? "text-txt-black-900"
-                                  : "text-inherit",
-                              )}
-                            >
-                              {q.question}
-                            </p>
-                          </div>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
+        <QueryBuilderSidebar
+          groupedQuestions={groupedQuestions}
+          activeSample={activeSample}
+          loadQuestion={loadQuestion}
+          mobileOpen={mobileSidebarOpen}
+          onMobileClose={() => setMobileSidebarOpen(false)}
+        />
 
         {/* ── Main content ─────────────────────────────────── */}
-        <main className="min-w-0 flex-1 px-6 pb-24 pt-8 sm:px-8 lg:px-10">
+        <main className="min-w-0 flex-1 px-2 pb-24 pt-8 sm:px-6 lg:px-10">
+          <div className="mb-5 flex items-center gap-2 lg:hidden">
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="flex items-center gap-1.5 text-body-sm text-txt-black-600 hover:text-txt-black-900"
+              aria-label="Open sample queries"
+            >
+              <Bars3Icon className="h-5 w-5" />
+              Sample Queries
+            </button>
+          </div>
+
           {/* Hero */}
           <h1 className="mb-2 font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]">
             Query Builder
@@ -618,7 +709,7 @@ export default function QueryBuilderDashboard() {
 
           {/* ── Step 1: Ask AI ── */}
           <section className="mb-12">
-            <StepLabel n={1} label="Ask AI to build your query" />
+            <StepLabel n={1} label="Ask AI to build your Query" />
             <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
               Why waste time writing SQL? Copy the prompt we&apos;ve prepared
               for you, paste it into the AI tool of your choice, and just ask
@@ -641,15 +732,9 @@ export default function QueryBuilderDashboard() {
               onKeyDown={handleEditorKeyDown}
             >
               <div className="space-y-3">
-                <div>
-                  <h3 className="text-[14px] font-semibold text-txt-black-900">
-                    Choose a source
-                  </h3>
-                  <p className="mt-1 text-[12px] leading-5 text-txt-black-500">
-                    Start in your workspace or pick a dataset to load a preview
-                    query into the editor.
-                  </p>
-                </div>
+                <p className="max-w-2xl text-body-sm text-txt-black-700">
+                  Start writing your own custom query, or pick a dataset to inspect.
+                </p>
 
                 <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-4">
                   <button
@@ -728,7 +813,7 @@ export default function QueryBuilderDashboard() {
                   </div>
                 </div>
 
-                <div className="[&_.cm-editor.cm-focused]:outline-none [&_.cm-editor]:font-mono [&_.cm-editor]:text-[13px] [&_.cm-focused]:outline-none">
+                <div className="relative overflow-hidden border-b border-otl-gray-200 bg-white [&_.cm-editor.cm-focused]:outline-none [&_.cm-editor]:font-mono [&_.cm-editor]:text-[13px] [&_.cm-focused]:outline-none [&_.cm-scroller]:overflow-hidden">
                   <CodeMirror
                     value={activeQueryText}
                     onChange={handleQueryChange}
@@ -815,8 +900,8 @@ export default function QueryBuilderDashboard() {
             <StepLabel n={3} label="Share your Query" />
             <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
               Want to send your work to someone else or save it for later?
-              Use this shareable link that stays updated with your current
-              SQL, so anyone opening it lands straight in the editor with the
+              Use this shareable link that encodes the current SQL in your workspace, 
+              so anyone opening it lands straight in the editor with the
               query ready to run. We do not store your generated link; your work
               is as private as you want it to be.
             </p>
