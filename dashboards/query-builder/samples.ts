@@ -9,55 +9,59 @@ export interface SampleQuery {
 
 export interface InterestingQuestion {
   question: string;
+  group: "Seats" | "Parties" | "Candidates";
   dataset: DatasetKey;
   sql: string;
 }
 
 export const INTERESTING_QUESTIONS: InterestingQuestion[] = [
   {
+    group: "Seats",
     question: "What was the smallest winning margin ever?",
     dataset: "results_stats",
     sql: "SELECT\n  date,\n  election,\n  state,\n  seat,\n  majority,\n  majority_perc\nFROM\n  results_stats\nWHERE\n  majority_perc NOT NULL -- uncontested seats\nORDER BY\n  majority ASC\nLIMIT\n  10",
   },
   {
-    question: "What was the largest winning margin ever?",
+    group: "Seats",
+    question: "Which Parliament seats are most malapportioned?",
     dataset: "results_stats",
-    sql: "SELECT\n  seat,\n  winner,\n  party,\n  winning_margin\nFROM results_stats\nORDER BY winning_margin DESC\nLIMIT 20",
+    sql: "SELECT\n  date,\n  election,\n  state,\n  seat,\n  voters_total AS total_voters,\n  PRINTF('%.2fx', voters_total / AVG(voters_total) OVER ()) AS vs_avg\nFROM\n  results_stats\nWHERE\n  election = (\n    SELECT election\n    FROM results_stats\n    WHERE election LIKE 'GE-%'\n    ORDER BY date DESC\n    LIMIT 1\n  )\nORDER BY\n  voters_total DESC",
   },
   {
-    question: "How has the proportion of women in Malaysian parliament changed over time?",
+    group: "Candidates",
+    question: "How has the % of female MPs changed over time?",
     dataset: "results_ballots",
-    sql: "SELECT\n  election,\n  COUNT(*) FILTER (WHERE sex = 'F') AS women,\n  COUNT(*) AS total_candidates,\n  ROUND(\n    COUNT(*) FILTER (WHERE sex = 'F') * 100.0 / COUNT(*),\n    1\n  ) AS pct_female\nFROM results_ballots\nGROUP BY election\nORDER BY election",
+    sql: "SELECT\n  election,\n  COUNT(*) AS total_mps,\n  COUNT(*) FILTER (WHERE sex = 'F') AS women_mps,\n  PRINTF(\n    '%.1f',\n    COUNT(*) FILTER (WHERE sex = 'F') * 100.0 / COUNT(*)\n  ) AS pct_female\nFROM results_ballots\nWHERE election LIKE 'GE%'\n  AND result LIKE 'won%'\nGROUP BY election\nORDER BY election",
   },
   {
-    question: "Which party won the most seats?",
+    group: "Parties",
+    question: "Which party won seats by the highest majority (on average) in GE-15?",
+    dataset: "results_ballots",
+    sql: "SELECT\n  b.party,\n  COUNT(*) AS seats_won,\n  ROUND(AVG(s.majority_perc), 2) AS avg_majority,\n  ROUND(MAX(s.majority_perc), 2) AS highest_majority,\n  ROUND(MIN(s.majority_perc), 2) AS lowest_majority\nFROM results_ballots b\nLEFT JOIN results_stats s\n  ON b.election = s.election\n  AND b.date = s.date\n  AND b.seat = s.seat\nWHERE b.election = 'GE-15'\n  AND b.result LIKE 'won%'\nGROUP BY b.party\nORDER BY avg_majority DESC",
+  },
+  {
+    group: "Seats",
+    question: "Which Sarawak DUN seats are most malapportioned?",
     dataset: "results_stats",
-    sql: "SELECT\n  party,\n  COUNT(*) AS seats_won\nFROM results_stats\nGROUP BY party\nORDER BY seats_won DESC",
+    sql: "SELECT\n  date,\n  election,\n  state,\n  seat,\n  voters_total AS total_voters,\n  PRINTF('%.2fx', voters_total / AVG(voters_total) OVER ()) AS vs_avg\nFROM\n  results_stats\nWHERE\n  election = (\n    SELECT election\n    FROM results_stats\n    WHERE state = 'Sarawak'\n    AND election like 'SE%'\n    ORDER BY date DESC\n    LIMIT 1\n  )\nAND\n  state = 'Sarawak'\nORDER BY\n  voters_total DESC",
   },
   {
-    question: "Which constituency had the highest voter turnout?",
+    group: "Candidates",
+    question: "Who were the youngest MPs ever?",
     dataset: "results_ballots",
-    sql: "SELECT\n  seat,\n  ROUND(\n    CAST(votes_cast AS FLOAT) / NULLIF(reg_voters, 0) * 100,\n    2\n  ) AS turnout_pct\nFROM results_ballots\nORDER BY turnout_pct DESC\nLIMIT 30",
+    sql: "SELECT\n  election,\n  date,\n  seat || ', ' || state AS seat,\n  name,\n  age,\n  party\nFROM results_ballots\nWHERE election LIKE 'GE%'\n  AND result LIKE 'won%'\n  AND age != -1\nORDER BY age ASC\nLIMIT 20",
   },
   {
-    question: "Who were the top vote-getters overall?",
+    group: "Parties",
+    question: "Which party had the worst male bias in GE-15?",
     dataset: "results_ballots",
-    sql: "SELECT\n  candidate,\n  party,\n  seat,\n  votes\nFROM results_ballots\nORDER BY votes DESC\nLIMIT 20",
+    sql: "SELECT\n  party,\n  COUNT(*) AS total_candidates,\n  SUM(CASE WHEN sex = 'M' THEN 1 ELSE 0 END) AS male,\n  SUM(CASE WHEN sex = 'F' THEN 1 ELSE 0 END) AS female,\n  ROUND(100.0 * SUM(CASE WHEN sex = 'M' THEN 1 ELSE 0 END) / COUNT(*), 2) AS male_perc,\n  ROUND(100.0 * SUM(CASE WHEN sex = 'F' THEN 1 ELSE 0 END) / COUNT(*), 2) AS female_perc\nFROM results_ballots\nWHERE election = 'GE-15'\n  AND party != 'BEBAS'\nGROUP BY party\nHAVING COUNT(*) > 10\nORDER BY male_perc DESC",
   },
   {
-    question: "Which state had the most spoilt ballots?",
+    group: "Candidates",
+    question: "Who has lost the most electoral contests?",
     dataset: "results_ballots",
-    sql: "SELECT\n  state,\n  SUM(votes_spoilt) AS total_spoilt\nFROM results_ballots\nGROUP BY state\nORDER BY total_spoilt DESC",
-  },
-  {
-    question: "Which seats were contested by exactly three candidates?",
-    dataset: "results_stats",
-    sql: "SELECT *\nFROM results_stats\nWHERE num_candidates = 3\nLIMIT 50",
-  },
-  {
-    question: "Which constituency had the most registered voters?",
-    dataset: "results_ballots",
-    sql: "SELECT\n  seat,\n  state,\n  MAX(reg_voters) AS registered_voters\nFROM results_ballots\nGROUP BY seat, state\nORDER BY registered_voters DESC\nLIMIT 20",
+    sql: "SELECT\n  r.candidate_uid,\n  r.name,\n  COUNT(*) AS total_losses,\n  (\n    SELECT COUNT(*)\n    FROM results_ballots\n    WHERE candidate_uid = r.candidate_uid\n      AND result LIKE 'won%'\n  ) AS total_wins,\n  (\n    SELECT party\n    FROM results_ballots\n    WHERE candidate_uid = r.candidate_uid\n    ORDER BY date ASC\n    LIMIT 1\n  ) AS first_party,\n  (\n    SELECT party\n    FROM results_ballots\n    WHERE candidate_uid = r.candidate_uid\n    ORDER BY date DESC\n    LIMIT 1\n  ) AS last_party\nFROM results_ballots r\nWHERE result NOT LIKE 'won%'\nGROUP BY r.candidate_uid, r.name\nORDER BY total_losses DESC\nLIMIT 10",
   },
 ];
 

@@ -6,8 +6,8 @@ export const DATASETS = {
 } as const;
 
 export const DATASET_LABELS: Record<DatasetKey, string> = {
-  results_ballots: "results-ballots",
-  results_stats: "results-stats",
+  results_ballots: "results_ballots",
+  results_stats: "results_stats",
 };
 
 export const DATASET_DESCRIPTIONS: Record<DatasetKey, string> = {

@@ -1,4 +1,12 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  memo,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  useDeferredValue,
+} from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -7,10 +15,10 @@ import { sql as sqlLang, StandardSQL } from "@codemirror/lang-sql";
 import { format as formatSql } from "sql-formatter";
 import {
   ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
   ClipboardDocumentIcon,
   ClipboardDocumentCheckIcon,
   WrenchScrewdriverIcon,
-  LinkIcon,
   SparklesIcon,
 } from "@heroicons/react/20/solid";
 
@@ -26,7 +34,9 @@ import { prepareQuery } from "./validator";
 import { trackQueryRun } from "./trackQueryRun";
 import { useDuckDB } from "./useDuckDB";
 
-const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), { ssr: false });
+const CodeMirror = dynamic(() => import("@uiw/react-codemirror"), {
+  ssr: false,
+});
 
 const MAX_DISPLAY_ROWS = 500;
 
@@ -40,13 +50,20 @@ interface QueryResult {
 }
 
 type ColType = "numeric" | "date" | "text";
+type QuerySource = "workspace" | DatasetKey;
 
 function getColType(fieldType: string, sample: any): ColType {
   const ft = fieldType.toLowerCase();
-  if (ft.includes("date") || ft.includes("timestamp") || ft.includes("time") || sample instanceof Date) {
+  if (
+    ft.includes("date") ||
+    ft.includes("timestamp") ||
+    ft.includes("time") ||
+    sample instanceof Date
+  ) {
     return "date";
   }
-  if (typeof sample === "number" || typeof sample === "bigint") return "numeric";
+  if (typeof sample === "number" || typeof sample === "bigint")
+    return "numeric";
   return "text";
 }
 
@@ -55,17 +72,30 @@ function formatCell(value: any, fieldType: string = ""): string {
 
   if (value instanceof Date) {
     const hasTime =
-      value.getUTCHours() !== 0 || value.getUTCMinutes() !== 0 || value.getUTCSeconds() !== 0;
+      value.getUTCHours() !== 0 ||
+      value.getUTCMinutes() !== 0 ||
+      value.getUTCSeconds() !== 0;
     return hasTime
       ? value.toLocaleString("en-GB")
-      : value.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+      : value.toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        });
   }
 
   // Arrow DATE32 columns sometimes arrive as plain integers (days since epoch in ms)
   const ft = fieldType.toLowerCase();
-  if ((ft.includes("date") || ft.includes("timestamp")) && typeof value === "number") {
+  if (
+    (ft.includes("date") || ft.includes("timestamp")) &&
+    typeof value === "number"
+  ) {
     const d = new Date(value);
-    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    return d.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   }
 
   if (typeof value === "bigint") return value.toLocaleString("en-GB");
@@ -79,10 +109,161 @@ function StepLabel({ n, label }: { n: number; label: string }) {
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-danger-600 text-[12px] font-bold text-white">
         {n}
       </div>
-      <h2 className="font-poppins text-[1.25rem] font-semibold text-txt-black-900">{label}</h2>
+      <h2 className="font-poppins text-[1.25rem] font-semibold text-txt-black-900">
+        {label}
+      </h2>
     </div>
   );
 }
+
+function getQuestionGroupLabel(group: InterestingQuestion["group"]) {
+  return group === "Seats" ? "Seats & Contests" : group;
+}
+
+function compactFormattedSql(sql: string) {
+  const lines = sql.split("\n").map((line) => line.replace(/\s+$/u, ""));
+  const compacted: string[] = [];
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (trimmed === "CASE") {
+      const parts = ["CASE"];
+      let endIndex = i + 1;
+
+      while (endIndex < lines.length) {
+        const nextTrimmed = lines[endIndex].trim();
+        parts.push(nextTrimmed);
+        if (nextTrimmed === "END") break;
+        endIndex += 1;
+      }
+
+      if (parts[parts.length - 1] === "END") {
+        const compactCase = parts.join(" ");
+        if (compactCase.length <= 100) {
+          compacted.push(`${line.match(/^\s*/u)?.[0] ?? ""}${compactCase}`);
+          i = endIndex;
+          continue;
+        }
+      }
+    }
+
+    if (compacted.length > 0) {
+      const prev = compacted[compacted.length - 1];
+      const prevTrimmed = prev.trimEnd();
+      const currentTrimmed = trimmed;
+
+      if (
+        prevTrimmed.endsWith("(") &&
+        /^(CASE\b|[A-Za-z_"][\w."']*|\d|\()/u.test(currentTrimmed) &&
+        !/^(SELECT|FROM|WHERE|GROUP BY|ORDER BY|HAVING|LIMIT|UNION|JOIN)\b/u.test(
+          currentTrimmed,
+        )
+      ) {
+        compacted[compacted.length - 1] = `${prevTrimmed}${currentTrimmed}`;
+        continue;
+      }
+    }
+
+    compacted.push(line);
+  }
+
+  return compacted.join("\n").replace(/\n{3,}/gu, "\n\n");
+}
+
+const QueryResults = memo(function QueryResults({
+  result,
+}: {
+  result: QueryResult;
+}) {
+  const columnTypes = useMemo<Record<number, ColType>>(() => {
+    return result.columns.reduce(
+      (acc, _, ci) => {
+        const sample = result.rows.find(
+          (r) => r[ci] !== null && r[ci] !== undefined,
+        )?.[ci];
+        acc[ci] = getColType(result.fieldTypes[ci] ?? "", sample);
+        return acc;
+      },
+      {} as Record<number, ColType>,
+    );
+  }, [result]);
+
+  return (
+    <>
+      <p className="flex items-center gap-1.5 px-1 text-[12px] text-txt-black-500">
+        <CheckCircleIcon className="text-green-600 h-3.5 w-3.5 shrink-0" />
+        <span>
+          {result.truncated
+            ? `${MAX_DISPLAY_ROWS.toLocaleString()}+ rows (capped at ${MAX_DISPLAY_ROWS})`
+            : `${result.totalRows.toLocaleString()} row${result.totalRows !== 1 ? "s" : ""}`}
+          {" · "}
+          {result.columns.length} col{result.columns.length !== 1 ? "s" : ""}
+          {" · "}
+          {result.executionTime < 1000
+            ? `${Math.round(result.executionTime)} ms`
+            : `${(result.executionTime / 1000).toFixed(2)} s`}
+        </span>
+      </p>
+
+      <div className="overflow-hidden rounded-xl border border-otl-gray-200">
+        {result.rows.length === 0 ? (
+          <div className="text-txt-black-400 bg-white px-4 py-10 text-center text-[13px]">
+            Query returned no rows.
+          </div>
+        ) : (
+          <div className="max-h-[24rem] overflow-auto sm:max-h-[28rem] lg:max-h-[36rem]">
+            <table className="w-full border-collapse text-[13px]">
+              <thead>
+                <tr className="bg-black-50">
+                  {result.columns.map((col, ci) => (
+                    <th
+                      key={col}
+                      className={clx(
+                        "text-txt-black-400 sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider",
+                        columnTypes[ci] === "numeric"
+                          ? "text-right"
+                          : "text-left",
+                      )}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {result.rows.map((row, ri) => (
+                  <tr
+                    key={ri}
+                    className="border-otl-gray-100 hover:bg-black-50/60 border-b transition-colors last:border-0"
+                  >
+                    {row.map((cell, ci) => (
+                      <td
+                        key={ci}
+                        className={clx(
+                          "text-txt-black-800 whitespace-nowrap px-3 py-1.5 font-mono text-[13px]",
+                          columnTypes[ci] === "numeric"
+                            ? "text-right tabular-nums"
+                            : "text-left",
+                          columnTypes[ci] === "date" && "text-txt-black-600",
+                          (cell === null || cell === undefined) &&
+                            "text-txt-black-300 italic",
+                        )}
+                      >
+                        {formatCell(cell, result.fieldTypes[ci])}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
+  );
+});
 
 // ── Main dashboard ──────────────────────────────────────────────────────────
 
@@ -90,150 +271,238 @@ export default function QueryBuilderDashboard() {
   const router = useRouter();
   const { db, initializing, error: dbError } = useDuckDB();
   const defaultQuestion = INTERESTING_QUESTIONS[0];
+  const hasAppliedSharedQueryRef = useRef(false);
+  const shouldAutoRunSharedQueryRef = useRef(false);
 
   const [queryText, setQueryText] = useState(defaultQuestion.sql);
-  const [activeDataset, setActiveDataset] = useState<DatasetKey>(defaultQuestion.dataset);
-  const [activeSample, setActiveSample] = useState<string | null>(defaultQuestion.question);
+  const [activeDataset, setActiveDataset] = useState<DatasetKey>(
+    defaultQuestion.dataset,
+  );
+  const [activeSource, setActiveSource] = useState<QuerySource>("workspace");
+  const [activeSample, setActiveSample] = useState<string | null>(
+    defaultQuestion.question,
+  );
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<QueryResult | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
   const [queryCount, setQueryCount] = useState<number | null>(null);
+  const [hasHydratedSharedQuery, setHasHydratedSharedQuery] = useState(false);
+  const deferredQueryText = useDeferredValue(queryText);
+  const getDatasetPreviewQuery = useCallback(
+    (dataset: DatasetKey) => `SELECT *\nFROM ${dataset}\nLIMIT 30`,
+    [],
+  );
+  const activeQueryText = useMemo(
+    () =>
+      activeSource === "workspace"
+        ? queryText
+        : getDatasetPreviewQuery(activeSource),
+    [activeSource, getDatasetPreviewQuery, queryText],
+  );
+
+  const encodedQuery = useMemo(() => {
+    const trimmedQuery = activeQueryText.trim();
+    return trimmedQuery ? encodeQuery(activeQueryText) : "";
+  }, [activeQueryText]);
+
+  const shareUrl = useMemo(() => {
+    if (!router.isReady) return "";
+
+    const basePath = router.asPath.split("?")[0] || router.pathname;
+    if (typeof window === "undefined") {
+      return encodedQuery ? `${basePath}?query=${encodedQuery}` : basePath;
+    }
+
+    const baseUrl = `${window.location.origin}${basePath}`;
+    return encodedQuery ? `${baseUrl}?query=${encodedQuery}` : baseUrl;
+  }, [encodedQuery, router.asPath, router.isReady, router.pathname]);
+
+  const groupedQuestions = useMemo(() => {
+    const groupOrder: InterestingQuestion["group"][] = [
+      "Seats",
+      "Parties",
+      "Candidates",
+    ];
+
+    return groupOrder.map((group) => ({
+      group,
+      questions: INTERESTING_QUESTIONS.filter(
+        (question) => question.group === group,
+      ),
+    }));
+  }, []);
 
   useEffect(() => {
     const token = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
     fetch(
-      `https://api.us-west-2.aws.tinybird.co/v0/pipes/views_by_page.json?token=${token}&page_id=/query-run`
+      `https://api.us-west-2.aws.tinybird.co/v0/pipes/views_by_page.json?token=${token}&page_id=/query-run`,
     )
-      .then(r => r.json())
-      .then(d => setQueryCount(d?.data?.[0]?.hits ?? null))
+      .then((r) => r.json())
+      .then((d) => setQueryCount(d?.data?.[0]?.hits ?? null))
       .catch(() => setQueryCount(null));
   }, []);
 
   // Decode shared query from URL on mount
   useEffect(() => {
-    if (!router.isReady) return;
+    if (!router.isReady || hasAppliedSharedQueryRef.current) return;
+    hasAppliedSharedQueryRef.current = true;
+
     const { query: qp } = router.query;
     if (typeof qp === "string" && qp) {
       try {
         setQueryText(decodeQuery(qp));
+        setActiveSource("workspace");
         setActiveSample(null);
+        shouldAutoRunSharedQueryRef.current = true;
       } catch {
         // malformed share link — ignore
       }
     }
-  }, [router.isReady]); // eslint-disable-line react-hooks/exhaustive-deps
+    setHasHydratedSharedQuery(true);
+  }, [router.isReady, router.query]);
+
+  useEffect(() => {
+    if (!router.isReady || !hasHydratedSharedQuery) return;
+
+    const currentQuery =
+      typeof router.query.query === "string" ? router.query.query : "";
+    if (currentQuery === (encodedQuery || "")) return;
+
+    void router.replace(
+      {
+        pathname: router.pathname,
+        query: encodedQuery ? { query: encodedQuery } : {},
+      },
+      undefined,
+      { shallow: true },
+    );
+  }, [encodedQuery, hasHydratedSharedQuery, router]);
 
   const extensions = useMemo(
     () => [
       sqlLang({
         dialect: StandardSQL,
-        schema: { results_ballots: [], results_stats: [] },
+        schema: Object.fromEntries(
+          (Object.keys(DATASETS) as DatasetKey[]).map((key) => [key, []]),
+        ),
         defaultTable: activeDataset,
       }),
     ],
-    [activeDataset]
+    [activeDataset],
   );
-
-  // Per-column types derived from Arrow schema + first non-null sample
-  const columnTypes = useMemo<Record<number, ColType>>(() => {
-    if (!result) return {};
-    return result.columns.reduce(
-      (acc, _, ci) => {
-        const sample = result.rows.find(r => r[ci] !== null && r[ci] !== undefined)?.[ci];
-        acc[ci] = getColType(result.fieldTypes[ci] ?? "", sample);
-        return acc;
-      },
-      {} as Record<number, ColType>
-    );
-  }, [result]);
 
   const loadQuestion = useCallback((q: InterestingQuestion) => {
     setQueryText(q.sql);
     setActiveDataset(q.dataset);
+    setActiveSource("workspace");
     setActiveSample(q.question);
-    setResult(null);
-    setQueryError(null);
   }, []);
 
-  const handleDatasetClick = useCallback((key: DatasetKey) => {
-    setActiveDataset(key);
-    setQueryText(`SELECT *\nFROM ${key}\nLIMIT 20`);
+  const handleQueryChange = useCallback((value: string) => {
+    setQueryText(value);
+    setActiveSource("workspace");
     setActiveSample(null);
-    setResult(null);
-    setQueryError(null);
   }, []);
 
   const handleFormat = useCallback(() => {
-    if (!queryText.trim()) return;
+    if (!activeQueryText.trim()) return;
     try {
       setQueryText(
-        formatSql(queryText, {
-          language: "duckdb",
-          tabWidth: 2,
-          keywordCase: "upper",
-          logicalOperatorNewline: "after",
-          expressionWidth: 120,
-        })
+        compactFormattedSql(
+          formatSql(activeQueryText, {
+            language: "duckdb",
+            tabWidth: 2,
+            keywordCase: "upper",
+            logicalOperatorNewline: "before",
+            expressionWidth: 200,
+          }),
+        ),
       );
+      setActiveSource("workspace");
+      setActiveSample(null);
     } catch {}
-  }, [queryText]);
+  }, [activeQueryText]);
 
   const handleCopy = useCallback(async () => {
-    if (!queryText.trim()) return;
-    await navigator.clipboard.writeText(queryText);
+    if (!activeQueryText.trim()) return;
+    await navigator.clipboard.writeText(activeQueryText);
     setCopyState("copied");
     setTimeout(() => setCopyState("idle"), 2000);
-  }, [queryText]);
+  }, [activeQueryText]);
 
   const handleShare = useCallback(async () => {
-    if (!queryText.trim()) return;
-    const encoded = encodeQuery(queryText);
-    const url = `${window.location.origin}${window.location.pathname}?query=${encoded}`;
-    await navigator.clipboard.writeText(url);
-    router.replace({ query: { query: encoded } }, undefined, { shallow: true });
+    if (!shareUrl) return;
+    await navigator.clipboard.writeText(shareUrl);
     setShareState("copied");
     setTimeout(() => setShareState("idle"), 2000);
-  }, [queryText, router]);
+  }, [shareUrl]);
 
-  const runQuery = useCallback(async () => {
-    if (!db || running || !queryText.trim()) return;
-    setRunning(true);
-    setQueryError(null);
-    setResult(null);
+  const runQuery = useCallback(
+    async (queryOverride?: string) => {
+      const sqlToRun = (queryOverride ?? activeQueryText).trim();
+      if (!db || running || !sqlToRun) return;
+      setRunning(true);
+      setQueryError(null);
+      setResult(null);
 
-    trackQueryRun();
-    setQueryCount(prev => (prev !== null ? prev + 1 : 1));
+      trackQueryRun();
+      setQueryCount((prev) => (prev !== null ? prev + 1 : 1));
 
-    try {
-      const prepared = prepareQuery(queryText);
-      const start = performance.now();
-      const conn = await db.connect();
-      const arrowResult = await conn.query(prepared);
-      const elapsed = performance.now() - start;
-      const columns: string[] = arrowResult.schema.fields.map((f: any) => f.name);
-      const fieldTypes: string[] = arrowResult.schema.fields.map(
-        (f: any) => f.type?.toString() ?? ""
-      );
-      const allRows = arrowResult.toArray();
-      const rows: any[][] = allRows
-        .slice(0, MAX_DISPLAY_ROWS)
-        .map((row: any) => columns.map(col => row[col]));
-      setResult({
-        columns,
-        fieldTypes,
-        rows,
-        executionTime: elapsed,
-        totalRows: arrowResult.numRows,
-        truncated: arrowResult.numRows > MAX_DISPLAY_ROWS,
-      });
-    } catch (err) {
-      setQueryError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setRunning(false);
+      try {
+        const prepared = prepareQuery(sqlToRun);
+        const start = performance.now();
+        const conn = await db.connect();
+        const arrowResult = await conn.query(prepared);
+        const elapsed = performance.now() - start;
+        const columns: string[] = arrowResult.schema.fields.map(
+          (f: any) => f.name,
+        );
+        const fieldTypes: string[] = arrowResult.schema.fields.map(
+          (f: any) => f.type?.toString() ?? "",
+        );
+        const allRows = arrowResult.toArray();
+        const rows: any[][] = allRows
+          .slice(0, MAX_DISPLAY_ROWS)
+          .map((row: any) => columns.map((col) => row[col]));
+        setResult({
+          columns,
+          fieldTypes,
+          rows,
+          executionTime: elapsed,
+          totalRows: arrowResult.numRows,
+          truncated: arrowResult.numRows > MAX_DISPLAY_ROWS,
+        });
+      } catch (err) {
+        setQueryError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setRunning(false);
+      }
+    },
+    [activeQueryText, db, running],
+  );
+
+  const handleDatasetClick = useCallback((key: DatasetKey) => {
+    setActiveDataset(key);
+    setActiveSource(key);
+    setActiveSample(null);
+  }, []);
+
+  useEffect(() => {
+    if (
+      !shouldAutoRunSharedQueryRef.current ||
+      !db ||
+      initializing ||
+      running ||
+      !deferredQueryText.trim()
+    ) {
+      return;
     }
-  }, [db, queryText, running]);
+
+    shouldAutoRunSharedQueryRef.current = false;
+    void runQuery();
+  }, [db, deferredQueryText, initializing, runQuery, running]);
 
   const handleEditorKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -242,27 +511,26 @@ export default function QueryBuilderDashboard() {
         runQuery();
       }
     },
-    [runQuery]
+    [runQuery],
   );
 
   const status = (() => {
-    if (dbError) return { text: `DuckDB error: ${dbError}`, cls: "text-danger-600" };
-    if (initializing) return { text: "Initialising DuckDB WASM…", cls: "text-txt-black-500" };
+    if (dbError)
+      return { text: `DuckDB error: ${dbError}`, cls: "text-danger-600" };
+    if (initializing)
+      return { text: "Initialising DuckDB WASM…", cls: "text-txt-black-500" };
     if (running) return { text: "Running query…", cls: "text-txt-black-500" };
     if (queryError) return { text: queryError, cls: "text-danger-600" };
-    if (result) {
-      return { text: "Query complete", cls: "text-txt-black-400" };
-    }
-    return { text: "Cmd + Enter / Ctrl + Enter to run", cls: "text-txt-black-400" };
+    if (result) return null;
+    return null;
   })();
 
   return (
     <div className="px-4.5 md:px-6">
-      <div className="mx-auto flex w-full max-w-screen-xl min-h-[calc(100vh-4rem)]">
-
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-screen-xl">
         {/* ── Left sidebar ─────────────────────────────────── */}
-        <aside className="hidden shrink-0 lg:block">
-          <div className="sticky top-16 h-[calc(100vh-4rem)] w-60 overflow-y-auto border-r border-otl-gray-200 pb-10 pr-4 pt-8">
+        <aside className="hidden w-60 shrink-0 self-stretch border-r border-otl-gray-200 lg:block">
+          <div className="hide-scrollbar sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto pb-10 pr-4 pt-8">
             <div className="mb-5 flex flex-col gap-2">
               <Link
                 href="https://t.me/myelectiondata"
@@ -278,57 +546,67 @@ export default function QueryBuilderDashboard() {
             <div className="mb-4 border-t border-otl-gray-200" />
 
             <div className="mb-4">
-              <p className="mb-1.5 text-[15px] font-semibold leading-6 text-txt-black-800">
+              <p className="text-txt-black-800 mb-1.5 text-[15px] font-semibold leading-6">
                 Sample Queries
               </p>
               <p className="text-[13px] leading-5 text-txt-black-500">
                 Get a feel for how to build queries and answer a question
               </p>
             </div>
-            <ul className="space-y-1">
-              {INTERESTING_QUESTIONS.map(q => (
-                <li key={q.question}>
-                  <button
-                    onClick={() => loadQuestion(q)}
-                    className={clx(
-                      "group w-full rounded-lg px-2 py-1.5 text-left transition-colors",
-                      activeSample === q.question
-                        ? "bg-bg-danger-50 text-txt-danger"
-                        : "text-txt-black-700 hover:bg-bg-black-50 hover:text-txt-black-900"
-                    )}
-                  >
-                    <div className="flex items-start gap-2">
-                      <span
-                        className={clx(
-                          "mt-2 h-1.5 w-1.5 shrink-0 rounded-full transition-colors",
-                          activeSample === q.question
-                            ? "bg-danger-600"
-                            : "bg-txt-black-300 group-hover:bg-txt-black-500"
-                        )}
-                      />
-                      <p
-                        className={clx(
-                          "text-[15px] leading-6",
-                          activeSample === q.question
-                            ? "font-medium text-txt-danger"
-                            : "font-normal text-inherit"
-                        )}
-                      >
-                        {q.question}
-                      </p>
-                    </div>
-                  </button>
-                </li>
+            <div className="space-y-4">
+              {groupedQuestions.map(({ group, questions }) => (
+                <div key={group}>
+                  <p className="text-txt-black-400 mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-[0.14em]">
+                    {getQuestionGroupLabel(group)}
+                  </p>
+                  <ul className="space-y-1">
+                    {questions.map((q) => (
+                      <li key={q.question}>
+                        <button
+                          onClick={() => loadQuestion(q)}
+                          className={clx(
+                            "group w-full rounded-xl border px-3 py-2 text-left transition-colors",
+                            activeSample === q.question
+                              ? "bg-black-50 border-otl-danger-200 text-txt-black-900"
+                              : "border-transparent text-txt-black-700 hover:border-otl-gray-200 hover:bg-bg-black-50 hover:text-txt-black-900",
+                          )}
+                        >
+                          <div className="flex items-start gap-2">
+                            <span
+                              className={clx(
+                                "pt-0.5 text-[14px] leading-5 transition-colors",
+                                activeSample === q.question
+                                  ? "text-danger-600"
+                                  : "text-txt-black-300 group-hover:text-txt-black-500",
+                              )}
+                            >
+                              &rarr;
+                            </span>
+                            <p
+                              className={clx(
+                                "text-[14px] font-normal leading-5",
+                                activeSample === q.question
+                                  ? "text-txt-black-900"
+                                  : "text-inherit",
+                              )}
+                            >
+                              {q.question}
+                            </p>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         </aside>
 
         {/* ── Main content ─────────────────────────────────── */}
         <main className="min-w-0 flex-1 px-6 pb-24 pt-8 sm:px-8 lg:px-10">
-
           {/* Hero */}
-          <h1 className="font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem] mb-2">
+          <h1 className="mb-2 font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]">
             Query Builder
           </h1>
           <p className="mb-12 flex items-center gap-1.5 text-body-sm text-txt-black-500">
@@ -342,12 +620,13 @@ export default function QueryBuilderDashboard() {
           <section className="mb-12">
             <StepLabel n={1} label="Ask AI to build your query" />
             <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
-              Why waste time writing SQL? Copy the prompt we&apos;ve prepared for you, paste it into
-              the AI tool of your choice, and just ask your question directly. It should be able to
-              generate the SQL needed for you to get an answer, if the data contains it.
+              Why waste time writing SQL? Copy the prompt we&apos;ve prepared
+              for you, paste it into the AI tool of your choice, and just ask
+              your question directly. It should be able to generate the SQL
+              needed for you to get an answer, if the data contains it.
             </p>
             <button
-              className="inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors hover:bg-black-50"
+              className="hover:bg-black-50 inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors"
               onClick={() => {}}
             >
               Copy Prompt
@@ -357,71 +636,104 @@ export default function QueryBuilderDashboard() {
           {/* ── Step 2: Run your Query ── */}
           <section className="mb-12">
             <StepLabel n={2} label="Run your Query" />
-            <div className="flex flex-col gap-4" onKeyDown={handleEditorKeyDown}>
+            <div
+              className="flex flex-col gap-4"
+              onKeyDown={handleEditorKeyDown}
+            >
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-[14px] font-semibold text-txt-black-900">
+                    Choose a source
+                  </h3>
+                  <p className="mt-1 text-[12px] leading-5 text-txt-black-500">
+                    Start in your workspace or pick a dataset to load a preview
+                    query into the editor.
+                  </p>
+                </div>
 
-              {/* Dataset chips */}
-              <div className="flex flex-wrap items-center gap-2">
-                {(Object.keys(DATASETS) as DatasetKey[]).map(key => (
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-4">
                   <button
-                    key={key}
-                    onClick={() => handleDatasetClick(key)}
+                    onClick={() => setActiveSource("workspace")}
                     className={clx(
-                      "flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors",
-                      activeDataset === key
-                        ? "border-danger-600 bg-danger-600 text-white"
-                        : "border-otl-gray-200 bg-white text-txt-black-700 hover:border-danger-600 hover:text-danger-600"
+                      "rounded-xl border px-3 py-2.5 text-left transition-all",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
+                      activeSource === "workspace"
+                        ? "border-danger-200 bg-bg-danger-50 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]"
+                        : "hover:bg-black-50 border-otl-gray-200 bg-white hover:border-otl-danger-200",
                     )}
                   >
-                    <span
-                      className={clx(
-                        "h-1.5 w-1.5 flex-shrink-0 rounded-full",
-                        activeDataset === key ? "bg-white" : "bg-txt-black-400"
-                      )}
-                    />
-                    {DATASET_LABELS[key]}
+                    <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
+                      My Workspace
+                    </p>
+                    <p className="mt-0.5 line-clamp-1 text-[11px] leading-4 text-txt-black-500">
+                      Write any SQL query from scratch
+                    </p>
                   </button>
-                ))}
-                <span className="hidden text-[11px] text-txt-black-500 sm:inline">
-                  — {DATASET_DESCRIPTIONS[activeDataset]}
-                </span>
+
+                  {(Object.keys(DATASETS) as DatasetKey[]).map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => void handleDatasetClick(key)}
+                      className={clx(
+                        "rounded-xl border px-3 py-2.5 text-left transition-all",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
+                        activeSource === key
+                          ? "border-danger-200 bg-bg-danger-50 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]"
+                          : "hover:bg-black-50 border-otl-gray-200 bg-white hover:border-otl-danger-200",
+                      )}
+                    >
+                      <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
+                        {DATASET_LABELS[key]}
+                      </p>
+                      <p className="mt-0.5 line-clamp-1 text-[11px] leading-4 text-txt-black-500">
+                        {DATASET_DESCRIPTIONS[key]}
+                      </p>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Editor card */}
               <div className="overflow-hidden rounded-xl border border-otl-gray-200 bg-white">
-                {/* Editor header — label left, copy button right */}
-                <div className="flex items-center justify-between border-b border-otl-gray-200 bg-black-50 px-4 py-2">
+                <div className="bg-black-50 flex items-center justify-between border-b border-otl-gray-200 px-4 py-2">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
                     SQL Editor
                   </span>
-                  <button
-                    onClick={handleCopy}
-                    disabled={!queryText.trim()}
-                    title={copyState === "copied" ? "Copied!" : "Copy SQL"}
-                    className="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-black-100 disabled:opacity-40"
-                  >
-                    {copyState === "copied" ? (
-                      <>
-                        <ClipboardDocumentCheckIcon className="h-3.5 w-3.5 text-green-600" />
-                        <span className="text-green-600">Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-                        Copy
-                      </>
-                    )}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={handleFormat}
+                      disabled={!activeQueryText.trim()}
+                      className="hover:bg-black-100 flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors disabled:opacity-40"
+                    >
+                      <WrenchScrewdriverIcon className="h-3.5 w-3.5" />
+                      Format
+                    </button>
+                    <button
+                      onClick={handleCopy}
+                      disabled={!activeQueryText.trim()}
+                      title={copyState === "copied" ? "Copied!" : "Copy SQL"}
+                      className="hover:bg-black-100 flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors disabled:opacity-40"
+                    >
+                      {copyState === "copied" ? (
+                        <>
+                          <ClipboardDocumentCheckIcon className="text-green-600 h-3.5 w-3.5" />
+                          <span className="text-green-600">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <ClipboardDocumentIcon className="h-3.5 w-3.5" />
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
-                {/* CodeMirror */}
                 <div className="[&_.cm-editor.cm-focused]:outline-none [&_.cm-editor]:font-mono [&_.cm-editor]:text-[13px] [&_.cm-focused]:outline-none">
                   <CodeMirror
-                    value={queryText}
-                    onChange={setQueryText}
+                    value={activeQueryText}
+                    onChange={handleQueryChange}
                     extensions={extensions}
                     theme="light"
-                    minHeight="180px"
-                    maxHeight="380px"
                     basicSetup={{
                       lineNumbers: true,
                       highlightActiveLineGutter: true,
@@ -430,7 +742,7 @@ export default function QueryBuilderDashboard() {
                       indentOnInput: true,
                       bracketMatching: true,
                       closeBrackets: true,
-                      autocompletion: true,
+                      autocompletion: false,
                       highlightActiveLine: true,
                       highlightSelectionMatches: true,
                       closeBracketsKeymap: true,
@@ -443,33 +755,23 @@ export default function QueryBuilderDashboard() {
                   />
                 </div>
 
-                {/* Action bar */}
-                <div className="flex items-center justify-between gap-2 border-t border-otl-gray-200 bg-black-50 px-3 py-2">
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={handleFormat}
-                      disabled={!queryText.trim()}
-                      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors hover:bg-black-100 disabled:opacity-40"
-                    >
-                      <WrenchScrewdriverIcon className="h-3.5 w-3.5" />
-                      Format
-                    </button>
-                    <button
-                      onClick={handleShare}
-                      disabled={!queryText.trim()}
-                      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors hover:bg-black-100 disabled:opacity-40"
-                    >
-                      <LinkIcon className="h-3.5 w-3.5" />
-                      {shareState === "copied" ? "Link copied!" : "Share"}
-                    </button>
-                  </div>
+                <div className="bg-black-50 flex items-center justify-between gap-2 border-t border-otl-gray-200 px-3 py-2">
+                  <p className="text-[12px] text-txt-black-500">
+                    We do not store your queries. Thanks to{" "}
+                    <span className="font-semibold text-txt-black-500">
+                      DuckDB WASM
+                    </span>
+                    , everything runs privately in your browser.
+                  </p>
                   <button
-                    onClick={runQuery}
-                    disabled={!db || initializing || running || !queryText.trim()}
+                    onClick={() => void runQuery()}
+                    disabled={
+                      !db || initializing || running || !activeQueryText.trim()
+                    }
                     className={clx(
                       "flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-[12px] font-semibold transition-colors",
                       "bg-danger-600 text-white hover:bg-danger-700",
-                      "disabled:cursor-not-allowed disabled:opacity-50"
+                      "disabled:cursor-not-allowed disabled:opacity-50",
                     )}
                   >
                     {running ? (
@@ -485,7 +787,11 @@ export default function QueryBuilderDashboard() {
               </div>
 
               {/* Status bar — plain text, no monospace */}
-              <p className={clx("px-1 text-[11px]", status.cls)}>{status.text}</p>
+              {status ? (
+                <p className={clx("px-1 text-[11px]", status.cls)}>
+                  {status.text}
+                </p>
+              ) : null}
 
               {/* Query error */}
               {queryError && (
@@ -500,98 +806,39 @@ export default function QueryBuilderDashboard() {
               )}
 
               {/* Results table */}
-              {result && !queryError && (
-                <>
-                  {/* Metadata row above the table */}
-                  <p className="px-1 text-[12px] text-txt-black-500">
-                    {result.truncated
-                      ? `${MAX_DISPLAY_ROWS.toLocaleString()}+ rows (capped at ${MAX_DISPLAY_ROWS})`
-                      : `${result.totalRows.toLocaleString()} row${result.totalRows !== 1 ? "s" : ""}`}
-                    {" · "}
-                    {result.columns.length} col{result.columns.length !== 1 ? "s" : ""}
-                    {" · "}
-                    {result.executionTime < 1000
-                      ? `${Math.round(result.executionTime)} ms`
-                      : `${(result.executionTime / 1000).toFixed(2)} s`}
-                  </p>
-
-                  <div className="overflow-hidden rounded-xl border border-otl-gray-200">
-                    {/* Results header */}
-                    <div className="flex items-center border-b border-otl-gray-200 bg-black-50 px-4 py-2">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
-                        Results
-                      </span>
-                    </div>
-
-                    {result.rows.length === 0 ? (
-                      <div className="bg-white px-4 py-10 text-center text-[13px] text-txt-black-400">
-                        Query returned no rows.
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full border-collapse text-[13px]">
-                          <thead>
-                            <tr className="bg-black-50">
-                              {result.columns.map((col, ci) => (
-                                <th
-                                  key={col}
-                                  className={clx(
-                                    "whitespace-nowrap border-b border-otl-gray-200 px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider text-txt-black-400",
-                                    columnTypes[ci] === "numeric" ? "text-right" : "text-left"
-                                  )}
-                                >
-                                  {col}
-                                </th>
-                              ))}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {result.rows.map((row, ri) => (
-                              <tr
-                                key={ri}
-                                className="border-b border-otl-gray-100 last:border-0 transition-colors hover:bg-black-50/60"
-                              >
-                                {row.map((cell, ci) => (
-                                  <td
-                                    key={ci}
-                                    className={clx(
-                                      "whitespace-nowrap px-3 py-1.5 font-mono text-[13px] text-txt-black-800",
-                                      columnTypes[ci] === "numeric"
-                                        ? "text-right tabular-nums"
-                                        : "text-left",
-                                      columnTypes[ci] === "date" && "text-txt-black-600",
-                                      (cell === null || cell === undefined) &&
-                                        "italic text-txt-black-300"
-                                    )}
-                                  >
-                                    {formatCell(cell, result.fieldTypes[ci])}
-                                  </td>
-                                ))}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* DuckDB attribution */}
-                  <p className="px-1 text-[11px] text-txt-black-400">
-                    Powered by <span className="font-semibold text-txt-black-500">DuckDB WASM</span> — all queries run in your browser
-                  </p>
-                </>
-              )}
+              {result && !queryError && <QueryResults result={result} />}
             </div>
           </section>
 
-          {/* ── Step 3: Visualise ── */}
+          {/* ── Step 3: Share your Query ── */}
           <section className="mb-12">
-            <StepLabel n={3} label="Visualise" />
-            <div className="rounded-xl border border-dashed border-otl-gray-300 bg-black-50 px-6 py-16 text-center text-body-sm text-txt-black-400">
-              Coming soon
+            <StepLabel n={3} label="Share your Query" />
+            <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
+              Want to send your work to someone else or save it for later?
+              Use this shareable link that stays updated with your current
+              SQL, so anyone opening it lands straight in the editor with the
+              query ready to run. We do not store your generated link; your work
+              is as private as you want it to be.
+            </p>
+            <div className="bg-black-50 mb-4 max-w-2xl rounded-lg border border-otl-gray-200 px-3 py-2">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
+                Shareable link preview
+              </p>
+              <p className="break-all font-mono text-[12px] leading-5 text-txt-black-700">
+                {shareUrl}
+              </p>
             </div>
+            <button
+              onClick={handleShare}
+              disabled={!shareUrl}
+              className={clx(
+                "hover:bg-black-50 inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors",
+                "disabled:cursor-not-allowed disabled:opacity-50",
+              )}
+            >
+              {shareState === "copied" ? "Copied!" : "Copy Link"}
+            </button>
           </section>
-
         </main>
       </div>
     </div>
