@@ -43,6 +43,7 @@ const nextConfig = {
     };
     config.module.rules.push(
       { test: /components|hooks\/index.ts/i, sideEffects: false },
+      { test: /\.md$/, type: "asset/source" },
       { test: /\.wasm$/, type: "webassembly/async" }
     );
     return config;

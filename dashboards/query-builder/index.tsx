@@ -7,6 +7,7 @@ import {
   useRef,
   useDeferredValue,
 } from "react";
+import { useTheme } from "next-themes";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -32,6 +33,7 @@ import {
 } from "./datasets";
 import { INTERESTING_QUESTIONS, type InterestingQuestion } from "./samples";
 import { encodeQuery, decodeQuery } from "./codec";
+import copyPrompt from "./copy-prompt.md";
 import { prepareQuery } from "./validator";
 import { trackQueryRun } from "./trackQueryRun";
 import { useDuckDB } from "./useDuckDB";
@@ -178,7 +180,7 @@ function QueryBuilderSidebar({
                     className={clx(
                       "group w-full rounded-xl border px-3 py-2 text-left transition-colors",
                       activeSample === q.question
-                        ? "bg-black-50 border-otl-danger-200 text-txt-black-900"
+                        ? "bg-bg-danger-50 border-otl-danger-200 text-txt-black-900"
                         : "border-transparent text-txt-black-700 hover:border-otl-gray-200 hover:bg-bg-black-50 hover:text-txt-black-900",
                     )}
                   >
@@ -355,19 +357,19 @@ const QueryResults = memo(function QueryResults({
 
       <div className="overflow-hidden rounded-xl border border-otl-gray-200">
         {result.rows.length === 0 ? (
-          <div className="text-txt-black-400 bg-white px-4 py-10 text-center text-[13px]">
+          <div className="text-txt-black-400 bg-bg-white px-4 py-10 text-center text-[13px]">
             Query returned no rows.
           </div>
         ) : (
           <div className="max-h-[24rem] overflow-auto sm:max-h-[28rem] lg:max-h-[36rem]">
             <table className="w-full border-collapse text-[13px]">
               <thead>
-                <tr className="bg-black-50">
+                <tr className="bg-bg-black-50">
                   {result.columns.map((col, ci) => (
                     <th
                       key={col}
                       className={clx(
-                        "text-txt-black-400 sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider",
+                        "text-txt-black-400 sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider",
                         columnTypes[ci] === "numeric"
                           ? "text-right"
                           : "text-left",
@@ -382,7 +384,7 @@ const QueryResults = memo(function QueryResults({
                 {result.rows.map((row, ri) => (
                   <tr
                     key={ri}
-                    className="border-otl-gray-100 hover:bg-black-50/60 border-b transition-colors last:border-0"
+                    className="border-otl-gray-100 hover:bg-bg-black-50/60 border-b transition-colors last:border-0"
                   >
                     {row.map((cell, ci) => (
                       <td
@@ -415,6 +417,7 @@ const QueryResults = memo(function QueryResults({
 
 export default function QueryBuilderDashboard() {
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { db, initializing, error: dbError } = useDuckDB();
   const defaultQuestion = INTERESTING_QUESTIONS[0];
@@ -432,10 +435,14 @@ export default function QueryBuilderDashboard() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<QueryResult | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
+  const [promptCopyState, setPromptCopyState] = useState<"idle" | "copied">(
+    "idle",
+  );
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
   const [queryCount, setQueryCount] = useState<number | null>(null);
   const [hasHydratedSharedQuery, setHasHydratedSharedQuery] = useState(false);
+  const [shouldSyncQueryToUrl, setShouldSyncQueryToUrl] = useState(false);
   const deferredQueryText = useDeferredValue(queryText);
   const getDatasetPreviewQuery = useCallback(
     (dataset: DatasetKey) => `SELECT *\nFROM ${dataset}\nLIMIT 30`,
@@ -502,6 +509,7 @@ export default function QueryBuilderDashboard() {
         setQueryText(decodeQuery(qp));
         setActiveSource("workspace");
         setActiveSample(null);
+        setShouldSyncQueryToUrl(true);
         shouldAutoRunSharedQueryRef.current = true;
       } catch {
         // malformed share link — ignore
@@ -511,7 +519,8 @@ export default function QueryBuilderDashboard() {
   }, [router.isReady, router.query]);
 
   useEffect(() => {
-    if (!router.isReady || !hasHydratedSharedQuery) return;
+    if (!router.isReady || !hasHydratedSharedQuery || !shouldSyncQueryToUrl)
+      return;
 
     const currentQuery =
       typeof router.query.query === "string" ? router.query.query : "";
@@ -525,7 +534,7 @@ export default function QueryBuilderDashboard() {
       undefined,
       { shallow: true },
     );
-  }, [encodedQuery, hasHydratedSharedQuery, router]);
+  }, [encodedQuery, hasHydratedSharedQuery, router, shouldSyncQueryToUrl]);
 
   const extensions = useMemo(
     () => [
@@ -548,6 +557,7 @@ export default function QueryBuilderDashboard() {
   }, []);
 
   const handleQueryChange = useCallback((value: string) => {
+    setShouldSyncQueryToUrl(true);
     setQueryText(value);
     setActiveSource("workspace");
     setActiveSample(null);
@@ -578,6 +588,12 @@ export default function QueryBuilderDashboard() {
     setCopyState("copied");
     setTimeout(() => setCopyState("idle"), 2000);
   }, [activeQueryText]);
+
+  const handleCopyPrompt = useCallback(async () => {
+    await navigator.clipboard.writeText(copyPrompt);
+    setPromptCopyState("copied");
+    setTimeout(() => setPromptCopyState("idle"), 2000);
+  }, []);
 
   const handleShare = useCallback(async () => {
     if (!shareUrl) return;
@@ -717,10 +733,23 @@ export default function QueryBuilderDashboard() {
               needed for you to get an answer, if the data contains it.
             </p>
             <button
-              className="hover:bg-black-50 inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors"
-              onClick={() => {}}
+              className="hover:bg-bg-black-50 inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors"
+              onClick={handleCopyPrompt}
+              title={
+                promptCopyState === "copied" ? "Prompt copied!" : "Copy prompt"
+              }
             >
-              Copy Prompt
+              {promptCopyState === "copied" ? (
+                <>
+                  <ClipboardDocumentCheckIcon className="text-green-600 h-4 w-4" />
+                  <span className="text-green-600">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <ClipboardDocumentIcon className="h-4 w-4" />
+                  Copy Prompt
+                </>
+              )}
             </button>
           </section>
 
@@ -743,8 +772,8 @@ export default function QueryBuilderDashboard() {
                       "rounded-xl border px-3 py-2.5 text-left transition-all",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
                       activeSource === "workspace"
-                        ? "border-danger-200 bg-bg-danger-50 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]"
-                        : "hover:bg-black-50 border-otl-gray-200 bg-white hover:border-otl-danger-200",
+                        ? "border-otl-danger-200 bg-bg-danger-50"
+                        : "hover:bg-bg-black-50 border-otl-gray-200 bg-bg-white hover:border-otl-danger-200",
                     )}
                   >
                     <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
@@ -763,8 +792,8 @@ export default function QueryBuilderDashboard() {
                         "rounded-xl border px-3 py-2.5 text-left transition-all",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
                         activeSource === key
-                          ? "border-danger-200 bg-bg-danger-50 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]"
-                          : "hover:bg-black-50 border-otl-gray-200 bg-white hover:border-otl-danger-200",
+                          ? "border-otl-danger-200 bg-bg-danger-50"
+                          : "hover:bg-bg-black-50 border-otl-gray-200 bg-bg-white hover:border-otl-danger-200",
                       )}
                     >
                       <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
@@ -778,8 +807,8 @@ export default function QueryBuilderDashboard() {
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-xl border border-otl-gray-200 bg-white">
-                <div className="bg-black-50 flex items-center justify-between border-b border-otl-gray-200 px-4 py-2">
+              <div className="overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-washed">
+                <div className="flex items-center justify-between border-b border-otl-gray-200 px-4 py-2">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
                     SQL Editor
                   </span>
@@ -787,7 +816,7 @@ export default function QueryBuilderDashboard() {
                     <button
                       onClick={handleFormat}
                       disabled={!activeQueryText.trim()}
-                      className="hover:bg-black-100 flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors disabled:opacity-40"
+                      className="hover:bg-bg-washed-active flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors disabled:opacity-40"
                     >
                       <WrenchScrewdriverIcon className="h-3.5 w-3.5" />
                       Format
@@ -796,7 +825,7 @@ export default function QueryBuilderDashboard() {
                       onClick={handleCopy}
                       disabled={!activeQueryText.trim()}
                       title={copyState === "copied" ? "Copied!" : "Copy SQL"}
-                      className="hover:bg-black-100 flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors disabled:opacity-40"
+                      className="hover:bg-bg-washed-active flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors disabled:opacity-40"
                     >
                       {copyState === "copied" ? (
                         <>
@@ -813,12 +842,12 @@ export default function QueryBuilderDashboard() {
                   </div>
                 </div>
 
-                <div className="relative overflow-hidden border-b border-otl-gray-200 bg-white [&_.cm-editor.cm-focused]:outline-none [&_.cm-editor]:font-mono [&_.cm-editor]:text-[13px] [&_.cm-focused]:outline-none [&_.cm-scroller]:overflow-hidden">
+                <div className="relative overflow-hidden border-b border-otl-gray-200 [&_.cm-editor.cm-focused]:outline-none [&_.cm-editor]:font-mono [&_.cm-editor]:text-[13px] [&_.cm-focused]:outline-none [&_.cm-scroller]:overflow-hidden">
                   <CodeMirror
                     value={activeQueryText}
                     onChange={handleQueryChange}
                     extensions={extensions}
-                    theme="light"
+                    theme={resolvedTheme === "dark" ? "dark" : "light"}
                     basicSetup={{
                       lineNumbers: true,
                       highlightActiveLineGutter: true,
@@ -840,7 +869,7 @@ export default function QueryBuilderDashboard() {
                   />
                 </div>
 
-                <div className="bg-black-50 flex items-center justify-between gap-2 border-t border-otl-gray-200 px-3 py-2">
+                <div className="flex items-center justify-between gap-2 border-t border-otl-gray-200 px-3 py-2">
                   <p className="text-[12px] text-txt-black-500">
                     We do not store your queries. Thanks to{" "}
                     <span className="font-semibold text-txt-black-500">
@@ -905,7 +934,7 @@ export default function QueryBuilderDashboard() {
               query ready to run. We do not store your generated link; your work
               is as private as you want it to be.
             </p>
-            <div className="bg-black-50 mb-4 max-w-2xl rounded-lg border border-otl-gray-200 px-3 py-2">
+            <div className="bg-bg-washed mb-4 max-w-2xl rounded-lg border border-otl-gray-200 px-3 py-2">
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
                 Shareable link preview
               </p>
@@ -917,7 +946,7 @@ export default function QueryBuilderDashboard() {
               onClick={handleShare}
               disabled={!shareUrl}
               className={clx(
-                "hover:bg-black-50 inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors",
+                "hover:bg-bg-black-50 inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors",
                 "disabled:cursor-not-allowed disabled:opacity-50",
               )}
             >
