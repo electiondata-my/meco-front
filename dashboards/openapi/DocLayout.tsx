@@ -44,7 +44,7 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
     currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] : null;
 
   return (
-    <div className="px-4.5 md:px-6">
+    <div className="px-3 sm:px-4.5 md:px-6">
     <div className="mx-auto flex w-full max-w-screen-xl min-h-[calc(100vh-4rem)]">
       {/* ── Left sidebar (desktop sticky + mobile drawer) ── */}
       <DocSidebar
@@ -56,7 +56,7 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
       {/* ── Main area ── */}
       <div className="flex min-w-0 flex-1">
         {/* Content column */}
-        <main className="min-w-0 flex-1 px-6 pb-24 pt-6 sm:px-8 lg:px-10 xl:px-12">
+        <main className="min-w-0 flex-1 px-2 pb-24 pt-6 sm:px-6 lg:px-10 xl:px-12">
           {/* Mobile top bar: hamburger + breadcrumb */}
           <div className="mb-5 flex items-center gap-2 lg:hidden">
             <button

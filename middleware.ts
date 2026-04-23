@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // These paths are English-only — redirect ms-MY visitors to en-GB
-const ENGLISH_ONLY_PATHS = ["/openapi", "/signin", "/console"];
+const ENGLISH_ONLY_PATHS = ["/openapi", "/query-builder", "/signin", "/console"];
 
 export const config = {
   matcher: [

@@ -12,7 +12,7 @@ import {
 import { useLanguage } from "@hooks/useLanguage";
 import { languages } from "@lib/options";
 
-const ENGLISH_ONLY_PATHS = ["/openapi", "/signin", "/console"];
+const ENGLISH_ONLY_PATHS = ["/openapi", "/query-builder", "/signin", "/console"];
 
 function isEnglishOnlyPath(asPath: string) {
   return ENGLISH_ONLY_PATHS.some(
