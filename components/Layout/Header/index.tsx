@@ -138,19 +138,19 @@ export default function Header() {
         {(close) => (
           <>
             <Nav.Item
-              key={"/candidates"}
-              title={t("common:nav.candidates")}
-              link="/candidates"
-              onClick={close}
-              icon={<UserIcon className="hidden size-8 max-lg:block" />}
-              className="text-center"
-            />
-            <Nav.Item
               key={"/seats"}
               title={t("common:nav.seats")}
               link="/seats"
               onClick={close}
               icon={<SeatsIcon className="hidden size-8 max-lg:block" />}
+              className="text-center"
+            />
+            <Nav.Item
+              key={"/candidates"}
+              title={t("common:nav.candidates")}
+              link="/candidates"
+              onClick={close}
+              icon={<UserIcon className="hidden size-8 max-lg:block" />}
               className="text-center"
             />
             <Nav.Item
