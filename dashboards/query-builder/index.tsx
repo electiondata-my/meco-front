@@ -599,6 +599,11 @@ export default function QueryBuilderDashboard() {
     router.pathname,
     shortQueryId,
   ]);
+  const hasShortShareLink = useMemo(() => {
+    if (shortQueryId) return true;
+    if (typeof router.query.id === "string" && router.query.id) return true;
+    return /[?&]id=[^&]+/u.test(shareUrl);
+  }, [router.query.id, shareUrl, shortQueryId]);
 
   const groupedQuestions = useMemo(() => {
     const groupOrder: InterestingQuestion["group"][] = [
@@ -881,7 +886,15 @@ export default function QueryBuilderDashboard() {
 
   const handleShortenLink = useCallback(async () => {
     const sqlToShorten = activeQueryText.trim();
-    if (!sqlToShorten || !db || running || shortenState !== "idle") return;
+    if (
+      hasShortShareLink ||
+      !sqlToShorten ||
+      !db ||
+      running ||
+      shortenState !== "idle"
+    ) {
+      return;
+    }
 
     setShortenError(null);
     setShortenState("validating");
@@ -941,6 +954,7 @@ export default function QueryBuilderDashboard() {
     activeQueryText,
     db,
     getTurnstileToken,
+    hasShortShareLink,
     router,
     runQuery,
     running,
@@ -1272,7 +1286,7 @@ export default function QueryBuilderDashboard() {
                 {shareUrl}
               </p>
             </div>
-            {!shortQueryId ? (
+            {!hasShortShareLink ? (
               <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
                 The link above might be a little long, depending on your query.
                 Unfortunately, it has to be in order to encode the entire SQL
@@ -1293,6 +1307,7 @@ export default function QueryBuilderDashboard() {
                 onClick={handleShortenLink}
                 disabled={
                   !shareUrl ||
+                  hasShortShareLink ||
                   !db ||
                   initializing ||
                   running ||
@@ -1307,7 +1322,9 @@ export default function QueryBuilderDashboard() {
                   ? "Checking Query..."
                   : shortenState === "shortening"
                     ? "Shortening..."
-                    : "Shorten Link"}
+                    : hasShortShareLink
+                      ? "Link Shortened"
+                      : "Shorten Link"}
               </button>
             </div>
           </section>
