@@ -1,18 +1,36 @@
 export type DatasetKey = keyof typeof DATASETS;
 
 export const DATASETS = {
-  results_ballots: "https://lake.electiondata.my/results/consol_ballots.parquet",
-  results_stats: "https://lake.electiondata.my/results/consol_stats.parquet",
+  headline_ballots: "https://lake.electiondata.my/results_headline/consol_ballots.parquet",
+  headline_stats: "https://lake.electiondata.my/results_headline/consol_stats.parquet",
+  saluran_ballots: "https://lake.electiondata.my/results_saluran/ge15_ballots.parquet",
+  saluran_stats: "https://lake.electiondata.my/results_saluran/ge15_stats.parquet",
+  voter_demographics: "https://lake.electiondata.my/seat_info/demographics.parquet",
+  voter_roll_ge15: "https://lake.electiondata.my/voter_rolls/ge15_2022.parquet",
 } as const;
 
 export const DATASET_LABELS: Record<DatasetKey, string> = {
-  results_ballots: "results_ballots",
-  results_stats: "results_stats",
+  headline_ballots: "headline_ballots",
+  headline_stats: "headline_stats",
+  saluran_ballots: "saluran_ballots",
+  saluran_stats: "saluran_stats",
+  voter_demographics: "voter_demographics",
+  voter_roll_ge15: "voter_roll_ge15",
 };
 
 export const DATASET_DESCRIPTIONS: Record<DatasetKey, string> = {
-  results_ballots: "Individual ballot results by candidate and constituency",
-  results_stats: "Aggregated seat-level statistics and winning margins",
+  headline_ballots:
+    "Parliament/DUN-level results by candidate, inc. party + demographic info",
+  headline_stats:
+    "Aggregated Parliament/DUN-level statistics e.g. voter turnout and majority",
+  saluran_ballots:
+    "Saluran-level results by candidate, inc. party + demographic info",
+  saluran_stats:
+    "Aggregated saluran-level statistics e.g. registered voters and valid votes",
+  voter_demographics:
+    "Parliament/DUN-level voter demographics (sex, age, ethnicity, and voter type)",
+  voter_roll_ge15:
+    "Anonymised GE-15 voter roll, with voting location and voter demographics",
 };
 
-export const DEFAULT_DATASET: DatasetKey = "results_ballots";
+export const DEFAULT_DATASET: DatasetKey = "headline_ballots";

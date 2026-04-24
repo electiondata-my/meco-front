@@ -23,6 +23,7 @@ import {
   ClipboardDocumentCheckIcon,
   WrenchScrewdriverIcon,
   SparklesIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/20/solid";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
@@ -58,8 +59,13 @@ interface QueryResult {
 type ColType = "numeric" | "date" | "text";
 type QuerySource = "workspace" | DatasetKey;
 type NumericFormatOptions = {
+  columnName?: string;
   decimalPlaces?: number;
 };
+
+function isYearColumn(columnName: string = ""): boolean {
+  return columnName.toLowerCase().includes("year");
+}
 
 function getColType(fieldType: string, sample: any): ColType {
   const ft = fieldType.toLowerCase();
@@ -124,6 +130,8 @@ function formatCell(
     });
   }
 
+  if (isYearColumn(options.columnName)) return String(value);
+
   if (typeof value === "bigint") return value.toLocaleString("en-GB");
   if (typeof value === "number") {
     const { decimalPlaces } = options;
@@ -152,7 +160,9 @@ function buildCsv(result: QueryResult): string {
         escapeCsvCell(
           cell === null || cell === undefined
             ? ""
-            : formatCell(cell, result.fieldTypes[ci]),
+            : formatCell(cell, result.fieldTypes[ci], {
+                columnName: result.columns[ci],
+              }),
         ),
       )
       .join(","),
@@ -391,12 +401,14 @@ const QueryResults = memo(function QueryResults({
     Record<number, { type: ColType; decimalPlaces?: number }>
   >(() => {
     return result.columns.reduce(
-      (acc, _, ci) => {
+      (acc, column, ci) => {
         const values = result.rows
           .map((row) => row[ci])
           .filter((value) => value !== null && value !== undefined);
         const sample = values[0];
-        const type = getColType(result.fieldTypes[ci] ?? "", sample);
+        const type = isYearColumn(column)
+          ? "text"
+          : getColType(result.fieldTypes[ci] ?? "", sample);
 
         acc[ci] = {
           type,
@@ -494,6 +506,7 @@ const QueryResults = memo(function QueryResults({
                       )}
                     >
                       {formatCell(cell, result.fieldTypes[ci], {
+                        columnName: result.columns[ci],
                         decimalPlaces: columnMeta[ci]?.decimalPlaces,
                       })}
                     </td>
@@ -551,7 +564,7 @@ export default function QueryBuilderDashboard() {
   const [hasHydratedSharedQuery, setHasHydratedSharedQuery] = useState(false);
   const deferredQueryText = useDeferredValue(queryText);
   const getDatasetPreviewQuery = useCallback(
-    (dataset: DatasetKey) => `SELECT *\nFROM ${dataset}\nLIMIT 30`,
+    (dataset: DatasetKey) => `SELECT *\nFROM ${dataset}\nUSING SAMPLE 30 ROWS`,
     [],
   );
   const activeQueryText = useMemo(
@@ -1053,31 +1066,29 @@ export default function QueryBuilderDashboard() {
                   inspect.
                 </p>
 
-                <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="flex">
                   <button
                     onClick={() => setActiveSource("workspace")}
                     className={clx(
-                      "rounded-xl border px-3 py-2.5 text-left transition-all",
+                      "inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
                       activeSource === "workspace"
                         ? "border-otl-danger-200 bg-bg-danger-50"
                         : "border-otl-gray-200 bg-bg-white hover:border-otl-danger-200 hover:bg-bg-black-50",
                     )}
                   >
-                    <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
-                      My Workspace
-                    </p>
-                    <p className="mt-0.5 line-clamp-1 text-[11px] leading-4 text-txt-black-500">
-                      Write any SQL query from scratch
-                    </p>
+                    <PencilSquareIcon className="h-4 w-4 text-txt-black-500" />
+                    My Workspace
                   </button>
+                </div>
 
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-4">
                   {(Object.keys(DATASETS) as DatasetKey[]).map((key) => (
                     <button
                       key={key}
                       onClick={() => void handleDatasetClick(key)}
                       className={clx(
-                        "rounded-xl border px-3 py-2.5 text-left transition-all",
+                        "min-h-[4.25rem] rounded-xl border px-3 py-2.5 text-left transition-all",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
                         activeSource === key
                           ? "border-otl-danger-200 bg-bg-danger-50"
@@ -1087,7 +1098,7 @@ export default function QueryBuilderDashboard() {
                       <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
                         {DATASET_LABELS[key]}
                       </p>
-                      <p className="mt-0.5 line-clamp-1 text-[11px] leading-4 text-txt-black-500">
+                      <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-txt-black-500">
                         {DATASET_DESCRIPTIONS[key]}
                       </p>
                     </button>
@@ -1261,14 +1272,16 @@ export default function QueryBuilderDashboard() {
                 {shareUrl}
               </p>
             </div>
-            <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
-              The link above might be a little long, depending on your query.
-              Unfortunately, it has to be in order to encode the entire SQL
-              query. If you want a beautiful short link to share, and don't mind
-              us storing your query (probably the case for 99% of users), just
-              click the 'Shorten Link' button below. All we store is the SQL
-              query; we do not know or store your identity.
-            </p>
+            {!shortQueryId ? (
+              <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
+                The link above might be a little long, depending on your query.
+                Unfortunately, it has to be in order to encode the entire SQL
+                query. If you want a beautiful short link to share, and don't
+                mind us storing your query (probably the case for 99% of users),
+                just click the 'Shorten Link' button below. All we store is the
+                SQL query; we do not know or store your identity.
+              </p>
+            ) : null}
             <div id="query-builder-turnstile" className="hidden" />
             {shortenError ? (
               <p className="mb-3 text-body-sm text-txt-danger">
