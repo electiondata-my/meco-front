@@ -19,7 +19,7 @@ export const INTERESTING_QUESTIONS: InterestingQuestion[] = [
     group: "Seats",
     question: "What was the smallest winning margin ever?",
     dataset: "results_stats",
-    sql: "SELECT\n  date,\n  election,\n  state,\n  seat,\n  majority,\n  majority_perc\nFROM\n  results_stats\nWHERE\n  majority_perc IS NOT NULL -- excludes uncontested seats\nORDER BY\n  majority ASC\nLIMIT\n  10",
+    sql: "SELECT\n  date,\n  election,\n  state,\n  seat,\n  majority,\n  ROUND(majority_perc, 3) as majority_perc\nFROM\n  results_stats\nWHERE\n  majority_perc IS NOT NULL -- excludes uncontested seats\nORDER BY\n  majority ASC\nLIMIT\n  10",
   },
   {
     group: "Seats",
@@ -31,7 +31,7 @@ export const INTERESTING_QUESTIONS: InterestingQuestion[] = [
     group: "Candidates",
     question: "How has the % of female MPs changed over time?",
     dataset: "results_ballots",
-    sql: "SELECT\n  election,\n  COUNT(*) AS total_mps,\n  COUNT(*) FILTER (WHERE sex = 'F') AS women_mps,\n  PRINTF(\n    '%.1f',\n    COUNT(*) FILTER (WHERE sex = 'F') * 100.0 / COUNT(*)\n  ) AS pct_female\nFROM results_ballots\nWHERE election LIKE 'GE%'\n  AND result LIKE 'won%'\nGROUP BY election\nORDER BY election",
+    sql: "SELECT\n  election,\n  COUNT(*) AS total_mps,\n  COUNT(*) FILTER (WHERE sex = 'F') AS women_mps,\n  ROUND(COUNT(*) FILTER (WHERE sex = 'F') * 100.0 / COUNT(*), 1) AS pct_female\nFROM results_ballots\nWHERE election LIKE 'GE%'\n  AND result LIKE 'won%'\nGROUP BY election\nORDER BY election",
   },
   {
     group: "Parties",
@@ -55,7 +55,7 @@ export const INTERESTING_QUESTIONS: InterestingQuestion[] = [
     group: "Parties",
     question: "Which party had the worst male bias in GE-15?",
     dataset: "results_ballots",
-    sql: "SELECT\n  ANY_VALUE(party) AS party,\n  ANY_VALUE(coalition) AS coalition,\n  COUNT(*) AS total_candidates,\n  SUM(CASE WHEN sex = 'M' THEN 1 ELSE 0 END) AS male,\n  SUM(CASE WHEN sex = 'F' THEN 1 ELSE 0 END) AS female,\n  ROUND(100.0 * SUM(CASE WHEN sex = 'M' THEN 1 ELSE 0 END) / COUNT(*), 2) AS male_perc,\n  ROUND(100.0 * SUM(CASE WHEN sex = 'F' THEN 1 ELSE 0 END) / COUNT(*), 2) AS female_perc\nFROM results_ballots\nWHERE election = 'GE-15'\n  AND party_uid != '000-BEBAS'\nGROUP BY party_uid\nHAVING COUNT(*) > 10\nORDER BY male_perc DESC",
+    sql: "SELECT\n  ANY_VALUE(party) AS party,\n  ANY_VALUE(coalition) AS coalition,\n  COUNT(*) AS total_candidates,\n  CAST(SUM(CASE WHEN sex = 'M' THEN 1 ELSE 0 END) AS INTEGER) AS male,\n  CAST(SUM(CASE WHEN sex = 'F' THEN 1 ELSE 0 END) AS INTEGER) AS female,\n  ROUND(100.0 * SUM(CASE WHEN sex = 'M' THEN 1 ELSE 0 END) / COUNT(*), 2) AS male_perc,\n  ROUND(100.0 * SUM(CASE WHEN sex = 'F' THEN 1 ELSE 0 END) / COUNT(*), 2) AS female_perc\nFROM results_ballots\nWHERE election = 'GE-15'\n  AND party_uid != '000-BEBAS'\nGROUP BY party_uid\nHAVING COUNT(*) > 10\nORDER BY male_perc DESC",
   },
   {
     group: "Candidates",

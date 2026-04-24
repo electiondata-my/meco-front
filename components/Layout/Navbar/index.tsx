@@ -8,7 +8,6 @@ import {
 } from "react";
 import { clx } from "@lib/helpers";
 import { useRouter } from "next/router";
-import { Link as BaseLink } from "@govtechmy/myds-react/link";
 import Link from "next/link";
 import { CrossIcon, HamburgerMenuIcon } from "@govtechmy/myds-react/icon";
 
@@ -87,23 +86,23 @@ const Item: FunctionComponent<NavItemProps> = ({
   title,
 }) => {
   const { pathname } = useRouter();
+  const active = pathname.startsWith(link) && link !== "/";
+
   return (
-    <BaseLink
-      underline={"none"}
-      asChild
+    <Link
+      href={link}
+      locale={locale}
+      scroll={false}
+      onClick={onClick}
       className={clx(
-        "flex flex-col items-center gap-1 px-2.5 py-1.5 text-body-sm font-semibold text-txt-black-500 max-lg:px-2 max-lg:py-2 max-lg:font-medium lg:justify-center lg:text-txt-black-700",
-        pathname.startsWith(link) && link !== "/"
-          ? "text-txt-danger lg:rounded-md lg:bg-bg-washed-active"
-          : "",
+        "flex flex-col items-center gap-1 px-2.5 py-1.5 text-body-sm text-txt-black-500 no-underline transition-colors max-lg:px-2 max-lg:py-2 max-lg:font-medium lg:justify-center lg:rounded-md lg:font-medium lg:text-txt-black-700 lg:hover:text-txt-black-900",
+        active ? "text-txt-danger lg:bg-bg-washed-active lg:text-txt-black-900" : "",
         className,
       )}
     >
-      <Link href={link} locale={locale} scroll={false} onClick={onClick}>
-        <span className="nav-mobile-icon lg:hidden">{icon}</span>
-        {title}
-      </Link>
-    </BaseLink>
+      <span className="nav-mobile-icon lg:hidden">{icon}</span>
+      {title}
+    </Link>
   );
 };
 

@@ -57,6 +57,9 @@ interface QueryResult {
 
 type ColType = "numeric" | "date" | "text";
 type QuerySource = "workspace" | DatasetKey;
+type NumericFormatOptions = {
+  decimalPlaces?: number;
+};
 
 function getColType(fieldType: string, sample: any): ColType {
   const ft = fieldType.toLowerCase();
@@ -73,7 +76,24 @@ function getColType(fieldType: string, sample: any): ColType {
   return "text";
 }
 
-function formatCell(value: any, fieldType: string = ""): string {
+function getDecimalPlaces(value: number): number {
+  if (!Number.isFinite(value) || Number.isInteger(value)) return 0;
+
+  const normalized = value.toString().toLowerCase();
+  if (normalized.includes("e")) {
+    const [mantissa, exponent] = normalized.split("e");
+    const mantissaDecimals = (mantissa.split(".")[1] ?? "").length;
+    return Math.max(0, mantissaDecimals - Number(exponent));
+  }
+
+  return (normalized.split(".")[1] ?? "").length;
+}
+
+function formatCell(
+  value: any,
+  fieldType: string = "",
+  options: NumericFormatOptions = {},
+): string {
   if (value === null || value === undefined) return "—";
 
   if (value instanceof Date) {
@@ -105,8 +125,40 @@ function formatCell(value: any, fieldType: string = ""): string {
   }
 
   if (typeof value === "bigint") return value.toLocaleString("en-GB");
-  if (typeof value === "number") return value.toLocaleString("en-GB");
+  if (typeof value === "number") {
+    const { decimalPlaces } = options;
+    return value.toLocaleString("en-GB", {
+      minimumFractionDigits:
+        decimalPlaces && decimalPlaces > 0 ? decimalPlaces : 0,
+      maximumFractionDigits:
+        decimalPlaces && decimalPlaces > 0 ? decimalPlaces : 20,
+    });
+  }
   return String(value);
+}
+
+function escapeCsvCell(value: string): string {
+  if (/[",\n\r]/u.test(value)) {
+    return `"${value.replace(/"/gu, '""')}"`;
+  }
+  return value;
+}
+
+function buildCsv(result: QueryResult): string {
+  const header = result.columns.map(escapeCsvCell).join(",");
+  const rows = result.rows.map((row) =>
+    row
+      .map((cell, ci) =>
+        escapeCsvCell(
+          cell === null || cell === undefined
+            ? ""
+            : formatCell(cell, result.fieldTypes[ci]),
+        ),
+      )
+      .join(","),
+  );
+
+  return [header, ...rows].join("\n");
 }
 
 function StepLabel({ n, label }: { n: number; label: string }) {
@@ -328,94 +380,131 @@ function compactFormattedSql(sql: string) {
 
 const QueryResults = memo(function QueryResults({
   result,
+  onCopyCsv,
+  csvCopyState,
 }: {
   result: QueryResult;
+  onCopyCsv: () => void;
+  csvCopyState: "idle" | "copied";
 }) {
-  const columnTypes = useMemo<Record<number, ColType>>(() => {
+  const columnMeta = useMemo<
+    Record<number, { type: ColType; decimalPlaces?: number }>
+  >(() => {
     return result.columns.reduce(
       (acc, _, ci) => {
-        const sample = result.rows.find(
-          (r) => r[ci] !== null && r[ci] !== undefined,
-        )?.[ci];
-        acc[ci] = getColType(result.fieldTypes[ci] ?? "", sample);
+        const values = result.rows
+          .map((row) => row[ci])
+          .filter((value) => value !== null && value !== undefined);
+        const sample = values[0];
+        const type = getColType(result.fieldTypes[ci] ?? "", sample);
+
+        acc[ci] = {
+          type,
+          decimalPlaces:
+            type === "numeric"
+              ? values.reduce((max, value) => {
+                  if (typeof value !== "number") return max;
+                  return Math.max(max, getDecimalPlaces(value));
+                }, 0)
+              : undefined,
+        };
         return acc;
       },
-      {} as Record<number, ColType>,
+      {} as Record<number, { type: ColType; decimalPlaces?: number }>,
     );
   }, [result]);
 
   return (
-    <>
-      <p className="flex items-center gap-1.5 px-1 text-[12px] text-txt-black-500">
-        <CheckCircleIcon className="text-green-600 h-3.5 w-3.5 shrink-0" />
-        <span>
-          {result.truncated
-            ? `${MAX_DISPLAY_ROWS.toLocaleString()}+ rows (capped at ${MAX_DISPLAY_ROWS})`
-            : `${result.totalRows.toLocaleString()} row${result.totalRows !== 1 ? "s" : ""}`}
-          {" · "}
-          {result.columns.length} col{result.columns.length !== 1 ? "s" : ""}
-          {" · "}
-          {result.executionTime < 1000
-            ? `${Math.round(result.executionTime)} ms`
-            : `${(result.executionTime / 1000).toFixed(2)} s`}
-        </span>
-      </p>
+    <div className="overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white">
+      <div className="flex items-end justify-between gap-3 border-b border-otl-gray-200 px-4 py-2">
+        <p className="flex items-center gap-1.5 text-[12px] text-txt-black-500">
+          <CheckCircleIcon className="text-green-600 h-3.5 w-3.5 shrink-0" />
+          <span>
+            {result.truncated
+              ? `${MAX_DISPLAY_ROWS.toLocaleString()}+ rows (capped at ${MAX_DISPLAY_ROWS})`
+              : `${result.totalRows.toLocaleString()} row${result.totalRows !== 1 ? "s" : ""}`}
+            {" · "}
+            {result.columns.length} col{result.columns.length !== 1 ? "s" : ""}
+            {" · "}
+            {result.executionTime < 1000
+              ? `${Math.round(result.executionTime)} ms`
+              : `${(result.executionTime / 1000).toFixed(2)} s`}
+          </span>
+        </p>
+        <button
+          onClick={onCopyCsv}
+          className="flex shrink-0 items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active"
+          title={csvCopyState === "copied" ? "Copied!" : "Copy results as CSV"}
+        >
+          {csvCopyState === "copied" ? (
+            <>
+              <ClipboardDocumentCheckIcon className="text-green-600 h-3.5 w-3.5" />
+              <span className="text-green-600">Copied!</span>
+            </>
+          ) : (
+            <>
+              <ClipboardDocumentIcon className="h-3.5 w-3.5" />
+              Copy as CSV
+            </>
+          )}
+        </button>
+      </div>
 
-      <div className="overflow-hidden rounded-xl border border-otl-gray-200">
-        {result.rows.length === 0 ? (
-          <div className="text-txt-black-400 bg-bg-white px-4 py-10 text-center text-[13px]">
-            Query returned no rows.
-          </div>
-        ) : (
-          <div className="max-h-[24rem] overflow-auto sm:max-h-[28rem] lg:max-h-[36rem]">
-            <table className="w-full border-collapse text-[13px]">
-              <thead>
-                <tr className="bg-bg-black-50">
-                  {result.columns.map((col, ci) => (
-                    <th
-                      key={col}
+      {result.rows.length === 0 ? (
+        <div className="text-txt-black-400 bg-bg-white px-4 py-10 text-center text-[13px]">
+          Query returned no rows.
+        </div>
+      ) : (
+        <div className="max-h-[24rem] overflow-auto sm:max-h-[28rem] lg:max-h-[36rem]">
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr className="bg-bg-black-50">
+                {result.columns.map((col, ci) => (
+                  <th
+                    key={col}
+                    className={clx(
+                      "text-txt-black-400 sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider",
+                      columnMeta[ci]?.type === "numeric"
+                        ? "text-right"
+                        : "text-left",
+                    )}
+                  >
+                    {col}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {result.rows.map((row, ri) => (
+                <tr
+                  key={ri}
+                  className="border-otl-gray-100 border-b transition-colors last:border-0 hover:bg-bg-black-50/60"
+                >
+                  {row.map((cell, ci) => (
+                    <td
+                      key={ci}
                       className={clx(
-                        "text-txt-black-400 sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider",
-                        columnTypes[ci] === "numeric"
-                          ? "text-right"
+                        "text-txt-black-800 whitespace-nowrap px-3 py-1.5 font-mono text-[13px]",
+                        columnMeta[ci]?.type === "numeric"
+                          ? "text-right tabular-nums"
                           : "text-left",
+                        columnMeta[ci]?.type === "date" && "text-txt-black-600",
+                        (cell === null || cell === undefined) &&
+                          "text-txt-black-300 italic",
                       )}
                     >
-                      {col}
-                    </th>
+                      {formatCell(cell, result.fieldTypes[ci], {
+                        decimalPlaces: columnMeta[ci]?.decimalPlaces,
+                      })}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody>
-                {result.rows.map((row, ri) => (
-                  <tr
-                    key={ri}
-                    className="border-otl-gray-100 border-b transition-colors last:border-0 hover:bg-bg-black-50/60"
-                  >
-                    {row.map((cell, ci) => (
-                      <td
-                        key={ci}
-                        className={clx(
-                          "text-txt-black-800 whitespace-nowrap px-3 py-1.5 font-mono text-[13px]",
-                          columnTypes[ci] === "numeric"
-                            ? "text-right tabular-nums"
-                            : "text-left",
-                          columnTypes[ci] === "date" && "text-txt-black-600",
-                          (cell === null || cell === undefined) &&
-                            "text-txt-black-300 italic",
-                        )}
-                      >
-                        {formatCell(cell, result.fieldTypes[ci])}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 });
 
@@ -429,6 +518,7 @@ export default function QueryBuilderDashboard() {
   const defaultQuestion = INTERESTING_QUESTIONS[0];
   const hasAppliedSharedQueryRef = useRef(false);
   const shouldAutoRunSharedQueryRef = useRef(false);
+  const editorSectionRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetRef = useRef<string | null>(null);
   const turnstileCallbackRef = useRef<{
     resolve: (token: string) => void;
@@ -450,6 +540,7 @@ export default function QueryBuilderDashboard() {
     "idle",
   );
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
+  const [csvCopyState, setCsvCopyState] = useState<"idle" | "copied">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
   const [shortenState, setShortenState] = useState<
     "idle" | "validating" | "shortening"
@@ -520,6 +611,10 @@ export default function QueryBuilderDashboard() {
       .then((d) => setQueryCount(d?.data?.[0]?.hits ?? null))
       .catch(() => setQueryCount(null));
   }, []);
+
+  useEffect(() => {
+    setCsvCopyState("idle");
+  }, [result]);
 
   const handleTurnstileScriptLoad = useCallback(() => {
     if (typeof window === "undefined" || !window.turnstile) return;
@@ -625,6 +720,19 @@ export default function QueryBuilderDashboard() {
     );
   }, [router]);
 
+  const scrollToEditor = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const editorTop = editorSectionRef.current?.getBoundingClientRect().top;
+    if (editorTop === undefined) return;
+
+    const navbarOffset = 88;
+    window.scrollTo({
+      top: window.scrollY + editorTop - navbarOffset,
+      behavior: "smooth",
+    });
+  }, []);
+
   const loadQuestion = useCallback(
     (q: InterestingQuestion) => {
       clearShareParamsFromUrl();
@@ -634,8 +742,9 @@ export default function QueryBuilderDashboard() {
       setActiveSample(q.question);
       setShortQueryId(null);
       setShortenError(null);
+      scrollToEditor();
     },
-    [clearShareParamsFromUrl],
+    [clearShareParamsFromUrl, scrollToEditor],
   );
 
   const handleQueryChange = useCallback(
@@ -691,6 +800,13 @@ export default function QueryBuilderDashboard() {
     setShareState("copied");
     setTimeout(() => setShareState("idle"), 2000);
   }, [shareUrl]);
+
+  const handleCopyCsv = useCallback(async () => {
+    if (!result) return;
+    await navigator.clipboard.writeText(buildCsv(result));
+    setCsvCopyState("copied");
+    setTimeout(() => setCsvCopyState("idle"), 2000);
+  }, [result]);
 
   const runQuery = useCallback(
     async (queryOverride?: string) => {
@@ -890,7 +1006,7 @@ export default function QueryBuilderDashboard() {
           <p className="mb-8 flex items-center gap-1.5 text-body-sm text-txt-black-500">
             <SparklesIcon className="h-4 w-4 shrink-0" />
             {queryCount !== null
-              ? `${numFormat(queryCount, "standard")} queries built so far`
+              ? `${numFormat(queryCount, "standard")} queries built and served`
               : "..."}
           </p>
 
@@ -979,7 +1095,10 @@ export default function QueryBuilderDashboard() {
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-washed">
+              <div
+                ref={editorSectionRef}
+                className="overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-washed"
+              >
                 <div className="flex items-center justify-between border-b border-otl-gray-200 px-4 py-2">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
                     SQL Editor
@@ -1092,7 +1211,13 @@ export default function QueryBuilderDashboard() {
               )}
 
               {/* Results table */}
-              {result && !queryError && <QueryResults result={result} />}
+              {result && !queryError && (
+                <QueryResults
+                  result={result}
+                  onCopyCsv={() => void handleCopyCsv()}
+                  csvCopyState={csvCopyState}
+                />
+              )}
             </div>
           </section>
 

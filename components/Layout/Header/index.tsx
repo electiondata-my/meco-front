@@ -46,7 +46,7 @@ function DesktopDropdown({
     <Menu as="div" className="relative hidden lg:block">
       <Menu.Button
         className={clx(
-          "flex items-center gap-1 rounded-md px-2.5 py-1.5 text-body-sm font-semibold text-txt-black-700 transition-colors hover:text-txt-black-900",
+          "flex items-center gap-1 rounded-md px-2.5 py-1.5 text-body-sm font-medium text-txt-black-700 transition-colors hover:text-txt-black-900",
           hasActiveItem && "bg-bg-washed-active text-txt-black-900",
         )}
       >
@@ -101,15 +101,6 @@ export default function Header() {
   const router = useRouter();
   const currentPath = router.asPath.split("?")[0].split("#")[0];
 
-  const dashboardItems: DesktopNavItem[] = [
-    { title: t("common:nav.seats"), link: "/seats" },
-    { title: t("common:nav.candidates"), link: "/candidates" },
-    { title: t("common:nav.parties"), link: "/parties" },
-    { title: t("common:nav.elections"), link: "/elections" },
-    { title: t("common:nav.byelections"), link: "/byelections" },
-    { title: t("common:nav.redelineation"), link: "/redelineation" },
-  ];
-
   const toolItems: DesktopNavItem[] = [
     { title: t("common:nav.catalogue"), link: "/data-catalogue" },
     { title: t("common:nav.openapi"), link: "/openapi/introduction", locale: "en-GB" },
@@ -146,24 +137,13 @@ export default function Header() {
       >
         {(close) => (
           <>
-            <DesktopDropdown
-              label="Dashboards"
-              items={dashboardItems}
-              currentPath={currentPath}
-            />
-            <DesktopDropdown
-              label="Tools"
-              items={toolItems}
-              currentPath={currentPath}
-            />
-
             <Nav.Item
               key={"/candidates"}
               title={t("common:nav.candidates")}
               link="/candidates"
               onClick={close}
               icon={<UserIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:hidden"
+              className="text-center"
             />
             <Nav.Item
               key={"/seats"}
@@ -171,7 +151,7 @@ export default function Header() {
               link="/seats"
               onClick={close}
               icon={<SeatsIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:hidden"
+              className="text-center"
             />
             <Nav.Item
               key={"/parties"}
@@ -179,7 +159,7 @@ export default function Header() {
               link="/parties"
               onClick={close}
               icon={<FlagIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:hidden"
+              className="text-center"
             />
             <Nav.Item
               key={"/byelections"}
@@ -187,7 +167,7 @@ export default function Header() {
               link="/byelections"
               onClick={close}
               icon={<BoltIcon className="hidden size-8 max-lg:block" />}
-              className="text-center lg:hidden"
+              className="text-center"
             />
             <Nav.Item
               key={"/elections"}
@@ -197,7 +177,7 @@ export default function Header() {
               icon={
                 <ClipboardDocumentCheckIcon className="hidden size-8 max-lg:block" />
               }
-              className="text-center lg:hidden"
+              className="text-center"
             />
 
             <Nav.Item
@@ -208,7 +188,13 @@ export default function Header() {
               icon={
                 <RedelineationIcon className="hidden size-8 max-lg:block" />
               }
-              className="text-center lg:hidden"
+              className="text-center"
+            />
+
+            <DesktopDropdown
+              label="Tools"
+              items={toolItems}
+              currentPath={currentPath}
             />
 
             <Nav.Item
