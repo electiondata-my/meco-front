@@ -2,15 +2,9 @@ import ComboBox from "@components/Combobox";
 import Container from "@components/Container";
 import Hero from "@components/Hero";
 import SectionGrid from "@components/Section/section-grid";
-import { QuestionCircleIcon } from "@govtechmy/myds-react/icon";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@govtechmy/myds-react/tooltip";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
-import { clx, seatSlug } from "@lib/helpers";
+import { seatSlug } from "@lib/helpers";
 import dynamic from "next/dynamic";
 import { FunctionComponent, useEffect } from "react";
 import {
@@ -21,7 +15,6 @@ import {
 } from "@govtechmy/myds-react/tabs";
 import { useMap } from "react-map-gl/mapbox";
 import GeohistoryTable from "./geohistory-table";
-import { useMediaQuery } from "@hooks/useMediaQuery";
 import RedelineationFilters from "./filters";
 import {
   ElectionType,
@@ -31,11 +24,8 @@ import {
   Region,
 } from "@dashboards/types";
 import { routes } from "@lib/routes";
-import { useTheme } from "next-themes";
-import { Theme } from "@lib/types";
 import { useRouter } from "next/router";
 
-const Bar = dynamic(() => import("@charts/bar"), { ssr: false });
 const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
   ssr: false,
 });
@@ -69,10 +59,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   data,
 }) => {
   const { t } = useTranslation(["redelineation"]);
-  const { resolvedTheme } = useTheme();
-  const theme = (resolvedTheme || "light") as Theme;
 
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { replace } = useRouter();
 
   const { type, year, election_type, toggle_state: param_toggle, seat_slug } =
@@ -92,8 +79,6 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
 
   const { seat_value, toggle_state } = _data;
 
-  const bar_data = data[`bar_${toggle_state}`];
-  const callout_data = data[`callout_${toggle_state}`];
   const dropdown = data[toggle_state].map(
     (
       d,
@@ -115,46 +100,6 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   const current_seat =
     data[toggle_state].find((d) => d[`seat_${toggle_state}`] === seat_value) ||
     data[toggle_state][0];
-
-  const STATUS_COLOR_MAP = {
-    light: {
-      unchanged: {
-        fill: "rgba(171, 171, 171, 0.2)",
-        outline: "rgba(171, 171, 171, 1)",
-      },
-      changed: {
-        fill: "rgba(255, 167, 66, 0.2)",
-        outline: "rgba(255, 167, 66, 1)",
-      },
-      new: {
-        fill: "rgba(82, 171, 245, 0.2)",
-        outline: "rgba(82, 171, 245, 1)",
-      },
-      abolished: {
-        fill: "rgba(247, 92, 92, 0.2)",
-        outline: "rgba(247, 92, 92, 1)",
-      },
-    },
-    dark: {
-      unchanged: {
-        fill: "rgba(109, 109, 109, 0.2)",
-        outline: "rgba(109, 109, 109, 1)",
-      },
-      changed: {
-        fill: "rgba(255, 167, 66, 0.2)",
-        outline: "rgba(255, 167, 66, 1)",
-      },
-      new: {
-        fill: "rgba(82, 171, 245, 0.2)",
-        outline: "rgba(82, 171, 245, 1)",
-      },
-      abolished: {
-        fill: "rgba(247, 92, 92, 0.2)",
-        outline: "rgba(247, 92, 92, 1)",
-      },
-    },
-  } as const;
-
   const { redelineation_map } = useMap();
 
   useEffect(() => {
@@ -383,6 +328,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             </Tabs>
           </div>
         </SectionGrid>
+        {/*
         <SectionGrid className="space-y-8">
           <h2 className="max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
             {t(`where_seats_${toggle_state}`)}
@@ -406,53 +352,47 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
               </TabsList>
             </Tabs>
             <div className="flex w-full justify-center gap-8">
-              {Object.entries(callout_data).map(([key, value]) =>
+              {Object.entries(data[`callout_${toggle_state}`]).map(([key, value]) =>
                 key === "total" ? null : (
                   <div key={key} className="flex flex-col gap-1">
                     <p className="text-body-xs text-txt-black-500">
                       {t(`status.${key}.title`)}
                     </p>
                     <p className="text-body-md font-semibold">
-                      {value}/{callout_data["total"]}
+                      {value}/{data[`callout_${toggle_state}`]["total"]}
                     </p>
                   </div>
                 ),
               )}
             </div>
             <div className="flex w-fit items-center gap-4.5 rounded-md border border-otl-gray-200 bg-bg-dialog px-2 py-1.5">
-              {Object.entries(callout_data).map(([key, value]) =>
+              {Object.entries(data[`callout_${toggle_state}`]).map(([key]) =>
                 key === "total" ? null : (
                   <div key={key} className="flex items-center gap-2">
                     <div
                       className="size-2 rounded-full"
                       style={{
                         background:
-                          STATUS_COLOR_MAP[theme][
-                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
-                          ].outline,
+                          resolvedTheme === "dark"
+                            ? {
+                                unchanged: "rgba(109, 109, 109, 1)",
+                                changed: "rgba(255, 167, 66, 1)",
+                                new: "rgba(82, 171, 245, 1)",
+                                abolished: "rgba(247, 92, 92, 1)",
+                              }[key]
+                            : {
+                                unchanged: "rgba(171, 171, 171, 1)",
+                                changed: "rgba(255, 167, 66, 1)",
+                                new: "rgba(82, 171, 245, 1)",
+                                abolished: "rgba(247, 92, 92, 1)",
+                              }[key],
                       }}
                     />
                     <p>{t(`status.${key}.title`)}</p>
                   </div>
                 ),
               )}
-              <Tooltip>
-                <TooltipTrigger>
-                  <QuestionCircleIcon className="size-4.5" />
-                </TooltipTrigger>
-                <TooltipContent className="flex flex-col text-body-xs">
-                  {Object.entries(callout_data).map(([key, value]) =>
-                    key === "total" ? null : (
-                      <p key={key}>
-                        <strong>{t(`status.${key}.title`)}:</strong>{" "}
-                        {t(`status.${key}.description`)}
-                      </p>
-                    ),
-                  )}
-                </TooltipContent>
-              </Tooltip>
             </div>
-
             <div className="-mt-4 w-full">
               <Bar
                 layout="horizontal"
@@ -460,30 +400,63 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                 enableGridY={false}
                 className={clx(
                   "mx-auto min-h-[350px] w-full max-w-[842px] lg:h-[480px] lg:w-[842px]",
-                  bar_data["state"].length === 1 &&
+                  data[`bar_${toggle_state}`]["state"].length === 1 &&
                     "h-[80px] min-h-0 lg:h-[100px]",
                 )}
                 type="category"
                 data={{
-                  labels: bar_data["state"],
-                  datasets: Object.entries(bar_data)
+                  labels: data[`bar_${toggle_state}`]["state"],
+                  datasets: Object.entries(data[`bar_${toggle_state}`])
                     .filter(([key]) => key !== "state")
                     .map(([key, value]) => {
+                      const colorMap =
+                        resolvedTheme === "dark"
+                          ? {
+                              unchanged: {
+                                fill: "rgba(109, 109, 109, 0.2)",
+                                outline: "rgba(109, 109, 109, 1)",
+                              },
+                              changed: {
+                                fill: "rgba(255, 167, 66, 0.2)",
+                                outline: "rgba(255, 167, 66, 1)",
+                              },
+                              new: {
+                                fill: "rgba(82, 171, 245, 0.2)",
+                                outline: "rgba(82, 171, 245, 1)",
+                              },
+                              abolished: {
+                                fill: "rgba(247, 92, 92, 0.2)",
+                                outline: "rgba(247, 92, 92, 1)",
+                              },
+                            }
+                          : {
+                              unchanged: {
+                                fill: "rgba(171, 171, 171, 0.2)",
+                                outline: "rgba(171, 171, 171, 1)",
+                              },
+                              changed: {
+                                fill: "rgba(255, 167, 66, 0.2)",
+                                outline: "rgba(255, 167, 66, 1)",
+                              },
+                              new: {
+                                fill: "rgba(82, 171, 245, 0.2)",
+                                outline: "rgba(82, 171, 245, 1)",
+                              },
+                              abolished: {
+                                fill: "rgba(247, 92, 92, 0.2)",
+                                outline: "rgba(247, 92, 92, 1)",
+                              },
+                            };
+
                       return {
                         label: t(`status.${key}.title`),
                         data: value,
                         fill: true,
                         borderRadius: 4,
-                        barThickness: isDesktop ? 24 : 16,
+                        barThickness: window.innerWidth >= 1024 ? 24 : 16,
                         borderWidth: 0.5,
-                        borderColor:
-                          STATUS_COLOR_MAP[theme][
-                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
-                          ].outline,
-                        backgroundColor:
-                          STATUS_COLOR_MAP[theme][
-                            key as keyof (typeof STATUS_COLOR_MAP)[typeof theme]
-                          ].fill,
+                        borderColor: colorMap[key].outline,
+                        backgroundColor: colorMap[key].fill,
                       };
                     }),
                 }}
@@ -491,6 +464,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
             </div>
           </div>
         </SectionGrid>
+        */}
       </Container>
     </>
   );
