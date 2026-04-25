@@ -102,9 +102,9 @@ export default function Header() {
   const currentPath = router.asPath.split("?")[0].split("#")[0];
 
   const toolItems: DesktopNavItem[] = [
+    { title: "Query Builder", link: "/query-builder", locale: "en-GB" },
     { title: t("common:nav.catalogue"), link: "/data-catalogue" },
     { title: t("common:nav.openapi"), link: "/openapi/introduction", locale: "en-GB" },
-    { title: "Query Builder", link: "/query-builder", locale: "en-GB" },
   ];
 
   return (
@@ -162,14 +162,6 @@ export default function Header() {
               className="text-center"
             />
             <Nav.Item
-              key={"/byelections"}
-              title={t("common:nav.byelections")}
-              link="/byelections"
-              onClick={close}
-              icon={<BoltIcon className="hidden size-8 max-lg:block" />}
-              className="text-center"
-            />
-            <Nav.Item
               key={"/elections"}
               title={t("common:nav.elections")}
               link="/elections"
@@ -177,6 +169,14 @@ export default function Header() {
               icon={
                 <ClipboardDocumentCheckIcon className="hidden size-8 max-lg:block" />
               }
+              className="text-center"
+            />
+            <Nav.Item
+              key={"/byelections"}
+              title={t("common:nav.byelections")}
+              link="/byelections"
+              onClick={close}
+              icon={<BoltIcon className="hidden size-8 max-lg:block" />}
               className="text-center"
             />
 
@@ -198,6 +198,15 @@ export default function Header() {
             />
 
             <Nav.Item
+              key={"/query-builder"}
+              title="Query Builder"
+              link="/query-builder"
+              locale="en-GB"
+              icon={<CircleStackIcon className="hidden size-8 max-lg:block" />}
+              onClick={close}
+              className="whitespace-nowrap text-center lg:hidden"
+            />
+            <Nav.Item
               key={"/data-catalogue"}
               title={t("common:nav.catalogue")}
               link="/data-catalogue"
@@ -215,15 +224,6 @@ export default function Header() {
               icon={
                 <CodeBracketIcon className="hidden size-8 max-lg:block" />
               }
-              onClick={close}
-              className="whitespace-nowrap text-center lg:hidden"
-            />
-            <Nav.Item
-              key={"/query-builder"}
-              title="Query Builder"
-              link="/query-builder"
-              locale="en-GB"
-              icon={<CircleStackIcon className="hidden size-8 max-lg:block" />}
               onClick={close}
               className="whitespace-nowrap text-center lg:hidden"
             />
