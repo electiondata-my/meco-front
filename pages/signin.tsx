@@ -87,7 +87,7 @@ const SignInPage: Page = () => {
     if (typeof window !== "undefined" && window.turnstile) {
       handleScriptLoad();
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
