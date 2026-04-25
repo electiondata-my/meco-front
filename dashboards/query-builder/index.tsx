@@ -667,6 +667,14 @@ export default function QueryBuilderDashboard() {
     });
   }, []);
 
+  // If Turnstile script was already loaded (e.g. SPA return visit), onLoad won't
+  // fire again — initialise the widget directly if window.turnstile already exists.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.turnstile) {
+      handleTurnstileScriptLoad();
+    }
+  }, [handleTurnstileScriptLoad]);
+
   // Decode shared query from URL on mount
   useEffect(() => {
     if (!router.isReady || hasAppliedSharedQueryRef.current) return;
@@ -932,7 +940,7 @@ export default function QueryBuilderDashboard() {
       const message = err instanceof Error ? err.message : "";
       if (message === "Verification not available") {
         setShortenError(
-          "The query is valid, but the Turnstile is not available yet. Try again shortly.",
+          "The query is valid, but Turnstile is not available yet. Try again shortly.",
         );
       } else if (message === "Verification failed") {
         setShortenError(
@@ -940,7 +948,7 @@ export default function QueryBuilderDashboard() {
         );
       } else if (message === "Failed to fetch") {
         setShortenError(
-          "The query is valid, but the link shortening service could not be reached from this page.",
+          "The query is valid, but the link shortening service could not be reached. Not your fault.",
         );
       } else {
         setShortenError(

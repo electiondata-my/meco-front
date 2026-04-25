@@ -58,6 +58,7 @@ const SignInPage: Page = () => {
 
   const handleScriptLoad = () => {
     if (typeof window === "undefined" || !window.turnstile) return;
+    if (turnstileWidgetRef.current) return;
     turnstileWidgetRef.current = window.turnstile.render("#cf-turnstile", {
       sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
       callback: (token: string) => turnstileCallbackRef.current?.resolve(token),
@@ -79,6 +80,14 @@ const SignInPage: Page = () => {
       window.turnstile.execute(turnstileWidgetRef.current);
     });
   };
+
+  // If Turnstile script was already loaded (e.g. returning from another page), onLoad
+  // won't fire again — initialise the widget directly if window.turnstile already exists.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.turnstile) {
+      handleScriptLoad();
+    }
+  }, []);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
