@@ -46,7 +46,7 @@ importers:
         version: 0.0.23(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@govtechmy/myds-style':
         specifier: ^0.0.10
-        version: 0.0.10(autoprefixer@10.4.20(postcss@8.4.47))(postcss@8.4.47)(tailwindcss@3.4.17)
+        version: 0.0.10(autoprefixer@10.4.20(postcss@8.5.10))(postcss@8.5.10)(tailwindcss@3.4.17)
       '@headlessui/react':
         specifier: ^2.2.4
         version: 2.2.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -175,7 +175,7 @@ importers:
         version: 6.0.0(@types/react@19.1.8)(react@19.1.0)
       next-pwa:
         specifier: ^5.6.0
-        version: 5.6.0(@babel/core@7.28.0)(next@15.5.15(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(webpack@5.99.9)
+        version: 5.6.0(@babel/core@7.28.0)(next@15.5.15(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(webpack@5.99.9(postcss@8.5.10))
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -230,7 +230,7 @@ importers:
         version: 15.3.5
       '@tailwindcss/nesting':
         specifier: ^0.0.0-insiders.565cd3e
-        version: 0.0.0-insiders.565cd3e(postcss@8.4.47)
+        version: 0.0.0-insiders.565cd3e(postcss@8.5.10)
       '@types/cookie':
         specifier: ^0.5.2
         version: 0.5.4
@@ -278,10 +278,10 @@ importers:
         version: 8.35.1(eslint@9.29.0(jiti@1.21.7))(typescript@5.8.3)
       autoprefixer:
         specifier: 10.4.20
-        version: 10.4.20(postcss@8.4.47)
+        version: 10.4.20(postcss@8.5.10)
       babel-loader:
         specifier: ^10.0.0
-        version: 10.0.0(@babel/core@7.28.0)(webpack@5.99.9)
+        version: 10.0.0(@babel/core@7.28.0)(webpack@5.99.9(postcss@8.5.10))
       eslint:
         specifier: 9.29.0
         version: 9.29.0(jiti@1.21.7)
@@ -298,8 +298,8 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3(next@15.5.15(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
       postcss:
-        specifier: 8.4.47
-        version: 8.4.47
+        specifier: 8.5.10
+        version: 8.5.10
       prettier:
         specifier: 3.5.3
         version: 3.5.3
@@ -3035,8 +3035,8 @@ packages:
     resolution: {integrity: sha512-/kyM18EfinwXZbno9FyUGeFh87KC8HRQBQGildHZbEuRyWFOmv1U10o9BBp8XVZDVNNuQKyIGIu5ZYAAXJ0V2Q==}
     engines: {node: '>= 4'}
 
-  enhanced-resolve@5.21.1:
-    resolution: {integrity: sha512-8p7DUVq6XJnZEz9W4oSwiwycxBIjHjRzYb3Je3zVN+geKTRQKzAkR/K4PBExlS0090d9nshak6phMUxr3PDjmQ==}
+  enhanced-resolve@5.21.2:
+    resolution: {integrity: sha512-xe9vQb5kReirPUxgQrXA3ihgbCqssmTiM7cOZ+Gzu+VeGWgpV98lLZvp0dl4yriyAePcewxGUs9UpKD8PET9KQ==}
     engines: {node: '>=10.13.0'}
 
   environment@1.1.0:
@@ -4277,8 +4277,8 @@ packages:
     resolution: {integrity: sha512-21t+ozMQDAL/UGgQVBbZ/xXvNO10++ZPuTmKRO8k9V3AClVRht49ahtDjfY8l1q6nSHOrE5ASfthzH3ol6R/hg==}
     engines: {node: '>=20.17'}
 
-  nanoid@3.3.11:
-    resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
+  nanoid@3.3.12:
+    resolution: {integrity: sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
@@ -4581,8 +4581,8 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.4.47:
-    resolution: {integrity: sha512-56rxCq7G/XfB4EkXq9Egn5GCqugWvDFjafDOThIdMBsI15iqPqR5r15TfSr1YPYeEI19YeaXMCbY6u88Y76GLQ==}
+  postcss@8.5.10:
+    resolution: {integrity: sha512-pMMHxBOZKFU6HgAZ4eyGnwXF/EvPGGqUr0MnZ5+99485wwW41kW91A4LOGxSHhgugZmSChL5AlElNdwlNgcnLQ==}
     engines: {node: ^10 || ^12 || >=14}
 
   potpack@2.0.0:
@@ -5286,18 +5286,45 @@ packages:
       uglify-js:
         optional: true
 
-  terser-webpack-plugin@5.5.0:
-    resolution: {integrity: sha512-UYhptBwhWvfIjKd/UuFo6D8uq9xpGLDK+z8EDsj/zWhrTaH34cKEbrkMKfV5YWqGBvAYA3tlzZbs2R+qYrbQJA==}
+  terser-webpack-plugin@5.6.0:
+    resolution: {integrity: sha512-Eum+5ajkaOhf5KbM26osvv21kLD7BaGqQ1UA4Ami4arYwylmGUQTgHFpHDdmJod1q4QXa66p0to/FBKID+J1vA==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
+      '@minify-html/node': '*'
       '@swc/core': '*'
+      '@swc/css': '*'
+      '@swc/html': '*'
+      clean-css: '*'
+      cssnano: '*'
+      csso: '*'
       esbuild: '*'
+      html-minifier-terser: '*'
+      lightningcss: '*'
+      postcss: '*'
       uglify-js: '*'
       webpack: ^5.1.0
     peerDependenciesMeta:
+      '@minify-html/node':
+        optional: true
       '@swc/core':
         optional: true
+      '@swc/css':
+        optional: true
+      '@swc/html':
+        optional: true
+      clean-css:
+        optional: true
+      cssnano:
+        optional: true
+      csso:
+        optional: true
       esbuild:
+        optional: true
+      html-minifier-terser:
+        optional: true
+      lightningcss:
+        optional: true
+      postcss:
         optional: true
       uglify-js:
         optional: true
@@ -6623,10 +6650,10 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
 
-  '@govtechmy/myds-style@0.0.10(autoprefixer@10.4.20(postcss@8.4.47))(postcss@8.4.47)(tailwindcss@3.4.17)':
+  '@govtechmy/myds-style@0.0.10(autoprefixer@10.4.20(postcss@8.5.10))(postcss@8.5.10)(tailwindcss@3.4.17)':
     dependencies:
-      autoprefixer: 10.4.20(postcss@8.4.47)
-      postcss: 8.4.47
+      autoprefixer: 10.4.20(postcss@8.5.10)
+      postcss: 8.5.10
       tailwindcss: 3.4.17
       tailwindcss-animate: 1.0.7(tailwindcss@3.4.17)
 
@@ -7656,10 +7683,10 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@tailwindcss/nesting@0.0.0-insiders.565cd3e(postcss@8.4.47)':
+  '@tailwindcss/nesting@0.0.0-insiders.565cd3e(postcss@8.5.10)':
     dependencies:
-      postcss: 8.4.47
-      postcss-nested: 5.0.6(postcss@8.4.47)
+      postcss: 8.5.10
+      postcss-nested: 5.0.6(postcss@8.5.10)
 
   '@tanstack/match-sorter-utils@8.19.4':
     dependencies:
@@ -8336,14 +8363,14 @@ snapshots:
 
   at-least-node@1.0.0: {}
 
-  autoprefixer@10.4.20(postcss@8.4.47):
+  autoprefixer@10.4.20(postcss@8.5.10):
     dependencies:
       browserslist: 4.25.1
       caniuse-lite: 1.0.30001770
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
-      postcss: 8.4.47
+      postcss: 8.5.10
       postcss-value-parser: 4.2.0
 
   available-typed-arrays@1.0.7:
@@ -8362,20 +8389,20 @@ snapshots:
 
   axobject-query@4.1.0: {}
 
-  babel-loader@10.0.0(@babel/core@7.28.0)(webpack@5.99.9):
+  babel-loader@10.0.0(@babel/core@7.28.0)(webpack@5.99.9(postcss@8.5.10)):
     dependencies:
       '@babel/core': 7.28.0
       find-up: 5.0.0
-      webpack: 5.99.9
+      webpack: 5.99.9(postcss@8.5.10)
 
-  babel-loader@8.4.1(@babel/core@7.28.0)(webpack@5.99.9):
+  babel-loader@8.4.1(@babel/core@7.28.0)(webpack@5.99.9(postcss@8.5.10)):
     dependencies:
       '@babel/core': 7.28.0
       find-cache-dir: 3.3.2
       loader-utils: 2.0.4
       make-dir: 3.1.0
       schema-utils: 2.7.1
-      webpack: 5.99.9
+      webpack: 5.99.9(postcss@8.5.10)
 
   babel-plugin-polyfill-corejs2@0.4.14(@babel/core@7.28.0):
     dependencies:
@@ -8550,10 +8577,10 @@ snapshots:
     dependencies:
       clsx: 2.1.1
 
-  clean-webpack-plugin@4.0.0(webpack@5.99.9):
+  clean-webpack-plugin@4.0.0(webpack@5.99.9(postcss@8.5.10)):
     dependencies:
       del: 4.1.1
-      webpack: 5.99.9
+      webpack: 5.99.9(postcss@8.5.10)
 
   cli-cursor@5.0.0:
     dependencies:
@@ -8838,7 +8865,7 @@ snapshots:
 
   emojis-list@3.0.0: {}
 
-  enhanced-resolve@5.21.1:
+  enhanced-resolve@5.21.2:
     dependencies:
       graceful-fs: 4.2.11
       tapable: 2.3.3
@@ -10560,7 +10587,7 @@ snapshots:
 
   nano-spawn@1.0.2: {}
 
-  nanoid@3.3.11: {}
+  nanoid@3.3.12: {}
 
   napi-postinstall@0.3.0: {}
 
@@ -10601,14 +10628,14 @@ snapshots:
       - '@types/react'
       - supports-color
 
-  next-pwa@5.6.0(@babel/core@7.28.0)(next@15.5.15(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(webpack@5.99.9):
+  next-pwa@5.6.0(@babel/core@7.28.0)(next@15.5.15(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(webpack@5.99.9(postcss@8.5.10)):
     dependencies:
-      babel-loader: 8.4.1(@babel/core@7.28.0)(webpack@5.99.9)
-      clean-webpack-plugin: 4.0.0(webpack@5.99.9)
+      babel-loader: 8.4.1(@babel/core@7.28.0)(webpack@5.99.9(postcss@8.5.10))
+      clean-webpack-plugin: 4.0.0(webpack@5.99.9(postcss@8.5.10))
       globby: 11.1.0
       next: 15.5.15(@babel/core@7.28.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      terser-webpack-plugin: 5.3.14(webpack@5.99.9)
-      workbox-webpack-plugin: 6.6.0(webpack@5.99.9)
+      terser-webpack-plugin: 5.3.14(webpack@5.99.9(postcss@8.5.10))
+      workbox-webpack-plugin: 6.6.0(webpack@5.99.9(postcss@8.5.10))
       workbox-window: 6.6.0
     transitivePeerDependencies:
       - '@babel/core'
@@ -10818,33 +10845,33 @@ snapshots:
 
   possible-typed-array-names@1.1.0: {}
 
-  postcss-import@15.1.0(postcss@8.4.47):
+  postcss-import@15.1.0(postcss@8.5.10):
     dependencies:
-      postcss: 8.4.47
+      postcss: 8.5.10
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
       resolve: 1.22.10
 
-  postcss-js@4.0.1(postcss@8.4.47):
+  postcss-js@4.0.1(postcss@8.5.10):
     dependencies:
       camelcase-css: 2.0.1
-      postcss: 8.4.47
+      postcss: 8.5.10
 
-  postcss-load-config@4.0.2(postcss@8.4.47):
+  postcss-load-config@4.0.2(postcss@8.5.10):
     dependencies:
       lilconfig: 3.1.3
       yaml: 2.8.3
     optionalDependencies:
-      postcss: 8.4.47
+      postcss: 8.5.10
 
-  postcss-nested@5.0.6(postcss@8.4.47):
+  postcss-nested@5.0.6(postcss@8.5.10):
     dependencies:
-      postcss: 8.4.47
+      postcss: 8.5.10
       postcss-selector-parser: 6.1.2
 
-  postcss-nested@6.2.0(postcss@8.4.47):
+  postcss-nested@6.2.0(postcss@8.5.10):
     dependencies:
-      postcss: 8.4.47
+      postcss: 8.5.10
       postcss-selector-parser: 6.1.2
 
   postcss-selector-parser@6.1.2:
@@ -10856,13 +10883,13 @@ snapshots:
 
   postcss@8.4.31:
     dependencies:
-      nanoid: 3.3.11
+      nanoid: 3.3.12
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.4.47:
+  postcss@8.5.10:
     dependencies:
-      nanoid: 3.3.11
+      nanoid: 3.3.12
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -11608,11 +11635,11 @@ snapshots:
       normalize-path: 3.0.0
       object-hash: 3.0.0
       picocolors: 1.1.1
-      postcss: 8.4.47
-      postcss-import: 15.1.0(postcss@8.4.47)
-      postcss-js: 4.0.1(postcss@8.4.47)
-      postcss-load-config: 4.0.2(postcss@8.4.47)
-      postcss-nested: 6.2.0(postcss@8.4.47)
+      postcss: 8.5.10
+      postcss-import: 15.1.0(postcss@8.5.10)
+      postcss-js: 4.0.1(postcss@8.5.10)
+      postcss-load-config: 4.0.2(postcss@8.5.10)
+      postcss-nested: 6.2.0(postcss@8.5.10)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.10
       sucrase: 3.35.0
@@ -11630,22 +11657,24 @@ snapshots:
       type-fest: 0.16.0
       unique-string: 2.0.0
 
-  terser-webpack-plugin@5.3.14(webpack@5.99.9):
+  terser-webpack-plugin@5.3.14(webpack@5.99.9(postcss@8.5.10)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.29
       jest-worker: 27.5.1
       schema-utils: 4.3.2
       serialize-javascript: 7.0.5
       terser: 5.43.1
-      webpack: 5.99.9
+      webpack: 5.99.9(postcss@8.5.10)
 
-  terser-webpack-plugin@5.5.0(webpack@5.99.9):
+  terser-webpack-plugin@5.6.0(postcss@8.5.10)(webpack@5.99.9(postcss@8.5.10)):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
       schema-utils: 4.3.3
       terser: 5.47.1
-      webpack: 5.99.9
+      webpack: 5.99.9(postcss@8.5.10)
+    optionalDependencies:
+      postcss: 8.5.10
 
   terser@5.43.1:
     dependencies:
@@ -12026,7 +12055,7 @@ snapshots:
 
   webpack-sources@3.4.1: {}
 
-  webpack@5.99.9:
+  webpack@5.99.9(postcss@8.5.10):
     dependencies:
       '@types/eslint-scope': 3.7.7
       '@types/estree': 1.0.9
@@ -12037,7 +12066,7 @@ snapshots:
       acorn: 8.16.0
       browserslist: 4.25.1
       chrome-trace-event: 1.0.4
-      enhanced-resolve: 5.21.1
+      enhanced-resolve: 5.21.2
       es-module-lexer: 1.7.0
       eslint-scope: 5.1.1
       events: 3.3.0
@@ -12049,12 +12078,21 @@ snapshots:
       neo-async: 2.6.2
       schema-utils: 4.3.3
       tapable: 2.3.3
-      terser-webpack-plugin: 5.5.0(webpack@5.99.9)
+      terser-webpack-plugin: 5.6.0(postcss@8.5.10)(webpack@5.99.9(postcss@8.5.10))
       watchpack: 2.5.1
       webpack-sources: 3.4.1
     transitivePeerDependencies:
+      - '@minify-html/node'
       - '@swc/core'
+      - '@swc/css'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
       - esbuild
+      - html-minifier-terser
+      - lightningcss
+      - postcss
       - uglify-js
 
   whatwg-url@5.0.0:
@@ -12225,12 +12263,12 @@ snapshots:
 
   workbox-sw@6.6.0: {}
 
-  workbox-webpack-plugin@6.6.0(webpack@5.99.9):
+  workbox-webpack-plugin@6.6.0(webpack@5.99.9(postcss@8.5.10)):
     dependencies:
       fast-json-stable-stringify: 2.1.0
       pretty-bytes: 5.6.0
       upath: 1.2.0
-      webpack: 5.99.9
+      webpack: 5.99.9(postcss@8.5.10)
       webpack-sources: 1.4.3
       workbox-build: 6.6.0
     transitivePeerDependencies:
