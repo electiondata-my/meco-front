@@ -101,12 +101,13 @@
     "@typescript-eslint/parser": "^8.34.1",
     "autoprefixer": "10.4.20",
     "babel-loader": "^10.0.0",
+    "webpack": "^5.106.2",
     "eslint": "9.29.0",
     "eslint-config-next": "15.5.15",
     "eslint-config-prettier": "^10.1.5",
     "lint-staged": ">=10",
     "next-sitemap": "^4.2.3",
-    "postcss": "8.4.47",
+    "postcss": "8.5.14",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.13",
     "tailwindcss": "3"
@@ -140,7 +141,11 @@
       "brace-expansion@>=2.0.0 <2.0.3": "2.0.3",
       "yaml@>=2.0.0 <2.8.3": "2.8.3",
       "@eslint/plugin-kit@<0.3.4": "0.3.4",
-      "diff@>=5.0.0 <5.2.2": "5.2.2"
+      "diff@>=5.0.0 <5.2.2": "5.2.2",
+      "fast-uri": "3.1.2",
+      "@babel/plugin-transform-modules-systemjs": "7.29.4",
+      "webpack": "5.106.2",
+      "postcss": "8.5.14"
     }
   }
 }
