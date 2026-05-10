@@ -33,7 +33,7 @@
     "@turf/bbox": "^7.2.0",
     "@uiw/react-codemirror": "^4.25.9",
     "@vercel/edge-config": "^0.2.1",
-    "axios": "^1.15.0",
+    "axios": "^1.15.2",
     "canvas2svg": "^1.0.16",
     "chart.js": "3.9.1",
     "chartjs-adapter-luxon": "^1.2.0",
