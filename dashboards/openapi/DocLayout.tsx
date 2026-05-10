@@ -27,7 +27,7 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isIntroduction = currentPath === "/openapi/introduction";
+  const isIntroduction = currentPath === "/openapi";
   const [apiStats, setApiStats] = useState<{ total_hits: number; total_users: number } | null>(null);
   useEffect(() => {
     if (!isIntroduction) return;

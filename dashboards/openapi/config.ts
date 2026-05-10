@@ -18,7 +18,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     group: "General",
     items: [
-      { label: "Introduction", href: "/openapi/introduction" },
+      { label: "Introduction", href: "/openapi" },
       { label: "Versioning", href: "/openapi/versioning" },
       { label: "Authentication", href: "/openapi/authentication" },
       { label: "Errors", href: "/openapi/errors" },
