@@ -104,7 +104,7 @@ export default function Header() {
   const toolItems: DesktopNavItem[] = [
     { title: "Query Builder", link: "/query-builder", locale: "en-GB" },
     { title: t("common:nav.catalogue"), link: "/data-catalogue" },
-    { title: t("common:nav.openapi"), link: "/openapi/introduction", locale: "en-GB" },
+    { title: t("common:nav.openapi"), link: "/openapi", locale: "en-GB" },
   ];
 
   return (
@@ -219,7 +219,7 @@ export default function Header() {
             <Nav.Item
               key={"/openapi"}
               title={t("common:nav.openapi")}
-              link="/openapi/introduction"
+              link="/openapi"
               locale="en-GB"
               icon={
                 <CodeBracketIcon className="hidden size-8 max-lg:block" />

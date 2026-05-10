@@ -20,6 +20,15 @@ const withPWA = require("next-pwa")({
 const nextConfig = {
   i18n,
   transpilePackages: ["chartjs-adapter-luxon"],
+  async redirects() {
+    return [
+      {
+        source: "/openapi/introduction",
+        destination: "/openapi",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

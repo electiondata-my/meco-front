@@ -46,6 +46,13 @@ const LayoutFooter = () => {
               </Link>
               <Link
                 target="_blank"
+                href="https://lom.agc.gov.my/subsid.php?type=pub"
+                className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
+              >
+                {t("footer.agc")}
+              </Link>
+              <Link
+                target="_blank"
                 href="https://open.dosm.gov.my/dashboard/kawasanku"
                 className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
               >
