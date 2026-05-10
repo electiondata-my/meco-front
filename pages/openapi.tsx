@@ -1,7 +1,6 @@
-import { GetServerSideProps } from "next";
+import { GetStaticProps } from "next";
 
-// Redirect /openapi → /openapi/introduction
-export const getServerSideProps: GetServerSideProps = async () => ({
+export const getStaticProps: GetStaticProps = async () => ({
   redirect: { destination: "/openapi/introduction", permanent: true },
 });
 
