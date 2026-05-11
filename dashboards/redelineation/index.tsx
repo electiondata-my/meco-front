@@ -207,11 +207,13 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
         yearOptions={yearOptions}
       />
 
-      <Container className="gap-8 py-8 lg:gap-16 lg:pb-16">
+      <Container className="gap-12 py-8 lg:gap-20 lg:pb-16">
         <RedelineationBeforeAfterMap
           election_type={election_type}
           map_new={data.map_new}
           map_old={data.map_old}
+          new_year={new_year}
+          old_year={old_year}
           type={type}
         />
 
