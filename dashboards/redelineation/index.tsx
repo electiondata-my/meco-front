@@ -30,6 +30,13 @@ const Mapbox = dynamic(() => import("@dashboards/redelineation/mapbox"), {
   ssr: false,
 });
 
+const RedelineationBeforeAfterMap = dynamic(
+  () => import("@dashboards/redelineation/before-after-map"),
+  {
+    ssr: false,
+  },
+);
+
 /**
  * Redelineation Dashboard
  * @overview Status: Live
@@ -62,14 +69,21 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
 
   const { replace } = useRouter();
 
-  const { type, year, election_type, toggle_state: param_toggle, seat_slug } =
-    params;
+  const {
+    type,
+    year,
+    election_type,
+    toggle_state: param_toggle,
+    seat_slug,
+  } = params;
 
   const initial_toggle: ToggleState = (param_toggle as ToggleState) || "new";
   const initial_seat = seat_slug
-    ? ((data[initial_toggle].find(
-        (d: any) => seatSlug(d[`seat_${initial_toggle}`]) === seat_slug,
-      ) as any)?.[`seat_${initial_toggle}`] ?? "")
+    ? ((
+        data[initial_toggle].find(
+          (d: any) => seatSlug(d[`seat_${initial_toggle}`]) === seat_slug,
+        ) as any
+      )?.[`seat_${initial_toggle}`] ?? "")
     : "";
 
   const { data: _data, setData } = useData({
@@ -103,12 +117,13 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
   const { redelineation_map } = useMap();
 
   useEffect(() => {
-    const target_toggle: ToggleState =
-      (param_toggle as ToggleState) || "new";
+    const target_toggle: ToggleState = (param_toggle as ToggleState) || "new";
     const target_seat_value = seat_slug
-      ? ((data[target_toggle].find(
-          (d: any) => seatSlug(d[`seat_${target_toggle}`]) === seat_slug,
-        ) as any)?.[`seat_${target_toggle}`] ??
+      ? ((
+          data[target_toggle].find(
+            (d: any) => seatSlug(d[`seat_${target_toggle}`]) === seat_slug,
+          ) as any
+        )?.[`seat_${target_toggle}`] ??
         (data[target_toggle][0] as any)[`seat_${target_toggle}`])
       : (data[target_toggle][0] as any)[`seat_${target_toggle}`];
 
@@ -147,9 +162,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
     const newToggle = value as ToggleState;
     setData("toggle_state", newToggle);
 
-    const newSeatValue = (
-      current_seat[`seat_${newToggle}`] as string[]
-    )[0];
+    const newSeatValue = (current_seat[`seat_${newToggle}`] as string[])[0];
     setData("seat_value", newSeatValue);
 
     if (seat_slug) {
@@ -195,6 +208,13 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
       />
 
       <Container className="gap-8 py-8 lg:gap-16 lg:pb-16">
+        <RedelineationBeforeAfterMap
+          election_type={election_type}
+          map_new={data.map_new}
+          map_old={data.map_old}
+          type={type}
+        />
+
         <SectionGrid>
           <div className="mx-auto w-full space-y-6">
             <h2 className="mx-auto max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
@@ -216,7 +236,7 @@ const RedelineationDashboard: FunctionComponent<RedelineationProps> = ({
                   {t("old_constituency")} ({old_year})
                 </TabsTrigger>
               </TabsList>
-              <div className="mx-auto w-full max-w-[727px] text-center">
+              <div className="mx-auto w-full max-w-[520px] text-center">
                 <ComboBox<{
                   value: string;
                   label: string;
