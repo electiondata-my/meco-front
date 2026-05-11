@@ -16,7 +16,6 @@ import Map, {
   Layer,
   MapMouseEvent,
   MapRef,
-  Popup,
   Source,
   ViewState,
   ViewStateChangeEvent,
@@ -33,7 +32,9 @@ interface BoundaryMapProps {
   boundaries: Array<{
     color: string;
     labelKey: "new_constituency" | "old_constituency";
+    opacity?: number;
     source: string;
+    width?: number;
   }>;
   id: string;
   election_type: ElectionType;
@@ -48,10 +49,10 @@ interface BoundaryMapProps {
 }
 
 interface PopupInfo {
-  latitude: number;
-  longitude: number;
   newSeat: string;
   oldSeat: string;
+  x: number;
+  y: number;
 }
 
 const REGION_VIEW_STATE: Record<Region, ViewState> = {
@@ -109,6 +110,7 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
 
   const primaryColor = resolvedTheme === "dark" ? "#FFFFFF" : "#18181B";
   const secondaryColor = "#DC2626";
+  const referenceOpacity = resolvedTheme === "dark" ? 0.45 : 0.35;
 
   const handleMove = (event: ViewStateChangeEvent) => {
     setViewState(event.viewState);
@@ -157,9 +159,17 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                   onTooltipOwnerChange={setTooltipOwner}
                   boundaries={[
                     {
+                      source: map_old,
+                      color: secondaryColor,
+                      labelKey: "old_constituency",
+                      opacity: referenceOpacity,
+                      width: 1,
+                    },
+                    {
                       source: map_new,
                       color: primaryColor,
                       labelKey: "new_constituency",
+                      width: 2,
                     },
                   ]}
                 />
@@ -180,9 +190,17 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                     onTooltipOwnerChange={setTooltipOwner}
                     boundaries={[
                       {
-                        source: map_old,
+                        source: map_new,
                         color: primaryColor,
+                        labelKey: "new_constituency",
+                        opacity: referenceOpacity,
+                        width: 1,
+                      },
+                      {
+                        source: map_old,
+                        color: secondaryColor,
                         labelKey: "old_constituency",
+                        width: 2,
                       },
                     ]}
                   />
@@ -191,12 +209,6 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                   className="pointer-events-none absolute inset-y-0 z-10 w-px bg-bg-black-900 dark:bg-bg-white"
                   style={{ left: `${slider}%` }}
                 />
-                <div
-                  className="shadow-floating pointer-events-none absolute top-1/2 z-10 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-bg-black-900 text-body-xs font-semibold text-txt-white dark:bg-bg-white dark:text-txt-black-900"
-                  style={{ left: `${slider}%` }}
-                >
-                  ||
-                </div>
                 <Root
                   className="absolute inset-x-0 top-1/2 z-20 flex h-9 -translate-y-1/2 touch-none select-none items-center"
                   value={[slider]}
@@ -207,7 +219,12 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                   onValueChange={([value]) => handleSliderChange(value)}
                 >
                   <Track className="relative h-full grow bg-transparent" />
-                  <Thumb className="block h-9 w-9 cursor-col-resize rounded-full bg-transparent outline-none focus-visible:ring-4 focus-visible:ring-fr-primary" />
+                  <Thumb className="shadow-floating flex h-9 w-[94px] cursor-col-resize items-center justify-center gap-1.5 rounded-full bg-[#18181B] px-3 text-body-xs font-semibold text-white outline-none focus-visible:ring-4 focus-visible:ring-fr-primary">
+                    <span className="font-mono text-body-sm leading-none">
+                      &lt;&gt;
+                    </span>
+                    <span>{t("map_explorer.slide")}</span>
+                  </Thumb>
                 </Root>
                 <MapCornerLabel position="left">
                   {t("new_constituency")}
@@ -229,11 +246,14 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                   source: map_old,
                   color: secondaryColor,
                   labelKey: "old_constituency",
+                  opacity: referenceOpacity,
+                  width: 1,
                 },
                 {
                   source: map_new,
                   color: primaryColor,
                   labelKey: "new_constituency",
+                  width: 2,
                 },
               ]}
               id="redelineation_new_map"
@@ -253,11 +273,14 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                   source: map_new,
                   color: primaryColor,
                   labelKey: "new_constituency",
+                  opacity: referenceOpacity,
+                  width: 1,
                 },
                 {
                   source: map_old,
                   color: secondaryColor,
                   labelKey: "old_constituency",
+                  width: 2,
                 },
               ]}
               id="redelineation_old_map"
@@ -306,6 +329,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
 }) => {
   const { t } = useTranslation(["redelineation"]);
   const mapRef = useRef<MapRef | null>(null);
+  const tooltipFrame = useRef<number | null>(null);
   const [popupInfo, setPopupInfo] = useState<PopupInfo | null>(null);
   const querySources = [map_new, map_old];
   const orderedSources = [
@@ -323,6 +347,18 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
     setPopupInfo(null);
   }, [tooltipResetKey]);
 
+  useEffect(() => {
+    return () => {
+      if (tooltipFrame.current) cancelAnimationFrame(tooltipFrame.current);
+    };
+  }, []);
+
+  const clearTooltip = () => {
+    if (tooltipFrame.current) cancelAnimationFrame(tooltipFrame.current);
+    tooltipFrame.current = null;
+    setPopupInfo(null);
+  };
+
   const handleMouseMove = (event: MapMouseEvent) => {
     onTooltipOwnerChange?.(id);
 
@@ -331,7 +367,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
     });
 
     if (!features?.length) {
-      setPopupInfo(null);
+      clearTooltip();
       return;
     }
 
@@ -351,15 +387,31 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
     const oldSeat = getSeat(map_old);
 
     if (!newSeat && !oldSeat) {
-      setPopupInfo(null);
+      clearTooltip();
       return;
     }
 
-    setPopupInfo({
-      latitude: event.lngLat.lat,
-      longitude: event.lngLat.lng,
+    const nextTooltip: PopupInfo = {
       newSeat,
       oldSeat,
+      x: event.point.x,
+      y: event.point.y,
+    };
+
+    if (tooltipFrame.current) cancelAnimationFrame(tooltipFrame.current);
+    tooltipFrame.current = requestAnimationFrame(() => {
+      setPopupInfo((current) => {
+        if (
+          current?.newSeat === nextTooltip.newSeat &&
+          current.oldSeat === nextTooltip.oldSeat &&
+          Math.abs(current.x - nextTooltip.x) < 2 &&
+          Math.abs(current.y - nextTooltip.y) < 2
+        ) {
+          return current;
+        }
+
+        return nextTooltip;
+      });
     });
   };
 
@@ -377,7 +429,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
       onMove={onMove}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {
-        setPopupInfo(null);
+        clearTooltip();
         onTooltipOwnerChange?.(
           tooltipOwner === id ? null : (tooltipOwner ?? null),
         );
@@ -410,34 +462,35 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
                   paint={{
                     "line-color": boundary.color,
                     "line-width":
-                      boundaries.findIndex((item) => item.source === source) ===
+                      boundary.width ??
+                      (boundaries.findIndex(
+                        (item) => item.source === source,
+                      ) ===
                       boundaries.length - 1
                         ? 1.5
-                        : 1,
-                    "line-opacity": 1,
+                        : 1),
+                    "line-opacity": boundary.opacity ?? 1,
                   }}
                 />
               ))}
           </Source>
         </Fragment>
       ))}
-      {popupInfo && (
-        <Popup
-          longitude={popupInfo.longitude}
-          latitude={popupInfo.latitude}
-          closeButton={false}
-          closeOnClick={false}
-          anchor="bottom"
+      {popupInfo && (!tooltipOwner || tooltipOwner === id) && (
+        <div
+          className="shadow-floating pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-md bg-bg-black-900 px-3 py-2 font-body text-body-xs text-txt-white"
+          style={{
+            left: popupInfo.x,
+            top: popupInfo.y - 12,
+          }}
         >
-          <div className="space-y-1 px-3 py-2 font-body text-body-xs text-txt-white">
-            <p>
-              {t("new")}: {popupInfo.newSeat || "-"}
-            </p>
-            <p>
-              {t("old")}: {popupInfo.oldSeat || "-"}
-            </p>
-          </div>
-        </Popup>
+          <p>
+            {t("new")}: {popupInfo.newSeat || "-"}
+          </p>
+          <p>
+            {t("old")}: {popupInfo.oldSeat || "-"}
+          </p>
+        </div>
       )}
     </Map>
   );
