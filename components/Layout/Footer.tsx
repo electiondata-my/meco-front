@@ -30,10 +30,10 @@ const LayoutFooter = () => {
             </div>
           </div>
 
-          {/* Right: Two cols of links  */}
-          <div className="flex flex-row gap-8 md:gap-12">
+          {/* Right: Three cols of links  */}
+          <div className="grid grid-cols-2 gap-8 md:flex md:flex-row md:gap-12">
             {/* Col 1: Useful Sites */}
-            <div className="flex w-[200px] flex-col gap-2">
+            <div className="order-1 flex w-full flex-col gap-2 md:w-[200px]">
               <p className="font-bold text-txt-black-900">
                 {t("footer.useful_sites")}
               </p>
@@ -60,11 +60,17 @@ const LayoutFooter = () => {
               </Link>
             </div>
 
-            {/* Col 2: Download + Docs */}
-            <div className="flex w-[200px] flex-col gap-2">
+            {/* Col 2: Use the Data */}
+            <div className="order-2 flex w-full flex-col gap-2 md:order-3 md:w-[200px]">
               <p className="font-bold text-txt-black-900">
-                {t("footer.open_data")}
+                {t("footer.use_the_data")}
               </p>
+              <Link
+                href="/query-builder"
+                className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
+              >
+                {t("footer.query_builder")}
+              </Link>
               <Link
                 href="/data-catalogue"
                 className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
@@ -76,6 +82,25 @@ const LayoutFooter = () => {
                 className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
               >
                 {t("footer.open_api")}
+              </Link>
+            </div>
+
+            {/* Col 3: About */}
+            <div className="order-3 flex w-full flex-col gap-2 md:order-2 md:w-[200px]">
+              <p className="font-bold text-txt-black-900">
+                {t("footer.about")}
+              </p>
+              <Link
+                href="#"
+                className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
+              >
+                {t("footer.background")}
+              </Link>
+              <Link
+                href="#"
+                className="text-body-sm text-txt-black-700 transition-colors hover:text-txt-black-900"
+              >
+                {t("footer.site_metrics")}
               </Link>
               <Link
                 href="/research"

@@ -25,6 +25,8 @@ interface RedelineationBeforeAfterMapProps {
   election_type: ElectionType;
   map_new: string;
   map_old: string;
+  new_year: string;
+  old_year: string;
   type: string;
 }
 
@@ -35,6 +37,7 @@ interface BoundaryMapProps {
     opacity?: number;
     source: string;
     width?: number;
+    year: string;
   }>;
   id: string;
   election_type: ElectionType;
@@ -86,6 +89,8 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
   election_type,
   map_new,
   map_old,
+  new_year,
+  old_year,
   type,
 }) => {
   const { LIGHT_STYLE, DARK_STYLE } = MapboxMapStyle;
@@ -139,8 +144,12 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
             <TabsTrigger value="compare">
               {t("map_explorer.tabs.compare")}
             </TabsTrigger>
-            <TabsTrigger value="new">{t("new_constituency")}</TabsTrigger>
-            <TabsTrigger value="old">{t("old_constituency")}</TabsTrigger>
+            <TabsTrigger value="new">
+              {t("new_constituency")} ({new_year})
+            </TabsTrigger>
+            <TabsTrigger value="old">
+              {t("old_constituency")} ({old_year})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="compare">
@@ -164,12 +173,14 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                       labelKey: "old_constituency",
                       opacity: referenceOpacity,
                       width: 1,
+                      year: old_year,
                     },
                     {
                       source: map_new,
                       color: primaryColor,
                       labelKey: "new_constituency",
                       width: 2,
+                      year: new_year,
                     },
                   ]}
                 />
@@ -195,12 +206,14 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                         labelKey: "new_constituency",
                         opacity: referenceOpacity,
                         width: 1,
+                        year: new_year,
                       },
                       {
                         source: map_old,
                         color: secondaryColor,
                         labelKey: "old_constituency",
                         width: 2,
+                        year: old_year,
                       },
                     ]}
                   />
@@ -227,10 +240,10 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                   </Thumb>
                 </Root>
                 <MapCornerLabel position="left">
-                  {t("new_constituency")}
+                  {t("new_constituency")} ({new_year})
                 </MapCornerLabel>
                 <MapCornerLabel position="right">
-                  {t("old_constituency")}
+                  {t("old_constituency")} ({old_year})
                 </MapCornerLabel>
               </div>
               <p className="text-center text-sm italic text-txt-black-500">
@@ -248,12 +261,14 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                   labelKey: "old_constituency",
                   opacity: referenceOpacity,
                   width: 1,
+                  year: old_year,
                 },
                 {
                   source: map_new,
                   color: primaryColor,
                   labelKey: "new_constituency",
                   width: 2,
+                  year: new_year,
                 },
               ]}
               id="redelineation_new_map"
@@ -275,12 +290,14 @@ const RedelineationBeforeAfterMap: FC<RedelineationBeforeAfterMapProps> = ({
                   labelKey: "new_constituency",
                   opacity: referenceOpacity,
                   width: 1,
+                  year: new_year,
                 },
                 {
                   source: map_old,
                   color: secondaryColor,
                   labelKey: "old_constituency",
                   width: 2,
+                  year: old_year,
                 },
               ]}
               id="redelineation_old_map"
@@ -416,83 +433,95 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
   };
 
   return (
-    <Map
-      id={id}
-      ref={mapRef}
-      reuseMaps={true}
-      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-      {...viewState}
-      style={{ width: "100%", height: "100%" }}
-      mapStyle={styleUrl}
-      customAttribution={APP_NAME}
-      interactiveLayerIds={querySources.map((source) => `${id}-${source}-fill`)}
-      onMove={onMove}
-      onMouseMove={handleMouseMove}
+    <div
+      className="absolute inset-0"
       onMouseLeave={() => {
         clearTooltip();
         onTooltipOwnerChange?.(
           tooltipOwner === id ? null : (tooltipOwner ?? null),
         );
       }}
+      onPointerLeave={() => {
+        clearTooltip();
+        onTooltipOwnerChange?.(
+          tooltipOwner === id ? null : (tooltipOwner ?? null),
+        );
+      }}
     >
-      {orderedSources.map((source) => (
-        <Fragment key={source}>
-          <Source
-            id={`${id}-${source}`}
-            type="vector"
-            url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${source}`}
+      <Map
+        id={id}
+        ref={mapRef}
+        reuseMaps={true}
+        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        {...viewState}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle={styleUrl}
+        customAttribution={APP_NAME}
+        interactiveLayerIds={querySources.map(
+          (source) => `${id}-${source}-fill`,
+        )}
+        onMove={onMove}
+        onMouseMove={handleMouseMove}
+      >
+        {orderedSources.map((source) => (
+          <Fragment key={source}>
+            <Source
+              id={`${id}-${source}`}
+              type="vector"
+              url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${source}`}
+            >
+              <Layer
+                id={`${id}-${source}-fill`}
+                type="fill"
+                source-layer={source}
+                paint={{
+                  "fill-color": "transparent",
+                  "fill-opacity": 0.01,
+                }}
+              />
+              {boundaries
+                .filter((boundary) => boundary.source === source)
+                .map((boundary) => (
+                  <Layer
+                    key={`${source}-line`}
+                    id={`${id}-${source}-line`}
+                    type="line"
+                    source-layer={source}
+                    paint={{
+                      "line-color": boundary.color,
+                      "line-width":
+                        boundary.width ??
+                        (boundaries.findIndex(
+                          (item) => item.source === source,
+                        ) ===
+                        boundaries.length - 1
+                          ? 1.5
+                          : 1),
+                      "line-opacity": boundary.opacity ?? 1,
+                    }}
+                  />
+                ))}
+            </Source>
+          </Fragment>
+        ))}
+        {popupInfo && (!tooltipOwner || tooltipOwner === id) && (
+          <div
+            className="shadow-floating pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-md bg-bg-black-900 px-3 py-2 font-body text-body-xs text-txt-white"
+            style={{
+              left: popupInfo.x,
+              top: popupInfo.y - 12,
+            }}
           >
-            <Layer
-              id={`${id}-${source}-fill`}
-              type="fill"
-              source-layer={source}
-              paint={{
-                "fill-color": "transparent",
-                "fill-opacity": 0.01,
-              }}
-            />
-            {boundaries
-              .filter((boundary) => boundary.source === source)
-              .map((boundary) => (
-                <Layer
-                  key={`${source}-line`}
-                  id={`${id}-${source}-line`}
-                  type="line"
-                  source-layer={source}
-                  paint={{
-                    "line-color": boundary.color,
-                    "line-width":
-                      boundary.width ??
-                      (boundaries.findIndex(
-                        (item) => item.source === source,
-                      ) ===
-                      boundaries.length - 1
-                        ? 1.5
-                        : 1),
-                    "line-opacity": boundary.opacity ?? 1,
-                  }}
-                />
-              ))}
-          </Source>
-        </Fragment>
-      ))}
-      {popupInfo && (!tooltipOwner || tooltipOwner === id) && (
-        <div
-          className="shadow-floating pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full rounded-md bg-bg-black-900 px-3 py-2 font-body text-body-xs text-txt-white"
-          style={{
-            left: popupInfo.x,
-            top: popupInfo.y - 12,
-          }}
-        >
-          <p>
-            {t("new")}: {popupInfo.newSeat || "-"}
-          </p>
-          <p>
-            {t("old")}: {popupInfo.oldSeat || "-"}
-          </p>
-        </div>
-      )}
-    </Map>
+            <p>
+              {t("new")}: {popupInfo.newSeat || "-"}
+            </p>
+            <p>
+              {t("old")}: {popupInfo.oldSeat || "-"}
+            </p>
+          </div>
+        )}
+      </Map>
+    </div>
   );
 };
 
@@ -504,8 +533,8 @@ const MapCornerLabel: FC<{
     <div
       className={
         position === "left"
-          ? "pointer-events-none absolute left-3 top-3 z-10 rounded-md border border-otl-gray-200 bg-bg-dialog px-2.5 py-1.5 text-body-xs font-medium text-txt-black-700 shadow-context-menu"
-          : "pointer-events-none absolute right-3 top-3 z-10 rounded-md border border-otl-gray-200 bg-bg-dialog px-2.5 py-1.5 text-body-xs font-medium text-txt-black-700 shadow-context-menu"
+          ? "pointer-events-none absolute left-3 top-3 z-10 rounded-sm bg-bg-dialog/80 px-2.5 py-1.5 text-body-xs font-medium text-txt-black-500"
+          : "pointer-events-none absolute right-3 top-3 z-10 rounded-sm bg-bg-dialog/80 px-2.5 py-1.5 text-body-xs font-medium text-txt-black-500"
       }
     >
       {children}
@@ -520,7 +549,7 @@ const MapLegend: FC<{
 
   return (
     <div className="absolute right-4 top-4">
-      <div className="flex w-[150px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog p-[5px] shadow-context-menu">
+      <div className="flex w-[210px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog p-[5px] shadow-context-menu">
         <p className="px-2.5 py-1.5 text-start text-body-2xs font-medium text-txt-black-500">
           {t("map_explorer.legend.title")}
         </p>
@@ -533,7 +562,9 @@ const MapLegend: FC<{
               className="h-0.5 w-3 shrink-0"
               style={{ backgroundColor: boundary.color }}
             />
-            <p>{t(boundary.labelKey)}</p>
+            <p>
+              {t(boundary.labelKey)} ({boundary.year})
+            </p>
           </div>
         ))}
       </div>
