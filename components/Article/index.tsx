@@ -28,9 +28,9 @@ export const ArticleLayout: FunctionComponent<ArticleLayoutProps> = ({
       className="bg-bg-white pb-14 pt-16 lg:pb-20 lg:pt-20"
     >
       <SectionGrid>
-        <div className="w-full max-w-[720px]">
+        <div className="w-full max-w-[640px]">
           <h1
-            className="text-[2.5rem] font-normal leading-[1.08] text-txt-black-900 lg:text-[3.75rem]"
+            className="text-center text-[2.25rem] font-normal leading-[1.08] text-txt-black-900 lg:text-[3.125rem]"
             style={articleSerif}
           >
             {title}
@@ -96,7 +96,7 @@ export const CorePrinciples: FunctionComponent<CorePrinciplesProps> = ({
                   {principle.title}
                 </h3>
                 <p
-                  className="mt-2 max-w-3xl text-[1.0625rem] leading-8 text-txt-black-700"
+                  className="mt-2 max-w-3xl text-[1.0625rem] leading-8 text-txt-black-700 lg:text-[1.125rem]"
                   style={articleSerif}
                 >
                   {principle.description}
@@ -114,7 +114,7 @@ const ArticleBody: FunctionComponent<{ children?: ReactNode }> = ({
   children,
 }) => (
   <div
-    className="mt-8 w-full max-w-[720px] space-y-5 text-[1.0625rem] leading-8 text-txt-black-700 lg:text-[1.125rem]"
+    className="mt-8 w-full max-w-[640px] space-y-5 text-[1.0625rem] leading-8 text-txt-black-700 lg:text-[1.125rem]"
     style={articleSerif}
   >
     {children}
