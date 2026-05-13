@@ -16,7 +16,7 @@ const AboutPage: Page = ({
   return (
     <>
       <Metadata
-        title={article.frontmatter.title}
+        title={article.frontmatter.metaTitle ?? article.frontmatter.title}
         description={article.frontmatter.description}
         keywords="MECo, Malaysian Election Corpus, Malaysian election data, open data"
       />

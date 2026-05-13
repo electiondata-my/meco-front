@@ -1,13 +1,19 @@
 import Container from "@components/Container";
 import SectionGrid from "@components/Section/section-grid";
-import type { ArticlePrinciple } from "@lib/articles";
+import type { ArticlePrinciple, ArticlePrincipleIcon } from "@lib/articles";
 import {
   ArrowDownTrayIcon,
   ScaleIcon,
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
-import { FunctionComponent, ReactNode } from "react";
+import type {
+  ForwardRefExoticComponent,
+  FunctionComponent,
+  ReactNode,
+  RefAttributes,
+  SVGProps,
+} from "react";
 
 export const articleSerif = {
   fontFamily: 'Georgia, "Times New Roman", serif',
@@ -42,7 +48,26 @@ export const ArticleLayout: FunctionComponent<ArticleLayoutProps> = ({
   );
 };
 
-const principleIcons = [ShieldCheckIcon, ArrowDownTrayIcon, ScaleIcon];
+type PrincipleIcon = ForwardRefExoticComponent<
+  Omit<SVGProps<SVGSVGElement>, "ref"> & {
+    title?: string;
+    titleId?: string;
+  } & RefAttributes<SVGSVGElement>
+>;
+
+const principleIcons: Record<ArticlePrincipleIcon, PrincipleIcon> = {
+  "arrow-down-tray": ArrowDownTrayIcon,
+  scale: ScaleIcon,
+  "shield-check": ShieldCheckIcon,
+};
+
+function getPrincipleIcon(icon: string): PrincipleIcon {
+  const Icon = principleIcons[icon as ArticlePrincipleIcon];
+  if (!Icon) {
+    throw new Error(`Unsupported core principle icon: ${icon}`);
+  }
+  return Icon;
+}
 
 interface CorePrinciplesProps {
   principles: ArticlePrinciple[];
@@ -69,8 +94,8 @@ export const CorePrinciples: FunctionComponent<CorePrinciplesProps> = ({
       )}
 
       <div className="border-y border-otl-gray-300">
-        {principles.map((principle, index) => {
-          const Icon = principleIcons[index] ?? ShieldCheckIcon;
+        {principles.map((principle) => {
+          const Icon = getPrincipleIcon(principle.icon);
 
           return (
             <section
@@ -127,7 +152,7 @@ const P: FunctionComponent<{ children?: ReactNode }> = ({ children }) => (
 
 const H2: FunctionComponent<{ children?: ReactNode }> = ({ children }) => (
   <h2
-    className="pt-7 text-[2rem] font-normal leading-tight text-txt-black-900"
+    className="pt-7 text-[2rem] font-normal leading-tight text-txt-black-900 first:pt-0"
     style={articleSerif}
   >
     {children}
