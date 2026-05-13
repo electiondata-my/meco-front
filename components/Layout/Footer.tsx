@@ -39,7 +39,7 @@ const LayoutFooter = () => {
     {
       title: t("footer.about"),
       links: [
-        { label: t("footer.background"), href: "#" },
+        { label: t("footer.background"), href: "/about" },
         { label: t("footer.site_metrics"), href: "#" },
         { label: t("footer.documentation"), href: "/research" },
       ],
