@@ -87,10 +87,7 @@ const LayoutFooter = () => {
 
         <div className="grid w-full max-w-[640px] grid-cols-2 gap-x-8 gap-y-9 sm:w-fit sm:grid-cols-[repeat(3,max-content)] sm:gap-x-16 lg:gap-x-20 lg:justify-self-end">
           {sections.map((section) => (
-            <div
-              key={section.title}
-              className="flex min-w-0 flex-col gap-3"
-            >
+            <div key={section.title} className="flex min-w-0 flex-col gap-3">
               <p className="text-body-sm font-semibold text-txt-black-900">
                 {section.title}
               </p>

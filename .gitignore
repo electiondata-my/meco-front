@@ -20,6 +20,9 @@ tb*
 .DS_Store
 *.pem
 
+# node version
+!/.nvmrc
+
 # debug
 npm-debug.log*
 yarn-debug.log*

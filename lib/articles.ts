@@ -5,10 +5,7 @@ import { serialize } from "next-mdx-remote/serialize";
 import type { MDXRemoteSerializeResult } from "next-mdx-remote";
 
 export type ArticleCollection = "about" | "blog";
-export type ArticlePrincipleIcon =
-  | "arrow-down-tray"
-  | "scale"
-  | "shield-check";
+export type ArticlePrincipleIcon = "arrow-down-tray" | "scale" | "shield-check";
 
 export interface ArticlePrinciple {
   number: string;
