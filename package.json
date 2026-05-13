@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "postbuild": "next-sitemap",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "lint-staged": {
     "*.{js,ts,tsx,css,md}": "prettier --write"

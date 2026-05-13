@@ -39,7 +39,7 @@ const LayoutFooter = () => {
     {
       title: t("footer.about"),
       links: [
-        { label: t("footer.background"), href: "#" },
+        { label: t("footer.background"), href: "/about" },
         { label: t("footer.site_metrics"), href: "#" },
         { label: t("footer.documentation"), href: "/research" },
       ],
@@ -85,12 +85,9 @@ const LayoutFooter = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-8 gap-y-9 sm:grid-cols-3 lg:justify-self-end">
+        <div className="grid w-full max-w-[640px] grid-cols-2 gap-x-8 gap-y-9 sm:w-fit sm:grid-cols-[repeat(3,max-content)] sm:gap-x-16 lg:gap-x-20 lg:justify-self-end">
           {sections.map((section) => (
-            <div
-              key={section.title}
-              className="flex min-w-0 flex-col gap-3 sm:w-[180px]"
-            >
+            <div key={section.title} className="flex min-w-0 flex-col gap-3">
               <p className="text-body-sm font-semibold text-txt-black-900">
                 {section.title}
               </p>
