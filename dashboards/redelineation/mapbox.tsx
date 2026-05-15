@@ -4,6 +4,7 @@ import { FC, useEffect, useRef, useState } from "react";
 import { APP_NAME } from "@lib/config";
 import { GeoJSONFeature } from "mapbox-gl";
 import Map, {
+  AttributionControl,
   Layer,
   MapRef,
   Popup,
@@ -111,10 +112,11 @@ const MapboxRedelineation: FC<Props> = ({
       initialViewState={initialState}
       style={{ width: "100%", height: "100%" }}
       mapStyle={styleUrl}
-      customAttribution={APP_NAME}
+      attributionControl={false}
       interactiveLayerIds={sources}
       onMouseMove={handleMouseMove}
     >
+      <AttributionControl compact={true} customAttribution={APP_NAME} />
       {/* Shaded Source */}
       <Source
         key={sources[1]}

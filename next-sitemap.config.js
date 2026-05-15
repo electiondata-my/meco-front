@@ -41,7 +41,7 @@ function makeEntry(path, priority = 0.7) {
 module.exports = {
   siteUrl: APP_URL,
   generateIndexSitemap: true,
-  generateRobotsTxt: true,
+  generateRobotsTxt: false,
   priority: 0.7,
   autoLastmod: true,
   outDir: "public",

@@ -11,8 +11,9 @@ import {
 } from "@govtechmy/myds-react/tabs";
 import { Root, Thumb, Track } from "@radix-ui/react-slider";
 import { useTheme } from "next-themes";
-import { FC, Fragment, useEffect, useRef, useState } from "react";
+import { FC, Fragment, ReactNode, useEffect, useRef, useState } from "react";
 import Map, {
+  AttributionControl,
   Layer,
   MapMouseEvent,
   MapRef,
@@ -390,7 +391,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
 
     const getSeat = (source: string) => {
       const feature = features.find(
-        (item) => item.layer.id === `${id}-${source}-fill`,
+        (item) => item.layer?.id === `${id}-${source}-fill`,
       );
 
       return (
@@ -456,13 +457,14 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
         {...viewState}
         style={{ width: "100%", height: "100%" }}
         mapStyle={styleUrl}
-        customAttribution={APP_NAME}
+        attributionControl={false}
         interactiveLayerIds={querySources.map(
           (source) => `${id}-${source}-fill`,
         )}
         onMove={onMove}
         onMouseMove={handleMouseMove}
       >
+        <AttributionControl compact={true} customAttribution={APP_NAME} />
         {orderedSources.map((source) => (
           <Fragment key={source}>
             <Source
@@ -526,7 +528,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
 };
 
 const MapCornerLabel: FC<{
-  children: string;
+  children: ReactNode;
   position: "left" | "right";
 }> = ({ children, position }) => {
   return (

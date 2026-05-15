@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Map, {
+  AttributionControl,
   Layer,
   LngLatLike,
   MapRef,
@@ -205,6 +206,7 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
         style={{ width: "100%", height: "100%" }}
         mapStyle={styleUrl}
         interactive={true}
+        attributionControl={false}
         onClick={handleClickPolygon}
         interactiveLayerIds={[`${current_del}-fill`]}
         logoPosition="top-right"
@@ -238,6 +240,7 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
           }
         }}
       >
+        <AttributionControl compact={true} />
         <Source
           key={current_del}
           type="vector"

@@ -53,7 +53,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
     seat: seats[0].seat,
     search_seat: "",
     loading: false,
-    results: {},
+    results: null as { data: any[]; votes: { x: string; abs: number; perc: number }[] } | null,
     filter_result: t("contested_by", { ns: "elections" }),
     filter_party: "",
     open: false,
@@ -417,11 +417,11 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
                   </DrawerHeader>
                   <FullResultContent
                     columns={columns}
-                    data={data.results.data}
+                    data={data.results?.data}
                     highlightedRows={[0]}
                     loading={data.loading}
                     result="won"
-                    votes={data.results.votes}
+                    votes={data.results?.votes ?? []}
                     partyNameDisplay="short"
                     compactMobileTable
                   />
@@ -432,7 +432,7 @@ const BallotSeat: FunctionComponent<BallotSeatProps> = ({
           rightBg="lg:w-full h-[650px] w-full space-y-4.5 bg-bg-white p-6 pb-8 max-lg:hidden overflow-scroll"
           right={
             <div className="space-y-4.5">
-              {data.results.data &&
+              {data.results?.data &&
                 data.results.data.length > 0 &&
                 election && (
                   <>

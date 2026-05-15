@@ -110,7 +110,7 @@ const RedelineationFilters: FunctionComponent<RedelineationFiltersProps> = ({
       <div
         ref={containerRef}
         className={clx(
-          "sticky top-16 z-20 col-span-full mx-auto w-full border border-transparent px-4.5 py-0 transition-all duration-300 max-sm:hidden md:w-[727px] md:px-0",
+          "sticky top-16 z-30 col-span-full mx-auto w-full border border-transparent px-4.5 py-0 transition-all duration-300 max-sm:hidden md:w-[727px] md:px-0",
           data.isStick &&
             "border-otl-gray-200 bg-bg-white py-2.5 max-md:top-14 md:w-full md:px-6",
         )}

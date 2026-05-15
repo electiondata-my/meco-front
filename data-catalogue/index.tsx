@@ -326,7 +326,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
               {sections.map((section) => (
                 <section
                   key={section.sectionKey}
-                  ref={(ref) => (scrollRef.current[section.sectionKey] = ref)}
+                  ref={(ref) => { scrollRef.current[section.sectionKey] = ref; }}
                 >
                   <h2 className="mb-5 font-poppins text-[1.25rem] font-semibold text-txt-black-900">
                     {section.title}

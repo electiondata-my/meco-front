@@ -7,7 +7,6 @@ import { Page } from "@lib/types";
 import { useTranslation } from "@hooks/useTranslation";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import Link from "next/link";
-import { ChevronRightIcon } from "@heroicons/react/20/solid";
 
 /**
  * Homepage
@@ -42,7 +41,6 @@ const HomePage: Page = ({
               className="flex items-center gap-1.5 rounded-md bg-bg-black-900 px-4 py-2 text-sm font-medium text-txt-white transition hover:bg-bg-black-700"
             >
               {t("hero.api_docs")}
-              <ChevronRightIcon className="h-4 w-4" />
             </Link>
             <Link
               href="/data-catalogue"

@@ -87,6 +87,7 @@ export type DCChartKeys =
 export type DCPeriod = "YEARLY" | "QUARTERLY" | "MONTHLY" | "WEEKLY" | "DAILY";
 
 type BaseFilter = {
+  key: string;
   name: string;
   selected: string;
   options: string[];

@@ -5,7 +5,6 @@ import {
   useEffect,
   useState,
 } from "react";
-import Image from "next/image";
 import Container from "@components/Container";
 import { clx, numFormat } from "@lib/helpers";
 import { useTranslation } from "next-i18next";
@@ -19,7 +18,6 @@ type ConditionalHeroProps =
       category?: never;
       description?: never;
       action?: never;
-      withPattern?: true;
     }
   | HeroDefault;
 
@@ -29,7 +27,6 @@ type HeroDefault = {
   category?: [text: string, className?: string];
   description?: [text: string, className?: string] | ReactNode;
   action?: ReactNode;
-  withPattern?: true;
 };
 
 type HeroProps = {
@@ -48,7 +45,6 @@ const Hero: FunctionComponent<HeroProps> = ({
   description,
   action,
   pageId = "sitewide",
-  withPattern,
   sectionGridClassName,
 }) => {
   const { t } = useTranslation();
@@ -100,18 +96,6 @@ const Hero: FunctionComponent<HeroProps> = ({
       className={clx("relative", className)}
       as="section"
     >
-      {withPattern && (
-        <div className="absolute flex h-full w-full justify-center overflow-hidden">
-          <Image
-            src="/static/images/hero-pattern.svg"
-            alt=""
-            aria-hidden="true"
-            width={1512}
-            height={378}
-            className="absolute opacity-10"
-          />
-        </div>
-      )}
       {children ? (
         children
       ) : (

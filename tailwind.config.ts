@@ -1,18 +1,34 @@
 import { preset } from "@govtechmy/myds-style";
 
+const escapeAmbiguousTailwindClasses = (content: string) =>
+  content
+    .replaceAll(
+      "data-[state=closed]:slide-out-to-top-[48%]",
+      "data-&lsqb;state=closed&rsqb;:slide-out-to-top-&lsqb;48%&rsqb;",
+    )
+    .replaceAll(
+      "data-[state=open]:slide-in-from-top-[48%]",
+      "data-&lsqb;state=open&rsqb;:slide-in-from-top-&lsqb;48%&rsqb;",
+    );
+
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./charts/**/*.{js,ts,jsx,tsx,mdx}",
-    "./dashboards/**/*.{js,ts,jsx,tsx}",
-    "./data-catalogue/**/*.{js,ts,jsx,tsx}",
-    "./hooks/**/*.{js,ts,jsx,tsx}",
-    "./lib/**/*.{js,ts,jsx,tsx}",
-    "node_modules/@govtechmy/myds-react/dist/**/*.{js,jsx,ts,tsx}",
-  ],
+  content: {
+    files: [
+      "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+      "./components/**/*.{js,ts,jsx,tsx,mdx}",
+      "./app/**/*.{js,ts,jsx,tsx,mdx}",
+      "./charts/**/*.{js,ts,jsx,tsx,mdx}",
+      "./dashboards/**/*.{js,ts,jsx,tsx}",
+      "./data-catalogue/**/*.{js,ts,jsx,tsx}",
+      "./hooks/**/*.{js,ts,jsx,tsx}",
+      "./lib/**/*.{js,ts,jsx,tsx}",
+      "node_modules/@govtechmy/myds-react/dist/**/*.{js,jsx,ts,tsx}",
+    ],
+    transform: {
+      DEFAULT: escapeAmbiguousTailwindClasses,
+    },
+  },
   presets: [preset],
   theme: {
     extend: {

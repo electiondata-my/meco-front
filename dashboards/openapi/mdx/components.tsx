@@ -84,7 +84,9 @@ const InlineCode: FunctionComponent<{ children?: ReactNode }> = ({
 );
 
 /** Code fence — rendered via DocCodeBlock (syntax highlighted + copyable). */
-const Pre: FunctionComponent<{ children?: React.ReactElement }> = ({
+const Pre: FunctionComponent<{
+  children?: React.ReactElement<{ className?: string; children?: string }>;
+}> = ({
   children,
 }) => {
   const lang =

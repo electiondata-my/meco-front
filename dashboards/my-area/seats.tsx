@@ -385,6 +385,7 @@ const ElectionSeatsDashboard: FunctionComponent<ElectionSeatsProps> = ({
             isLoading={data.loading}
             className="w-full"
             percentOnlyColumns={["majority", "voter_turnout"]}
+            flexibleColumnId="name"
           />
         </SectionGrid>
 
