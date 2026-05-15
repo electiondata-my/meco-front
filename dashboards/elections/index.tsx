@@ -88,8 +88,8 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
       : ElectionEnum.Dun,
     tab_index: 0,
     election_fullname: ELECTION_FULLNAME,
-    election_acronym: ELECTION_ACRONYM,
-    state: CURRENT_STATE,
+    election_acronym: ELECTION_ACRONYM as string | null,
+    state: CURRENT_STATE as string | null,
     showFullTable: false,
     open_filter: false,
   });
@@ -127,7 +127,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
           ? null
           : data.state || CURRENT_STATE,
       );
-      setData("election", null);
+      setData("election_acronym", null);
     } else {
       setData("state", data.state || CURRENT_STATE);
     }
@@ -192,7 +192,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
                       className="text-sm"
                     />
                     <StateDropdown
-                      currentState={data.state}
+                      currentState={data.state ?? undefined}
                       onChange={(selected) => {
                         setData("state", selected.value);
                         TOGGLE_IS_DUN && setData("election_acronym", null);
@@ -266,7 +266,7 @@ const ElectionExplorer: FunctionComponent<ElectionExplorerProps> = ({
               />
             </div>
             <StateDropdown
-              currentState={data.state}
+              currentState={data.state ?? undefined}
               onChange={(selected) => {
                 if (TOGGLE_IS_PARLIMEN && data.election_acronym) {
                   push(

@@ -38,11 +38,11 @@ const nextConfig = {
     ];
   },
   reactStrictMode: true,
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
-    domains: ["api.mapbox.com", "static.electiondata.my"],
+    remotePatterns: [
+      { protocol: "https", hostname: "api.mapbox.com" },
+      { protocol: "https", hostname: "static.electiondata.my" },
+    ],
   },
   webpack: (config) => {
     config.experiments = {

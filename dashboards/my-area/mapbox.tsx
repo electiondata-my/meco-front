@@ -1,5 +1,12 @@
 import { FC, Fragment, useEffect, useRef, useState } from "react";
-import Map, { Layer, MapRef, Popup, Source, useMap } from "react-map-gl/mapbox";
+import Map, {
+  AttributionControl,
+  Layer,
+  MapRef,
+  Popup,
+  Source,
+  useMap,
+} from "react-map-gl/mapbox";
 import { useTheme } from "next-themes";
 import { Boundaries, ElectionType, Lineage } from "@dashboards/types";
 import { useTranslation } from "@hooks/useTranslation";
@@ -143,10 +150,11 @@ const MapboxMyArea: FC<MapboxProps> = ({
       }}
       style={{ width: "100%", height: "100%" }}
       mapStyle={styleUrl}
-      customAttribution={APP_NAME}
+      attributionControl={false}
       interactiveLayerIds={boundData.map(([years, hdata]) => hdata[0])}
       onMouseMove={handleMouseMove}
     >
+      <AttributionControl compact={true} customAttribution={APP_NAME} />
       {boundData.map(([year, [id, seats]], index) => (
         <Fragment key={year}>
           {selectedBounds.find((selected) => selected === id) && (

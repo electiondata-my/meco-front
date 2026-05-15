@@ -1,5 +1,11 @@
 import { FC, useEffect, useRef, useState } from "react";
-import Map, { Layer, MapRef, Popup, Source } from "react-map-gl/mapbox";
+import Map, {
+  AttributionControl,
+  Layer,
+  MapRef,
+  Popup,
+  Source,
+} from "react-map-gl/mapbox";
 import { useTheme } from "next-themes";
 import {
   MapboxMapStyle,
@@ -145,10 +151,11 @@ const MapInstance: FC<MapInstanceProps> = ({
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={styleUrl}
-        customAttribution={APP_NAME}
+        attributionControl={false}
         interactiveLayerIds={[`${mapboxKey}-fill`]}
         onClick={handleClick}
       >
+        <AttributionControl compact={true} customAttribution={APP_NAME} />
         <button
           onClick={handleReset}
           className="absolute right-2 top-2 z-10 rounded-md border border-otl-gray-200 bg-bg-dialog p-1.5 shadow-context-menu hover:bg-bg-white"

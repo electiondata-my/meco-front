@@ -47,7 +47,7 @@ index.html
 
 # sitemaps
 robots.txt
-sitemap*.xml
+sitemap*.xml*
 
 # bundle-analyzer
 analyze

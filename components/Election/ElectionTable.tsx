@@ -43,6 +43,8 @@ export interface ElectionTableProps {
   scrollable?: boolean;
   /** When true, renders a compact 3-column table on mobile (Name | Party | Votes Won) for use in the FullResult modal drawer. */
   compactMobileTable?: boolean;
+  /** Desktop column id that takes remaining width and truncates to a single line. */
+  flexibleColumnId?: string;
 }
 
 type TableIds =
@@ -106,6 +108,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   simpleMobileTable = false,
   scrollable = false,
   compactMobileTable = false,
+  flexibleColumnId,
 }) => {
   const { t, i18n } = useTranslation(["common", "election", "party"]);
   const barSize = compactBars ? "w-[72px] h-[5px]" : "w-[100px] h-[5px]";
@@ -127,7 +130,19 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
       case "index":
         return highlight ? <p className="text-primary-600">{value}</p> : value;
       case "name":
-        return highlight ? (
+        return flexibleColumnId === "name" ? (
+          <p
+            className="flex min-w-0 items-center whitespace-nowrap"
+            title={String(value ?? "")}
+          >
+            <span className="min-w-0 truncate">{value}</span>
+            {highlight && (
+              <span className="ml-1 inline-flex translate-y-0.5">
+                <ResultBadge hidden value={cell.row.original.result} />
+              </span>
+            )}
+          </p>
+        ) : highlight ? (
           <p>
             {value}
             <span className="ml-1 inline-flex translate-y-0.5">
@@ -551,6 +566,17 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                       <th
                         key={header.id}
                         colSpan={header.colSpan}
+                        style={
+                          flexibleColumnId
+                            ? {
+                                width:
+                                  header.column.columnDef.id ===
+                                  flexibleColumnId
+                                    ? "auto"
+                                    : "1%",
+                              }
+                            : undefined
+                        }
                         className={clx(
                           "sticky top-0 z-10 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
                           isFirstCol
@@ -612,6 +638,8 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                         const isFirstCol = colIndex === 0;
                         const isFullResultCol =
                           cell.column.columnDef.id === "full_result";
+                        const isFlexibleCol =
+                          cell.column.columnDef.id === flexibleColumnId;
                         return (
                           <td
                             key={cell.id}
@@ -620,6 +648,10 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                                 ? "font-medium"
                                 : "font-normal",
                               "py-[11px]",
+                              flexibleColumnId &&
+                                (isFlexibleCol
+                                  ? "w-full max-w-0 min-w-0"
+                                  : "w-px whitespace-nowrap"),
                               isFirstCol &&
                                 firstColumnNoWrap &&
                                 "whitespace-nowrap",

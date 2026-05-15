@@ -64,6 +64,7 @@ const PaperCard = ({ paper }: { paper: Paper }) => {
             src={paper.thumbnail}
             alt={t(`${paper.key}.title`)}
             fill
+            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
             className="object-cover object-top transition group-hover:scale-[1.02]"
           />
         ) : (

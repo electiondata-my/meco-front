@@ -11,7 +11,7 @@ type Props = {
   selected?: OptionType | null;
   onChange: (option?: OptionType) => void;
   placeholder?: string;
-  config?: MatchSorterOptions;
+  config?: MatchSorterOptions<OptionType>;
 };
 
 /**
@@ -24,7 +24,7 @@ const CompactCandidateCombobox: FunctionComponent<Props> = ({
   selected,
   onChange,
   placeholder = "Search candidate",
-  config = { keys: ["label"] },
+  config = { keys: ["label"] } as MatchSorterOptions<OptionType>,
 }) => {
   const [query, setQuery] = useState<string>(selected?.label ?? "");
   const [open, setOpen] = useState(false);
