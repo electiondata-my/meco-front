@@ -31,7 +31,7 @@ const DocLayout: FunctionComponent<DocLayoutProps> = ({
   const [apiStats, setApiStats] = useState<{ total_hits: number; total_users: number } | null>(null);
   useEffect(() => {
     if (!isIntroduction) return;
-    const token = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
+    const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
     fetch(`https://api.us-west-2.aws.tinybird.co/v0/pipes/api_stats_summary.json?token=${token}`)
       .then(r => r.json())
       .then(d => setApiStats(d?.data?.[0] ?? null))

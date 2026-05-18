@@ -621,7 +621,7 @@ export default function QueryBuilderDashboard() {
   }, []);
 
   useEffect(() => {
-    const token = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
+    const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
     fetch(
       `https://api.us-west-2.aws.tinybird.co/v0/pipes/views_by_page.json?token=${token}&page_id=/query-run`,
     )
@@ -641,7 +641,7 @@ export default function QueryBuilderDashboard() {
     turnstileWidgetRef.current = window.turnstile.render(
       "#query-builder-turnstile",
       {
-        sitekey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "",
+        sitekey: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "",
         callback: (token: string) =>
           turnstileCallbackRef.current?.resolve(token),
         "error-callback": () =>

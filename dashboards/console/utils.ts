@@ -93,7 +93,7 @@ export interface AnalyticsData {
 
 // --------------- Constants ---------------
 
-export const AUTH_URL = process.env.NEXT_PUBLIC_AUTH_URL ?? "/api/auth";
+export const AUTH_URL = import.meta.env.PUBLIC_AUTH_URL ?? "/api/auth";
 export const MAX_KEYS = 15;
 
 export const PERIOD_HOURS: Record<Period, number> = {

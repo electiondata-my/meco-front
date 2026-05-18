@@ -48,12 +48,12 @@ const CatalogueEmbed: ForwardRefExoticComponent<CatalogueEmbedProps> =
 
     const EMBED = useMemo<{ url: string; params: URLSearchParams }>(() => {
       // const embed = new URL(
-      //   `${process.env.NEXT_PUBLIC_APP_URL}${
+      //   `${import.meta.env.PUBLIC_APP_URL}${
       //     language?.value === "ms-MY" ? "/ms-MY" : ""
       //   }/data-catalogue/embed/${uid}`
       // );
       const embed = new URL(
-        `${process.env.NEXT_PUBLIC_APP_URL}${"/ms-MY"}/data-catalogue/embed/${uid}`,
+        `${import.meta.env.PUBLIC_APP_URL}${"/ms-MY"}/data-catalogue/embed/${uid}`,
       );
       const search_params = new URLSearchParams(
         Object.entries(data)

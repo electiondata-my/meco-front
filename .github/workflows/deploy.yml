@@ -1,0 +1,43 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+        env:
+          PUBLIC_APP_URL: ${{ secrets.PUBLIC_APP_URL }}
+          PUBLIC_APP_ENV: production
+          PUBLIC_API_URL_TB: ${{ secrets.PUBLIC_API_URL_TB }}
+          PUBLIC_API_TOKEN_TB: ${{ secrets.PUBLIC_API_TOKEN_TB }}
+          PUBLIC_API_URL_S3: ${{ secrets.PUBLIC_API_URL_S3 }}
+          PUBLIC_I18N_URL: ${{ secrets.PUBLIC_I18N_URL }}
+          PUBLIC_TINYBIRD_TOKEN: ${{ secrets.PUBLIC_TINYBIRD_TOKEN }}
+          PUBLIC_TINYBIRD_TOKEN_READ: ${{ secrets.PUBLIC_TINYBIRD_TOKEN_READ }}
+          PUBLIC_MAPBOX_ACCOUNT: ${{ secrets.PUBLIC_MAPBOX_ACCOUNT }}
+          PUBLIC_MAPBOX_TOKEN: ${{ secrets.PUBLIC_MAPBOX_TOKEN }}
+          PUBLIC_AUTH_URL: ${{ secrets.PUBLIC_AUTH_URL }}
+          PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.PUBLIC_TURNSTILE_SITE_KEY }}
+
+      - name: Deploy to Cloudflare Pages
+        run: npx wrangler pages deploy dist/ --project-name=electiondata-my
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

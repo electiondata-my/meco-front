@@ -9,23 +9,23 @@ type BaseURL = "api_tb" | "api_s3" | "app" | string;
  * @param {Record<string, string>} headers Additional headers
  * @returns Base of URL
  *
- * @example "api_tb"  -> "https://[NEXT_PUBLIC_API_URL_TB]/"
- * @example "api_s3"  -> "https://[NEXT_PUBLIC_API_URL_S3]/"
- * @example "app"     -> "https://[NEXT_PUBLIC_APP_URL]/"
+ * @example "api_tb"  -> "https://[PUBLIC_API_URL_TB]/"
+ * @example "api_s3"  -> "https://[PUBLIC_API_URL_S3]/"
+ * @example "app"     -> "https://[PUBLIC_APP_URL]/"
  */
 const instance = (base: BaseURL, headers: Record<string, string> = {}) => {
   const urls: Record<BaseURL, string> = {
-    api_tb: process.env.NEXT_PUBLIC_API_URL_TB ?? "",
-    api_s3: process.env.NEXT_PUBLIC_API_URL_S3 ?? "",
-    app: process.env.NEXT_PUBLIC_APP_URL ?? "",
+    api_tb: import.meta.env.PUBLIC_API_URL_TB ?? "",
+    api_s3: import.meta.env.PUBLIC_API_URL_S3 ?? "",
+    app: import.meta.env.PUBLIC_APP_URL ?? "",
   };
 
   // Different authorization logic for each base
   let authorization = "";
   if (base === "api_tb") {
-    authorization = `Bearer ${process.env.NEXT_PUBLIC_TINYBIRD_TOKEN}`;
+    authorization = `Bearer ${import.meta.env.PUBLIC_TINYBIRD_TOKEN}`;
   } else if (base === "app") {
-    authorization = `Bearer ${process.env.NEXT_PUBLIC_AUTHORIZATION_TOKEN}`;
+    authorization = `Bearer ${import.meta.env.PUBLIC_AUTHORIZATION_TOKEN}`;
   }
 
   const config: AxiosRequestConfig = {
@@ -88,7 +88,7 @@ export const post = (
  * @returns {Promise<Response>} Text
  */
 export const stream = (route: string, payload?: any): Promise<Response> => {
-  return fetch(process.env.NEXT_PUBLIC_AI_URL + route, {
+  return fetch(import.meta.env.PUBLIC_AI_URL + route, {
     method: "POST",
     headers: {
       Accept: "text/event-stream",

@@ -108,7 +108,7 @@ const MapboxRedelineation: FC<Props> = ({
       id="redelineation_map"
       ref={mapRef}
       reuseMaps={true}
-      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+      mapboxAccessToken={import.meta.env.PUBLIC_MAPBOX_TOKEN}
       initialViewState={initialState}
       style={{ width: "100%", height: "100%" }}
       mapStyle={styleUrl}
@@ -122,7 +122,7 @@ const MapboxRedelineation: FC<Props> = ({
         key={sources[1]}
         id={sources[1]}
         type="vector"
-        url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${sources[1]}`}
+        url={`mapbox://${import.meta.env.PUBLIC_MAPBOX_ACCOUNT}.${sources[1]}`}
       >
         <Layer
           id={`${sources[1]}-line`}
@@ -169,7 +169,7 @@ const MapboxRedelineation: FC<Props> = ({
         key={sources[0]}
         id={sources[0]}
         type="vector"
-        url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${sources[0]}`}
+        url={`mapbox://${import.meta.env.PUBLIC_MAPBOX_ACCOUNT}.${sources[0]}`}
       >
         <Layer
           id={`${sources[0]}-line`}

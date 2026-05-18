@@ -1,0 +1,20 @@
+---
+import TabCode from "./TabCode.tsx";
+const { curl, javascript, typescript, python, r, go } = Astro.props as {
+  curl?: string;
+  javascript?: string;
+  typescript?: string;
+  python?: string;
+  r?: string;
+  go?: string;
+};
+---
+<TabCode
+  client:only="react"
+  curl={curl}
+  javascript={javascript}
+  typescript={typescript}
+  python={python}
+  r={r}
+  go={go}
+/>

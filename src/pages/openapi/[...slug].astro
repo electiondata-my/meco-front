@@ -1,0 +1,40 @@
+---
+import DocLayout from "@src/components/OpenApi/DocLayout.astro";
+import { mdxComponents } from "@src/components/OpenApi/mdxComponents";
+import TabCodeIsland from "@src/components/OpenApi/mdx/TabCodeIsland.astro";
+import TokenInputIsland from "@src/components/OpenApi/mdx/TokenInputIsland.astro";
+import CandidatesApiTesterIsland from "@src/components/OpenApi/mdx/CandidatesApiTesterIsland.astro";
+import { getCollection, render } from "astro:content";
+import { extractToc } from "@src/lib/docs";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("openapi");
+  // Exclude introduction — served by index.astro
+  return entries
+    .filter(e => e.id !== "introduction")
+    .map(entry => ({
+      params: { slug: entry.id },
+      props: { entry },
+    }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const toc = extractToc(entry.body ?? "");
+const { title, breadcrumb, description } = entry.data;
+
+// Build the current path from the slug.
+// e.g. entry.id "authentication" → "/openapi/authentication"
+//      entry.id "endpoints/candidates" → "/openapi/endpoints/candidates"
+const currentPath = `/openapi/${entry.id}`;
+---
+
+<DocLayout
+  title={title}
+  description={description}
+  breadcrumb={breadcrumb}
+  toc={toc}
+  currentPath={currentPath}
+>
+  <Content components={{ ...mdxComponents, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland }} />
+</DocLayout>

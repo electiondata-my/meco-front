@@ -202,7 +202,7 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
       <Map
         id="mymap"
         ref={mapRef}
-        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapboxAccessToken={import.meta.env.PUBLIC_MAPBOX_TOKEN}
         style={{ width: "100%", height: "100%" }}
         mapStyle={styleUrl}
         interactive={true}
@@ -245,7 +245,7 @@ const MapExplorerDelimitation: FunctionComponent<DelimiationExplorerProps> = ({
           key={current_del}
           type="vector"
           id={current_del}
-          url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${current_del}`}
+          url={`mapbox://${import.meta.env.PUBLIC_MAPBOX_ACCOUNT}.${current_del}`}
         >
           <Layer
             id={`${current_del}-fill`}

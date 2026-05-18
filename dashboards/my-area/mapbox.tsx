@@ -80,7 +80,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
   }, [resolvedTheme]);
 
   // if (type === "static") {
-  //   const fullURl = `https://api.mapbox.com/styles/v1/mapbox/${resolvedTheme === "dark" ? "dark-v11" : "light-v11"}/static/${seatGeoJson}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`;
+  //   const fullURl = `https://api.mapbox.com/styles/v1/mapbox/${resolvedTheme === "dark" ? "dark-v11" : "light-v11"}/static/${seatGeoJson}?access_token=${import.meta.env.PUBLIC_MAPBOX_TOKEN}`;
   //   return (
   //     <img src={fullURl} alt="mapbox-static-image" width={846} height={400} />
   //   );
@@ -142,7 +142,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
       id="myarea_map"
       ref={mapRef}
       reuseMaps={true}
-      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+      mapboxAccessToken={import.meta.env.PUBLIC_MAPBOX_TOKEN}
       initialViewState={{
         longitude,
         latitude,
@@ -162,7 +162,7 @@ const MapboxMyArea: FC<MapboxProps> = ({
               key={id}
               id={id}
               type="vector"
-              url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${id}`}
+              url={`mapbox://${import.meta.env.PUBLIC_MAPBOX_ACCOUNT}.${id}`}
             >
               <Layer
                 id={`${id}-line`}

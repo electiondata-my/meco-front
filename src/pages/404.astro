@@ -1,0 +1,26 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import { getTranslations, t } from "@i18n/index";
+
+const locale = Astro.currentLocale ?? "en-GB";
+const i18n = await getTranslations(locale, ["error"]);
+const e = (key: string) => t(i18n.error ?? {}, key);
+---
+
+<Layout title={e("404.title")}>
+  <div
+    class="mx-auto flex w-full max-w-screen-xl flex-1 flex-col items-center justify-center gap-4 px-4 py-32 text-center md:px-6"
+  >
+    <p class="font-poppins text-[4rem] font-bold leading-none text-red-500 lg:text-[5rem]">404</p>
+    <h1 class="font-poppins text-heading-sm font-bold text-txt-black-900 lg:text-heading-md">
+      {e("404.header")}
+    </h1>
+    <p class="max-w-md text-body-md text-txt-black-500">{e("404.description")}</p>
+    <a
+      href="/"
+      class="mt-4 inline-flex items-center rounded-lg bg-bg-danger px-4 py-2 text-body-sm font-medium text-white no-underline transition hover:opacity-90"
+    >
+      {e("404.cta")}
+    </a>
+  </div>
+</Layout>

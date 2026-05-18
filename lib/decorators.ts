@@ -49,7 +49,7 @@ export const withi18n = <T extends Context>(
     if (
       "res" in context &&
       option &&
-      process.env.NEXT_PUBLIC_APP_ENV === "production"
+      import.meta.env.PUBLIC_APP_ENV === "production"
     )
       context.res.setHeader(
         "Cache-Control",

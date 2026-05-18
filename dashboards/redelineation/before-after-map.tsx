@@ -453,7 +453,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
         id={id}
         ref={mapRef}
         reuseMaps={true}
-        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapboxAccessToken={import.meta.env.PUBLIC_MAPBOX_TOKEN}
         {...viewState}
         style={{ width: "100%", height: "100%" }}
         mapStyle={styleUrl}
@@ -470,7 +470,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
             <Source
               id={`${id}-${source}`}
               type="vector"
-              url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${source}`}
+              url={`mapbox://${import.meta.env.PUBLIC_MAPBOX_ACCOUNT}.${source}`}
             >
               <Layer
                 id={`${id}-${source}-fill`}

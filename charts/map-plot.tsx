@@ -125,7 +125,7 @@
 //       <TileLayer
 //         key={_theme}
 //         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-//         url={`${process.env.NEXT_PUBLIC_TILESERVER_URL}/styles/${_theme}/{z}/{x}/{y}.png`}
+//         url={`${import.meta.env.PUBLIC_TILESERVER_URL}/styles/${_theme}/{z}/{x}/{y}.png`}
 //       />
 
 //       {markers && (

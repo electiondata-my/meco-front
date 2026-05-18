@@ -143,7 +143,7 @@ const MapInstance: FC<MapInstanceProps> = ({
       <Map
         ref={mapRef}
         reuseMaps={true}
-        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+        mapboxAccessToken={import.meta.env.PUBLIC_MAPBOX_TOKEN}
         initialViewState={{
           longitude: center[0],
           latitude: center[1],
@@ -166,7 +166,7 @@ const MapInstance: FC<MapInstanceProps> = ({
         <Source
           id={mapboxKey}
           type="vector"
-          url={`mapbox://${process.env.NEXT_PUBLIC_MAPBOX_ACCOUNT}.${mapboxKey}`}
+          url={`mapbox://${import.meta.env.PUBLIC_MAPBOX_ACCOUNT}.${mapboxKey}`}
         >
           <Layer
             id={`${mapboxKey}-fill`}

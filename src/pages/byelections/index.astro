@@ -1,0 +1,33 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import ByElectionsDashboard, { type ByElectionSeat } from "@src/components/ByElections/ByElectionsDashboard";
+import { getTranslations, t } from "@i18n/index";
+
+const locale = Astro.currentLocale ?? "en-GB";
+const apiBase = import.meta.env.PUBLIC_API_URL_S3 ?? "";
+
+let seats: ByElectionSeat[] = [];
+try {
+  const res = await fetch(`${apiBase}/elections/byelections.json`);
+  if (res.ok) {
+    const json = await res.json();
+    const raw: ByElectionSeat[] = json.data ?? json;
+    seats = raw.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+} catch {
+  // non-fatal — page renders with empty list
+}
+
+const i18n = await getTranslations(locale, ["common", "byelections"]);
+const title = t(i18n.byelections ?? {}, "hero.header");
+---
+
+<Layout title={title}>
+  <ByElectionsDashboard
+    client:only="react"
+    seats={seats}
+    translations={{ common: i18n.common ?? {}, byelections: i18n.byelections ?? {} }}
+    apiBaseUrl={apiBase}
+    locale={locale}
+  />
+</Layout>

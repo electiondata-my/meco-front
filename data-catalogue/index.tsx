@@ -79,7 +79,7 @@ const CatalogueIndex: FunctionComponent<CatalogueIndexProps> = ({
     const fetchViews = async () => {
       setViewsLoading(true);
       try {
-        const token = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
+        const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
         const url = `https://api.us-west-2.aws.tinybird.co/v0/pipes/views_by_page.json?token=${token}&page_id=${routes.DATA_CATALOGUE}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Network response was not ok");

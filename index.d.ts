@@ -2,19 +2,19 @@ declare namespace NodeJS {
   export interface ProcessEnv {
     APP_URL: string;
     APP_ENV: string;
-    NEXT_PUBLIC_APP_URL: string;
-    NEXT_PUBLIC_APP_ENV: string;
-    NEXT_PUBLIC_API_URL_S3: string;
-    NEXT_PUBLIC_I18N_URL: string;
-    NEXT_PUBLIC_MAPBOX_ACCOUNT: string;
-    NEXT_PUBLIC_MAPBOX_TOKEN: string;
+    PUBLIC_APP_URL: string;
+    PUBLIC_APP_ENV: string;
+    PUBLIC_API_URL_S3: string;
+    PUBLIC_I18N_URL: string;
+    PUBLIC_MAPBOX_ACCOUNT: string;
+    PUBLIC_MAPBOX_TOKEN: string;
     REVALIDATE_TOKEN: string;
     AUTH_TOKEN: string;
     ANALYZE: boolean;
     PROTECT_DEPLOYMENT: boolean;
 
-    NEXT_PUBLIC_API_URL_TB: string;
-    NEXT_PUBLIC_TINYBIRD_TOKEN: string;
+    PUBLIC_API_URL_TB: string;
+    PUBLIC_TINYBIRD_TOKEN: string;
   }
 }
 

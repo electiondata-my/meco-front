@@ -1,0 +1,173 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import DocSidebar from "./DocSidebar";
+import DocTOC from "./DocTOC";
+import { ALL_PAGES } from "@dashboards/openapi/config";
+import type { TocItem } from "@src/lib/docs";
+
+interface Props {
+  title: string;
+  description?: string;
+  breadcrumb: string;
+  toc: TocItem[];
+  currentPath: string;
+  isIntroduction?: boolean;
+  apiStats?: { total_hits: number; total_users: number } | null;
+}
+
+const { title, description, breadcrumb, toc, currentPath, isIntroduction = false, apiStats } = Astro.props;
+
+const currentIndex = ALL_PAGES.findIndex(p => p.href === currentPath);
+const prev = currentIndex > 0 ? ALL_PAGES[currentIndex - 1] : null;
+const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] : null;
+
+function numFormat(n: number): string {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + "k";
+  return String(n);
+}
+---
+
+<Layout title={title} description={description}>
+  <!-- hljs GitHub light/dark themes for DocCodeBlock static renders -->
+  <style is:inline slot="head">
+    /* Light */
+    .hljs{color:#24292e;background:#fff}.hljs-doctag,.hljs-keyword,.hljs-meta .hljs-keyword,.hljs-template-tag,.hljs-template-variable,.hljs-type,.hljs-variable.language_{color:#d73a49}.hljs-title,.hljs-title.class_,.hljs-title.class_.inherited__,.hljs-title.function_{color:#6f42c1}.hljs-attr,.hljs-attribute,.hljs-literal,.hljs-meta,.hljs-number,.hljs-operator,.hljs-selector-attr,.hljs-selector-class,.hljs-selector-id,.hljs-variable{color:#005cc5}.hljs-meta .hljs-string,.hljs-regexp,.hljs-string{color:#032f62}.hljs-built_in,.hljs-symbol{color:#e36209}.hljs-code,.hljs-comment,.hljs-formula{color:#6a737d}.hljs-name,.hljs-quote,.hljs-selector-pseudo,.hljs-selector-tag{color:#22863a}
+    /* Dark overrides — html.dark is set by the theme toggle script */
+    html.dark .hljs{color:#c9d1d9;background:#0d1117}
+    html.dark .hljs-doctag,html.dark .hljs-keyword,html.dark .hljs-meta .hljs-keyword,html.dark .hljs-template-tag,html.dark .hljs-template-variable,html.dark .hljs-type,html.dark .hljs-variable.language_{color:#ff7b72}
+    html.dark .hljs-title,html.dark .hljs-title.class_,html.dark .hljs-title.class_.inherited__,html.dark .hljs-title.function_{color:#d2a8ff}
+    html.dark .hljs-attr,html.dark .hljs-attribute,html.dark .hljs-literal,html.dark .hljs-meta,html.dark .hljs-number,html.dark .hljs-operator,html.dark .hljs-selector-attr,html.dark .hljs-selector-class,html.dark .hljs-selector-id,html.dark .hljs-variable{color:#79c0ff}
+    html.dark .hljs-meta .hljs-string,html.dark .hljs-regexp,html.dark .hljs-string{color:#a5d6ff}
+    html.dark .hljs-built_in,html.dark .hljs-symbol{color:#ffa657}
+    html.dark .hljs-code,html.dark .hljs-comment,html.dark .hljs-formula{color:#8b949e}
+    html.dark .hljs-name,html.dark .hljs-quote,html.dark .hljs-selector-pseudo,html.dark .hljs-selector-tag{color:#7ee787}
+  </style>
+
+  <div class="px-3 sm:px-4.5 md:px-6">
+    <div class="mx-auto flex w-full max-w-screen-xl min-h-[calc(100vh-4rem)]">
+
+      <!-- Left sidebar (React island) -->
+      <DocSidebar client:load currentPath={currentPath} />
+
+      <!-- Main area -->
+      <div class="flex min-w-0 flex-1">
+
+        <!-- Content column -->
+        <main class="min-w-0 flex-1 px-2 pb-24 pt-6 sm:px-6 lg:px-10 xl:px-12">
+
+          <!-- Mobile top bar: hamburger + breadcrumb -->
+          <div class="mb-5 flex items-center gap-2 lg:hidden">
+            <button
+              onclick="document.dispatchEvent(new CustomEvent('open-doc-sidebar'))"
+              class="flex items-center gap-1.5 text-body-sm text-txt-black-600 hover:text-txt-black-900"
+              aria-label="Open navigation"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+              Menu
+            </button>
+            <span class="text-txt-black-300">/</span>
+            <span class="text-body-xs text-txt-black-500">{breadcrumb}</span>
+          </div>
+
+          <!-- Desktop breadcrumb -->
+          <p class="mb-3 hidden text-body-xs font-semibold uppercase tracking-widest text-txt-black-400 lg:block">
+            {breadcrumb}
+          </p>
+
+          <!-- H1 -->
+          <h1 class:list={[
+            "font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]",
+            isIntroduction ? "mb-3" : "mb-8",
+          ]}>
+            {title}
+          </h1>
+
+          <!-- API stats (introduction page only) -->
+          {isIntroduction && apiStats && (
+            <p class="mb-8 flex items-center gap-1 text-body-sm text-txt-black-500">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0">
+                <path d="M11.983 1.907a.75.75 0 0 0-1.292-.657l-8.5 9.5A.75.75 0 0 0 2.75 12h6.572l-1.305 6.093a.75.75 0 0 0 1.292.657l8.5-9.5A.75.75 0 0 0 17.25 8h-6.572l1.305-6.093Z" />
+              </svg>
+              {numFormat(apiStats.total_hits)} requests served · {numFormat(apiStats.total_users)} users and counting
+            </p>
+          )}
+
+          <!-- Page body -->
+          <slot />
+
+          <!-- Prev / Next navigation -->
+          <div
+            class:list={[
+              "mt-16 flex gap-4 border-t border-otl-gray-200 pt-8",
+              prev && next ? "justify-between" : prev ? "justify-start" : "justify-end",
+            ]}
+          >
+            {prev && (
+              <a href={prev.href} class="group flex flex-col gap-0.5">
+                <span class="text-body-xs text-txt-black-400">Previous</span>
+                <span class="flex items-center gap-1.5 text-body-sm font-medium text-txt-black-700 transition-colors group-hover:text-txt-danger">
+                  ← {prev.label}
+                </span>
+              </a>
+            )}
+            {next && (
+              <a href={next.href} class="group flex flex-col items-end gap-0.5">
+                <span class="text-body-xs text-txt-black-400">Next</span>
+                <span class="flex items-center gap-1.5 text-body-sm font-medium text-txt-black-700 transition-colors group-hover:text-txt-danger">
+                  {next.label} →
+                </span>
+              </a>
+            )}
+          </div>
+        </main>
+
+        <!-- Right TOC (React island) -->
+        <DocTOC client:load toc={toc} />
+      </div>
+    </div>
+  </div>
+
+  <!-- Patch empty heading IDs — Astro text nodes don't expose content to React
+       so IDs are computed client-side from textContent before React hydration -->
+  <script is:inline>
+    (function () {
+      function slugify(text) {
+        return text.toLowerCase().replace(/[^a-z0-9 -]/g, "").trim().replace(/\s+/g, "-").replace(/-+/g, "-");
+      }
+      document.querySelectorAll("h2[id=''], h3[id='']").forEach(function (el) {
+        el.id = slugify(el.textContent || "");
+      });
+    })();
+  </script>
+
+  <!-- Copy button injection for code blocks -->
+  <script is:inline>
+    (function () {
+      function addCopyButtons() {
+        document.querySelectorAll(".doc-code-block[data-copy]").forEach(function (block) {
+          if (block.querySelector(".copy-btn")) return;
+          var code = block.getAttribute("data-copy") || "";
+          var btn = document.createElement("button");
+          btn.textContent = "Copy";
+          btn.className =
+            "copy-btn absolute right-3 top-3 flex items-center gap-1 rounded-md border border-otl-gray-200 bg-bg-white px-2 py-1 font-sans text-xs text-txt-black-400 opacity-0 transition-opacity hover:text-txt-black-700 group-hover:opacity-100";
+          btn.addEventListener("click", function () {
+            navigator.clipboard.writeText(code).then(function () {
+              btn.textContent = "Copied!";
+              setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+            });
+          });
+          block.appendChild(btn);
+        });
+      }
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", addCopyButtons);
+      } else {
+        addCopyButtons();
+      }
+    })();
+  </script>
+</Layout>

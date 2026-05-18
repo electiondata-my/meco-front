@@ -9,9 +9,9 @@ import {
   useState,
 } from "react";
 
-const TB_BASE = process.env.NEXT_PUBLIC_API_URL_TB;
-const TB_INGEST_TOKEN = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
-const TB_READ_TOKEN = process.env.NEXT_PUBLIC_TINYBIRD_TOKEN;
+const TB_BASE = import.meta.env.PUBLIC_API_URL_TB;
+const TB_INGEST_TOKEN = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
+const TB_READ_TOKEN = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
 
 export type Meta = Omit<MetaPage["meta"], "type"> & {
   type: "dashboard" | "data-catalogue";
