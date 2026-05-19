@@ -191,7 +191,7 @@ export default function SiteMetricsDashboard() {
         </div>
 
         {/* ── Desktop layout ── */}
-        <div className="hidden lg:flex lg:h-[calc(100svh-4rem)] lg:w-full lg:flex-col">
+        <div className="hidden lg:flex lg:h-[calc(100svh-4rem)] lg:w-full lg:flex-col lg:mb-6">
           <div className="flex flex-col items-center gap-3 px-3 py-6">
             <h1 className="font-heading text-heading-sm font-semibold text-txt-black-900">
               {t("meta.title")}
