@@ -21,6 +21,8 @@ import {
   CheckCircleIcon,
   ClipboardDocumentIcon,
   ClipboardDocumentCheckIcon,
+  ClipboardIcon,
+  TrashIcon,
   WrenchScrewdriverIcon,
   SparklesIcon,
   PencilSquareIcon,
@@ -814,6 +816,26 @@ export default function QueryBuilderDashboard() {
     setTimeout(() => setCopyState("idle"), 2000);
   }, [activeQueryText]);
 
+  const handleClear = useCallback(() => {
+    clearShareParamsFromUrl();
+    setQueryText("");
+    setActiveSource("workspace");
+    setActiveSample(null);
+    setShortQueryId(null);
+    setShortenError(null);
+  }, [clearShareParamsFromUrl]);
+
+  const handlePaste = useCallback(async () => {
+    const text = await navigator.clipboard.readText();
+    if (!text.trim()) return;
+    clearShareParamsFromUrl();
+    setQueryText(text);
+    setActiveSource("workspace");
+    setActiveSample(null);
+    setShortQueryId(null);
+    setShortenError(null);
+  }, [clearShareParamsFromUrl]);
+
   const handleCopyPrompt = useCallback(async () => {
     await navigator.clipboard.writeText(copyPrompt);
     setPromptCopyState("copied");
@@ -1146,10 +1168,25 @@ export default function QueryBuilderDashboard() {
                       Format
                     </button>
                     <button
-                      onClick={handleCopy}
+                      onClick={handleClear}
+                      disabled={!activeQueryText.trim()}
+                      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors hover:bg-bg-washed-active disabled:opacity-40"
+                    >
+                      <TrashIcon className="h-3.5 w-3.5" />
+                      Clear
+                    </button>
+                    <button
+                      onClick={() => void handlePaste()}
+                      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors hover:bg-bg-washed-active"
+                    >
+                      <ClipboardIcon className="h-3.5 w-3.5" />
+                      Paste
+                    </button>
+                    <button
+                      onClick={() => void handleCopy()}
                       disabled={!activeQueryText.trim()}
                       title={copyState === "copied" ? "Copied!" : "Copy SQL"}
-                      className="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active disabled:opacity-40"
+                      className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[12px] font-medium text-txt-black-700 transition-colors hover:bg-bg-washed-active disabled:opacity-40"
                     >
                       {copyState === "copied" ? (
                         <>

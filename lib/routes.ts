@@ -13,6 +13,7 @@ export const routes = {
   PARTIES: "/parties",
   REDELINEATION: "/redelineation",
   RESEARCH: "/research",
+  SITE_METRICS: "/site-metrics",
   SEATS: "/seats",
   TRIVIA: "/trivia",
 };
