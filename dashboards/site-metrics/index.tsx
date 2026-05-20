@@ -157,7 +157,7 @@ export default function SiteMetricsDashboard() {
           </div>
 
           <div>
-            <div className="grid grid-cols-[1fr_4rem_3rem_3.5rem] items-center gap-3 border-b border-otl-gray-100 px-4 py-2">
+            <div className="grid grid-cols-[1fr_4.5rem_3rem_3.5rem] items-center gap-3 border-b border-otl-gray-100 px-4 py-2">
               <span />
               <span className="text-center text-xs font-semibold uppercase tracking-wider text-txt-black-400">
                 {t("trend")}
