@@ -140,11 +140,11 @@ Phase 11 — Full parity audit
 
 ### 0.1 — Astro project init
 
-- [ ] Init Astro in `meco-front` repo root on `refactor/astro`:
+- [x] Init Astro in `meco-front` repo root on `refactor/astro`:
   ```bash
   pnpm create astro@latest . --template minimal --typescript strict --install
   ```
-- [ ] Replace `package.json` scripts:
+- [x] Replace `package.json` scripts:
   ```json
   {
     "dev": "astro dev",
@@ -153,7 +153,7 @@ Phase 11 — Full parity audit
     "postbuild": "node scripts/compress-sitemaps.mjs"
   }
   ```
-- [ ] Delete: `next.config.js`, `next-i18next.config.js`, `next-sitemap.config.js`, `pages/`, `middleware.ts` (will be rewritten)
+- [x] Delete: `next.config.js`, `next-i18next.config.js`, `next-sitemap.config.js`, `pages/`, `middleware.ts` (will be rewritten)
 
 ### 0.2 — Install integrations
 
@@ -233,8 +233,8 @@ src/
 
 ### 0.5 — `tsconfig.json`
 
-- [ ] Keep existing path aliases (`@components/*`, `@lib/*`, etc.)
-- [ ] Set `baseUrl` to `src/`
+- [x] Keep existing path aliases (`@components/*`, `@lib/*`, etc.)
+- [x] Set `baseUrl` to `src/`
 
 ### 0.6 — Environment variables
 
@@ -262,14 +262,14 @@ Rename all `NEXT_PUBLIC_*` → `PUBLIC_*` across the codebase. Update all refere
 
 ### 0.7 — GitHub Actions workflows
 
-- [ ] **Full rebuild** (`.github/workflows/deploy.yml`): triggered on push to `main`, no `POST_TO_BUILD` set, builds all pages
-- [ ] **Surgical rebuild** (`.github/workflows/rebuild-page.yml`): triggered by `repository_dispatch`, sets `POST_TO_BUILD` from payload, builds and deploys only affected pages (see Decision #2 above for full implementation)
-- [ ] Store `CF_ACCOUNT_ID` and `CF_API_TOKEN` in GitHub secrets
+- [x] **Full rebuild** (`.github/workflows/deploy.yml`): triggered on push to `main`, no `POST_TO_BUILD` set, builds all pages
+- [x] **Surgical rebuild** (`.github/workflows/rebuild-page.yml`): triggered by `repository_dispatch`, sets `POST_TO_BUILD` from payload, builds and deploys only affected pages (see Decision #2 above for full implementation)
+- [x] Store `CF_ACCOUNT_ID` and `CF_API_TOKEN` in GitHub secrets
 
 **Verify Phase 0:**
-- [ ] `pnpm dev` starts without errors
-- [ ] `pnpm build` completes (even with empty `src/pages/`)
-- [ ] Wrangler can authenticate and deploy to Cloudflare Pages
+- [x] `pnpm dev` starts without errors
+- [x] `pnpm build` completes (even with empty `src/pages/`)
+- [x] Wrangler can authenticate and deploy to Cloudflare Pages
 
 ---
 
@@ -289,8 +289,8 @@ export async function fetchJSON<T>(path: string, base = BASE_S3): Promise<T> {
 }
 ```
 
-- [ ] Keep Axios only inside React islands that need it (API console, stream calls)
-- [ ] Remove Axios from all build-time / frontmatter code
+- [x] Keep Axios only inside React islands that need it (API console, stream calls)
+- [x] Remove Axios from all build-time / frontmatter code
 
 ### 1.2 — i18n system (`src/i18n/index.ts`)
 
@@ -320,16 +320,16 @@ export function t(
 }
 ```
 
-- [ ] Translations are fetched in Astro frontmatter only — never in the browser
-- [ ] React islands receive pre-translated strings as props from the `.astro` parent
-- [ ] Remove `next-i18next`, `i18next`, `react-i18next` from dependencies
+- [x] Translations are fetched in Astro frontmatter only — never in the browser
+- [x] React islands receive pre-translated strings as props from the `.astro` parent
+- [x] Remove `next-i18next`, `i18next`, `react-i18next` from dependencies
 
 ### 1.3 — `src/layouts/BaseLayout.astro`
 
 Replaces `_app.tsx` + `_document.tsx`.
 
-- [ ] `<html lang={locale}>` driven by `Astro.currentLocale`
-- [ ] **Theme script** — runs before paint, defaults to system preference, respects stored preference:
+- [x] `<html lang={locale}>` driven by `Astro.currentLocale`
+- [x] **Theme script** — runs before paint, defaults to system preference, respects stored preference:
   ```html
   <script is:inline>
     const stored = localStorage.getItem('theme');
@@ -338,43 +338,43 @@ Replaces `_app.tsx` + `_document.tsx`.
     document.documentElement.classList.toggle('dark', dark);
   </script>
   ```
-- [ ] Fonts loaded via `<link>` preconnect + Google Fonts (remove `next/font`)
-- [ ] Body `class` from current `_app.tsx` (`inter poppins-variable box-border ...`) moved to `<body>` tag
-- [ ] Tinybird Flock.js: `<script src="https://unpkg.com/@tinybirdco/flock.js" async defer is:inline />`
-- [ ] Leaflet CSS: loaded conditionally via `needsLeaflet` prop
-- [ ] PWA meta tags, apple touch icons (copied from `_document.tsx`)
-- [ ] `<AutoToast client:load />` from `@govtechmy/myds-react`
-- [ ] Remove `next-themes` — replaced by inline script above
+- [x] Fonts loaded via `<link>` preconnect + Google Fonts (remove `next/font`)
+- [x] Body `class` from current `_app.tsx` (`inter poppins-variable box-border ...`) moved to `<body>` tag
+- [x] Tinybird Flock.js: `<script src="https://unpkg.com/@tinybirdco/flock.js" async defer is:inline />`
+- [x] Leaflet CSS: loaded conditionally via `needsLeaflet` prop
+- [x] PWA meta tags, apple touch icons (copied from `_document.tsx`)
+- [x] `<AutoToast client:load />` from `@govtechmy/myds-react`
+- [x] Remove `next-themes` — replaced by inline script above
 
 **Parity criteria:**
-- [ ] `class="dark"` applied before first paint — no flash of wrong theme
-- [ ] Defaults to system preference when no stored preference exists
-- [ ] Stored preference overrides system on return visits
-- [ ] `lang` attribute matches current locale
-- [ ] Tinybird script fires on every page load
-- [ ] Fonts render identically (Inter body, Poppins headings)
+- [x] `class="dark"` applied before first paint — no flash of wrong theme
+- [x] Defaults to system preference when no stored preference exists
+- [x] Stored preference overrides system on return visits
+- [x] `lang` attribute matches current locale
+- [x] Tinybird script fires on every page load
+- [x] Fonts render identically (Inter body, Poppins headings)
 
 ### 1.4 — `src/components/Layout/index.astro`
 
 Replaces `components/Layout/index.tsx`. Shell with Header + Footer via slots.
 
-- [ ] **Header** — static `.astro` except:
+- [x] **Header** — static `.astro` except:
   - `ThemeToggle` → `<ThemeToggle client:load />` (reads `localStorage`, toggles `class="dark"` on `<html>`, dispatches custom event)
   - `LocaleSwitch` → `<LocaleSwitch client:load />` (reads `Astro.currentLocale` as prop, navigates via `window.location`)
-- [ ] **Footer** — pure `.astro`, static links only (remove any `window.location` usage)
+- [x] **Footer** — pure `.astro`, static links only (remove any `window.location` usage)
 
 ### 1.5 — Middleware (`src/middleware.ts`)
 
-- [ ] Redirect `ms-MY/{signin,console,query-builder,openapi,map}` → `/{same path}` (English-only pages)
-- [ ] Proxy `/api/auth/*` → `https://auth.electiondata.my/*` (replaces `next.config.js` rewrite)
-- [ ] Optional basic auth when `PROTECT_DEPLOYMENT=true`
+- [x] Redirect `ms-MY/{signin,console,query-builder,openapi,map}` → `/{same path}` (English-only pages)
+- [x] Proxy `/api/auth/*` → `https://auth.electiondata.my/*` (replaces `next.config.js` rewrite)
+- [x] Optional basic auth when `PROTECT_DEPLOYMENT=true`
 
 **Verify Phase 1:**
-- [ ] `pnpm dev` — BaseLayout renders with correct lang, fonts, theme script
-- [ ] Dark/light mode toggle works, survives page reload, defaults to system preference
-- [ ] Header and footer render correctly in both locales
-- [ ] Middleware redirects work for English-only pages
-- [ ] Auth proxy passes requests through correctly
+- [x] `pnpm dev` — BaseLayout renders with correct lang, fonts, theme script
+- [x] Dark/light mode toggle works, survives page reload, defaults to system preference
+- [x] Header and footer render correctly in both locales
+- [x] Middleware redirects work for English-only pages
+- [x] Auth proxy passes requests through correctly
 
 ---
 
@@ -555,30 +555,40 @@ Replaces `components/Layout/index.tsx`. Shell with Header + Footer via slots.
 
 > These pages were flagged as React islands in the original audit. After review, most are static or require only vanilla JS. The key rule: if user interaction is navigation (select → go to URL), it's static. If interaction re-renders data on the same page without a navigation, evaluate vanilla JS first before reaching for React.
 
-### 5.1 — Home (`/`)
+### 5.1 — Home (`/`) ✅ COMPLETE
 
 | | |
 |---|---|
 | **Current** | `pages/index.tsx` → 5 parallel `get()` calls: `/seats/current/dropdown.json`, `/candidates/dropdown.json`, `/parties/dropdown.json`, `/dates.json`, `/latest.json`. `HomeDashboard` uses React with `useState` for dropdowns. |
 | **Target** | `src/pages/index.astro` + `src/pages/ms-MY/index.astro` — **fully static, no React island** |
 
-The dropdowns are navigation controls (select a seat → go to `/seats/[slug]`). This is `<select onchange="window.location=...">` — no React needed.
+**Accepted deviations:**
 
-- [ ] Frontmatter fetches all 5 endpoints with `Promise.allSettled()`. Failed fetches fall back to `[]`.
-- [ ] Hero section, dropdowns, dates list, and "Latest" section all rendered as `.astro` markup
-- [ ] Dropdowns use native `<select>` with an inline `<script>` for navigation on change — no framework
-- [ ] Delete `HomeDashboard` React component entirely (or gut it to a shell if other pages reference it)
-- [ ] Translations from `home` + `common` namespaces
+> **Deviation 5.1A — Custom combobox instead of native `<select>`:** Production uses a React `ComboBox` with a floating dropdown, fuzzy search, and a red gradient circular search button. A native `<select>` would be a visible regression. Replaced with a vanilla JS combobox: text `<input>` + hidden `<select>` as data store + `<ul>` dropdown list. Reads options from `Array.from(selectEl.options)`. All navigation behaviour identical.
+
+> **Deviation 5.1B — `darkMode: "class"` added to `tailwind.config.ts`:** The file was defaulting to the `"media"` strategy, making `dark:` utilities respond to OS preference rather than the `.dark` class toggled by `ThemeToggle`. Added `darkMode: "class"` as a one-line fix.
+
+> **Deviation 5.1C — Party/Election dropdown enrichment:** Party dropdown shows flag image (`/static/images/parties/` or `/static/images/coalitions/` based on type) + a red/blue type pill. Elections dropdown shows state flag (`/static/images/states/{stateKey}.jpeg`). Both match production visuals. Missing flag images show a `?` placeholder rectangle at the same dimensions.
+
+> **Deviation 5.1D — View count fetched client-side:** `PUBLIC_TINYBIRD_TOKEN` and `PUBLIC_API_URL_TB` passed as `data-*` attributes on the count `<span>` at build time; a `<script>` block fetches the Tinybird `views_by_page` pipe on load and updates the span. Matches production pattern exactly.
+
+- [x] Frontmatter fetches all 5 endpoints with `Promise.allSettled()`. Failed fetches fall back to `[]`.
+- [x] Hero section, dropdowns, "Latest" section, Explore section, Trust section all rendered as `.astro` markup
+- [x] Dropdowns use custom vanilla JS combobox (see Deviation 5.1A)
+- [x] `HomeDashboard` React component replaced — `.astro` file is the full implementation
+- [x] Translations from `home`, `common`, `seats`, `candidates`, `parties` namespaces
 
 **Parity criteria:**
-- [ ] Hero renders with correct translated header, description, category label, and two CTA buttons
-- [ ] Seat dropdown populates from `seats/current/dropdown.json` and navigates to `/seats/[slug]` on selection
-- [ ] Candidate dropdown populates from `candidates/dropdown.json` and navigates on selection
-- [ ] Party dropdown populates from `parties/dropdown.json` and navigates on selection
-- [ ] Election date list renders from `dates.json`
-- [ ] "Latest" section renders from `latest.json`
-- [ ] Both locale URLs serve correctly translated content
-- [ ] Zero React JS shipped to the browser for this page
+- [x] Hero renders with correct translated header, description, category label, and two CTA buttons
+- [x] Eye icon (heroicons `EyeIcon` solid/20) + view count rendered; view count fetched client-side
+- [x] Seat dropdown navigates to `/seats/{type}/{slug}` on selection
+- [x] Candidate dropdown navigates to `/candidates/{slug}` on selection
+- [x] Party dropdown (with flag + type pill) navigates to `/parties/{uid}/mys` on selection
+- [x] Election dropdown (with state flag) navigates to `/elections/{stateKey}/{election}` on selection
+- [x] Tabs match production `SegmentTabs` styling (`rounded-lg bg-bg-washed`, active: `rounded-md border border-otl-gray-200 bg-bg-dialog-active shadow-button`)
+- [x] "Latest" section renders theme-aware thumbnails (CSS `.dark` selector + `<picture>` element — no `useTheme`)
+- [x] Both locale URLs serve correctly translated content
+- [x] Zero React JS shipped to the browser for this page
 
 ### 5.2 — Elections Explorer (`/elections/[[...election]]`)
 
@@ -610,7 +620,7 @@ The dropdowns are navigation controls (select a seat → go to `/seats/[slug]`).
 - [ ] Invalid state/election combinations return 404
 - [ ] Both locales
 
-### 5.3 — Candidates (`/candidates/[[...slug]]`)
+### 5.3 — Candidates (`/candidates/[[...slug]]`) 🔄 IN PROGRESS
 
 | | |
 |---|---|
@@ -619,18 +629,29 @@ The dropdowns are navigation controls (select a seat → go to `/seats/[slug]`).
 
 All candidate data is fetched at build time. The page is purely presentational — bio, election history, results. No interactive filtering exists that would require a framework.
 
-- [ ] `getStaticPaths()` fetches `/candidates/dropdown.json` → enumerates all slugs
-- [ ] `src/pages/candidates/index.astro` handles the no-param case (candidates list)
-- [ ] Fetch full candidate data in frontmatter and render as `.astro` markup
-- [ ] Delete `CandidateDashboard` React component (or convert to `.astro`)
-- [ ] **`POST_TO_BUILD` support:** filter by candidate slug
+- [x] `getStaticPaths()` fetches `/candidates/dropdown.json` → enumerates all slugs (with `POST_TO_BUILD` filter)
+- [x] `src/pages/candidates/index.astro` handles the no-param case
+- [x] `src/pages/candidates/[...slug].astro` delegates to `src/components/Candidates/CandidatePage.astro`
+- [x] Fetch full candidate data in frontmatter (`/candidates/{slug}.json`)
+- [x] Hero section, election history table (All / Parlimen / DUN tabs), result badge rendered as `.astro`
+- [x] Party flag shown inline in table rows
+- [x] **`POST_TO_BUILD` support:** implemented
+
+**Still needed (polishing phase):**
+- [ ] Search box: currently uses native `<select>` — replace with same custom combobox as home page (rounded pill, red gradient button, fuzzy search)
+- [ ] `FullResults` column: production table has a 6th column with a button that opens a popover showing all candidates + vote counts for that specific election/seat (fetches `/results/{seat}/{date}.json` on demand). Astro version has only 5 columns. Decision needed: pre-fetch all result sets at build time and inline them, or add a React island for this column only.
+- [ ] Table mobile layout: production `ElectionTable` has a compact mobile view (`hideNameInMobileParty`). Astro version is a plain horizontal-scroll table on mobile.
+- [ ] Vote percentage bar: production table shows a bar visual for vote percentage alongside the count. Missing from Astro version.
+- [ ] Both locale URLs tested
 
 **Parity criteria:**
-- [ ] `/candidates` index page renders all candidates list
-- [ ] Individual candidate pages render bio, election history, and results
-- [ ] Invalid slugs return 404
+- [ ] `/candidates` index page renders candidates list
+- [x] Individual candidate pages render election history with All/Parlimen/DUN tabs
+- [x] Invalid slugs redirect (no 404 loop)
 - [ ] Both locales
-- [ ] Zero React JS shipped to the browser for candidate pages
+- [ ] Custom combobox search matching home page style
+- [ ] FullResults column (decision on pre-fetch vs island)
+- [x] Zero React JS shipped to the browser for candidate pages (current state — FullResults may require a small island)
 
 ### 5.4 — Parties (`/parties/[[...party]]`)
 

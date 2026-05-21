@@ -49,6 +49,7 @@ const partyOptions = [...parties].sort((a, b) => {
 }).map(p => ({
   label: `${p.party} (${isMalay ? p.party_name_bm : p.party_name_en})`,
   value: p.party_uid,
+  type: p.type,
 }));
 
 const allElections: (ElectionOpt & { isGE: boolean; stateKey: string })[] = [];
@@ -127,10 +128,9 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
         </a>
       </div>
       <p class="flex items-center justify-center gap-0.5 text-body-sm text-txt-black-500">
-        <!-- eye icon (EyeIcon solid/20 from heroicons) -->
-        <svg class="size-4 self-center" viewBox="0 0 20 20" fill="currentColor">
+        <svg class="size-4.5 self-center" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
-          <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41Z" clip-rule="evenodd" />
+          <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd" />
         </svg>
         <span id="hero-view-count" data-token={tbToken} data-host={tbHost}>---</span>
       </p>
@@ -198,7 +198,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       <!-- Parties -->
       <div class="tab-panel hidden w-full max-w-[727px]" data-panel="2">
         <select id="party-select" class="hidden" aria-hidden="true" tabindex="-1">
-          {partyOptions.map(o => <option value={o.value}>{o.label}</option>)}
+          {partyOptions.map(o => <option value={o.value} data-party-type={o.type}>{o.label}</option>)}
         </select>
         <div class="combobox relative" data-type="party" data-select="party-select">
           <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
@@ -363,6 +363,10 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
   tabBtns.forEach(btn => btn.addEventListener("click", () => activateTab(Number(btn.dataset.index))));
 
   // ── Combobox ──────────────────────────────────────────────────────────────
+  function esc(s: string) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
   function initCombobox(wrapper: HTMLElement) {
     const type     = wrapper.dataset.type!;
     const selectId = wrapper.dataset.select!;
@@ -371,7 +375,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
 
     const allOptions = Array.from(selectEl.options)
       .filter(o => o.value)
-      .map(o => ({ value: o.value, label: o.text.trim() }));
+      .map(o => ({ value: o.value, label: o.text.trim(), partyType: o.dataset.partyType }));
 
     const input = wrapper.querySelector<HTMLInputElement>(".combobox-input")!;
     const btn   = wrapper.querySelector<HTMLButtonElement>(".combobox-btn")!;
@@ -385,23 +389,54 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       return `/seats/${val}`;
     }
 
-    function render(options: { value: string; label: string }[]) {
-      const items = options.slice(0, 100);
+    function render(options: typeof allOptions) {
+      const items = options;
       if (items.length === 0) {
-        list.innerHTML = `<li class="px-4 py-2 text-body-sm italic text-txt-black-500">No results</li>`;
+        list.innerHTML = `<li class="px-4 py-2 text-sm italic text-txt-black-500">No results</li>`;
+        list.querySelectorAll<HTMLLIElement>("li[data-value]").forEach(attachClick);
         return;
       }
-      list.innerHTML = items.map(o =>
-        `<li class="cursor-pointer truncate px-4 py-2 text-body-md text-txt-black-700 hover:bg-bg-black-50" data-value="${o.value}">${o.label}</li>`
-      ).join("");
-      list.querySelectorAll<HTMLLIElement>("li[data-value]").forEach(li => {
-        li.addEventListener("mousedown", e => {
-          e.preventDefault();
-          selected = li.dataset.value!;
-          input.value = li.textContent!.trim();
-          list.classList.add("hidden");
-          window.location.href = href(selected);
-        });
+
+      if (type === "party") {
+        list.innerHTML = items.map(o => {
+          const folder = o.partyType === "coalition" ? "coalitions" : "parties";
+          const pillCls = o.partyType === "coalition"
+            ? "border-blue-400 bg-blue-50/60 text-blue-600"
+            : "border-red-400 bg-red-50/60 text-red-600";
+          const pillText = o.partyType === "coalition" ? "Coalition" : "Party";
+          const fallback = `this.replaceWith(Object.assign(document.createElement('div'),{className:'flex h-[18px] w-[28px] items-center justify-center rounded-sm border border-otl-gray-200 bg-bg-black-50 text-xs text-txt-black-400',textContent:'?'}))`;
+          return `<li class="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
+            <div class="flex h-[18px] w-7 shrink-0 items-center justify-center">
+              <img src="/static/images/${folder}/${esc(o.value)}.png" alt="" class="max-h-[18px] max-w-[28px] border border-otl-gray-200 object-contain" onerror="${fallback}" />
+            </div>
+            <span class="grow truncate">${esc(o.label)}</span>
+            <span class="ml-auto shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${pillCls}">${pillText}</span>
+          </li>`;
+        }).join("");
+      } else if (type === "election") {
+        list.innerHTML = items.map(o => {
+          const stateKey = o.value.split("/")[0];
+          return `<li class="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
+            <img src="/static/images/states/${stateKey}.jpeg" alt="" class="h-4 w-auto shrink-0 border border-otl-gray-200" onerror="this.style.display='none'" />
+            <span class="grow truncate">${esc(o.label)}</span>
+          </li>`;
+        }).join("");
+      } else {
+        list.innerHTML = items.map(o =>
+          `<li class="cursor-pointer truncate px-4 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">${esc(o.label)}</li>`
+        ).join("");
+      }
+
+      list.querySelectorAll<HTMLLIElement>("li[data-value]").forEach(attachClick);
+    }
+
+    function attachClick(li: HTMLLIElement) {
+      li.addEventListener("mousedown", e => {
+        e.preventDefault();
+        selected = li.dataset.value!;
+        input.value = allOptions.find(o => o.value === selected)?.label ?? "";
+        list.classList.add("hidden");
+        window.location.href = href(selected);
       });
     }
 

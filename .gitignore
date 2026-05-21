@@ -3,6 +3,7 @@
 .env.old
 .env.next
 .env.astro
+CLAUDE.md
 
 # dependencies
 /node_modules
