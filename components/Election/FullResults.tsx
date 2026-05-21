@@ -53,7 +53,7 @@ interface FullResultsProps<T extends Candidate | Seat> {
 }
 
 /**
- * Modal popup for a single constituency result (candidates / seats / trivia / byelections).
+ * Modal popup for a single constituency result (candidates / seats / byelections).
  * For the full election result (parties), use ElectionFullResults instead.
  */
 const FullResults = <T extends Candidate | Seat>({

@@ -12,7 +12,6 @@ const namespaces = [
   "home",
   "parties",
   "party",
-  "trivia",
   "redelineation",
   "research",
   "seats",
