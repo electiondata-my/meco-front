@@ -13,6 +13,10 @@ tb*
 /.next/
 /out/
 
+# astro
+.astro/*
+dist/*
+
 # production
 /build
 
@@ -48,7 +52,6 @@ fallback-*.js
 index.html
 
 # sitemaps
-robots.txt
 sitemap*.xml*
 
 # bundle-analyzer
