@@ -1,0 +1,15 @@
+---
+// /candidates index — redirect to the default candidate page (first in dropdown)
+import { fetchJSON } from "@src/lib/api";
+
+type DropdownEntry = { name: string; slug: string; c: string; w: string; l: string };
+
+let defaultSlug = "CMVBA"; // CMVBA = Mahathir Mohamad — same default as the original
+try {
+  const json = await fetchJSON<{ data: DropdownEntry[] }>("/candidates/dropdown.json");
+  const entries = json.data ?? [];
+  if (entries.length > 0) defaultSlug = entries[0].slug;
+} catch { /* ignore */ }
+
+return Astro.redirect(`/candidates/${defaultSlug}`, 302);
+---

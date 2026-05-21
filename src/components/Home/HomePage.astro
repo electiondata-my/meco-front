@@ -1,0 +1,439 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import { getTranslations, t } from "@i18n/index";
+import { fetchJSON } from "@src/lib/api";
+import { StateKeyByName, STATE_ORDER } from "@src/lib/constants";
+
+const locale = Astro.currentLocale ?? "en-GB";
+const isMalay = locale.startsWith("ms");
+
+type SeatOption   = { seat_name: string; slug: string; type: "parlimen" | "dun" };
+type CandidateOpt = { name: string; slug: string; c: string; w: string; l: string };
+type PartyOpt     = { party_uid: string; party: string; party_name_en: string; party_name_bm: string; type: string };
+type ElectionOpt  = { state: string; election: string; date: string };
+type LatestItem   = { title_en: string; title_bm: string; date: string; url: string; img_light: string; img_dark: string };
+
+const [seatsRes, candidatesRes, partiesRes, datesRes, latestRes] = await Promise.allSettled([
+  fetchJSON<{ data: SeatOption[] }>("/seats/current/dropdown.json"),
+  fetchJSON<{ data: CandidateOpt[] }>("/candidates/dropdown.json"),
+  fetchJSON<{ data: PartyOpt[] }>("/parties/dropdown.json"),
+  fetchJSON<{ data: ElectionOpt[] }>("/dates.json"),
+  fetchJSON<{ data: LatestItem[] }>("/latest.json"),
+]);
+
+const seats      = seatsRes.status      === "fulfilled" ? (seatsRes.value.data ?? [])      : [];
+const candidates = candidatesRes.status === "fulfilled" ? (candidatesRes.value.data ?? []) : [];
+const parties    = partiesRes.status    === "fulfilled" ? (partiesRes.value.data ?? [])    : [];
+const datesFlat  = datesRes.status      === "fulfilled" ? (datesRes.value.data ?? [])      : [];
+const latest     = latestRes.status     === "fulfilled" ? (latestRes.value.data ?? [])     : [];
+
+const datesMap = datesFlat.reduce((acc, e) => {
+  (acc[e.state] ??= []).push(e);
+  return acc;
+}, {} as Record<string, ElectionOpt[]>);
+
+const seatOptions = seats.map(s => ({
+  value: `${s.type}/${s.slug}`,
+  label: s.seat_name,
+}));
+
+const candidateOptions = [...candidates].sort((a, b) => {
+  const ca = Number(a.c), cb = Number(b.c);
+  if (ca !== cb) return cb - ca;
+  return Number(b.w) - Number(a.w);
+}).map(c => ({ label: `${c.name} (W${c.w}, L${c.l})`, value: c.slug }));
+
+const partyOptions = [...parties].sort((a, b) => {
+  if (a.type !== b.type) return a.type === "party" ? -1 : 1;
+  return a.party.localeCompare(b.party);
+}).map(p => ({
+  label: `${p.party} (${isMalay ? p.party_name_bm : p.party_name_en})`,
+  value: p.party_uid,
+}));
+
+const allElections: (ElectionOpt & { isGE: boolean; stateKey: string })[] = [];
+for (const [stateName, elections] of Object.entries(datesMap)) {
+  const stateKey = stateName === "Malaysia" ? "mys" : (StateKeyByName[stateName] ?? stateName);
+  for (const e of elections) {
+    const isGE = e.election.startsWith("GE");
+    if (isGE && stateName !== "Malaysia") continue;
+    allElections.push({ ...e, isGE, stateKey });
+  }
+}
+allElections.sort((a, b) => {
+  if (a.isGE && b.isGE) return new Date(b.date).getTime() - new Date(a.date).getTime();
+  if (a.isGE) return -1;
+  if (b.isGE) return 1;
+  const oa = STATE_ORDER[a.stateKey] ?? 999;
+  const ob = STATE_ORDER[b.stateKey] ?? 999;
+  if (oa !== ob) return oa - ob;
+  return new Date(b.date).getTime() - new Date(a.date).getTime();
+});
+
+const electionOptions = allElections.map(e => {
+  const year = e.date.slice(0, 4);
+  const label = isMalay
+    ? e.election.replace(/^GE/, "PRU").replace(/^SE/, "PRN")
+    : e.election;
+  const display = e.isGE ? `Malaysia ${label} (${year})` : `${e.state} ${label} (${year})`;
+  return { label: display, value: `${e.stateKey}/${e.election}` };
+});
+
+const i18n = await getTranslations(locale, ["common", "home", "seats", "candidates", "parties"]);
+const h = (key: string) => t(i18n.home ?? {}, key);
+
+const exploreKeys = ["seats", "candidates", "parties", "byelections", "elections", "redelineation"] as const;
+const exploreHrefs: Record<string, string> = {
+  seats: "/seats", candidates: "/candidates", parties: "/parties",
+  byelections: "/byelections", elections: "/elections", redelineation: "/redelineation",
+};
+
+const tabs = [
+  h("tab.seats")      || "Seats",
+  h("tab.candidates") || "Candidates",
+  h("tab.parties")    || "Parties",
+  h("tab.elections")  || "Elections",
+];
+
+const seatSearchLabel      = t(i18n.seats      ?? {}, "search_seat")      || "Search seat…";
+const candidateSearchLabel = t(i18n.candidates ?? {}, "search_candidate") || "Search candidate…";
+const partySearchLabel     = t(i18n.parties    ?? {}, "search_party")     || "Search party…";
+const electionSearchLabel  = h("search_election") || "Search election…";
+
+const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
+const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
+---
+
+<Layout title="ElectionData.MY">
+
+  <!-- Hero: full-width red gradient -->
+  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white px-4 md:px-6">
+    <div class="mx-auto flex max-w-[727px] flex-col items-center space-y-4 pb-8 pt-16 text-center lg:space-y-6">
+      <h3 class="text-body-xs font-semibold uppercase leading-5 tracking-[0.1em] text-txt-danger lg:text-body-lg">
+        {h("hero.category") || "Democracy begins with transparency"}
+      </h3>
+      <h1 class="font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
+        {h("hero.header") || "Open election data for Malaysia"}
+      </h1>
+      <p class="w-full whitespace-pre-line text-body-sm text-txt-black-700 lg:text-body-md">
+        {h("hero.description")}
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <a href="/openapi" class="flex items-center gap-1.5 rounded-md bg-bg-black-900 px-4 py-2 text-sm font-medium text-txt-white no-underline transition hover:bg-bg-black-700">
+          {h("hero.api_docs") || "API Docs"}
+        </a>
+        <a href="/data-catalogue" class="flex items-center gap-1.5 rounded-md border border-otl-gray-300 bg-bg-white px-4 py-2 text-sm font-medium text-txt-black-900 no-underline transition hover:border-otl-gray-400 hover:bg-bg-black-50">
+          {h("hero.data_catalogue") || "Data Catalogue"}
+        </a>
+      </div>
+      <p class="flex items-center justify-center gap-0.5 text-body-sm text-txt-black-500">
+        <!-- eye icon (EyeIcon solid/20 from heroicons) -->
+        <svg class="size-4 self-center" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+          <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41Z" clip-rule="evenodd" />
+        </svg>
+        <span id="hero-view-count" data-token={tbToken} data-host={tbHost}>---</span>
+      </p>
+    </div>
+  </section>
+
+  <div class="mx-auto w-full max-w-screen-xl px-4 pb-8 pt-4 md:px-6 lg:pb-12 lg:pt-6">
+
+    <!-- Tabs + search -->
+    <section class="flex flex-col items-center gap-6 pb-8">
+
+      <!-- Tabs: match production SegmentTabs -->
+      <div class="flex h-8 w-fit flex-row items-center rounded-lg bg-bg-washed p-0">
+        {tabs.map((tab, i) => (
+          <button
+            class:list={[
+              "tab-btn flex h-8 min-h-8 flex-row items-center justify-center px-2.5 py-1.5 text-body-sm font-medium transition-colors",
+              i === 0
+                ? "rounded-md border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
+                : "text-txt-black-500",
+            ]}
+            data-index={i}
+          >{tab}</button>
+        ))}
+      </div>
+
+      <!-- Seats -->
+      <div class="tab-panel w-full max-w-[727px]" data-panel="0">
+        <!-- Hidden select — data source for JS combobox -->
+        <select id="seat-select" class="hidden" aria-hidden="true" tabindex="-1">
+          {seatOptions.sort((a, b) => {
+            if (a.value.startsWith("parlimen") !== b.value.startsWith("parlimen"))
+              return a.value.startsWith("parlimen") ? -1 : 1;
+            return a.label.localeCompare(b.label);
+          }).map(s => <option value={s.value}>{s.label}</option>)}
+        </select>
+        <!-- Custom combobox -->
+        <div class="combobox relative" data-type="seat" data-select="seat-select">
+          <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
+            <input type="text" class="combobox-input w-full border-0 bg-transparent py-2.5 pl-5 pr-2 text-body-md text-txt-black-700 placeholder:text-txt-black-500 focus:outline-none" placeholder={seatSearchLabel} autocomplete="off" spellcheck="false" />
+            <button type="button" class="combobox-btn mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-danger-400 to-danger-600 text-white" aria-label="Search">
+              <svg class="size-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" /></svg>
+            </button>
+          </div>
+          <ul class="combobox-list absolute left-0 right-0 top-full z-50 mt-1.5 hidden max-h-60 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1 shadow-lg"></ul>
+        </div>
+      </div>
+
+      <!-- Candidates -->
+      <div class="tab-panel hidden w-full max-w-[727px]" data-panel="1">
+        <select id="candidate-select" class="hidden" aria-hidden="true" tabindex="-1">
+          {candidateOptions.map(o => <option value={o.value}>{o.label}</option>)}
+        </select>
+        <div class="combobox relative" data-type="candidate" data-select="candidate-select">
+          <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
+            <input type="text" class="combobox-input w-full border-0 bg-transparent py-2.5 pl-5 pr-2 text-body-md text-txt-black-700 placeholder:text-txt-black-500 focus:outline-none" placeholder={candidateSearchLabel} autocomplete="off" spellcheck="false" />
+            <button type="button" class="combobox-btn mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-danger-400 to-danger-600 text-white" aria-label="Search">
+              <svg class="size-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" /></svg>
+            </button>
+          </div>
+          <ul class="combobox-list absolute left-0 right-0 top-full z-50 mt-1.5 hidden max-h-60 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1 shadow-lg"></ul>
+        </div>
+      </div>
+
+      <!-- Parties -->
+      <div class="tab-panel hidden w-full max-w-[727px]" data-panel="2">
+        <select id="party-select" class="hidden" aria-hidden="true" tabindex="-1">
+          {partyOptions.map(o => <option value={o.value}>{o.label}</option>)}
+        </select>
+        <div class="combobox relative" data-type="party" data-select="party-select">
+          <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
+            <input type="text" class="combobox-input w-full border-0 bg-transparent py-2.5 pl-5 pr-2 text-body-md text-txt-black-700 placeholder:text-txt-black-500 focus:outline-none" placeholder={partySearchLabel} autocomplete="off" spellcheck="false" />
+            <button type="button" class="combobox-btn mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-danger-400 to-danger-600 text-white" aria-label="Search">
+              <svg class="size-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" /></svg>
+            </button>
+          </div>
+          <ul class="combobox-list absolute left-0 right-0 top-full z-50 mt-1.5 hidden max-h-60 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1 shadow-lg"></ul>
+        </div>
+      </div>
+
+      <!-- Elections -->
+      <div class="tab-panel hidden w-full max-w-[727px]" data-panel="3">
+        <select id="election-select" class="hidden" aria-hidden="true" tabindex="-1">
+          {electionOptions.map(o => <option value={o.value}>{o.label}</option>)}
+        </select>
+        <div class="combobox relative" data-type="election" data-select="election-select">
+          <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
+            <input type="text" class="combobox-input w-full border-0 bg-transparent py-2.5 pl-5 pr-2 text-body-md text-txt-black-700 placeholder:text-txt-black-500 focus:outline-none" placeholder={electionSearchLabel} autocomplete="off" spellcheck="false" />
+            <button type="button" class="combobox-btn mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-danger-400 to-danger-600 text-white" aria-label="Search">
+              <svg class="size-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" /></svg>
+            </button>
+          </div>
+          <ul class="combobox-list absolute left-0 right-0 top-full z-50 mt-1.5 hidden max-h-60 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1 shadow-lg"></ul>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Latest -->
+    {latest.length > 0 && (
+      <section class="flex flex-col items-center gap-6 py-8 lg:gap-12 lg:py-10">
+        <h2 class="text-center font-poppins text-2xl font-semibold">{h("latest.title") || "Latest"}</h2>
+        <div class="grid w-full max-w-[1000px] grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-8">
+          {latest.map(item => (
+            <a
+              href={item.url || "#"}
+              target={item.url?.startsWith("/") ? undefined : "_blank"}
+              rel={item.url?.startsWith("/") ? undefined : "noopener noreferrer"}
+              class="group flex min-w-0 flex-col overflow-hidden rounded-lg border bg-bg-dialog no-underline hover:border-bg-danger-200 hover:ring-[3px] hover:ring-fr-danger dark:border-otl-gray-200"
+            >
+              <div class="relative aspect-[1200/630] w-full shrink-0 overflow-hidden">
+                <picture class="img-light absolute inset-0 h-full w-full">
+                  <img src={item.img_light} alt={isMalay ? item.title_bm : item.title_en} class="h-full w-full object-cover" loading="lazy" />
+                </picture>
+                <picture class="img-dark absolute inset-0 h-full w-full">
+                  <img src={item.img_dark || item.img_light} alt={isMalay ? item.title_bm : item.title_en} class="h-full w-full object-cover" loading="lazy" />
+                </picture>
+              </div>
+              <div class="flex flex-1 flex-col gap-1 p-3 lg:p-4">
+                <p class="line-clamp-2 text-body-md font-semibold text-txt-black-900">
+                  {isMalay ? item.title_bm : item.title_en}
+                </p>
+                <div class="relative overflow-hidden">
+                  <p class="text-body-sm text-txt-black-500 transition-transform group-hover:-translate-y-full">
+                    {new Date(item.date).toLocaleDateString(isMalay ? "ms-MY" : "en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                  </p>
+                  <p class="absolute inset-x-0 bottom-0 translate-y-full text-body-sm font-medium text-txt-danger transition-transform group-hover:translate-y-0 group-hover:duration-300">
+                    {h("latest.click_to_explore") || "Click to explore"}
+                  </p>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Explore -->
+    <section class="flex flex-col items-center gap-4 py-8 lg:gap-12 lg:py-10">
+      <h2 class="text-center font-poppins text-2xl font-semibold">{h("explore.title") || "Explore"}</h2>
+      <div class="grid w-full max-w-[1000px] divide-y divide-otl-gray-200 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-4 lg:divide-y-0">
+        {exploreKeys.map(key => (
+          <a href={exploreHrefs[key]} class="group flex flex-row items-center gap-4 py-3 no-underline lg:flex-col lg:items-center lg:rounded-lg lg:bg-bg-white lg:p-4 lg:text-center">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-bg-danger-100 lg:size-[54px]">
+              <svg class="size-5 text-txt-danger lg:size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                {key === "seats"         && <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />}
+                {key === "candidates"    && <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />}
+                {key === "parties"       && <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />}
+                {key === "byelections"   && <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />}
+                {key === "elections"     && <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />}
+                {key === "redelineation" && <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />}
+              </svg>
+            </div>
+            <div class="flex-1 lg:flex-none">
+              <p class="text-body-md font-semibold text-txt-black-900">{h(`explore.${key}.title`)}</p>
+              <p class="text-body-sm text-txt-black-500">{h(`explore.${key}.description`)}</p>
+            </div>
+            <svg class="size-4 shrink-0 text-txt-black-500 lg:hidden" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            </svg>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <!-- Trust -->
+    <section class="flex flex-col items-center gap-6 pb-8 pt-4 lg:gap-12 lg:pb-16">
+      <h2 class="text-center font-poppins text-2xl font-semibold">{h("trust.title") || "Election data you can trust"}</h2>
+      <div class="flex w-full max-w-[1000px] flex-col gap-4 lg:flex-row lg:gap-8">
+        <div class="flex flex-1 flex-col gap-4 rounded-lg border border-otl-gray-200 bg-gradient-to-r from-bg-dialog to-bg-gray-50 p-5 lg:gap-6 lg:p-[30px]">
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-otl-gray-200 shadow-button lg:size-[52px]">
+            <svg class="size-5 text-txt-black-700 lg:size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 15.803 7.5 7.5 0 0 0 15.803 15.803Z" /></svg>
+          </div>
+          <div class="flex flex-col gap-2">
+            <h3 class="text-body-lg font-semibold">{h("trust.research.title")}</h3>
+            <p class="text-sm leading-5 text-txt-black-500">{h("trust.research.description")}</p>
+          </div>
+          <a href="/research" class="flex items-center gap-1 text-sm font-medium text-txt-danger no-underline hover:underline">
+            {h("trust.research.link") || "View research"}
+            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+          </a>
+        </div>
+        <div class="flex flex-1 flex-col gap-4 rounded-lg border border-otl-gray-200 bg-gradient-to-r from-bg-dialog to-bg-gray-50 p-5 lg:gap-6 lg:p-[30px]">
+          <div class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-otl-gray-200 shadow-button lg:size-[52px]">
+            <svg class="size-5 text-txt-black-700 lg:size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.589-1.202L18.75 4.97Zm-16.5.52c.99-.203 1.99-.377 3-.52m0 0 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.989 5.989 0 0 1-2.031.352 5.989 5.989 0 0 1-2.031-.352c-.483-.174-.711-.703-.589-1.202L5.25 5.49Z" /></svg>
+          </div>
+          <div class="flex flex-col gap-2">
+            <h3 class="text-body-lg font-semibold">{h("trust.neutral.title")}</h3>
+            <p class="text-sm leading-5 text-txt-black-500">{h("trust.neutral.description")}</p>
+          </div>
+          <a href="/about" class="flex items-center gap-1 text-sm font-medium text-txt-danger no-underline hover:underline">
+            {h("trust.neutral.link") || "Learn more"}
+            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</Layout>
+
+<style>
+  /* Theme-aware map thumbnails */
+  .img-dark { display: none; }
+  :global(.dark) .img-dark { display: block; }
+  :global(.dark) .img-light { display: none; }
+</style>
+
+<script>
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  const tabBtns  = document.querySelectorAll<HTMLButtonElement>(".tab-btn");
+  const tabPanels = document.querySelectorAll<HTMLElement>(".tab-panel");
+
+  const ACTIVE_CLASSES   = ["rounded-md", "border", "border-otl-gray-200", "bg-bg-dialog-active", "text-txt-black-900", "shadow-button"];
+  const INACTIVE_CLASSES = ["text-txt-black-500"];
+
+  function activateTab(index: number) {
+    tabBtns.forEach((btn, i) => {
+      if (i === index) {
+        btn.classList.add(...ACTIVE_CLASSES);
+        btn.classList.remove(...INACTIVE_CLASSES);
+      } else {
+        btn.classList.remove(...ACTIVE_CLASSES);
+        btn.classList.add(...INACTIVE_CLASSES);
+      }
+    });
+    tabPanels.forEach((panel, i) => panel.classList.toggle("hidden", i !== index));
+  }
+
+  tabBtns.forEach(btn => btn.addEventListener("click", () => activateTab(Number(btn.dataset.index))));
+
+  // ── Combobox ──────────────────────────────────────────────────────────────
+  function initCombobox(wrapper: HTMLElement) {
+    const type     = wrapper.dataset.type!;
+    const selectId = wrapper.dataset.select!;
+    const selectEl = document.getElementById(selectId) as HTMLSelectElement | null;
+    if (!selectEl) return;
+
+    const allOptions = Array.from(selectEl.options)
+      .filter(o => o.value)
+      .map(o => ({ value: o.value, label: o.text.trim() }));
+
+    const input = wrapper.querySelector<HTMLInputElement>(".combobox-input")!;
+    const btn   = wrapper.querySelector<HTMLButtonElement>(".combobox-btn")!;
+    const list  = wrapper.querySelector<HTMLUListElement>(".combobox-list")!;
+    let selected = "";
+
+    function href(val: string) {
+      if (type === "party")     return `/parties/${val}/mys`;
+      if (type === "candidate") return `/candidates/${val}`;
+      if (type === "election")  return `/elections/${val}`;
+      return `/seats/${val}`;
+    }
+
+    function render(options: { value: string; label: string }[]) {
+      const items = options.slice(0, 100);
+      if (items.length === 0) {
+        list.innerHTML = `<li class="px-4 py-2 text-body-sm italic text-txt-black-500">No results</li>`;
+        return;
+      }
+      list.innerHTML = items.map(o =>
+        `<li class="cursor-pointer truncate px-4 py-2 text-body-md text-txt-black-700 hover:bg-bg-black-50" data-value="${o.value}">${o.label}</li>`
+      ).join("");
+      list.querySelectorAll<HTMLLIElement>("li[data-value]").forEach(li => {
+        li.addEventListener("mousedown", e => {
+          e.preventDefault();
+          selected = li.dataset.value!;
+          input.value = li.textContent!.trim();
+          list.classList.add("hidden");
+          window.location.href = href(selected);
+        });
+      });
+    }
+
+    function open() {
+      const q = input.value.toLowerCase();
+      render(q ? allOptions.filter(o => o.label.toLowerCase().includes(q)) : allOptions);
+      list.classList.remove("hidden");
+    }
+
+    function close() { list.classList.add("hidden"); }
+
+    input.addEventListener("input",  () => { selected = ""; open(); });
+    input.addEventListener("focus",  open);
+    input.addEventListener("blur",   () => setTimeout(close, 150));
+    btn.addEventListener("click",    () => { if (selected) window.location.href = href(selected); else input.focus(); });
+    document.addEventListener("click", e => { if (!wrapper.contains(e.target as Node)) close(); });
+  }
+
+  document.querySelectorAll<HTMLElement>(".combobox").forEach(initCombobox);
+
+  // ── View count ────────────────────────────────────────────────────────────
+  const vcEl = document.getElementById("hero-view-count") as HTMLElement | null;
+  if (vcEl) {
+    const { token, host } = vcEl.dataset as { token?: string; host?: string };
+    if (token && host) {
+      fetch(`${host}/v0/pipes/views_by_page.json?token=${token}&page_id=sitewide`)
+        .then(r => r.json())
+        .then(data => {
+          const views = data?.data?.[0]?.hits;
+          if (views != null) vcEl.textContent = `${Number(views).toLocaleString()} views`;
+        })
+        .catch(() => {});
+    }
+  }
+</script>

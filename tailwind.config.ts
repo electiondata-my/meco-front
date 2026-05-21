@@ -13,6 +13,7 @@ const escapeAmbiguousTailwindClasses = (content: string) =>
 
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: "class",
   content: {
     files: [
       "./src/**/*.{js,ts,jsx,tsx,astro,mdx}",

@@ -1,0 +1,278 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import { getTranslations, t } from "@i18n/index";
+import { fetchJSON } from "@src/lib/api";
+import { CountryAndStates, STATES, MALAYSIA } from "@src/lib/constants";
+
+interface Props {
+  partyUid: string;
+  stateCode: string;
+}
+
+const { partyUid, stateCode } = Astro.props;
+const locale = Astro.currentLocale ?? "en-GB";
+const isMalay = locale.startsWith("ms");
+
+type DropdownEntry = {
+  party_uid: string;
+  party: string;
+  party_name_en: string;
+  party_name_bm: string;
+  type: string;
+};
+type PartyElection = {
+  party: string;
+  type: "parlimen" | "dun";
+  state: string;
+  election_name: string;
+  date: string;
+  coalition?: string;
+  coalition_uid?: string;
+  seats_total: number;
+  seats_contested: number;
+  seats_contested_perc: number;
+  seats_won: number;
+  seats_won_perc: number;
+  votes: number;
+  votes_perc: number;
+};
+type PartyData = {
+  elections: { parlimen: PartyElection[]; dun: PartyElection[] };
+};
+
+const [dropdownRes, dataRes] = await Promise.allSettled([
+  fetchJSON<{ data: DropdownEntry[] }>("/parties/dropdown.json"),
+  fetchJSON<PartyData>(`/parties/${partyUid}/${stateCode}.json`),
+]);
+
+const dropdown = dropdownRes.status === "fulfilled" ? (dropdownRes.value.data ?? []) : [];
+const partyData = dataRes.status    === "fulfilled" ? dataRes.value     : null;
+
+const parlimen = partyData?.elections?.parlimen ?? [];
+const dun      = partyData?.elections?.dun      ?? [];
+
+const currentParty = dropdown.find(d => d.party_uid === partyUid);
+
+const partyOptions = [...dropdown].sort((a, b) => {
+  if (a.type !== b.type) return a.type === "party" ? -1 : 1;
+  return a.party.localeCompare(b.party);
+}).map(p => ({
+  label: `${p.party} (${isMalay ? p.party_name_bm : p.party_name_en})`,
+  value: p.party_uid,
+}));
+
+const stateOptions = [MALAYSIA, ...STATES].map(s => ({
+  label: s.name,
+  value: s.key,
+}));
+
+const i18n = await getTranslations(locale, ["common", "parties"]);
+const c  = (key: string) => t(i18n.common  ?? {}, key);
+const p  = (key: string) => t(i18n.parties ?? {}, key);
+
+const stateName = CountryAndStates[stateCode] ?? stateCode;
+const partyFolder = currentParty?.type === "coalition" ? "coalitions" : "parties";
+
+const localePrefix = isMalay ? "/ms-MY" : "";
+const pageTitle = currentParty
+  ? `${currentParty.party} | ${p("hero.header") || "Parties"}`
+  : p("hero.header") || "Parties";
+
+// WPs have no DUN
+const NO_DUN_STATES = ["mys", "kul", "lbn", "pjy"];
+---
+
+<Layout title={pageTitle}>
+  <!-- Hero -->
+  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
+    <div class="mx-auto flex max-w-[727px] flex-col items-center justify-center gap-4 px-4 pb-8 pt-16 md:px-6 lg:gap-6">
+      <p class="text-center text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger lg:text-body-lg">
+        {p("hero.category") || "Parties"}
+      </p>
+      <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
+        {p("hero.header") || "Parties Explorer"}
+      </h1>
+      {p("hero.description") !== "hero.description" && (
+        <p class="w-full text-center text-body-sm text-txt-black-700 lg:text-body-md">{p("hero.description")}</p>
+      )}
+    </div>
+  </section>
+
+  <!-- Main content -->
+  <div class="mx-auto w-full max-w-screen-xl space-y-6 px-4 pb-6 pt-2 md:px-6 lg:space-y-16 lg:pb-16">
+
+    <!-- Party search + state filter -->
+    <div class="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+      <div class="w-full md:w-[480px]">
+        <select id="party-select" class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-3 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger">
+          <option value="">{p("search_party") || "Search party…"}</option>
+          {partyOptions.map(o => (
+            <option value={o.value} selected={o.value === partyUid}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+      <div class="w-full md:w-[200px]">
+        <select id="state-select" class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-3 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger">
+          {stateOptions.map(o => (
+            <option value={o.value} selected={o.value === stateCode}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <!-- Party identity + election history -->
+    {currentParty && (
+      <div class="flex items-center gap-3">
+        <img
+          src={`/static/images/${partyFolder}/${partyUid}.png`}
+          alt={currentParty.party}
+          class="h-8 w-auto border border-otl-gray-200 object-contain"
+        />
+        <div>
+          <span class="text-heading-2xs font-bold">{currentParty.party}</span>
+          <span class="ml-2 text-body-sm text-txt-black-500">
+            {isMalay ? currentParty.party_name_bm : currentParty.party_name_en}
+          </span>
+        </div>
+        <span class:list={[
+          "ml-2 rounded-full border px-2 py-0.5 text-xs font-medium",
+          currentParty.type === "coalition"
+            ? "border-blue-400 bg-blue-50/60 text-blue-600"
+            : "border-red-400 bg-red-50/60 text-red-600",
+        ]}>
+          {p(currentParty.type) || currentParty.type}
+        </span>
+      </div>
+    )}
+
+    <div class="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
+      <h2 class="text-heading-2xs font-bold">
+        {p("title") ? `${p("title")} ${currentParty?.party ?? partyUid}` : `${currentParty?.party ?? partyUid} — ${stateName}`}
+      </h2>
+
+      <!-- Tabs -->
+      <div class="border-b border-otl-gray-200">
+        <div class="flex gap-4">
+          {[c("parlimen") || "Parlimen", c("dun") || "DUN"].map((tab, i) => (
+            <button
+              class:list={[
+                "party-tab -mb-px border-b-2 pb-3 pt-1 text-body-sm font-medium transition-colors",
+                i === 0
+                  ? "border-txt-danger text-txt-danger"
+                  : "border-transparent text-txt-black-500 hover:text-txt-black-900",
+              ]}
+              data-tab={i}
+            >{tab}</button>
+          ))}
+        </div>
+      </div>
+
+      <!-- Parlimen tab -->
+      <div class="party-panel overflow-x-auto" data-panel="0">
+        {parlimen.length === 0
+          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{p("no_data") || "No parlimen data."}</p>
+          : (
+            <table class="w-full text-left text-body-sm">
+              <thead>
+                <tr class="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
+                  <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
+                  {currentParty?.type !== "coalition" && <th class="whitespace-nowrap px-4 py-3">{c("coalition_name") || "Coalition"}</th>}
+                  <th class="whitespace-nowrap px-4 py-3">{c("seats_won") || "Seats Won"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("seats_contested") || "Contested"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {parlimen.map(e => (
+                  <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
+                    <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
+                    {currentParty?.type !== "coalition" && (
+                      <td class="whitespace-nowrap px-4 py-3">
+                        {e.coalition_uid && (
+                          <img src={`/static/images/coalitions/${e.coalition_uid}.png`} alt={e.coalition ?? ""} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
+                        )}
+                        {e.coalition ?? "—"}
+                      </td>
+                    )}
+                    <td class="whitespace-nowrap px-4 py-3">{e.seats_won} / {e.seats_total} ({e.seats_won_perc?.toFixed(1)}%)</td>
+                    <td class="whitespace-nowrap px-4 py-3">{e.votes?.toLocaleString()} ({e.votes_perc?.toFixed(1)}%)</td>
+                    <td class="whitespace-nowrap px-4 py-3">{e.seats_contested} ({e.seats_contested_perc?.toFixed(1)}%)</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        }
+      </div>
+
+      <!-- DUN tab -->
+      <div class="party-panel hidden overflow-x-auto" data-panel="1">
+        {NO_DUN_STATES.includes(stateCode)
+          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{p("no_data_dun_wp") || "No DUN (Federal Territory)."}</p>
+          : dun.length === 0
+            ? <p class="py-8 text-center text-body-sm text-txt-black-500">{p("no_data") || "No DUN data."}</p>
+            : (
+              <table class="w-full text-left text-body-sm">
+                <thead>
+                  <tr class="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
+                    <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
+                    {currentParty?.type !== "coalition" && <th class="whitespace-nowrap px-4 py-3">{c("coalition_name") || "Coalition"}</th>}
+                    <th class="whitespace-nowrap px-4 py-3">{c("seats_won") || "Seats Won"}</th>
+                    <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
+                    <th class="whitespace-nowrap px-4 py-3">{c("seats_contested") || "Contested"}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dun.map(e => (
+                    <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
+                      <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
+                      {currentParty?.type !== "coalition" && (
+                        <td class="whitespace-nowrap px-4 py-3">
+                          {e.coalition_uid && (
+                            <img src={`/static/images/coalitions/${e.coalition_uid}.png`} alt={e.coalition ?? ""} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
+                          )}
+                          {e.coalition ?? "—"}
+                        </td>
+                      )}
+                      <td class="whitespace-nowrap px-4 py-3">{e.seats_won} / {e.seats_total} ({e.seats_won_perc?.toFixed(1)}%)</td>
+                      <td class="whitespace-nowrap px-4 py-3">{e.votes?.toLocaleString()} ({e.votes_perc?.toFixed(1)}%)</td>
+                      <td class="whitespace-nowrap px-4 py-3">{e.seats_contested} ({e.seats_contested_perc?.toFixed(1)}%)</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+        }
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ localePrefix, partyUid, stateCode }}>
+  // Party select
+  document.getElementById("party-select")?.addEventListener("change", e => {
+    const val = e.target.value;
+    if (val) window.location.href = `${localePrefix}/parties/${val}/${stateCode}`;
+  });
+
+  // State select
+  document.getElementById("state-select")?.addEventListener("change", e => {
+    const val = e.target.value;
+    if (val) window.location.href = `${localePrefix}/parties/${partyUid}/${val}`;
+  });
+
+  // Tabs
+  const tabs   = document.querySelectorAll(".party-tab");
+  const panels = document.querySelectorAll(".party-panel");
+
+  tabs.forEach(tab => tab.addEventListener("click", () => {
+    const idx = Number(tab.dataset.tab);
+    tabs.forEach((t, i) => {
+      t.classList.toggle("border-txt-danger",  i === idx);
+      t.classList.toggle("text-txt-danger",    i === idx);
+      t.classList.toggle("border-transparent", i !== idx);
+      t.classList.toggle("text-txt-black-500", i !== idx);
+    });
+    panels.forEach((p, i) => p.classList.toggle("hidden", i !== idx));
+  }));
+</script>

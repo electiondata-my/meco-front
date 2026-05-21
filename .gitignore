@@ -11,9 +11,9 @@
 /coverage
 tb*
 
-# next.js
-/.next/
-/out/
+# astro
+.astro/*
+dist/
 
 # production
 /build

@@ -1,0 +1,40 @@
+---
+import PartyPage from "@src/components/Parties/PartyPage.astro";
+import { fetchJSON } from "@src/lib/api";
+import { MALAYSIA, STATES } from "@src/lib/constants";
+
+type DropdownEntry = {
+  party_uid: string;
+  party: string;
+  party_name_en: string;
+  party_name_bm: string;
+  type: string;
+};
+
+export async function getStaticPaths() {
+  const filter = import.meta.env.POST_TO_BUILD;
+
+  let entries: DropdownEntry[] = [];
+  try {
+    const json = await fetchJSON<{ data: DropdownEntry[] }>("/parties/dropdown.json");
+    entries = json.data ?? [];
+  } catch { /* non-fatal */ }
+
+  const stateCodes = [MALAYSIA.key, ...STATES.map(s => s.key)];
+
+  const paths = entries.flatMap(e =>
+    stateCodes
+      .filter(() => !filter || e.party_uid === filter)
+      .map(stateCode => ({
+        params: { party: `${e.party_uid}/${stateCode}` },
+        props:  { partyUid: e.party_uid, stateCode },
+      }))
+  );
+
+  return paths;
+}
+
+const { partyUid, stateCode } = Astro.props as { partyUid: string; stateCode: string };
+---
+
+<PartyPage partyUid={partyUid} stateCode={stateCode} />

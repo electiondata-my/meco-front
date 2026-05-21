@@ -1,0 +1,24 @@
+---
+import CandidatePage from "@src/components/Candidates/CandidatePage.astro";
+import { fetchJSON } from "@src/lib/api";
+
+type DropdownEntry = { name: string; slug: string; c: string; w: string; l: string };
+
+export async function getStaticPaths() {
+  const filter = import.meta.env.POST_TO_BUILD;
+
+  let entries: DropdownEntry[] = [];
+  try {
+    const json = await fetchJSON<{ data: DropdownEntry[] }>("/candidates/dropdown.json");
+    entries = json.data ?? [];
+  } catch { /* non-fatal */ }
+
+  return entries
+    .filter(e => !filter || e.slug === filter)
+    .map(e => ({ params: { slug: e.slug } }));
+}
+
+const { slug } = Astro.params as { slug: string };
+---
+
+<CandidatePage slug={slug} />

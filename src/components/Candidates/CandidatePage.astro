@@ -1,0 +1,273 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import { getTranslations, t } from "@i18n/index";
+import { fetchJSON } from "@src/lib/api";
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const locale = Astro.currentLocale ?? "en-GB";
+const isMalay = locale.startsWith("ms");
+
+type DropdownEntry = { name: string; slug: string; c: string; w: string; l: string };
+type CandidateElection = {
+  type: "parlimen" | "dun";
+  election_name: string;
+  date: string;
+  seat: string;
+  party: string;
+  party_uid?: string;
+  votes: { abs: number; perc: number };
+  result: string;
+};
+type CandidateData = {
+  elections: { parlimen: CandidateElection[]; dun: CandidateElection[] };
+};
+
+const [dropdownRes, dataRes] = await Promise.allSettled([
+  fetchJSON<{ data: DropdownEntry[] }>("/candidates/dropdown.json"),
+  fetchJSON<CandidateData>(`/candidates/${slug}.json`),
+]);
+
+const dropdown = dropdownRes.status === "fulfilled" ? (dropdownRes.value.data ?? []) : [];
+const candData = dataRes.status     === "fulfilled" ? dataRes.value     : null;
+
+if (!candData) return Astro.redirect(isMalay ? "/ms-MY/candidates" : "/candidates");
+
+const parlimen = candData.elections?.parlimen ?? [];
+const dun      = candData.elections?.dun      ?? [];
+const allElections = [...parlimen, ...dun].sort((a, b) =>
+  new Date(b.date).getTime() - new Date(a.date).getTime()
+);
+
+const candidateOptions = [...dropdown].sort((a, b) => {
+  const ca = Number(a.c), cb = Number(b.c);
+  if (ca !== cb) return cb - ca;
+  return Number(b.w) - Number(a.w);
+}).map(c => ({ label: `${c.name} (W${c.w}, L${c.l})`, value: c.slug }));
+
+const currentOption = dropdown.find(d => d.slug === slug);
+
+const i18n = await getTranslations(locale, ["common", "candidates"]);
+const c  = (key: string) => t(i18n.common     ?? {}, key);
+const cd = (key: string) => t(i18n.candidates ?? {}, key);
+
+function resultClass(result: string) {
+  if (result.startsWith("won")) return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
+  return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
+}
+function resultLabel(result: string) {
+  if (result === "won")              return cd("won")              || "Won";
+  if (result === "won_uncontested")  return cd("won_uncontested")  || "Won (Uncontested)";
+  if (result === "lost")             return cd("lost")             || "Lost";
+  if (result === "lost_deposit")     return cd("lost_deposit")     || "Lost Deposit";
+  return result;
+}
+
+const localePrefix = isMalay ? "/ms-MY" : "";
+const pageTitle = currentOption
+  ? `${currentOption.name} | ${cd("hero.header") || "Candidates"}`
+  : cd("hero.header") || "Candidates";
+---
+
+<Layout title={pageTitle}>
+  <!-- Hero -->
+  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
+    <div class="mx-auto flex max-w-screen-xl max-w-[727px] flex-col items-center justify-center gap-4 px-4 pb-8 pt-16 md:px-6 lg:gap-6">
+      <p class="text-center text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger lg:text-body-lg">
+        {cd("hero.category") || "Candidates"}
+      </p>
+      <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
+        {cd("hero.header") || "Candidates Explorer"}
+      </h1>
+      {cd("hero.description") !== "hero.description" && (
+        <p class="w-full text-center text-body-sm text-txt-black-700 lg:text-body-md">{cd("hero.description")}</p>
+      )}
+    </div>
+  </section>
+
+  <!-- Main content -->
+  <div class="mx-auto w-full max-w-screen-xl space-y-6 px-4 pb-6 pt-2 md:px-6 lg:space-y-16 lg:pb-16">
+
+    <!-- Candidate search -->
+    <div class="mx-auto mt-3 w-full md:w-[727px]">
+      <select
+        id="candidate-select"
+        class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-3 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger"
+      >
+        <option value="">{cd("search_candidate") || "Search candidate…"}</option>
+        {candidateOptions.map(o => (
+          <option value={o.value} selected={o.value === slug}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+
+    <!-- Election history -->
+    <div class="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
+      <h2 class="text-heading-2xs font-bold">
+        {cd("title") || "Election history for "}
+        <span class="text-txt-danger">{currentOption?.name ?? slug}</span>
+      </h2>
+
+      <!-- Tab bar -->
+      <div class="border-b border-otl-gray-200">
+        <div class="flex gap-4">
+          {[c("all") || "All", c("parlimen") || "Parlimen", c("dun") || "DUN"].map((tab, i) => (
+            <button
+              class:list={[
+                "elec-tab -mb-px border-b-2 pb-3 pt-1 text-body-sm font-medium transition-colors",
+                i === 0
+                  ? "border-txt-danger text-txt-danger"
+                  : "border-transparent text-txt-black-500 hover:text-txt-black-900",
+              ]}
+              data-tab={i}
+            >{tab}</button>
+          ))}
+        </div>
+      </div>
+
+      <!-- All tab -->
+      <div class="elec-panel overflow-x-auto" data-panel="0">
+        {allElections.length === 0
+          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{cd("no_data") || "No data."}</p>
+          : (
+            <table class="w-full text-left text-body-sm">
+              <thead>
+                <tr class="border-b-2 border-otl-gray-200 text-body-sm font-medium text-txt-black-700">
+                  <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("constituency") || "Constituency"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("party_name") || "Party"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("result") || "Result"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allElections.map(e => (
+                  <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
+                    <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-txt-black-700">{e.seat}</td>
+                    <td class="whitespace-nowrap px-4 py-3">
+                      {e.party_uid && (
+                        <img src={`/static/images/parties/${e.party_uid}.png`} alt={e.party} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
+                      )}
+                      {e.party}
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3">{e.votes?.abs?.toLocaleString() ?? "—"}</td>
+                    <td class="whitespace-nowrap px-4 py-3">
+                      <span class:list={["rounded-full px-2 py-0.5 text-xs font-medium", resultClass(e.result)]}>
+                        {resultLabel(e.result)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        }
+      </div>
+
+      <!-- Parlimen tab -->
+      <div class="elec-panel hidden overflow-x-auto" data-panel="1">
+        {parlimen.length === 0
+          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{cd("no_data") || "No data."}</p>
+          : (
+            <table class="w-full text-left text-body-sm">
+              <thead>
+                <tr class="border-b-2 border-otl-gray-200 text-body-sm font-medium text-txt-black-700">
+                  <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("constituency") || "Constituency"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("party_name") || "Party"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("result") || "Result"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {parlimen.map(e => (
+                  <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
+                    <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-txt-black-700">{e.seat}</td>
+                    <td class="whitespace-nowrap px-4 py-3">
+                      {e.party_uid && (
+                        <img src={`/static/images/parties/${e.party_uid}.png`} alt={e.party} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
+                      )}
+                      {e.party}
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3">{e.votes?.abs?.toLocaleString() ?? "—"}</td>
+                    <td class="whitespace-nowrap px-4 py-3">
+                      <span class:list={["rounded-full px-2 py-0.5 text-xs font-medium", resultClass(e.result)]}>
+                        {resultLabel(e.result)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        }
+      </div>
+
+      <!-- DUN tab -->
+      <div class="elec-panel hidden overflow-x-auto" data-panel="2">
+        {dun.length === 0
+          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{cd("no_data") || "No data."}</p>
+          : (
+            <table class="w-full text-left text-body-sm">
+              <thead>
+                <tr class="border-b-2 border-otl-gray-200 text-body-sm font-medium text-txt-black-700">
+                  <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("constituency") || "Constituency"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("party_name") || "Party"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
+                  <th class="whitespace-nowrap px-4 py-3">{c("result") || "Result"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dun.map(e => (
+                  <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
+                    <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-txt-black-700">{e.seat}</td>
+                    <td class="whitespace-nowrap px-4 py-3">
+                      {e.party_uid && (
+                        <img src={`/static/images/parties/${e.party_uid}.png`} alt={e.party} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
+                      )}
+                      {e.party}
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3">{e.votes?.abs?.toLocaleString() ?? "—"}</td>
+                    <td class="whitespace-nowrap px-4 py-3">
+                      <span class:list={["rounded-full px-2 py-0.5 text-xs font-medium", resultClass(e.result)]}>
+                        {resultLabel(e.result)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        }
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ localePrefix }}>
+  document.getElementById("candidate-select")?.addEventListener("change", e => {
+    const val = e.target.value;
+    if (val) window.location.href = `${localePrefix}/candidates/${val}`;
+  });
+
+  const tabs   = document.querySelectorAll(".elec-tab");
+  const panels = document.querySelectorAll(".elec-panel");
+
+  tabs.forEach(tab => tab.addEventListener("click", () => {
+    const idx = Number(tab.dataset.tab);
+    tabs.forEach((t, i) => {
+      t.classList.toggle("border-txt-danger",  i === idx);
+      t.classList.toggle("text-txt-danger",    i === idx);
+      t.classList.toggle("border-transparent", i !== idx);
+      t.classList.toggle("text-txt-black-500", i !== idx);
+    });
+    panels.forEach((p, i) => p.classList.toggle("hidden", i !== idx));
+  }));
+</script>
