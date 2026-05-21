@@ -1,6 +1,8 @@
 # secrets
 .env
 .env.old
+.env.next
+.env.astro
 
 # dependencies
 /node_modules
