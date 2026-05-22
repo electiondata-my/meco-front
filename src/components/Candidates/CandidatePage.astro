@@ -1,15 +1,7 @@
 ---
 import Layout from "@src/components/Layout/index.astro";
-import { getTranslations, t } from "@i18n/index";
-import { fetchJSON } from "@src/lib/api";
-
-interface Props {
-  slug: string;
-}
-
-const { slug } = Astro.props;
-const locale = Astro.currentLocale ?? "en-GB";
-const isMalay = locale.startsWith("ms");
+import { t } from "@i18n/index";
+import CandidateElectionTable from "./CandidateElectionTable";
 
 type DropdownEntry = { name: string; slug: string; c: string; w: string; l: string };
 type CandidateElection = {
@@ -19,28 +11,26 @@ type CandidateElection = {
   seat: string;
   party: string;
   party_uid?: string;
-  votes: { abs: number; perc: number };
+  votes: number;
+  votes_perc: number;
   result: string;
 };
-type CandidateData = {
-  elections: { parlimen: CandidateElection[]; dun: CandidateElection[] };
-};
 
-const [dropdownRes, dataRes] = await Promise.allSettled([
-  fetchJSON<{ data: DropdownEntry[] }>("/candidates/dropdown.json"),
-  fetchJSON<CandidateData>(`/candidates/${slug}.json`),
-]);
+interface Props {
+  slug: string;
+  dropdown: DropdownEntry[];
+  candData: CandidateElection[] | null;
+  translations: Record<string, Record<string, any>>;
+}
 
-const dropdown = dropdownRes.status === "fulfilled" ? (dropdownRes.value.data ?? []) : [];
-const candData = dataRes.status     === "fulfilled" ? dataRes.value     : null;
+const { slug, dropdown, candData, translations } = Astro.props;
+const locale = Astro.currentLocale ?? "en-GB";
+const isMalay = locale.startsWith("ms");
 
 if (!candData) return Astro.redirect(isMalay ? "/ms-MY/candidates" : "/candidates");
 
-const parlimen = candData.elections?.parlimen ?? [];
-const dun      = candData.elections?.dun      ?? [];
-const allElections = [...parlimen, ...dun].sort((a, b) =>
-  new Date(b.date).getTime() - new Date(a.date).getTime()
-);
+const parlimen = candData.filter(e => e.type === "parlimen");
+const dun      = candData.filter(e => e.type === "dun");
 
 const candidateOptions = [...dropdown].sort((a, b) => {
   const ca = Number(a.c), cb = Number(b.c);
@@ -50,32 +40,22 @@ const candidateOptions = [...dropdown].sort((a, b) => {
 
 const currentOption = dropdown.find(d => d.slug === slug);
 
-const i18n = await getTranslations(locale, ["common", "candidates"]);
-const c  = (key: string) => t(i18n.common     ?? {}, key);
-const cd = (key: string) => t(i18n.candidates ?? {}, key);
+const cd = (key: string) => t(translations.candidates ?? {}, key);
 
-function resultClass(result: string) {
-  if (result.startsWith("won")) return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
-  return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
-}
-function resultLabel(result: string) {
-  if (result === "won")              return cd("won")              || "Won";
-  if (result === "won_uncontested")  return cd("won_uncontested")  || "Won (Uncontested)";
-  if (result === "lost")             return cd("lost")             || "Lost";
-  if (result === "lost_deposit")     return cd("lost_deposit")     || "Lost Deposit";
-  return result;
-}
 
 const localePrefix = isMalay ? "/ms-MY" : "";
 const pageTitle = currentOption
   ? `${currentOption.name} | ${cd("hero.header") || "Candidates"}`
   : cd("hero.header") || "Candidates";
+
+const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
+const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
 ---
 
 <Layout title={pageTitle}>
   <!-- Hero -->
   <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
-    <div class="mx-auto flex max-w-screen-xl max-w-[727px] flex-col items-center justify-center gap-4 px-4 pb-8 pt-16 md:px-6 lg:gap-6">
+    <div class="mx-auto flex max-w-[727px] flex-col items-center space-y-4 px-4 pb-8 pt-16 text-center md:px-6 lg:space-y-6">
       <p class="text-center text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger lg:text-body-lg">
         {cd("hero.category") || "Candidates"}
       </p>
@@ -85,189 +65,197 @@ const pageTitle = currentOption
       {cd("hero.description") !== "hero.description" && (
         <p class="w-full text-center text-body-sm text-txt-black-700 lg:text-body-md">{cd("hero.description")}</p>
       )}
+      <p class="flex items-center justify-center gap-0.5 text-body-sm text-txt-black-500">
+        <svg class="size-4.5 self-center" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+          <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd" />
+        </svg>
+        <span id="cand-view-count" data-token={tbToken} data-host={tbHost}>---</span>
+      </p>
     </div>
   </section>
 
   <!-- Main content -->
-  <div class="mx-auto w-full max-w-screen-xl space-y-6 px-4 pb-6 pt-2 md:px-6 lg:space-y-16 lg:pb-16">
+  <div class="px-4.5 pb-6 pt-4 md:px-6 lg:pb-16">
+  <div class="mx-auto w-full max-w-screen-xl space-y-8 lg:space-y-16">
 
     <!-- Candidate search -->
-    <div class="mx-auto mt-3 w-full md:w-[727px]">
-      <select
-        id="candidate-select"
-        class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-3 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger"
-      >
-        <option value="">{cd("search_candidate") || "Search candidate…"}</option>
+    <div class="mx-auto mt-3 w-full md:w-[679px]">
+      <select id="candidate-select" class="hidden" aria-hidden="true" tabindex="-1">
         {candidateOptions.map(o => (
           <option value={o.value} selected={o.value === slug}>{o.label}</option>
         ))}
       </select>
-    </div>
-
-    <!-- Election history -->
-    <div class="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
-      <h2 class="text-heading-2xs font-bold">
-        {cd("title") || "Election history for "}
-        <span class="text-txt-danger">{currentOption?.name ?? slug}</span>
-      </h2>
-
-      <!-- Tab bar -->
-      <div class="border-b border-otl-gray-200">
-        <div class="flex gap-4">
-          {[c("all") || "All", c("parlimen") || "Parlimen", c("dun") || "DUN"].map((tab, i) => (
-            <button
-              class:list={[
-                "elec-tab -mb-px border-b-2 pb-3 pt-1 text-body-sm font-medium transition-colors",
-                i === 0
-                  ? "border-txt-danger text-txt-danger"
-                  : "border-transparent text-txt-black-500 hover:text-txt-black-900",
-              ]}
-              data-tab={i}
-            >{tab}</button>
-          ))}
+      <div class="combobox relative" data-type="candidate" data-select="candidate-select">
+        <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
+          <input
+            type="text"
+            class="combobox-input w-full border-0 bg-transparent py-2.5 pl-5 pr-2 text-body-md text-txt-black-700 placeholder:text-txt-black-500 focus:outline-none"
+            placeholder={cd("search_candidate") || "Search candidate…"}
+            autocomplete="off"
+            spellcheck="false"
+            value={currentOption ? `${currentOption.name} (W${currentOption.w}, L${currentOption.l})` : ""}
+          />
+          <button
+            type="button"
+            class={`combobox-clear mr-1 h-5 w-5 shrink-0 items-center justify-center rounded-full text-txt-black-500 hover:text-txt-black-700 ${currentOption ? "flex" : "hidden"}`}
+            aria-label="Clear"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="combobox-btn mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-danger-400 to-danger-600 text-white"
+            aria-label="Search"
+          >
+            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
+            </svg>
+          </button>
         </div>
-      </div>
-
-      <!-- All tab -->
-      <div class="elec-panel overflow-x-auto" data-panel="0">
-        {allElections.length === 0
-          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{cd("no_data") || "No data."}</p>
-          : (
-            <table class="w-full text-left text-body-sm">
-              <thead>
-                <tr class="border-b-2 border-otl-gray-200 text-body-sm font-medium text-txt-black-700">
-                  <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("constituency") || "Constituency"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("party_name") || "Party"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("result") || "Result"}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allElections.map(e => (
-                  <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                    <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
-                    <td class="whitespace-nowrap px-4 py-3 text-txt-black-700">{e.seat}</td>
-                    <td class="whitespace-nowrap px-4 py-3">
-                      {e.party_uid && (
-                        <img src={`/static/images/parties/${e.party_uid}.png`} alt={e.party} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
-                      )}
-                      {e.party}
-                    </td>
-                    <td class="whitespace-nowrap px-4 py-3">{e.votes?.abs?.toLocaleString() ?? "—"}</td>
-                    <td class="whitespace-nowrap px-4 py-3">
-                      <span class:list={["rounded-full px-2 py-0.5 text-xs font-medium", resultClass(e.result)]}>
-                        {resultLabel(e.result)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
-        }
-      </div>
-
-      <!-- Parlimen tab -->
-      <div class="elec-panel hidden overflow-x-auto" data-panel="1">
-        {parlimen.length === 0
-          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{cd("no_data") || "No data."}</p>
-          : (
-            <table class="w-full text-left text-body-sm">
-              <thead>
-                <tr class="border-b-2 border-otl-gray-200 text-body-sm font-medium text-txt-black-700">
-                  <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("constituency") || "Constituency"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("party_name") || "Party"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("result") || "Result"}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {parlimen.map(e => (
-                  <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                    <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
-                    <td class="whitespace-nowrap px-4 py-3 text-txt-black-700">{e.seat}</td>
-                    <td class="whitespace-nowrap px-4 py-3">
-                      {e.party_uid && (
-                        <img src={`/static/images/parties/${e.party_uid}.png`} alt={e.party} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
-                      )}
-                      {e.party}
-                    </td>
-                    <td class="whitespace-nowrap px-4 py-3">{e.votes?.abs?.toLocaleString() ?? "—"}</td>
-                    <td class="whitespace-nowrap px-4 py-3">
-                      <span class:list={["rounded-full px-2 py-0.5 text-xs font-medium", resultClass(e.result)]}>
-                        {resultLabel(e.result)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
-        }
-      </div>
-
-      <!-- DUN tab -->
-      <div class="elec-panel hidden overflow-x-auto" data-panel="2">
-        {dun.length === 0
-          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{cd("no_data") || "No data."}</p>
-          : (
-            <table class="w-full text-left text-body-sm">
-              <thead>
-                <tr class="border-b-2 border-otl-gray-200 text-body-sm font-medium text-txt-black-700">
-                  <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("constituency") || "Constituency"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("party_name") || "Party"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("result") || "Result"}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dun.map(e => (
-                  <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                    <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
-                    <td class="whitespace-nowrap px-4 py-3 text-txt-black-700">{e.seat}</td>
-                    <td class="whitespace-nowrap px-4 py-3">
-                      {e.party_uid && (
-                        <img src={`/static/images/parties/${e.party_uid}.png`} alt={e.party} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
-                      )}
-                      {e.party}
-                    </td>
-                    <td class="whitespace-nowrap px-4 py-3">{e.votes?.abs?.toLocaleString() ?? "—"}</td>
-                    <td class="whitespace-nowrap px-4 py-3">
-                      <span class:list={["rounded-full px-2 py-0.5 text-xs font-medium", resultClass(e.result)]}>
-                        {resultLabel(e.result)}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
-        }
+        <ul class="combobox-list absolute left-0 right-0 top-full z-50 mt-1.5 hidden max-h-60 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1 shadow-lg"></ul>
       </div>
     </div>
+
+    <!-- Election history (React island — handles tabs, vote bars, full results modal) -->
+    <div class="mt-6 lg:mt-10">
+      <CandidateElectionTable
+        client:only="react"
+        parlimen={parlimen}
+        dun={dun}
+        candidateName={currentOption?.name ?? slug}
+        candidateStats={currentOption ? `W${currentOption.w}, L${currentOption.l}` : undefined}
+        apiBase={import.meta.env.PUBLIC_API_URL_S3}
+        translations={{ common: translations.common ?? {}, candidates: translations.candidates ?? {} }}
+      />
+    </div>
+  </div>
   </div>
 </Layout>
 
 <script define:vars={{ localePrefix }}>
-  document.getElementById("candidate-select")?.addEventListener("change", e => {
-    const val = e.target.value;
-    if (val) window.location.href = `${localePrefix}/candidates/${val}`;
-  });
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
 
-  const tabs   = document.querySelectorAll(".elec-tab");
-  const panels = document.querySelectorAll(".elec-panel");
+  function initCombobox(wrapper) {
+    const selectEl = document.getElementById(wrapper.dataset.select);
+    if (!selectEl) return;
 
-  tabs.forEach(tab => tab.addEventListener("click", () => {
-    const idx = Number(tab.dataset.tab);
-    tabs.forEach((t, i) => {
-      t.classList.toggle("border-txt-danger",  i === idx);
-      t.classList.toggle("text-txt-danger",    i === idx);
-      t.classList.toggle("border-transparent", i !== idx);
-      t.classList.toggle("text-txt-black-500", i !== idx);
+    const allOptions = Array.from(selectEl.options)
+      .filter(o => o.value)
+      .map(o => ({ value: o.value, label: o.text.trim() }));
+
+    const input     = wrapper.querySelector(".combobox-input");
+    const btn       = wrapper.querySelector(".combobox-btn");
+    const clearBtn  = wrapper.querySelector(".combobox-clear");
+    const list      = wrapper.querySelector(".combobox-list");
+    let selected = "";
+    let activeIdx = -1;
+
+    function updateClear() {
+      if (!clearBtn) return;
+      if (input.value.length > 0) {
+        clearBtn.classList.remove("hidden");
+        clearBtn.classList.add("flex");
+      } else {
+        clearBtn.classList.add("hidden");
+        clearBtn.classList.remove("flex");
+      }
+    }
+
+    function highlight(idx) {
+      const items = [...list.querySelectorAll("li[data-value]")];
+      items.forEach((li, i) => {
+        if (i === idx) li.classList.add("bg-bg-black-50");
+        else li.classList.remove("bg-bg-black-50");
+      });
+      activeIdx = idx;
+      if (idx >= 0) items[idx]?.scrollIntoView({ block: "nearest" });
+    }
+
+    function render(options) {
+      activeIdx = -1;
+      if (options.length === 0) {
+        list.innerHTML = `<li class="px-4 py-2 text-sm italic text-txt-black-500">No results</li>`;
+        return;
+      }
+      list.innerHTML = options.map(o =>
+        `<li class="cursor-pointer truncate px-4 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">${esc(o.label)}</li>`
+      ).join("");
+      list.querySelectorAll("li[data-value]").forEach(li => {
+        li.addEventListener("mousedown", e => {
+          e.preventDefault();
+          selected = li.dataset.value;
+          input.value = allOptions.find(o => o.value === selected)?.label ?? "";
+          list.classList.add("hidden");
+          window.location.href = `${localePrefix}/candidates/${selected}`;
+        });
+      });
+    }
+
+    function open() {
+      const q = input.value.toLowerCase();
+      render(q ? allOptions.filter(o => o.label.toLowerCase().includes(q)) : allOptions);
+      list.classList.remove("hidden");
+    }
+
+    function close() { list.classList.add("hidden"); activeIdx = -1; }
+
+    input.addEventListener("input",  () => { selected = ""; open(); updateClear(); });
+    input.addEventListener("focus",  open);
+    input.addEventListener("blur",   () => setTimeout(close, 150));
+    input.addEventListener("keydown", e => {
+      const items = [...list.querySelectorAll("li[data-value]")];
+      const isOpen = !list.classList.contains("hidden");
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (!isOpen) { open(); return; }
+        highlight(Math.min(activeIdx + 1, items.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!isOpen) return;
+        highlight(Math.max(activeIdx - 1, 0));
+      } else if (e.key === "Enter") {
+        if (isOpen && activeIdx >= 0 && items[activeIdx]) {
+          e.preventDefault();
+          selected = items[activeIdx].dataset.value;
+          input.value = allOptions.find(o => o.value === selected)?.label ?? "";
+          close();
+          window.location.href = `${localePrefix}/candidates/${selected}`;
+        }
+      } else if (e.key === "Escape") {
+        close();
+      }
     });
-    panels.forEach((p, i) => p.classList.toggle("hidden", i !== idx));
-  }));
+    btn.addEventListener("click",    () => { if (selected) window.location.href = `${localePrefix}/candidates/${selected}`; else input.focus(); });
+    clearBtn?.addEventListener("mousedown", e => {
+      e.preventDefault();
+      input.value = "";
+      selected = "";
+      close();
+      updateClear();
+      input.focus();
+    });
+    document.addEventListener("click", e => { if (!wrapper.contains(e.target)) close(); });
+  }
+
+  document.querySelectorAll(".combobox").forEach(initCombobox);
+
+  // ── View count ────────────────────────────────────────────────────────────
+  const vcEl = document.getElementById("cand-view-count");
+  if (vcEl) {
+    const { token, host } = vcEl.dataset;
+    if (token && host) {
+      fetch(`${host}/v0/pipes/views_by_page.json?token=${token}&page_id=/candidates`)
+        .then(r => r.json())
+        .then(data => {
+          const views = data?.data?.[0]?.hits;
+          if (views != null) vcEl.textContent = `${Number(views).toLocaleString()} views`;
+        })
+        .catch(() => {});
+    }
+  }
 </script>

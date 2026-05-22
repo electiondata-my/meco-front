@@ -12,7 +12,10 @@ type DropdownEntry = {
 };
 
 export async function getStaticPaths() {
-  const filter = import.meta.env.POST_TO_BUILD;
+  const scope      = import.meta.env.POST_TO_BUILD_PARTIES;
+  const anyScope   = !!(import.meta.env.POST_TO_BUILD_CANDIDATES || import.meta.env.POST_TO_BUILD_ELECTIONS || scope);
+  if (anyScope && !scope) return [];
+  const slugFilter = scope && scope !== 'all' ? new Set(scope.split(',')) : null;
 
   let entries: DropdownEntry[] = [];
   try {
@@ -24,7 +27,7 @@ export async function getStaticPaths() {
 
   return entries.flatMap(e =>
     stateCodes
-      .filter(() => !filter || e.party_uid === filter)
+      .filter(() => !slugFilter || slugFilter.has(e.party_uid))
       .map(stateCode => ({
         params: { party: `${e.party_uid}/${stateCode}` },
         props:  { partyUid: e.party_uid, stateCode },

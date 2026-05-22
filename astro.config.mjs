@@ -12,6 +12,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   output: 'static',
   site: 'https://electiondata.my',
+  build: {
+    concurrency: 12,
+  },
   integrations: [
     react(),
     mdx(),

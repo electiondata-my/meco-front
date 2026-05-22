@@ -1,26 +1,50 @@
 ---
 import CandidatePage from "@src/components/Candidates/CandidatePage.astro";
 import { fetchJSON } from "@src/lib/api";
+import { getTranslations } from "@i18n/index";
 
 type DropdownEntry = { name: string; slug: string; c: string; w: string; l: string };
+type CandidateElection = {
+  type: "parlimen" | "dun";
+  election_name: string;
+  date: string;
+  seat: string;
+  party: string;
+  party_uid?: string;
+  votes: number;
+  votes_perc: number;
+  result: string;
+};
 
 export async function getStaticPaths() {
-  const filter = import.meta.env.POST_TO_BUILD;
+  const scope      = import.meta.env.POST_TO_BUILD_CANDIDATES;
+  const anyScope   = !!(scope || import.meta.env.POST_TO_BUILD_ELECTIONS || import.meta.env.POST_TO_BUILD_PARTIES);
+  if (anyScope && !scope) return [];
+  const slugFilter = scope && scope !== 'all' ? new Set(scope.split(',')) : null;
+  const r2 = import.meta.env.PUBLIC_API_URL_R2;
 
-  let entries: DropdownEntry[] = [];
-  try {
-    const json = await fetchJSON<{ data: DropdownEntry[] }>("/candidates/dropdown.json");
-    entries = json.data ?? [];
-  } catch {
-    // non-fatal — build produces zero candidate pages if API is unreachable
-  }
+  const [dropdownJson, allData, translations] = await Promise.all([
+    fetchJSON<{ data: DropdownEntry[] }>("/candidates/dropdown.json", r2).catch(() => ({ data: [] as DropdownEntry[] })),
+    fetchJSON<Record<string, CandidateElection[]>>("/candidates/all.json", r2).catch(() => ({} as Record<string, CandidateElection[]>)),
+    getTranslations("en-GB", ["common", "candidates"]),
+  ]);
 
-  return entries
-    .filter(e => !filter || e.slug === filter)
-    .map(e => ({ params: { slug: e.slug } }));
+  const dropdown = dropdownJson.data ?? [];
+
+  return dropdown
+    .filter(e => !slugFilter || slugFilter.has(e.slug))
+    .map(e => ({
+      params: { slug: e.slug },
+      props: { dropdown, candData: allData[e.slug] ?? null, translations },
+    }));
 }
 
 const { slug } = Astro.params as { slug: string };
+const { dropdown, candData, translations } = Astro.props as {
+  dropdown: DropdownEntry[];
+  candData: CandidateElection[] | null;
+  translations: Record<string, Record<string, any>>;
+};
 ---
 
-<CandidatePage slug={slug} />
+<CandidatePage slug={slug} dropdown={dropdown} candData={candData} translations={translations} />

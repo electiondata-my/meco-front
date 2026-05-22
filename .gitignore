@@ -12,6 +12,7 @@ CLAUDE.md
 
 # testing
 /coverage
+scripts/test*
 tb*
 
 # astro

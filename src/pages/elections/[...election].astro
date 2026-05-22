@@ -7,7 +7,10 @@ type ElectionEntry = { state: string; election: string; date: string };
 type DatesJson = { data: ElectionEntry[] };
 
 export async function getStaticPaths() {
-  const filter = import.meta.env.POST_TO_BUILD;
+  const scope      = import.meta.env.POST_TO_BUILD_ELECTIONS;
+  const anyScope   = !!(import.meta.env.POST_TO_BUILD_CANDIDATES || scope || import.meta.env.POST_TO_BUILD_PARTIES);
+  if (anyScope && !scope) return [];
+  const slugFilter = scope && scope !== 'all' ? new Set(scope.split(',')) : null;
 
   let entries: ElectionEntry[] = [];
   try {
@@ -16,7 +19,7 @@ export async function getStaticPaths() {
   } catch { /* non-fatal */ }
 
   return entries
-    .filter(e => !filter || e.election === filter)
+    .filter(e => !slugFilter || slugFilter.has(e.election))
     .flatMap(e => {
       const stateCode = StateKeyByName[e.state];
       if (!stateCode) return [];

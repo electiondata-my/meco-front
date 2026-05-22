@@ -19,6 +19,28 @@ electiondata.my is a public Malaysian election data platform. The vast majority 
 - All data fetching happens in Astro frontmatter `---` blocks (build-time `fetch()`). No runtime data fetch on static pages.
 - The migrated site must have 100% production parity: identical UI, identical features, nothing dropped.
 
+## Data Strategy (Critical for Build Performance)
+
+Static output means **every page renders independently at build time**. Any `fetch()` inside a component (not in `getStaticPaths`) runs once per page, not once per build. With 14,595 candidate pages, a single `fetchJSON` call inside the component body multiplies into 14,595 HTTP requests — each adding ~70–90ms of network latency.
+
+**The rule: `getStaticPaths` fetches once, components fetch never.**
+
+All data that a page needs must be fetched in `getStaticPaths` and distributed as `props`. Components receive `props` only — no `fetchJSON` calls in component bodies.
+
+This applies to two categories:
+1. **Page data** (`candidates/all.json`, `parties/all.json`, etc.) — request a bundled "all" file from the backend if individual-per-slug files exist.
+2. **i18n translations** — fetch all required namespace files once in `getStaticPaths`, pass as a `translations` prop.
+
+**Build time targets (candidates as the benchmark — 14,595 × 2 locales = 29,190 pages):**
+
+| Strategy | Fetches | Est. build time |
+|---|---|---|
+| Current (no fix) | ~29,190 data + ~58,380 i18n | ~20–40 min |
+| `all.json` only | 2 data + ~58,380 i18n | ~12–15 min |
+| `all.json` + i18n as prop | 6 total | **~1–2 min** |
+
+**When to escalate:** If implementing a page requires fetching a file that only exists in per-slug form (no bundled "all" file), **stop and ask the user** before proceeding. The backend can produce a bundled file in ~10 minutes; a naive implementation produces a build that takes 20+ minutes to run. Always prefer requesting the data shape change over accepting a slow build.
+
 ---
 
 ## Resolved Architecture Decisions
@@ -1010,7 +1032,7 @@ All risks are low-severity with known mitigations. None are blockers.
 | **DuckDB WASM / Vite worker error** | `optimizeDeps: { exclude: ['@duckdb/duckdb-wasm'] }` in Vite config. One-line fix. |
 | **Mapbox/Leaflet `window is not defined`** | `client:only="react"` + `ssr: { noExternal: ['mapbox-gl', 'react-map-gl'] }`. Already covered in scaffold. |
 | **`@govtechmy/myds-react` SSR** | `ssr: { noExternal: ['@govtechmy/myds-react'] }`. Already in scaffold config. |
-| **Path enumeration build time** | Add retry logic in `getStaticPaths()`; parallelize fetches. At ~35k pages, target build time is 4–8 min with `build.concurrency` tuned. |
+| **Path enumeration build time** | Root cause is per-component `fetchJSON` calls multiplying across 14k+ pages — not page count itself. Fix: fetch all data + i18n in `getStaticPaths`, pass as props. With bundled `all.json` files and i18n as props, target build time is **~1–2 min** (6 total HTTP fetches). See Data Strategy section. |
 | **`POST_TO_BUILD` + full site consistency** | Surgical builds only update specific pages. If a data change affects multiple pages (e.g. a candidate appears on elections pages too), the webhook payload must list all affected paths. Backend team to document which data changes affect which routes. |
 | **next-themes removal / ImageTheme** | Replace `useTheme` with CSS `.dark img` selector or pass theme as prop. Low-impact, affects a small number of components. |
 | **chartjs-adapter-luxon** | Remove `transpilePackages` workaround from Next config — not needed in Vite. Verify chart rendering after migration. |
