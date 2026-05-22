@@ -1,0 +1,22 @@
+---
+// STUB — no seats/dropdown.json endpoint yet; returns [] until data is ready
+import Layout from "@src/components/Layout/index.astro";
+
+export async function getStaticPaths() {
+  const scope    = import.meta.env.POST_TO_BUILD_SEATS;
+  const anyScope = !!(import.meta.env.POST_TO_BUILD_CANDIDATES || import.meta.env.POST_TO_BUILD_ELECTIONS || import.meta.env.POST_TO_BUILD_PARTIES || scope);
+  if (anyScope && !scope) return [];
+  return [];
+}
+
+const { seat } = Astro.params as { seat: string };
+---
+
+<Layout title="Kerusi — Akan Datang">
+  <div class="mx-auto flex max-w-screen-xl flex-col items-center justify-center gap-4 px-4 py-32">
+    <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900">
+      Akan datang
+    </h1>
+    <p class="text-center text-body-sm text-txt-black-500">{seat}</p>
+  </div>
+</Layout>
