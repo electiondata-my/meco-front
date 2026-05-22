@@ -31,13 +31,18 @@ This applies to two categories:
 1. **Page data** (`candidates/all.json`, `parties/all.json`, etc.) — request a bundled "all" file from the backend if individual-per-slug files exist.
 2. **i18n translations** — fetch all required namespace files once in `getStaticPaths`, pass as a `translations` prop.
 
+**Critical trap — `Layout` fetches i18n on every page render:**
+`src/components/Layout/index.astro` calls `getTranslations(locale, ["common"])` in its frontmatter. Because Layout is included by every page, and because Astro renders each page independently, this call executes once per page — not once per build. With 14,595 candidate pages × 2 locales, that alone produces 29,190 HTTP round-trips to the i18n server during the render phase, on top of what `getStaticPaths` already fetches.
+
+The fix is a module-level cache in both `src/i18n/index.ts` and `src/lib/api.ts`. Since Astro SSG builds run in a single Node.js process, a `Map` at module scope persists for the entire build — each `locale:namespace` key (e.g. `en-GB:common`) is fetched exactly once regardless of how many pages use it. See Phase 1.1 and 1.2 for the cached implementations.
+
 **Build time targets (candidates as the benchmark — 14,595 × 2 locales = 29,190 pages):**
 
 | Strategy | Fetches | Est. build time |
 |---|---|---|
-| Current (no fix) | ~29,190 data + ~58,380 i18n | ~20–40 min |
+| Naive (no cache) | ~29,190 data + ~58,380 i18n | ~20–40 min |
 | `all.json` only | 2 data + ~58,380 i18n | ~12–15 min |
-| `all.json` + i18n as prop | 6 total | **~1–2 min** |
+| `all.json` + i18n cache | ~6 total | **~1–2 min** |
 
 **When to escalate:** If implementing a page requires fetching a file that only exists in per-slug form (no bundled "all" file), **stop and ask the user** before proceeding. The backend can produce a bundled file in ~10 minutes; a naive implementation produces a build that takes 20+ minutes to run. Always prefer requesting the data shape change over accepting a slow build.
 
@@ -299,15 +304,22 @@ Rename all `NEXT_PUBLIC_*` → `PUBLIC_*` across the codebase. Update all refere
 
 ### 1.1 — API layer (`src/lib/api.ts`)
 
-Replace Axios-based `get()` with native `fetch()` for build-time calls:
+Replace Axios-based `get()` with native `fetch()` for build-time calls. Include a module-level cache so each URL is fetched at most once per build (eliminates duplicate fetches when EN and ms-MY `getStaticPaths` both request the same endpoint):
 
 ```ts
 const BASE_S3 = import.meta.env.PUBLIC_API_URL_S3;
 
+// Build-time cache: keyed by full URL. Safe because Astro SSG is single-process.
+const _cache = new Map<string, unknown>();
+
 export async function fetchJSON<T>(path: string, base = BASE_S3): Promise<T> {
-  const res = await fetch(`${base}${path}`);
+  const url = `${base}${path}`;
+  if (_cache.has(url)) return _cache.get(url) as T;
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`fetch failed: ${path} (${res.status})`);
-  return res.json();
+  const data = await res.json() as T;
+  _cache.set(url, data);
+  return data;
 }
 ```
 
@@ -316,18 +328,30 @@ export async function fetchJSON<T>(path: string, base = BASE_S3): Promise<T> {
 
 ### 1.2 — i18n system (`src/i18n/index.ts`)
 
+Include a module-level cache. `Layout/index.astro` calls `getTranslations` in its frontmatter, which runs once per page render — without caching this produces one HTTP request per page per namespace (see Data Strategy for the full explanation):
+
 ```ts
+const BASE_I18N = import.meta.env.PUBLIC_I18N_URL;
+
+// Build-time cache: keyed by "locale:namespace". Safe because Astro SSG is single-process.
+const _cache = new Map<string, Record<string, any>>();
+
+async function fetchNs(locale: string, ns: string): Promise<Record<string, any>> {
+  const key = `${locale}:${ns}`;
+  if (_cache.has(key)) return _cache.get(key)!;
+  try {
+    const data = await fetch(`${BASE_I18N}/${locale}/${ns}.json`).then(r => r.json());
+    _cache.set(key, data);
+    return data;
+  } catch {
+    _cache.set(key, {});
+    return {};
+  }
+}
+
 export async function getTranslations(locale: string, namespaces: string[]) {
-  const base = import.meta.env.PUBLIC_I18N_URL;
-  const results = await Promise.allSettled(
-    namespaces.map(ns => fetch(`${base}/${locale}/${ns}.json`).then(r => r.json()))
-  );
-  return Object.fromEntries(
-    namespaces.map((ns, i) => [
-      ns,
-      results[i].status === 'fulfilled' ? results[i].value : {}
-    ])
-  );
+  const results = await Promise.all(namespaces.map(ns => fetchNs(locale, ns)));
+  return Object.fromEntries(namespaces.map((ns, i) => [ns, results[i]]));
 }
 
 export function t(
@@ -345,6 +369,7 @@ export function t(
 - [x] Translations are fetched in Astro frontmatter only — never in the browser
 - [x] React islands receive pre-translated strings as props from the `.astro` parent
 - [x] Remove `next-i18next`, `i18next`, `react-i18next` from dependencies
+- [x] **Cache required:** `Layout` calls `getTranslations` on every page — without the cache, each of ~30k page renders makes an individual HTTP request to the i18n server
 
 ### 1.3 — `src/layouts/BaseLayout.astro`
 
@@ -693,6 +718,20 @@ All candidate data is fetched at build time. The page is purely presentational �
 - [ ] Coalition grouping renders correctly
 - [ ] State filter (if interactive) works within the React island
 - [ ] Both locales
+
+### Stress-test deployment (Phase 5 checkpoint)
+
+Before fully implementing Parties, Elections, and Seats, a Cloudflare Pages stress-test was run with ~30k candidate pages to validate build time and deployment pipeline.
+
+**Approach:** Parties and Elections pages were temporarily replaced with "Coming soon" stubs (their real implementations preserved in commit `cd1529011c0440204a61dafadb88f3b435b3f08c`). Stubs kept the correct `getStaticPaths()` (real dropdown fetches, real POST_TO_BUILD filtering) so the path count was accurate, but the component body was just a `<Layout>` wrapper with a heading. Seats pages did not exist yet and were stubbed with `return []` (no `seats/dropdown.json` endpoint).
+
+**To restore the real implementations:**
+```bash
+git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/parties/[...party].astro
+git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...party].astro
+git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/elections/[...election].astro
+git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/elections/[...election].astro
+```
 
 **Verify Phase 5:**
 - [ ] Home page fully functional in both locales — dropdown navigation works, zero React JS in bundle

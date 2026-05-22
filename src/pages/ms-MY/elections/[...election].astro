@@ -1,5 +1,7 @@
 ---
-import ElectionsPage from "@src/components/Elections/ElectionsPage.astro";
+// STUB — restore real implementation from commit cd1529011c0440204a61dafadb88f3b435b3f08c
+// git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/elections/[...election].astro
+import Layout from "@src/components/Layout/index.astro";
 import { fetchJSON } from "@src/lib/api";
 import { StateKeyByName } from "@src/lib/constants";
 
@@ -33,4 +35,13 @@ export async function getStaticPaths() {
 const { stateCode, electionName } = Astro.props as { stateCode: string; electionName: string };
 ---
 
-<ElectionsPage stateCode={stateCode} electionName={electionName} />
+<Layout title="Pilihan Raya — Akan Datang">
+  <div class="mx-auto flex max-w-screen-xl flex-col items-center justify-center gap-4 px-4 py-32">
+    <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900">
+      Akan datang
+    </h1>
+    <p class="text-center text-body-sm text-txt-black-500">
+      {stateCode} / {electionName}
+    </p>
+  </div>
+</Layout>

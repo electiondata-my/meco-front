@@ -1,24 +1,31 @@
 const BASE_I18N = import.meta.env.PUBLIC_I18N_URL;
 
+// Build-time cache: keyed by "locale:namespace". Safe because Astro SSG is single-process.
+const _cache = new Map<string, Record<string, any>>();
+
+async function fetchNs(locale: string, ns: string): Promise<Record<string, any>> {
+  const key = `${locale}:${ns}`;
+  if (_cache.has(key)) return _cache.get(key)!;
+  try {
+    const data = await fetch(`${BASE_I18N}/${locale}/${ns}.json`).then(r => r.json());
+    _cache.set(key, data);
+    return data;
+  } catch {
+    _cache.set(key, {});
+    return {};
+  }
+}
+
 /**
  * Fetches one or more i18n namespaces at build time (Astro frontmatter only).
- * Falls back to {} for any namespace that fails to load.
+ * Results are cached in-process so each locale+namespace is fetched exactly once.
  */
 export async function getTranslations(
   locale: string,
   namespaces: string[],
 ): Promise<Record<string, Record<string, any>>> {
-  const results = await Promise.allSettled(
-    namespaces.map(ns =>
-      fetch(`${BASE_I18N}/${locale}/${ns}.json`).then(r => r.json()),
-    ),
-  );
-  return Object.fromEntries(
-    namespaces.map((ns, i) => [
-      ns,
-      results[i].status === 'fulfilled' ? results[i].value : {},
-    ]),
-  );
+  const results = await Promise.all(namespaces.map(ns => fetchNs(locale, ns)));
+  return Object.fromEntries(namespaces.map((ns, i) => [ns, results[i]]));
 }
 
 /**
