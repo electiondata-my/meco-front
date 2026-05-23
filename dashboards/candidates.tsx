@@ -1,5 +1,6 @@
 import { BaseResult, Candidate, ElectionResource } from "./types";
 import FullResults, { Result } from "@components/Election/FullResults";
+import ResultBadge from "@components/Election/ResultBadge";
 import { generateSchema } from "@lib/schema/election-explorer";
 import { get } from "@lib/api";
 import { ComboBox, Container, Hero, Panel, Tabs } from "@components/index";
@@ -55,6 +56,9 @@ const ElectionCandidatesDashboard: FunctionComponent<
   const DEFAULT_CANDIDATE = "CMVBA";
   const CANDIDATE_OPTION = CANDIDATE_OPTIONS.find(
     (e) => e.value === (params.candidate ?? DEFAULT_CANDIDATE),
+  );
+  const SELECTED_CANDIDATE = selection.find(
+    (e) => e.slug === (params.candidate ?? DEFAULT_CANDIDATE),
   );
 
   const allElections = useMemo(
@@ -116,7 +120,13 @@ const ElectionCandidatesDashboard: FunctionComponent<
                 header: t("votes_won"),
               },
             ])}
-            highlighted={CANDIDATE_OPTION?.label}
+            highlighted={{
+              name: SELECTED_CANDIDATE?.name,
+              votes: row.original.votes,
+            }}
+            mobileTriggerPrefix={
+              <ResultBadge hidden value={row.original.result} />
+            }
           />
         );
       },
@@ -260,6 +270,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     context: "all",
                   })}
                   hideNameInMobileParty
+                  compactElectionCard
                 />
               </Panel>
               <Panel name={t("parlimen")}>
@@ -273,6 +284,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     context: "parliament",
                   })}
                   hideNameInMobileParty
+                  compactElectionCard
                 />
               </Panel>
               <Panel name={t("dun")}>
@@ -286,6 +298,7 @@ const ElectionCandidatesDashboard: FunctionComponent<
                     context: "dun",
                   })}
                   hideNameInMobileParty
+                  compactElectionCard
                 />
               </Panel>
             </Tabs>
