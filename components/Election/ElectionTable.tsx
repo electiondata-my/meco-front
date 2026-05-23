@@ -21,7 +21,7 @@ export interface ElectionTableProps {
   data?: any;
   columns: Array<ColumnDef<any, any>>;
   highlightedRows?: Array<number>;
-  highlighted?: string;
+  highlighted?: string | Record<string, any>;
   result?: ElectionResult;
   isLoading: boolean;
   headerClassName?: string;
@@ -43,6 +43,8 @@ export interface ElectionTableProps {
   scrollable?: boolean;
   /** When true, renders a compact 3-column table on mobile (Name | Party | Votes Won) for use in the FullResult modal drawer. */
   compactMobileTable?: boolean;
+  /** When true, renders a compact single-card-per-row layout on mobile combining election+seat on one line (candidates page). */
+  compactElectionCard?: boolean;
   /** Desktop column id that takes remaining width and truncates to a single line. */
   flexibleColumnId?: string;
 }
@@ -108,6 +110,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
   simpleMobileTable = false,
   scrollable = false,
   compactMobileTable = false,
+  compactElectionCard = false,
   flexibleColumnId,
 }) => {
   const { t, i18n } = useTranslation(["common", "election", "party"]);
@@ -504,7 +507,11 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
 
   const isHighlighted = (row: any) => {
     if (highlightedRows) return highlightedRows.includes(row.index);
-    else if ("name" in row.original) return row.original.name === highlighted;
+    else if (highlighted && typeof highlighted === "object") {
+      return Object.entries(highlighted).every(
+        ([key, value]) => row.original[key] === value,
+      );
+    } else if ("name" in row.original) return row.original.name === highlighted;
     else if ("party" in row.original) return row.original.party === highlighted;
     else return false;
   };
@@ -581,8 +588,8 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                           "sticky top-0 z-10 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
                           isFirstCol
                             ? compactFirstColumn
-                              ? "pl-2 pr-3"
-                              : "pl-4 pr-3"
+                              ? "pl-0 pr-3"
+                              : "pl-3 pr-3"
                             : "px-3",
                           isLastCol && isFullResultCol && "pr-1 text-right",
                           fullBorder && "border border-b-2 text-body-xs",
@@ -657,8 +664,8 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                                 "whitespace-nowrap",
                               isFirstCol
                                 ? compactFirstColumn
-                                  ? "pl-2 pr-3"
-                                  : "pl-4 pr-3"
+                                  ? "pl-0 pr-3"
+                                  : "pl-3 pr-3"
                                 : "px-3",
                               isLastCol && isFullResultCol && "pr-1 text-right",
                               fullBorder && "border",
@@ -703,7 +710,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                               "sticky top-0 whitespace-nowrap border-b-2 border-otl-gray-200 bg-bg-white py-3 font-medium",
                               isFirst ? "left-0 z-30" : "z-20",
                               isFirst
-                                ? `${compactFirstColumn ? "pl-2" : "pl-4"} pr-3`
+                                ? `${compactFirstColumn ? "pl-0" : "pl-4"} pr-3`
                                 : "px-3",
                             )}
                           >
@@ -785,7 +792,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                               className={clx(
                                 "py-[11px]",
                                 isFirst
-                                  ? `sticky left-0 z-10 w-px whitespace-nowrap ${compactFirstColumn ? "pl-2" : "pl-4"} pr-3 ${stickyBg}`
+                                  ? `sticky left-0 z-10 w-px whitespace-nowrap ${compactFirstColumn ? "pl-0" : "pl-4"} pr-3 ${stickyBg}`
                                   : "px-3",
                               )}
                             >
@@ -807,7 +814,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
             <table className="w-full text-left text-body-sm">
               <thead>
                 <tr>
-                  <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white py-3 pl-2 pr-3 font-medium">
+                  <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white py-3 pl-0 pr-3 font-medium">
                     {t("candidate_name")}
                   </th>
                   <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white px-3 py-3 text-center font-medium">
@@ -845,7 +852,7 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
                       {/* Name */}
                       <td
                         className={clx(
-                          "w-full min-w-0 py-3 pl-2 pr-3",
+                          "w-full min-w-0 py-3 pl-0 pr-3",
                           highlight && "font-medium",
                         )}
                       >
@@ -913,9 +920,131 @@ const ElectionTable: FunctionComponent<ElectionTableProps> = ({
           </div>
         )}
 
+        {/* Mobile – compact election card (candidates page) */}
+        {compactElectionCard &&
+          !simpleMobileTable &&
+          !compactMobileTable &&
+          data.map((row: any, idx: number) => {
+            if (row.change_en) {
+              const isMalay =
+                i18n.language && i18n.language.startsWith("ms");
+              return (
+                <div
+                  key={"explanation-mobile-" + idx}
+                  className="border-b border-otl-gray-200 bg-bg-washed p-3 text-center text-body-sm italic text-txt-black-700 md:hidden"
+                >
+                  {isMalay && row.change_ms ? row.change_ms : row.change_en}
+                </div>
+              );
+            }
+            const tableRow = table
+              .getRowModel()
+              .rows.find((r: any) => r.index === idx);
+            if (!tableRow) return null;
+            const highlight = isHighlighted(tableRow);
+
+            const cells: Record<string, any> = {};
+            tableRow.getVisibleCells().forEach((cell: any) => {
+              cells[cell.column.columnDef.id] = cell;
+            });
+
+            const orig = tableRow.original;
+            const logoId = orig.party_uid;
+            const partyLogoSrc = logoId
+              ? `/static/images/parties/${logoId}.png`
+              : "/static/images/parties/_fallback_.png";
+            const coalition = orig.coalition;
+            const partyLabel =
+              coalition && coalition !== "ALONE"
+                ? `${orig.party} (${coalition})`
+                : orig.party;
+            const votesPerc = orig.votes_perc;
+            const electionDisplay = formatElectionDisplay(
+              orig.election_name,
+              orig.date,
+              i18n.language ?? "en-GB",
+            );
+
+            return isLoading ? (
+              <div
+                key={idx}
+                className="flex flex-col gap-3.5 border-b border-otl-gray-200 px-3 py-4 first-of-type:border-t-2 md:hidden"
+              >
+                <Skeleton className="w-full" />
+                <Skeleton className="w-28" />
+                <Skeleton className="w-36" />
+              </div>
+            ) : (
+              <div
+                key={idx}
+                className={clx(
+                  "flex flex-col gap-3.5 border-b border-otl-gray-200 px-3 py-4 text-body-sm md:hidden",
+                  idx === 0 && "border-t-2",
+                  highlight ? "bg-bg-black-50" : "bg-inherit",
+                )}
+              >
+                {/* Row 1: election • seat | result badge + expand */}
+                <div className="flex items-start justify-between gap-2">
+                  <p>
+                    <span className="font-semibold">{electionDisplay}</span>
+                    {orig.seat && (
+                      <span className="text-txt-black-700">
+                        {" "}
+                        • {orig.seat}
+                      </span>
+                    )}
+                  </p>
+                  <div className="flex shrink-0 items-center">
+                    {cells.full_result &&
+                      flexRender(
+                        cells.full_result.column.columnDef.cell,
+                        cells.full_result.getContext(),
+                      )}
+                  </div>
+                </div>
+                {/* Row 2: Party */}
+                {cells.party && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-txt-black-500">
+                      {t("party_name")}:
+                    </span>
+                    <div className="relative flex h-4.5 w-8 shrink-0">
+                      <ImageWithFallback
+                        className="border border-otl-gray-200"
+                        src={partyLogoSrc}
+                        width={32}
+                        height={18}
+                        alt={orig.party}
+                      />
+                    </div>
+                    <span className="font-medium">{partyLabel}</span>
+                  </div>
+                )}
+                {/* Row 3: Votes Won */}
+                {cells.votes && (
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap text-txt-black-500">
+                      {t("votes_won")}:
+                    </span>
+                    <BarPerc hidden value={votesPerc} size="w-[100px] h-[5px]" />
+                    <span className="whitespace-nowrap">
+                      {orig.votes !== null
+                        ? numFormat(orig.votes, "standard")
+                        : "—"}
+                      {votesPerc !== null
+                        ? ` (${numFormat(votesPerc, "compact", [1, 1])}%)`
+                        : " (—)"}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
         {/* Mobile – card layout */}
         {!simpleMobileTable &&
           !compactMobileTable &&
+          !compactElectionCard &&
           data.map((row: any, idx: number) => {
             if (row.change_en) {
               const isMalay = i18n.language && i18n.language.startsWith("ms");
