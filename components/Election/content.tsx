@@ -10,7 +10,7 @@ interface FullResultContentProps {
   data: any;
   columns: ColumnDef<any, any>[];
   highlightedRows?: Array<number>;
-  highlighted?: string;
+  highlighted?: string | Record<string, any>;
   loading: boolean;
   result?: ElectionResult;
   votes: {
