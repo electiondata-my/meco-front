@@ -9,12 +9,11 @@ const compat = new FlatCompat({
 module.exports = [
   {
     ignores: [
-      ".next/**",
+      "dist/**",
       "build/**",
       "coverage/**",
       "node_modules/**",
       "out/**",
-      "next-env.d.ts",
       "sw.js",
       "sw.js.map",
       "workbox-*.js",
@@ -24,11 +23,10 @@ module.exports = [
   },
   ...compat.config({
     env: { browser: true, es2020: true },
-    extends: ["prettier", "plugin:@next/next/recommended"],
+    extends: ["prettier"],
     parser: "@typescript-eslint/parser",
     parserOptions: { ecmaVersion: "latest", sourceType: "module" },
     rules: {
-      "@next/next/no-html-link-for-pages": "off",
       "import/no-anonymous-default-export": "off",
     },
   }),

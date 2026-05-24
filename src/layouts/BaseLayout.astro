@@ -1,5 +1,4 @@
 ---
-import { AutoToast } from "@govtechmy/myds-react/toast";
 import "../../styles/globals.css";
 
 interface Props {
@@ -154,6 +153,5 @@ const ogImage = image ?? `${import.meta.env.PUBLIC_APP_URL}/static/images/og_${l
     style="font-family: Inter, sans-serif; --font-poppins: Poppins, sans-serif;"
   >
     <slot />
-    <AutoToast client:load />
   </body>
 </html>

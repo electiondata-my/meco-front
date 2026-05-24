@@ -13,7 +13,7 @@ export default defineConfig({
   output: 'static',
   site: 'https://electiondata.my',
   build: {
-    concurrency: 12,
+    concurrency: 25,
   },
   integrations: [
     react(),
@@ -44,7 +44,7 @@ export default defineConfig({
       },
     },
     ssr: {
-      noExternal: ['@govtechmy/myds-react', 'mapbox-gl', 'react-map-gl'],
+      noExternal: ['mapbox-gl', 'react-map-gl'],
     },
     optimizeDeps: {
       exclude: ['@duckdb/duckdb-wasm'], // Prevents Vite worker resolution error

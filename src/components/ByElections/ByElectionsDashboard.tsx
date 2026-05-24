@@ -91,9 +91,10 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
 
   useEffect(() => {
     const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
-    if (!token) { setViewsLoading(false); return; }
+    const baseUrl = import.meta.env.PUBLIC_API_URL_TB;
+    if (!token || !baseUrl) { setViewsLoading(false); return; }
     fetch(
-      `https://api.us-west-2.aws.tinybird.co/v0/pipes/views_by_page.json?token=${token}&page_id=/byelections`,
+      `${baseUrl}/v0/pipes/views_by_page.json?token=${token}&page_id=/byelections`,
     )
       .then(r => (r.ok ? r.json() : Promise.reject()))
       .then(d => setViews(d?.data?.[0]?.hits ?? null))

@@ -35,16 +35,20 @@ export async function getStaticPaths() {
     .filter(e => !slugFilter || slugFilter.has(e.slug))
     .map(e => ({
       params: { slug: e.slug },
-      props: { dropdown, candData: allData[e.slug] ?? null, translations },
+      props: {
+        currentOption: { name: e.name, slug: e.slug, w: e.w, l: e.l },
+        candData: allData[e.slug] ?? null,
+        translations,
+      },
     }));
 }
 
 const { slug } = Astro.params as { slug: string };
-const { dropdown, candData, translations } = Astro.props as {
-  dropdown: DropdownEntry[];
+const { currentOption, candData, translations } = Astro.props as {
+  currentOption: { name: string; slug: string; w: string; l: string };
   candData: CandidateElection[] | null;
   translations: Record<string, Record<string, any>>;
 };
 ---
 
-<CandidatePage slug={slug} dropdown={dropdown} candData={candData} translations={translations} />
+<CandidatePage slug={slug} currentOption={currentOption} candData={candData} translations={translations} />

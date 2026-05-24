@@ -198,17 +198,23 @@ function numFmt(n: number | null | undefined, dp = 0): string {
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5a.75.75 0 0 1 .75.75V7.5h-1.5V2.25A.75.75 0 0 1 12 1.5ZM11.25 7.5v5.69l-1.72-1.72a.75.75 0 0 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V7.5h3.75a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6.75a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3h4.5Z" /></svg>
             {c("parlimen") || "Parlimen"}
           </a>
-          <a
-            href={NON_SE_STATES.includes(stateCode) ? "#" : `${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
-            class:list={[
-              "flex items-center gap-1 rounded-full px-3 py-1.5 font-medium transition-colors no-underline",
-              !isGE ? "bg-bg-danger-50 text-txt-danger" : "text-txt-black-500 hover:text-txt-black-900",
-              NON_SE_STATES.includes(stateCode) ? "opacity-40 cursor-not-allowed pointer-events-none" : "",
-            ]}
-          >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" /></svg>
-            {c("dun") || "DUN"}
-          </a>
+          {NON_SE_STATES.includes(stateCode) ? (
+            <span class="flex cursor-not-allowed items-center gap-1 rounded-full px-3 py-1.5 font-medium opacity-40 text-txt-black-500">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" /></svg>
+              {c("dun") || "DUN"}
+            </span>
+          ) : (
+            <a
+              href={`${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
+              class:list={[
+                "flex items-center gap-1 rounded-full px-3 py-1.5 font-medium transition-colors no-underline",
+                !isGE ? "bg-bg-danger-50 text-txt-danger" : "text-txt-black-500 hover:text-txt-black-900",
+              ]}
+            >
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" /></svg>
+              {c("dun") || "DUN"}
+            </a>
+          )}
         </div>
       </div>
 
@@ -230,8 +236,8 @@ function numFmt(n: number | null | undefined, dp = 0): string {
       <div class="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-bg-white pb-6">
         <div class="flex items-center justify-between px-4 py-3">
           <p class="font-bold">{c("filters") || "Filters"}</p>
-          <button id="filter-close" class="p-1 text-txt-black-500">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+          <button id="filter-close" aria-label="Close filters" class="p-1 text-txt-black-500">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
           </button>
         </div>
         <div class="divide-y divide-otl-divider px-4">
@@ -242,10 +248,16 @@ function numFmt(n: number | null | undefined, dp = 0): string {
                 class:list={["rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline", isGE ? "border-txt-danger bg-bg-danger-50 text-txt-danger" : "border-otl-gray-200 text-txt-black-500"]}>
                 {c("parlimen") || "Parlimen"}
               </a>
-              <a href={NON_SE_STATES.includes(stateCode) ? "#" : `${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
-                class:list={["rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline", !isGE ? "border-txt-danger bg-bg-danger-50 text-txt-danger" : "border-otl-gray-200 text-txt-black-500", NON_SE_STATES.includes(stateCode) ? "opacity-40 pointer-events-none" : ""]}>
-                {c("dun") || "DUN"}
-              </a>
+              {NON_SE_STATES.includes(stateCode) ? (
+                <span class="rounded-full border border-otl-gray-200 px-3 py-1.5 text-body-sm font-medium text-txt-black-500 opacity-40 cursor-not-allowed">
+                  {c("dun") || "DUN"}
+                </span>
+              ) : (
+                <a href={`${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
+                  class:list={["rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline", !isGE ? "border-txt-danger bg-bg-danger-50 text-txt-danger" : "border-otl-gray-200 text-txt-black-500"]}>
+                  {c("dun") || "DUN"}
+                </a>
+              )}
             </div>
           </div>
           <div class="grid grid-cols-2 gap-3 py-3">

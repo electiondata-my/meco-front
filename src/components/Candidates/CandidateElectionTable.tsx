@@ -81,6 +81,40 @@ function ResultBadge({ result, cd }: { result: string; cd: (k: string) => string
   );
 }
 
+function ResultIcon({ result }: { result: string }) {
+  const won = result.startsWith("won");
+  return won ? (
+    <svg className="h-5 w-5 shrink-0 text-txt-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+    </svg>
+  ) : (
+    <svg className="h-5 w-5 shrink-0 text-txt-danger" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function ResultLine({ result, cd }: { result: string; cd: (k: string) => string }) {
+  const won = result.startsWith("won");
+  return (
+    <div className="flex flex-wrap items-center gap-x-1.5 text-body-md">
+      <span className="font-bold">ELECTION RESULT:</span>
+      <span className={`flex items-center gap-1 font-normal ${won ? "text-txt-success" : "text-txt-danger"}`}>
+        {resultLabel(result, cd).toUpperCase()}
+        {won ? (
+          <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+          </svg>
+        ) : (
+          <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+          </svg>
+        )}
+      </span>
+    </div>
+  );
+}
+
 export default function CandidateElectionTable({
   parlimen,
   dun,
@@ -206,20 +240,20 @@ export default function CandidateElectionTable({
       ) : (
         <>
         {/* Mobile: compact card list */}
-        <div className="sm:hidden border-t border-otl-gray-200 divide-y divide-otl-gray-200">
+        <div className="divide-y divide-otl-gray-200 border-y border-otl-gray-200 sm:hidden">
           {elections.map((e, idx) => (
             <div key={idx} className="space-y-3 py-4">
               {/* Row 1: election • seat | result + icon */}
               <div className="flex items-start justify-between gap-2">
                 <p className="text-body-sm font-medium leading-snug text-txt-black-900">
-                  {e.election_name} • {e.seat}
+                  {e.election_name} ({new Date(e.date).getFullYear()}) • {e.seat}
                 </p>
                 <button
                   onClick={() => fetchFullResult(e, idx, elections)}
                   className="flex shrink-0 items-center gap-2"
                   aria-label="Full result"
                 >
-                  <ResultBadge result={e.result} cd={cd} />
+                  <ResultIcon result={e.result} />
                   <svg className="h-4 w-4 shrink-0 text-txt-black-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                   </svg>
@@ -376,18 +410,26 @@ export default function CandidateElectionTable({
             {/* Panel — max-w-4xl matches production Dialog */}
             <div className="modal-panel relative z-10 flex max-h-[calc(100%-40px)] w-full flex-col overflow-hidden rounded-t-2xl bg-bg-white shadow-xl sm:max-w-4xl sm:rounded-xl">
               {/* Header */}
-              <div className="flex flex-col space-y-2 px-4 pb-0 pt-4 uppercase sm:px-6 sm:pb-4 sm:pt-5">
-                <div className="flex w-full items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-baseline gap-x-2 text-body-sm">
-                    <span className="font-semibold">{modal.area}</span>
-                    {modal.state && (
-                      <span className="font-normal text-txt-black-500">{modal.state}</span>
-                    )}
+              <div className="flex flex-col gap-3 px-4 pb-0 pt-4 uppercase sm:px-6 sm:pb-2 sm:pt-5">
+                <div className="flex w-full items-start justify-between gap-2">
+                  <div className="flex min-w-0 flex-1 flex-col gap-3">
+                    <div className="flex flex-wrap items-baseline gap-x-1.5 text-body-md">
+                      <span className="font-semibold">{modal.election_name}</span>
+                      <span className="text-txt-black-500" aria-hidden="true">&middot;</span>
+                      <span className="text-txt-black-500">{modal.date}</span>
+                    </div>
+                    <div className="flex flex-wrap items-baseline gap-x-2 text-body-md">
+                      <span className="font-semibold">
+                        {modal.area}
+                        {modal.state ? "," : ""}
+                      </span>
+                      {modal.state && (
+                        <span className="font-normal text-txt-black-500">{modal.state}</span>
+                      )}
+                    </div>
+                    <ResultLine result={modal.result} cd={cd} />
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className="hidden sm:block">
-                      <ResultBadge result={modal.result} cd={cd} />
-                    </span>
+                  <div className="flex shrink-0 items-start">
                     <button
                       onClick={() => setModal((prev) => ({ ...prev, open: false }))}
                       className="shrink-0 rounded-sm p-1 text-txt-black-500 opacity-70 hover:opacity-100"
@@ -399,18 +441,10 @@ export default function CandidateElectionTable({
                     </button>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-x-2 text-body-sm">
-                  <span>{modal.election_name}</span>
-                  <span className="text-txt-black-500">{modal.date}</span>
-                </div>
-                {/* Mobile: result badge on its own line */}
-                <div className="sm:hidden">
-                  <ResultBadge result={modal.result} cd={cd} />
-                </div>
               </div>
 
               {/* Scrollable content — matches FullResultContent */}
-              <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-8 pt-2 text-body-md sm:px-6 sm:pt-6">
+              <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-8 pt-2 text-body-md sm:px-6 sm:pt-2">
                 {modal.loading ? (
                   <div className="flex h-32 items-center justify-center">
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-txt-danger border-t-transparent" />
@@ -418,16 +452,19 @@ export default function CandidateElectionTable({
                 ) : (
                   <>
                     {/* Ballot table */}
-                    <div className="space-y-3">
-                      <p className="font-bold">{c("election_result") || "Election Result"}</p>
+                    <div>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-body-sm">
+                        <table className="w-full table-fixed text-body-sm">
+                          <colgroup>
+                            <col className="w-[45%]" />
+                            <col className="w-[27%]" />
+                            <col className="w-[28%]" />
+                          </colgroup>
                           <thead>
                             <tr className="border-b-2 border-otl-gray-200 font-medium">
                               <th className="py-3 pl-2 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
-                              <th className="px-3 py-3 text-center">{c("party_name") || "Party"}</th>
+                              <th className="px-3 py-3 text-center sm:text-left">{c("party_name") || "Party"}</th>
                               <th className="px-3 py-3 text-left">{c("votes_won") || "Votes"}</th>
-                              <th className="hidden sm:table-cell px-3 py-3 text-left">{c("result") || "Result"}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -438,9 +475,11 @@ export default function CandidateElectionTable({
                                   key={i}
                                   className={`border-b border-otl-gray-200 ${highlight ? "bg-bg-washed" : ""}`}
                                 >
-                                  <td className={`w-full min-w-0 py-3 pl-2 pr-3 ${highlight ? "font-medium" : ""}`}>{b.name}</td>
+                                  <td className={`min-w-0 break-words py-3 pl-2 pr-3 ${highlight ? "font-medium" : ""}`}>
+                                    {b.name}
+                                  </td>
                                   <td className="px-3 py-3">
-                                    <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-center sm:gap-1.5">
+                                    <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
                                       {b.party_uid && (
                                         <div className="relative flex h-[18px] w-8 shrink-0 justify-center">
                                           <img
@@ -460,7 +499,7 @@ export default function CandidateElectionTable({
                                     </div>
                                   </td>
                                   <td className="px-3 py-3">
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                    <div className="flex flex-col gap-2 whitespace-nowrap sm:flex-row sm:items-center">
                                       <div className="h-[5px] w-[80px] shrink-0 overflow-x-hidden rounded-full bg-bg-washed sm:w-[72px]">
                                         {b.votes_perc != null && (
                                           <div
@@ -475,9 +514,6 @@ export default function CandidateElectionTable({
                                       </span>
                                     </div>
                                   </td>
-                                  <td className="hidden sm:table-cell px-3 py-[11px]">
-                                    <ResultBadge result={b.result} cd={cd} />
-                                  </td>
                                 </tr>
                               );
                             })}
@@ -489,9 +525,7 @@ export default function CandidateElectionTable({
                     {/* Voting stats — matches FullResultContent layout */}
                     {modal.votes.length > 0 && (
                       <div className="space-y-3">
-                        <p className="font-bold">
-                          {c("voting_statistics") || "Voting Statistics"}
-                        </p>
+                        <p className="font-bold">SUMMARY STATISTICS</p>
                         <div className="flex flex-col gap-3 text-sm">
                           {modal.votes.map(({ x, abs, perc }) => (
                             <div key={x} className="flex w-[245px] flex-col gap-3 whitespace-nowrap">

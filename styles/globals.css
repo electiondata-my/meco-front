@@ -1,12 +1,12 @@
 @import "mapbox-gl/dist/mapbox-gl.css";
 
-@import "@govtechmy/myds-style/color.css";
+@import "../src/styles/tokens/color.css";
 
 /* Import Light theme */
-@import "@govtechmy/myds-style/light.css";
+@import "../src/styles/tokens/light.css";
 
 /* Import Dark theme */
-@import "@govtechmy/myds-style/dark.css";
+@import "../src/styles/tokens/dark.css";
 
 /* TAILWIND CSS */
 @import "tailwindcss/base";

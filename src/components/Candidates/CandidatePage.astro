@@ -3,7 +3,6 @@ import Layout from "@src/components/Layout/index.astro";
 import { t } from "@i18n/index";
 import CandidateElectionTable from "./CandidateElectionTable";
 
-type DropdownEntry = { name: string; slug: string; c: string; w: string; l: string };
 type CandidateElection = {
   type: "parlimen" | "dun";
   election_name: string;
@@ -18,12 +17,13 @@ type CandidateElection = {
 
 interface Props {
   slug: string;
-  dropdown: DropdownEntry[];
+  candidateOptions?: { label: string; value: string }[] | null;
+  currentOption: { name: string; slug: string; w: string; l: string } | undefined;
   candData: CandidateElection[] | null;
   translations: Record<string, Record<string, any>>;
 }
 
-const { slug, dropdown, candData, translations } = Astro.props;
+const { slug, candidateOptions, currentOption, candData, translations } = Astro.props;
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 
@@ -31,14 +31,6 @@ if (!candData) return Astro.redirect(isMalay ? "/ms-MY/candidates" : "/candidate
 
 const parlimen = candData.filter(e => e.type === "parlimen");
 const dun      = candData.filter(e => e.type === "dun");
-
-const candidateOptions = [...dropdown].sort((a, b) => {
-  const ca = Number(a.c), cb = Number(b.c);
-  if (ca !== cb) return cb - ca;
-  return Number(b.w) - Number(a.w);
-}).map(c => ({ label: `${c.name} (W${c.w}, L${c.l})`, value: c.slug }));
-
-const currentOption = dropdown.find(d => d.slug === slug);
 
 const cd = (key: string) => t(translations.candidates ?? {}, key);
 
@@ -50,6 +42,7 @@ const pageTitle = currentOption
 
 const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
 const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
+const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
 ---
 
 <Layout title={pageTitle}>
@@ -81,12 +74,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
 
     <!-- Candidate search -->
     <div class="mx-auto mt-3 w-full md:w-[679px]">
-      <select id="candidate-select" class="hidden" aria-hidden="true" tabindex="-1">
-        {candidateOptions.map(o => (
-          <option value={o.value} selected={o.value === slug}>{o.label}</option>
-        ))}
-      </select>
-      <div class="combobox relative" data-type="candidate" data-select="candidate-select">
+      <div class="combobox relative" data-type="candidate">
         <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
           <input
             type="text"
@@ -135,19 +123,37 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
   </div>
 </Layout>
 
-<script define:vars={{ localePrefix }}>
+<script define:vars={{ localePrefix, r2Url, preloadedOptions: candidateOptions ?? null }}>
   function esc(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
+  // preloadedOptions is set on the index page (build-time data); null on slug pages
+  var _options = preloadedOptions;
+  var _optionsPromise = preloadedOptions ? Promise.resolve(preloadedOptions) : null;
+
+  function loadOptions() {
+    if (!_optionsPromise) {
+      _optionsPromise = fetch(r2Url + "/candidates/dropdown.json")
+        .then(function(r) { return r.json(); })
+        .then(function(json) {
+          var raw = json.data ?? [];
+          _options = raw.slice()
+            .sort(function(a, b) {
+              var ca = Number(a.c), cb = Number(b.c);
+              if (ca !== cb) return cb - ca;
+              return Number(b.w) - Number(a.w);
+            })
+            .map(function(c) {
+              return { value: c.slug, label: c.name + " (W" + c.w + ", L" + c.l + ")" };
+            });
+          return _options;
+        });
+    }
+    return _optionsPromise;
+  }
+
   function initCombobox(wrapper) {
-    const selectEl = document.getElementById(wrapper.dataset.select);
-    if (!selectEl) return;
-
-    const allOptions = Array.from(selectEl.options)
-      .filter(o => o.value)
-      .map(o => ({ value: o.value, label: o.text.trim() }));
-
     const input     = wrapper.querySelector(".combobox-input");
     const btn       = wrapper.querySelector(".combobox-btn");
     const clearBtn  = wrapper.querySelector(".combobox-clear");
@@ -189,16 +195,32 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
         li.addEventListener("mousedown", e => {
           e.preventDefault();
           selected = li.dataset.value;
-          input.value = allOptions.find(o => o.value === selected)?.label ?? "";
+          input.value = _options?.find(o => o.value === selected)?.label ?? "";
           list.classList.add("hidden");
           window.location.href = `${localePrefix}/candidates/${selected}`;
         });
       });
     }
 
-    function open() {
-      const q = input.value.toLowerCase();
-      render(q ? allOptions.filter(o => o.label.toLowerCase().includes(q)) : allOptions);
+    async function open() {
+      if (!_options) {
+        list.innerHTML = `<li class="px-4 py-2 text-sm italic text-txt-black-500">Loading…</li>`;
+        list.classList.remove("hidden");
+        try {
+          await loadOptions();
+        } catch(e) {
+          list.innerHTML = `<li class="px-4 py-2 text-sm italic text-txt-black-500">Failed to load</li>`;
+          return;
+        }
+      }
+      const q = input.value.toLowerCase().trim();
+      if (!q) {
+        render(_options.slice(0, 7));
+        list.classList.remove("hidden");
+        return;
+      }
+      const tokens = q.split(/\s+/);
+      render(_options.filter(o => tokens.every(tok => o.label.toLowerCase().includes(tok))));
       list.classList.remove("hidden");
     }
 
@@ -222,7 +244,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
         if (isOpen && activeIdx >= 0 && items[activeIdx]) {
           e.preventDefault();
           selected = items[activeIdx].dataset.value;
-          input.value = allOptions.find(o => o.value === selected)?.label ?? "";
+          input.value = _options?.find(o => o.value === selected)?.label ?? "";
           close();
           window.location.href = `${localePrefix}/candidates/${selected}`;
         }
@@ -243,6 +265,11 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
   }
 
   document.querySelectorAll(".combobox").forEach(initCombobox);
+
+  // On slug pages, prefetch in the background so data is ready when the user searches
+  if (!preloadedOptions) {
+    loadOptions().catch(function() {});
+  }
 
   // ── View count ────────────────────────────────────────────────────────────
   const vcEl = document.getElementById("cand-view-count");
