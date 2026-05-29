@@ -7,13 +7,15 @@
     "build": "astro build",
     "start": "astro preview",
     "postbuild": "node scripts/compress-sitemaps.mjs",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "deploy": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=main --commit-dirty=true",
+    "deploy-staging": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=staging --commit-dirty=true"
   },
   "lint-staged": {
     "*.{js,ts,tsx,css,md}": "prettier --write"
   },
   "engines": {
-    "node": "22.x"
+    "node": "24.x"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.6",
@@ -60,8 +62,8 @@
     "luxon": "^3.6.1",
     "mapbox-gl": "^3.13.0",
     "match-sorter": "^8.0.3",
-    "parse5": "^7.3.0",
     "mitt": "^3.0.1",
+    "parse5": "^7.3.0",
     "react": "19.1.0",
     "react-chartjs-2": "^4.3.1",
     "react-dom": "19.1.0",
@@ -104,44 +106,8 @@
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.13",
     "tailwindcss": "3",
-    "webpack": "^5.106.2"
+    "webpack": "^5.106.2",
+    "wrangler": "4.95.0"
   },
-  "packageManager": "pnpm@10.12.1+sha512.f0dda8580f0ee9481c5c79a1d927b9164f2c478e90992ad268bbb2465a736984391d6333d2c327913578b2804af33474ca554ba29c04a8b13060a717675ae3ac",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "core-js",
-      "sharp",
-      "unrs-resolver"
-    ],
-    "overrides": {
-      "glob@>=10.2.0 <10.5.0": "10.5.0",
-      "@isaacs/brace-expansion@<=5.0.0": "5.0.1",
-      "minimatch@<3.1.4": "3.1.4",
-      "minimatch@>=5.0.0 <5.1.8": "5.1.8",
-      "minimatch@>=9.0.0 <9.0.7": "9.0.7",
-      "minimatch@>=10.0.0 <10.2.3": "10.2.3",
-      "rollup@<2.80.0": "2.80.0",
-      "serialize-javascript": "7.0.5",
-      "flatted@<=3.4.1": "3.4.2",
-      "picomatch@<2.3.2": "2.3.2",
-      "picomatch@>=4.0.0 <4.0.4": "4.0.4",
-      "i18next-fs-backend@<2.6.4": "2.6.4",
-      "follow-redirects@<=1.15.11": "1.16.0",
-      "protocol-buffers-schema@<3.6.1": "3.6.1",
-      "js-yaml@>=4.0.0 <4.1.1": "4.1.1",
-      "ajv@<6.14.0": "6.14.0",
-      "ajv@>=8.0.0 <8.18.0": "8.18.0",
-      "brace-expansion@<1.1.13": "1.1.13",
-      "brace-expansion@>=2.0.0 <2.0.3": "2.0.3",
-      "brace-expansion@>=5.0.0 <5.0.6": "5.0.6",
-      "qs@>=6.11.1 <=6.15.1": "6.15.2",
-      "yaml@>=2.0.0 <2.8.3": "2.8.3",
-      "@eslint/plugin-kit@<0.3.4": "0.3.4",
-      "diff@>=5.0.0 <5.2.2": "5.2.2",
-      "fast-uri": "3.1.2",
-      "@babel/plugin-transform-modules-systemjs": "7.29.4",
-      "webpack": "5.106.2",
-      "postcss": "8.5.14"
-    }
-  }
+  "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1"
 }
