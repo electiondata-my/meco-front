@@ -173,6 +173,9 @@ importers:
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
+      parse5:
+        specifier: ^7.3.0
+        version: 7.3.0
       react:
         specifier: 19.1.0
         version: 19.1.0

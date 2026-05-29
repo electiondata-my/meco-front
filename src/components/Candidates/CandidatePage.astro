@@ -134,8 +134,18 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
   var _options = preloadedOptions;
   var _optionsPromise = preloadedOptions ? Promise.resolve(preloadedOptions) : null;
 
+  var SESSION_KEY = "candidateOptions";
+
   function loadOptions() {
     if (!_optionsPromise) {
+      try {
+        var cached = sessionStorage.getItem(SESSION_KEY);
+        if (cached) {
+          _options = JSON.parse(cached);
+          _optionsPromise = Promise.resolve(_options);
+          return _optionsPromise;
+        }
+      } catch {}
       _optionsPromise = fetch(r2Url + "/candidates/dropdown.json")
         .then(function(r) { return r.json(); })
         .then(function(json) {
@@ -149,6 +159,7 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
             .map(function(c) {
               return { value: c.slug, label: c.name + " (W" + c.w + ", L" + c.l + ")" };
             });
+          try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(_options)); } catch {}
           return _options;
         });
     }
