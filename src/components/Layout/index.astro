@@ -31,7 +31,7 @@ const mainNavItems: NavItem[] = [
 ];
 
 const toolItems: NavItem[] = [
-  { title: "Query Builder",          href: "/query-builder", locale: "en-GB" },
+  { title: c("nav.query_builder"),    href: "/query-builder", locale: "en-GB" },
   { title: c("nav.catalogue"),       href: "/data-catalogue" },
   { title: c("nav.openapi"),         href: "/openapi", locale: "en-GB" },
 ];
@@ -111,7 +111,7 @@ const footerSections = [
             <summary
               class="flex cursor-pointer list-none items-center gap-1 rounded-md px-2.5 py-1.5 text-body-sm font-medium text-txt-black-700 transition-colors hover:text-txt-black-900"
             >
-              Tools
+              {c("nav.tools")}
               <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                 <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
               </svg>
@@ -237,7 +237,7 @@ const footerSections = [
         <svg class="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
         </svg>
-        Query Builder
+        {c("nav.query_builder")}
       </a>
 
       <a href="/data-catalogue" class:list={["flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive("/data-catalogue") ? "text-txt-danger" : "text-txt-black-500"]}>

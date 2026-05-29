@@ -1,0 +1,31 @@
+---
+import { parseFragment } from "parse5";
+import DocCodeBlock from "./DocCodeBlock";
+
+const html = await Astro.slots.render("default");
+const fragment = parseFragment(html);
+
+function findCodeNode(node: any): any {
+  if (node?.nodeName === "code") return node;
+  for (const child of node?.childNodes ?? []) {
+    const found = findCodeNode(child);
+    if (found) return found;
+  }
+  return null;
+}
+
+function collectText(node: any): string {
+  if (node?.nodeName === "#text") return node.value ?? "";
+  return (node?.childNodes ?? []).map(collectText).join("");
+}
+
+const codeNode = findCodeNode(fragment);
+const code = collectText(codeNode ?? fragment).trimEnd();
+const className = codeNode?.attrs?.find((attr: { name: string }) => attr.name === "class")?.value ?? "";
+const lang = className
+  .split(/\s+/)
+  .find((name: string) => name.startsWith("language-"))
+  ?.replace("language-", "") ?? "bash";
+---
+
+<DocCodeBlock code={code} lang={lang} className="my-4" />

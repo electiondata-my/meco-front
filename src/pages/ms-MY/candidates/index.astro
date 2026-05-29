@@ -1,3 +1,48 @@
 ---
-return Astro.redirect("/candidates", 302);
+import CandidatePage from "@src/components/Candidates/CandidatePage.astro";
+import { fetchJSON } from "@src/lib/api";
+
+type DropdownEntry = { name: string; slug: string; c: string; w: string; l: string };
+type CandidateElection = {
+  type: "parlimen" | "dun";
+  election_name: string;
+  date: string;
+  seat: string;
+  party: string;
+  party_uid?: string;
+  votes: number;
+  votes_perc: number;
+  result: string;
+};
+
+const DEFAULT_SLUG = "CMVBA";
+const r2 = import.meta.env.PUBLIC_API_URL_R2;
+
+const [dropdownJson, allData] = await Promise.all([
+  fetchJSON<{ data: DropdownEntry[] }>("/candidates/dropdown.json", r2).catch(() => ({ data: [] as DropdownEntry[] })),
+  fetchJSON<Record<string, CandidateElection[]>>("/candidates/all.json", r2).catch(() => ({} as Record<string, CandidateElection[]>)),
+]);
+
+const dropdown = dropdownJson.data ?? [];
+
+const candidateOptions = [...dropdown]
+  .sort((a, b) => {
+    const ca = Number(a.c), cb = Number(b.c);
+    if (ca !== cb) return cb - ca;
+    return Number(b.w) - Number(a.w);
+  })
+  .map(c => ({ label: `${c.name} (W${c.w}, L${c.l})`, value: c.slug }));
+
+const defaultEntry = dropdown.find(e => e.slug === DEFAULT_SLUG);
+const currentOption = defaultEntry
+  ? { name: defaultEntry.name, slug: defaultEntry.slug, w: defaultEntry.w, l: defaultEntry.l }
+  : undefined;
+const candData = (allData[DEFAULT_SLUG] ?? null) as CandidateElection[] | null;
 ---
+
+<CandidatePage
+  slug={DEFAULT_SLUG}
+  candidateOptions={candidateOptions}
+  currentOption={currentOption}
+  candData={candData}
+/>

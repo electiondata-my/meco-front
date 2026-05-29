@@ -22,6 +22,7 @@ const openapi = defineCollection({
   loader: glob({ pattern: '**/*.mdx', base: './src/content/openapi' }),
   schema: z.object({
     title: z.string(),
+    pageTitle: z.string().optional(),
     breadcrumb: z.string(),
     description: z.string(),
     keywords: z.string(),

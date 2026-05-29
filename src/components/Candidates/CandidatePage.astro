@@ -1,6 +1,6 @@
 ---
 import Layout from "@src/components/Layout/index.astro";
-import { t } from "@i18n/index";
+import { getTranslations, t } from "@i18n/index";
 import CandidateElectionTable from "./CandidateElectionTable";
 
 type CandidateElection = {
@@ -20,19 +20,20 @@ interface Props {
   candidateOptions?: { label: string; value: string }[] | null;
   currentOption: { name: string; slug: string; w: string; l: string } | undefined;
   candData: CandidateElection[] | null;
-  translations: Record<string, Record<string, any>>;
 }
 
-const { slug, candidateOptions, currentOption, candData, translations } = Astro.props;
+const { slug, candidateOptions, currentOption, candData } = Astro.props;
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 
 if (!candData) return Astro.redirect(isMalay ? "/ms-MY/candidates" : "/candidates");
 
+const i18n = await getTranslations(locale, ["common", "candidates"]);
+
 const parlimen = candData.filter(e => e.type === "parlimen");
 const dun      = candData.filter(e => e.type === "dun");
 
-const cd = (key: string) => t(translations.candidates ?? {}, key);
+const cd = (key: string) => t(i18n.candidates ?? {}, key);
 
 
 const localePrefix = isMalay ? "/ms-MY" : "";
@@ -116,7 +117,8 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
         candidateName={currentOption?.name ?? slug}
         candidateStats={currentOption ? `W${currentOption.w}, L${currentOption.l}` : undefined}
         apiBase={import.meta.env.PUBLIC_API_URL_S3}
-        translations={{ common: translations.common ?? {}, candidates: translations.candidates ?? {} }}
+        isMalay={isMalay}
+        translations={{ common: i18n.common ?? {}, candidates: i18n.candidates ?? {} }}
       />
     </div>
   </div>
@@ -161,6 +163,19 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
     let selected = "";
     let activeIdx = -1;
 
+    function focusInputWithoutScroll() {
+      const y = window.scrollY;
+      input.focus({ preventScroll: true });
+      window.scrollTo({ top: y, left: window.scrollX });
+    }
+
+    function goToCandidate(value) {
+      try {
+        sessionStorage.setItem("candidateSearchScrollY", String(window.scrollY));
+      } catch {}
+      window.location.href = `${localePrefix}/candidates/${value}`;
+    }
+
     function updateClear() {
       if (!clearBtn) return;
       if (input.value.length > 0) {
@@ -197,7 +212,7 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
           selected = li.dataset.value;
           input.value = _options?.find(o => o.value === selected)?.label ?? "";
           list.classList.add("hidden");
-          window.location.href = `${localePrefix}/candidates/${selected}`;
+          goToCandidate(selected);
         });
       });
     }
@@ -215,7 +230,7 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
       }
       const q = input.value.toLowerCase().trim();
       if (!q) {
-        render(_options.slice(0, 7));
+        render(_options);
         list.classList.remove("hidden");
         return;
       }
@@ -246,25 +261,62 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
           selected = items[activeIdx].dataset.value;
           input.value = _options?.find(o => o.value === selected)?.label ?? "";
           close();
-          window.location.href = `${localePrefix}/candidates/${selected}`;
+          goToCandidate(selected);
         }
       } else if (e.key === "Escape") {
         close();
       }
     });
-    btn.addEventListener("click",    () => { if (selected) window.location.href = `${localePrefix}/candidates/${selected}`; else input.focus(); });
+    btn.addEventListener("click",    () => { if (selected) goToCandidate(selected); else focusInputWithoutScroll(); });
     clearBtn?.addEventListener("mousedown", e => {
       e.preventDefault();
       input.value = "";
       selected = "";
       close();
       updateClear();
-      input.focus();
+      focusInputWithoutScroll();
     });
     document.addEventListener("click", e => { if (!wrapper.contains(e.target)) close(); });
   }
 
   document.querySelectorAll(".combobox").forEach(initCombobox);
+
+  // ── Cmd/Ctrl+K shortcut ───────────────────────────────────────────────────
+  document.addEventListener("keydown", e => {
+    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      const input = document.querySelector(".combobox-input");
+      const clearBtn = document.querySelector(".combobox-clear");
+      if (input) {
+        input.value = "";
+        clearBtn?.classList.add("hidden");
+        clearBtn?.classList.remove("flex");
+        input.focus({ preventScroll: true });
+      }
+    }
+  });
+
+  let savedScrollY = null;
+  try {
+    savedScrollY = sessionStorage.getItem("candidateSearchScrollY");
+  } catch {}
+  if (savedScrollY != null) {
+    try {
+      sessionStorage.removeItem("candidateSearchScrollY");
+    } catch {}
+    const targetScrollY = Number(savedScrollY);
+    if (Number.isFinite(targetScrollY)) {
+      let attempts = 0;
+      const restoreScroll = () => {
+        attempts += 1;
+        window.scrollTo({ top: targetScrollY, left: window.scrollX });
+        if (Math.abs(window.scrollY - targetScrollY) > 1 && attempts < 60) {
+          requestAnimationFrame(restoreScroll);
+        }
+      };
+      requestAnimationFrame(restoreScroll);
+    }
+  }
 
   // On slug pages, prefetch in the background so data is ready when the user searches
   if (!preloadedOptions) {

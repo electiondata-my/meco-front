@@ -46,6 +46,7 @@ interface Props {
   candidateName: string;
   candidateStats?: string;
   apiBase: string;
+  isMalay?: boolean;
   translations: { common: Record<string, any>; candidates: Record<string, any> };
 }
 
@@ -62,6 +63,19 @@ function resultLabel(result: string, cd: (k: string) => string): string {
   if (result === "lost_deposit") return cd("lost_deposit") || "Lost Deposit";
   return result;
 }
+
+function formatElectionName(name: string, isMalay?: boolean): string {
+  if (!isMalay && name === "By-Election") return "By-Elec";
+  if (!isMalay) return name;
+  if (name.startsWith("GE-")) return name.replace(/^GE-/, "PRU-");
+  if (name.startsWith("SE-")) return name.replace(/^SE-/, "PRN-");
+  if (name === "By-Election") return "PRK";
+  return name;
+}
+
+const monoCellClass = "font-['IBM_Plex_Mono','Roboto_Mono',monospace]";
+const monoNumberClass = `${monoCellClass} tabular-nums`;
+const desktopMonoNumberClass = "sm:font-['IBM_Plex_Mono','Roboto_Mono',monospace] sm:tabular-nums";
 
 function ResultBadge({ result, cd }: { result: string; cd: (k: string) => string }) {
   const won = result.startsWith("won");
@@ -94,11 +108,19 @@ function ResultIcon({ result }: { result: string }) {
   );
 }
 
-function ResultLine({ result, cd }: { result: string; cd: (k: string) => string }) {
+function ResultLine({
+  result,
+  cd,
+  c,
+}: {
+  result: string;
+  cd: (k: string) => string;
+  c: (k: string) => string;
+}) {
   const won = result.startsWith("won");
   return (
     <div className="flex flex-wrap items-center gap-x-1.5 text-body-md">
-      <span className="font-bold">ELECTION RESULT:</span>
+      <span className="font-bold">{c("election_result")}:</span>
       <span className={`flex items-center gap-1 font-normal ${won ? "text-txt-success" : "text-txt-danger"}`}>
         {resultLabel(result, cd).toUpperCase()}
         {won ? (
@@ -121,6 +143,7 @@ export default function CandidateElectionTable({
   candidateName,
   candidateStats,
   apiBase,
+  isMalay,
   translations,
 }: Props) {
   const allElections = [...parlimen, ...dun].sort(
@@ -146,7 +169,11 @@ export default function CandidateElectionTable({
   });
 
   const elections = tabIndex === 0 ? allElections : tabIndex === 1 ? parlimen : dun;
-  const TABS = [c("all") || "All Results", c("parlimen") || "Parliament", c("dun") || "DUN"];
+  const TABS = [
+    { label: c("all") || "All Results", count: allElections.length },
+    { label: c("parlimen") || "Parliament", count: parlimen.length },
+    { label: c("dun") || "DUN", count: dun.length },
+  ];
 
   const fetchFullResult = useCallback(
     async (e: CandidateElection, index: number, list: CandidateElection[]) => {
@@ -215,18 +242,21 @@ export default function CandidateElectionTable({
           <span className="text-txt-danger">{displayName}</span>
         </h2>
         <div className="flex h-8 w-fit shrink-0 items-center rounded-lg bg-bg-washed p-0">
-          {TABS.map((tab, i) => (
+          {TABS.map(({ label, count }, i) => (
             <button
               key={i}
               onClick={() => setTabIndex(i)}
               className={[
-                "flex h-8 min-h-8 items-center justify-center whitespace-nowrap px-2.5 py-1.5 text-body-sm font-medium transition-colors",
+                "flex h-8 min-h-8 items-center justify-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 text-body-sm font-medium transition-colors",
                 i === tabIndex
                   ? "rounded-md border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
                   : "text-txt-black-500 hover:text-txt-black-900",
               ].join(" ")}
             >
-              {tab}
+              {label}
+              <span className={`text-body-xs ${i === tabIndex ? "text-txt-black-500" : "text-txt-black-400"}`}>
+                ({count})
+              </span>
             </button>
           ))}
         </div>
@@ -246,7 +276,7 @@ export default function CandidateElectionTable({
               {/* Row 1: election • seat | result + icon */}
               <div className="flex items-start justify-between gap-2">
                 <p className="text-body-sm font-medium leading-snug text-txt-black-900">
-                  {e.election_name} ({new Date(e.date).getFullYear()}) • {e.seat}
+                  {formatElectionName(e.election_name, isMalay)} ({new Date(e.date).getFullYear()}) • {e.seat}
                 </p>
                 <button
                   onClick={() => fetchFullResult(e, idx, elections)}
@@ -302,8 +332,9 @@ export default function CandidateElectionTable({
             <tbody>
               {elections.map((e, idx) => (
                 <tr key={idx} className="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                  <td className="whitespace-nowrap py-2.5 pl-2 pr-4">
-                    {e.election_name} ({new Date(e.date).getFullYear()})
+                  <td className={`whitespace-nowrap py-2.5 pl-2 pr-4 ${monoCellClass}`}>
+                    {formatElectionName(e.election_name, isMalay)}
+                    <span className="ml-1">({new Date(e.date).getFullYear()})</span>
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-txt-black-700">{e.seat}</td>
                   <td className="whitespace-nowrap px-4 py-2.5">
@@ -326,9 +357,9 @@ export default function CandidateElectionTable({
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-[5px] w-[100px] shrink-0 overflow-x-hidden rounded-full bg-bg-washed">
+                  <td className={`px-4 py-2.5 ${monoNumberClass}`}>
+                    <div className="flex items-center gap-px">
+                      <div className="h-[5px] w-[116px] shrink-0 overflow-x-hidden rounded-full bg-bg-washed">
                         {e.votes_perc != null && (
                           <div
                             className="h-full overflow-hidden rounded-full bg-bg-black-900"
@@ -337,8 +368,10 @@ export default function CandidateElectionTable({
                         )}
                       </div>
                       <span className="whitespace-nowrap">
-                        {e.votes?.toLocaleString() ?? "0"}
-                        {` (${e.votes_perc != null ? `${e.votes_perc.toFixed(1)}%` : "—"})`}
+                        <span className="inline-block min-w-[3.75rem] text-right">
+                          {e.votes?.toLocaleString() ?? "0"}
+                        </span>
+                        <span>{` (${e.votes_perc != null ? `${e.votes_perc.toFixed(1)}%` : "—"})`}</span>
                       </span>
                     </div>
                   </td>
@@ -414,7 +447,7 @@ export default function CandidateElectionTable({
                 <div className="flex w-full items-start justify-between gap-2">
                   <div className="flex min-w-0 flex-1 flex-col gap-3">
                     <div className="flex flex-wrap items-baseline gap-x-1.5 text-body-md">
-                      <span className="font-semibold">{modal.election_name}</span>
+                      <span className="font-semibold">{formatElectionName(modal.election_name, isMalay)}</span>
                       <span className="text-txt-black-500" aria-hidden="true">&middot;</span>
                       <span className="text-txt-black-500">{modal.date}</span>
                     </div>
@@ -427,7 +460,7 @@ export default function CandidateElectionTable({
                         <span className="font-normal text-txt-black-500">{modal.state}</span>
                       )}
                     </div>
-                    <ResultLine result={modal.result} cd={cd} />
+                    <ResultLine result={modal.result} cd={cd} c={c} />
                   </div>
                   <div className="flex shrink-0 items-start">
                     <button
@@ -456,15 +489,15 @@ export default function CandidateElectionTable({
                       <div className="overflow-x-auto">
                         <table className="w-full table-fixed text-body-sm">
                           <colgroup>
-                            <col className="w-[45%]" />
-                            <col className="w-[27%]" />
-                            <col className="w-[28%]" />
+                            <col className="w-[43%]" />
+                            <col className="w-[26%]" />
+                            <col className="w-[31%]" />
                           </colgroup>
                           <thead>
                             <tr className="border-b-2 border-otl-gray-200 font-medium">
                               <th className="py-3 pl-2 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
                               <th className="px-3 py-3 text-center sm:text-left">{c("party_name") || "Party"}</th>
-                              <th className="px-3 py-3 text-left">{c("votes_won") || "Votes"}</th>
+                              <th className="py-3 pl-3 pr-4 text-left">{c("votes_won") || "Votes"}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -498,8 +531,8 @@ export default function CandidateElectionTable({
                                       </span>
                                     </div>
                                   </td>
-                                  <td className="px-3 py-3">
-                                    <div className="flex flex-col gap-2 whitespace-nowrap sm:flex-row sm:items-center">
+                                  <td className={`py-3 pl-3 pr-4 ${desktopMonoNumberClass}`}>
+                                    <div className="flex flex-col gap-2 whitespace-nowrap sm:flex-row sm:items-center sm:gap-0.5">
                                       <div className="h-[5px] w-[80px] shrink-0 overflow-x-hidden rounded-full bg-bg-washed sm:w-[72px]">
                                         {b.votes_perc != null && (
                                           <div
@@ -509,8 +542,10 @@ export default function CandidateElectionTable({
                                         )}
                                       </div>
                                       <span className="whitespace-nowrap text-xs sm:text-body-sm">
-                                        {b.votes?.toLocaleString() ?? "0"}
-                                        {` (${b.votes_perc != null ? `${b.votes_perc.toFixed(1)}%` : "—"})`}
+                                        <span className="sm:inline-block sm:min-w-[3.75rem] sm:text-right">
+                                          {b.votes?.toLocaleString() ?? "0"}
+                                        </span>
+                                        <span>{` (${b.votes_perc != null ? `${b.votes_perc.toFixed(1)}%` : "—"})`}</span>
                                       </span>
                                     </div>
                                   </td>
@@ -525,7 +560,7 @@ export default function CandidateElectionTable({
                     {/* Voting stats — matches FullResultContent layout */}
                     {modal.votes.length > 0 && (
                       <div className="space-y-3">
-                        <p className="font-bold">SUMMARY STATISTICS</p>
+                        <p className="font-bold">{c("summary_statistics")}</p>
                         <div className="flex flex-col gap-3 text-sm">
                           {modal.votes.map(({ x, abs, perc }) => (
                             <div key={x} className="flex w-[245px] flex-col gap-3 whitespace-nowrap">

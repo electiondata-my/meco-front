@@ -1,9 +1,12 @@
 ---
 import DocLayout from "@src/components/OpenApi/DocLayout.astro";
 import { mdxComponents } from "@src/components/OpenApi/mdxComponents";
+import PreCodeBlock from "@src/components/OpenApi/mdx/PreCodeBlock.astro";
+import OrderedList from "@src/components/OpenApi/mdx/OrderedList.astro";
 import TabCodeIsland from "@src/components/OpenApi/mdx/TabCodeIsland.astro";
 import TokenInputIsland from "@src/components/OpenApi/mdx/TokenInputIsland.astro";
 import CandidatesApiTesterIsland from "@src/components/OpenApi/mdx/CandidatesApiTesterIsland.astro";
+import UnorderedList from "@src/components/OpenApi/mdx/UnorderedList.astro";
 import { getCollection, render } from "astro:content";
 import { extractToc } from "@src/lib/docs";
 
@@ -21,7 +24,7 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 const toc = extractToc(entry.body ?? "");
-const { title, breadcrumb, description } = entry.data;
+const { title, pageTitle, breadcrumb, description } = entry.data;
 
 // Build the current path from the slug.
 // e.g. entry.id "authentication" → "/openapi/authentication"
@@ -31,10 +34,11 @@ const currentPath = `/openapi/${entry.id}`;
 
 <DocLayout
   title={title}
+  pageTitle={pageTitle}
   description={description}
   breadcrumb={breadcrumb}
   toc={toc}
   currentPath={currentPath}
 >
-  <Content components={{ ...mdxComponents, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland }} />
+  <Content components={{ ...mdxComponents, pre: PreCodeBlock, ol: OrderedList, ul: UnorderedList, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland }} />
 </DocLayout>

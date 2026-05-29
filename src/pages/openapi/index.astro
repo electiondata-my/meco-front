@@ -1,9 +1,12 @@
 ---
 import DocLayout from "@src/components/OpenApi/DocLayout.astro";
 import { mdxComponents } from "@src/components/OpenApi/mdxComponents";
+import PreCodeBlock from "@src/components/OpenApi/mdx/PreCodeBlock.astro";
+import OrderedList from "@src/components/OpenApi/mdx/OrderedList.astro";
 import TabCodeIsland from "@src/components/OpenApi/mdx/TabCodeIsland.astro";
 import TokenInputIsland from "@src/components/OpenApi/mdx/TokenInputIsland.astro";
 import CandidatesApiTesterIsland from "@src/components/OpenApi/mdx/CandidatesApiTesterIsland.astro";
+import UnorderedList from "@src/components/OpenApi/mdx/UnorderedList.astro";
 import { getEntry, render } from "astro:content";
 import { extractToc } from "@src/lib/docs";
 
@@ -12,7 +15,7 @@ if (!entry) return Astro.redirect("/");
 
 const { Content } = await render(entry);
 const toc = extractToc(entry.body ?? "");
-const { title, breadcrumb, description } = entry.data;
+const { title, pageTitle, breadcrumb, description } = entry.data;
 
 let apiStats: { total_hits: number; total_users: number } | null = null;
 const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
@@ -33,6 +36,7 @@ if (token) {
 
 <DocLayout
   title={title}
+  pageTitle={pageTitle}
   description={description}
   breadcrumb={breadcrumb}
   toc={toc}
@@ -40,5 +44,5 @@ if (token) {
   isIntroduction
   apiStats={apiStats}
 >
-  <Content components={{ ...mdxComponents, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland }} />
+  <Content components={{ ...mdxComponents, pre: PreCodeBlock, ol: OrderedList, ul: UnorderedList, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland }} />
 </DocLayout>

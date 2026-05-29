@@ -76,11 +76,11 @@ const electionOptions = allElections.map(e => {
   const label = isMalay
     ? e.election.replace(/^GE/, "PRU").replace(/^SE/, "PRN")
     : e.election;
-  const display = e.isGE ? `Malaysia ${label} (${year})` : `${e.state} ${label} (${year})`;
+  const display = e.isGE ? `Malaysia: ${label} (${year})` : `${e.state}: ${label} (${year})`;
   return { label: display, value: `${e.stateKey}/${e.election}` };
 });
 
-const i18n = await getTranslations(locale, ["common", "home", "seats", "candidates", "parties"]);
+const i18n = await getTranslations(locale, ["common", "home"]);
 const h = (key: string) => t(i18n.home ?? {}, key);
 
 const exploreKeys = ["seats", "candidates", "parties", "byelections", "elections", "redelineation"] as const;
@@ -96,10 +96,10 @@ const tabs = [
   h("tab.elections")  || "Elections",
 ];
 
-const seatSearchLabel      = t(i18n.seats      ?? {}, "search_seat")      || "Search seat…";
-const candidateSearchLabel = t(i18n.candidates ?? {}, "search_candidate") || "Search candidate…";
-const partySearchLabel     = t(i18n.parties    ?? {}, "search_party")     || "Search party…";
-const electionSearchLabel  = h("search_election") || "Search election…";
+const seatSearchLabel      = h("search_seat")      || "Search seat…";
+const candidateSearchLabel = h("search_candidate") || "Search candidate…";
+const partySearchLabel     = h("search_party")     || "Search party…";
+const electionSearchLabel  = h("search_election")  || "Search election…";
 
 const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
 const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
@@ -455,7 +455,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
     function open() {
       const q = input.value.toLowerCase().trim();
       if (!q) {
-        render(allOptions.slice(0, 7));
+        render(allOptions);
         list.classList.remove("hidden");
         return;
       }
@@ -497,6 +497,16 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
   }
 
   document.querySelectorAll<HTMLElement>(".combobox").forEach(initCombobox);
+
+  // ── Cmd/Ctrl+K shortcut ───────────────────────────────────────────────────
+  document.addEventListener("keydown", (e: KeyboardEvent) => {
+    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      const activePanel = [...tabPanels].find(p => !p.classList.contains("hidden"));
+      const input = activePanel?.querySelector<HTMLInputElement>(".combobox-input");
+      if (input) { input.value = ""; input.focus(); }
+    }
+  });
 
   // ── View count ────────────────────────────────────────────────────────────
   const vcEl = document.getElementById("hero-view-count") as HTMLElement | null;

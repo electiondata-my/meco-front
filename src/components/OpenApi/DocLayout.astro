@@ -7,6 +7,7 @@ import type { TocItem } from "@src/lib/docs";
 
 interface Props {
   title: string;
+  pageTitle?: string;
   description?: string;
   breadcrumb: string;
   toc: TocItem[];
@@ -15,16 +16,14 @@ interface Props {
   apiStats?: { total_hits: number; total_users: number } | null;
 }
 
-const { title, description, breadcrumb, toc, currentPath, isIntroduction = false, apiStats } = Astro.props;
+const { title, pageTitle = title, description, breadcrumb, toc, currentPath, isIntroduction = false, apiStats } = Astro.props;
 
 const currentIndex = ALL_PAGES.findIndex(p => p.href === currentPath);
 const prev = currentIndex > 0 ? ALL_PAGES[currentIndex - 1] : null;
 const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] : null;
 
 function numFormat(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "k";
-  return String(n);
+  return n.toLocaleString("en-GB");
 }
 ---
 
@@ -82,7 +81,7 @@ function numFormat(n: number): string {
             "font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]",
             isIntroduction ? "mb-3" : "mb-8",
           ]}>
-            {title}
+            {pageTitle}
           </h1>
 
           <!-- API stats (introduction page only) -->

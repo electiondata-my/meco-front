@@ -1,7 +1,6 @@
 ---
 import CandidatePage from "@src/components/Candidates/CandidatePage.astro";
 import { fetchJSON } from "@src/lib/api";
-import { getTranslations } from "@i18n/index";
 
 type DropdownEntry = { name: string; slug: string; c: string; w: string; l: string };
 type CandidateElection = {
@@ -19,10 +18,9 @@ type CandidateElection = {
 const DEFAULT_SLUG = "CMVBA";
 const r2 = import.meta.env.PUBLIC_API_URL_R2;
 
-const [dropdownJson, allData, translations] = await Promise.all([
+const [dropdownJson, allData] = await Promise.all([
   fetchJSON<{ data: DropdownEntry[] }>("/candidates/dropdown.json", r2).catch(() => ({ data: [] as DropdownEntry[] })),
   fetchJSON<Record<string, CandidateElection[]>>("/candidates/all.json", r2).catch(() => ({} as Record<string, CandidateElection[]>)),
-  getTranslations("en-GB", ["common", "candidates"]),
 ]);
 
 const dropdown = dropdownJson.data ?? [];
@@ -47,5 +45,4 @@ const candData = (allData[DEFAULT_SLUG] ?? null) as CandidateElection[] | null;
   candidateOptions={candidateOptions}
   currentOption={currentOption}
   candData={candData}
-  translations={translations}
 />
