@@ -73,6 +73,27 @@ function formatElectionName(name: string, isMalay?: boolean): string {
   return name;
 }
 
+function PartyFlag({ uid, party }: { uid: string; party: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className="flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
+        ?
+      </span>
+    );
+  }
+  return (
+    <img
+      src={`/static/images/parties/${uid}.png`}
+      alt={party}
+      width={32}
+      height={18}
+      className="shrink-0 border border-otl-gray-200"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 const monoCellClass = "font-['IBM_Plex_Mono','Roboto_Mono',monospace]";
 const monoNumberClass = `${monoCellClass} tabular-nums`;
 const desktopMonoNumberClass = "sm:font-['IBM_Plex_Mono','Roboto_Mono',monospace] sm:tabular-nums";
@@ -236,8 +257,8 @@ export default function CandidateElectionTable({
   return (
     <div className="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
       {/* Heading + tab pills in same row */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <h2 className="text-heading-2xs font-semibold">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="min-w-0 text-heading-2xs font-semibold">
           {cd("title") || "Complete electoral history for "}
           <span className="text-txt-danger">{displayName}</span>
         </h2>
@@ -292,9 +313,7 @@ export default function CandidateElectionTable({
               {/* Row 2: Party */}
               <div className="flex items-center gap-1.5 text-body-sm">
                 <span className="shrink-0 text-txt-black-500">{c("party_name") || "Party"}:</span>
-                {e.party_uid && (
-                  <img src={`/static/images/parties/${e.party_uid}.png`} alt={e.party} width={32} height={18} className="border border-otl-gray-200" />
-                )}
+                {e.party_uid && <PartyFlag uid={e.party_uid} party={e.party} />}
                 <span className="text-txt-black-700">
                   {e.coalition && e.coalition !== "ALONE" ? `${e.party} (${e.coalition})` : e.party}
                 </span>
@@ -339,17 +358,7 @@ export default function CandidateElectionTable({
                   <td className="whitespace-nowrap px-4 py-2.5 text-txt-black-700">{e.seat}</td>
                   <td className="whitespace-nowrap px-4 py-2.5">
                     <div className="flex items-center gap-1.5">
-                      {e.party_uid && (
-                        <div className="relative flex h-[18px] w-8 shrink-0 justify-center">
-                          <img
-                            src={`/static/images/parties/${e.party_uid}.png`}
-                            alt={e.party}
-                            width={32}
-                            height={18}
-                            className="border border-otl-gray-200"
-                          />
-                        </div>
-                      )}
+                      {e.party_uid && <PartyFlag uid={e.party_uid} party={e.party} />}
                       <span>
                         {e.coalition && e.coalition !== "ALONE"
                           ? `${e.party} (${e.coalition})`
@@ -513,17 +522,7 @@ export default function CandidateElectionTable({
                                   </td>
                                   <td className="px-3 py-3">
                                     <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
-                                      {b.party_uid && (
-                                        <div className="relative flex h-[18px] w-8 shrink-0 justify-center">
-                                          <img
-                                            src={`/static/images/parties/${b.party_uid}.png`}
-                                            alt={b.party}
-                                            width={32}
-                                            height={18}
-                                            className="border border-otl-gray-200"
-                                          />
-                                        </div>
-                                      )}
+                                      {b.party_uid && <PartyFlag uid={b.party_uid} party={b.party} />}
                                       <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
                                         {b.coalition && b.coalition !== "ALONE"
                                           ? `${b.party} (${b.coalition})`
