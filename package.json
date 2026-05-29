@@ -8,8 +8,8 @@
     "start": "astro preview",
     "postbuild": "node scripts/compress-sitemaps.mjs",
     "lint": "eslint .",
-    "deploy": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=main --commit-dirty=true",
-    "deploy-staging": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=staging --commit-dirty=true"
+    "deploy": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=main",
+    "deploy-staging": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=staging"
   },
   "lint-staged": {
     "*.{js,ts,tsx,css,md}": "prettier --write"
