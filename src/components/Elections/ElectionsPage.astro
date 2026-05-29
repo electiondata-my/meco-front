@@ -360,7 +360,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
     <!-- Ballot seat — React island -->
     {seats.length > 0 && (
       <BallotSeat
-        client:only="react"
+        client:load
         seats={seats}
         election={electionName}
         state={stateCode}

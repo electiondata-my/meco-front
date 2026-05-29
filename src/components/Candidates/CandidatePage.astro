@@ -111,7 +111,7 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
     <!-- Election history (React island — handles tabs, vote bars, full results modal) -->
     <div class="mt-6 lg:mt-10">
       <CandidateElectionTable
-        client:only="react"
+        client:load
         parlimen={parlimen}
         dun={dun}
         candidateName={currentOption?.name ?? slug}

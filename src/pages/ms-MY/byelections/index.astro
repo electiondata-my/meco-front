@@ -24,7 +24,7 @@ const title = t(i18n.byelections ?? {}, "hero.header");
 
 <Layout title={title}>
   <ByElectionsDashboard
-    client:only="react"
+    client:load
     seats={seats}
     translations={{ common: i18n.common ?? {}, byelections: i18n.byelections ?? {} }}
     apiBaseUrl={apiBase}
