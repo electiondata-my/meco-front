@@ -1,0 +1,29 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import SiteMetricsDashboard from "@src/components/SiteMetrics/SiteMetricsDashboard";
+import { getTranslations, t as tr } from "@i18n/index";
+
+const locale = "ms-MY";
+const i18n = await getTranslations(locale, ["site-metrics"]);
+const ns = i18n["site-metrics"] ?? {};
+
+function flatten(obj: Record<string, any>, prefix = ""): Record<string, string> {
+  return Object.entries(obj).reduce((acc, [k, v]) => {
+    const key = prefix ? `${prefix}.${k}` : k;
+    if (typeof v === "object" && v !== null) Object.assign(acc, flatten(v, key));
+    else acc[key] = String(v);
+    return acc;
+  }, {} as Record<string, string>);
+}
+
+const translations = flatten(ns);
+const tbBase = import.meta.env.PUBLIC_API_URL_TB;
+const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
+---
+
+<Layout
+  title={tr(ns, "meta.title")}
+  description={tr(ns, "meta.description")}
+>
+  <SiteMetricsDashboard client:only="react" tbBase={tbBase} token={token} translations={translations} />
+</Layout>
