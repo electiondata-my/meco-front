@@ -10,7 +10,7 @@ interface FullResultContentProps {
   data: any;
   columns: ColumnDef<any, any>[];
   highlightedRows?: Array<number>;
-  highlighted?: string;
+  highlighted?: string | Record<string, any>;
   loading: boolean;
   result?: ElectionResult;
   votes: {
@@ -24,6 +24,7 @@ interface FullResultContentProps {
   showVotingStats?: boolean;
   compactMobileTable?: boolean;
   headerClassName?: string;
+  showResultHeading?: boolean;
 }
 
 const FullResultContent = ({
@@ -40,13 +41,18 @@ const FullResultContent = ({
   showVotingStats = true,
   compactMobileTable = false,
   headerClassName,
+  showResultHeading = true,
 }: FullResultContentProps) => {
   const { t } = useTranslation("common");
 
   return (
-    <div className="hide-scrollbar flex-1 space-y-4.5 overflow-scroll text-body-md max-md:px-4 max-md:pb-8">
-      <div className="space-y-3">
-        <div className="font-bold">{t("election_result")}</div>
+    <div className="hide-scrollbar min-h-0 space-y-6 overflow-y-auto text-body-md md:flex-1 max-md:px-4 max-md:pb-8">
+      <div className={clx(showResultHeading ? "space-y-3" : "space-y-0")}>
+        {showResultHeading && (
+          <div className="text-body-md font-semibold uppercase">
+            {t("election_result")}
+          </div>
+        )}
         <ElectionTable
           className="w-full overflow-y-auto"
           compactFirstColumn
@@ -67,8 +73,10 @@ const FullResultContent = ({
       </div>
 
       {showVotingStats && (
-        <div className="space-y-3 pt-4">
-          <p className="font-bold">{t("voting_statistics")}</p>
+        <div className="space-y-3">
+          <p className="text-body-md font-semibold uppercase">
+            {t("voting_statistics")}
+          </p>
           {votes && votes.length > 0 ? (
             <div className="flex flex-col gap-3 text-sm">
               {votes.map(({ x, abs, perc }, i: number) =>

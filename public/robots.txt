@@ -1,0 +1,40 @@
+# Allow all legitimate crawlers
+User-agent: *
+Allow: /
+
+# --- SEO tool crawlers ---
+User-agent: AhrefsBot
+User-agent: SemrushBot
+User-agent: SemrushBot-SA
+User-agent: SemrushBot-BA
+User-agent: SemrushBot-SI
+User-agent: SemrushBot-BM
+User-agent: MJ12bot
+User-agent: DotBot
+User-agent: BLEXBot
+User-agent: DataForSeoBot
+User-agent: serpstatbot
+User-agent: PetalBot
+User-agent: RogerBot
+User-agent: linkdexbot
+User-agent: Exabot
+User-agent: SiteAuditBot
+User-agent: seoscanners.net
+Disallow: /
+
+# --- AI training crawlers (no discoverability benefit) ---
+User-agent: Bytespider
+User-agent: CCBot
+User-agent: Diffbot
+User-agent: cohere-ai
+User-agent: ImagesiftBot
+User-agent: omgili
+User-agent: omgilibot
+User-agent: FacebookAds
+Disallow: /
+
+# Host
+Host: https://electiondata.my
+
+# Sitemaps
+Sitemap: https://electiondata.my/sitemap.xml.gz

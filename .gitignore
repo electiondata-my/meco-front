@@ -5,6 +5,9 @@
 .env.astro
 CLAUDE.md
 
+# local only
+CLAUDE.md
+
 # dependencies
 /node_modules
 /.pnp
@@ -18,6 +21,10 @@ tb*
 # astro
 .astro/*
 dist/
+
+# astro
+.astro/*
+dist/*
 
 # production
 /build
@@ -48,7 +55,6 @@ fallback-*.js
 index.html
 
 # sitemaps
-robots.txt
 sitemap*.xml*
 
 # bundle-analyzer

@@ -27,7 +27,7 @@ import { ArrowsPointingOutIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { clx, toDate } from "@lib/helpers";
 import { useData } from "@hooks/useData";
 import { useTranslation } from "@hooks/useTranslation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useMediaQuery } from "@hooks/useMediaQuery";
 import { FullResultContent } from "./content";
 import { ButtonIcon, Button } from "@govtechmy/myds-react/button";
@@ -45,15 +45,17 @@ interface FullResultsProps<T extends Candidate | Seat> {
   onChange: (option: T) => Promise<Result<BaseResult[]>>;
   options: Array<T>;
   columns?: any;
-  highlighted?: string;
+  highlighted?: string | Record<string, any>;
   highlightedRows?: Array<number>;
   currentIndex: number;
   /** When "short", party column shows party code + (coalition) instead of full name. */
   partyNameDisplay?: "full" | "short";
+  /** Content to prepend inside the mobile (Drawer) trigger button, replacing the text label. */
+  mobileTriggerPrefix?: ReactNode;
 }
 
 /**
- * Modal popup for a single constituency result (candidates / seats / trivia / byelections).
+ * Modal popup for a single constituency result (candidates / seats / byelections).
  * For the full election result (parties), use ElectionFullResults instead.
  */
 const FullResults = <T extends Candidate | Seat>({
@@ -64,6 +66,7 @@ const FullResults = <T extends Candidate | Seat>({
   highlightedRows,
   currentIndex,
   partyNameDisplay,
+  mobileTriggerPrefix,
 }: FullResultsProps<T>) => {
   if (!options) return <></>;
 
@@ -106,28 +109,34 @@ const FullResults = <T extends Candidate | Seat>({
     }
   };
 
-  const Trigger = () => (
-    <Button
-      variant="default-ghost"
-      className="border-0 py-0"
-      onClick={() => {
-        setData("loading", true);
-        setOpen(true);
-        getData(options[data.index]);
-        onChange(selected)
-          .then((results) => {
-            if (!results) return;
-            setData("results", results);
-          })
-          .finally(() => setData("loading", false));
-      }}
-    >
-      <ButtonIcon>
-        <ArrowsPointingOutIcon className="h-4.5 w-4.5" />
-      </ButtonIcon>
-      <p className="whitespace-nowrap font-normal">{t("full_result")}</p>
-    </Button>
-  );
+  const Trigger = ({ mobile = false }: { mobile?: boolean }) => {
+    const prefix = mobile ? mobileTriggerPrefix : null;
+    return (
+      <Button
+        variant="default-ghost"
+        className="border-0 py-0"
+        onClick={() => {
+          setData("loading", true);
+          setOpen(true);
+          getData(options[data.index]);
+          onChange(selected)
+            .then((results) => {
+              if (!results) return;
+              setData("results", results);
+            })
+            .finally(() => setData("loading", false));
+        }}
+      >
+        {prefix}
+        <ButtonIcon>
+          <ArrowsPointingOutIcon className="h-4.5 w-4.5" />
+        </ButtonIcon>
+        {!prefix && (
+          <p className="whitespace-nowrap font-normal">{t("full_result")}</p>
+        )}
+      </Button>
+    );
+  };
 
   const Pagination = () => {
     if (options.length > 1)
@@ -183,6 +192,20 @@ const FullResults = <T extends Candidate | Seat>({
     return <></>;
   };
 
+  const ResultHeading = () => (
+    <div className="flex flex-wrap items-center gap-x-1.5 text-body-md font-semibold uppercase">
+      <span>
+        {t("election_result")}
+        {isCandidate && data.badge ? ":" : ""}
+      </span>
+      {isCandidate && data.badge && (
+        <span className="font-normal">
+          <ResultBadge value={data.badge} reversed />
+        </span>
+      )}
+    </div>
+  );
+
   if (isDesktop)
     return (
       <Dialog
@@ -196,22 +219,24 @@ const FullResults = <T extends Candidate | Seat>({
           <Trigger />
         </DialogTrigger>
         <DialogContent className="flex max-h-[calc(100%-40px)] max-w-4xl flex-col">
-          <DialogHeader className="pr-8 uppercase">
+          <DialogHeader className="gap-3 space-y-0 pr-8 uppercase">
             <div className="flex w-full items-center justify-between">
-              <div className="flex flex-wrap gap-x-2 text-lg">
-                <DialogTitle className="text-body-lg font-semibold">
-                  {data.area}
-                </DialogTitle>
-                <DialogDescription className="font-normal text-txt-black-500">
-                  {data.state}
-                </DialogDescription>
+              <div className="flex flex-wrap items-center gap-x-1 text-body-md">
+                <span className="font-semibold">{t(data.election_name, { ns: "election" })}</span>
+                <span className="text-txt-black-500">·</span>
+                <span className="text-txt-black-500">{data.date}</span>
               </div>
-              {isCandidate && <ResultBadge value={data.badge} />}
             </div>
-            <div className="flex flex-wrap gap-x-2 text-body-sm">
-              <span>{t(data.election_name, { ns: "election" })}</span>
-              <span className="text-txt-black-500">{data.date}</span>
+            <div className="flex flex-wrap items-center gap-x-1 text-body-md">
+              <DialogTitle className="text-body-md font-semibold">
+                {data.area}
+                {data.state ? "," : ""}
+              </DialogTitle>
+              <DialogDescription className="text-body-md font-normal text-txt-black-500">
+                {data.state}
+              </DialogDescription>
             </div>
+            <ResultHeading />
           </DialogHeader>
           <FullResultContent
             data={data.results?.data}
@@ -219,10 +244,11 @@ const FullResults = <T extends Candidate | Seat>({
             loading={data.loading}
             highlighted={highlighted}
             highlightedRows={highlightedRows}
-            result={isCandidate ? selected.result : undefined}
+            result={isCandidate ? data.badge : undefined}
             votes={data.results?.votes ?? []}
             partyNameDisplay={partyNameDisplay}
             headerClassName="!bg-bg-dialog"
+            showResultHeading={false}
           />
           <Pagination />
         </DialogContent>
@@ -238,24 +264,28 @@ const FullResults = <T extends Candidate | Seat>({
       }}
     >
       <DrawerTrigger asChild>
-        <Trigger />
+        <Trigger mobile />
       </DrawerTrigger>
-      <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
-        <DrawerHeader className="flex w-full flex-col items-start px-4 py-3 uppercase">
+      <DrawerContent className="pt-0">
+        <DrawerHeader className="flex w-full flex-col items-start gap-3 px-4 py-3 uppercase">
           <div className="flex w-full items-center justify-between">
-            <div className="flex flex-wrap items-center gap-x-2 text-lg">
-              <DrawerTitle className="text-body-lg font-semibold">{data.area}</DrawerTitle>
-              <span className="text-txt-black-500">{data.state}</span>
+            <div className="flex flex-wrap items-center gap-x-1 text-body-md">
+              <span className="font-semibold">{t(data.election_name, { ns: "election" })}</span>
+              <span className="text-txt-black-500">·</span>
+              <span className="text-txt-black-500">{data.date}</span>
             </div>
             <DrawerClose>
               <XMarkIcon className="h-5 w-5 text-txt-black-500" />
             </DrawerClose>
           </div>
-          <div className="flex flex-wrap gap-x-2">
-            <span>{t(data.election_name, { ns: "election" })}</span>
-            <span className="text-txt-black-500">{data.date}</span>
+          <div className="flex flex-wrap items-center gap-x-1 text-body-md">
+            <DrawerTitle className="text-body-md font-semibold">
+              {data.area}
+              {data.state ? "," : ""}
+            </DrawerTitle>
+            <span className="text-txt-black-500">{data.state}</span>
           </div>
-          {isCandidate && <ResultBadge value={data.badge} />}
+          <ResultHeading />
         </DrawerHeader>
         <FullResultContent
           data={data.results?.data}
@@ -263,10 +293,11 @@ const FullResults = <T extends Candidate | Seat>({
           loading={data.loading}
           highlighted={highlighted}
           highlightedRows={highlightedRows}
-          result={isCandidate ? selected.result : undefined}
+          result={isCandidate ? data.badge : undefined}
           votes={data.results?.votes || []}
           partyNameDisplay={partyNameDisplay}
           compactMobileTable
+          showResultHeading={false}
         />
         <DrawerFooter>
           <Pagination />
