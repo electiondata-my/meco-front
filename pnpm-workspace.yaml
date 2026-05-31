@@ -6,7 +6,16 @@ allowBuilds:
   sharp: true
   workerd: true
 
-minimumReleaseAge: '10080 minutes'
+minimumReleaseAge: 10080
+minimumReleaseAgeExclude:
+  - '@cloudflare/workerd-darwin-64@1.20260526.1'
+  - '@cloudflare/workerd-darwin-arm64@1.20260526.1'
+  - '@cloudflare/workerd-linux-64@1.20260526.1'
+  - '@cloudflare/workerd-linux-arm64@1.20260526.1'
+  - '@cloudflare/workerd-windows-64@1.20260526.1'
+  - 'miniflare@4.20260526.0'
+  - 'workerd@1.20260526.1'
+  - 'wrangler@4.95.0'
 
 overrides:
   glob@>=10.2.0 <10.5.0: '10.5.0'
