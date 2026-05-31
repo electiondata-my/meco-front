@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 type CandidateElection = {
@@ -73,9 +73,17 @@ function formatElectionName(name: string, isMalay?: boolean): string {
   return name;
 }
 
-function PartyFlag({ uid, party }: { uid: string; party: string }) {
+function PartyFlag({ uid, party }: { uid?: string; party: string }) {
   const [failed, setFailed] = useState(false);
-  if (failed) {
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth === 0) {
+      setFailed(true);
+    }
+  }, []);
+
+  if (!uid || failed) {
     return (
       <span className="flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
         ?
@@ -84,6 +92,7 @@ function PartyFlag({ uid, party }: { uid: string; party: string }) {
   }
   return (
     <img
+      ref={imgRef}
       src={`/static/images/parties/${uid}.png`}
       alt={party}
       width={32}
@@ -313,7 +322,7 @@ export default function CandidateElectionTable({
               {/* Row 2: Party */}
               <div className="flex items-center gap-1.5 text-body-sm">
                 <span className="shrink-0 text-txt-black-500">{c("party_name") || "Party"}:</span>
-                {e.party_uid && <PartyFlag uid={e.party_uid} party={e.party} />}
+                <PartyFlag uid={e.party_uid} party={e.party} />
                 <span className="text-txt-black-700">
                   {e.coalition && e.coalition !== "ALONE" ? `${e.party} (${e.coalition})` : e.party}
                 </span>
@@ -358,7 +367,7 @@ export default function CandidateElectionTable({
                   <td className="whitespace-nowrap px-4 py-2.5 text-txt-black-700">{e.seat}</td>
                   <td className="whitespace-nowrap px-4 py-2.5">
                     <div className="flex items-center gap-1.5">
-                      {e.party_uid && <PartyFlag uid={e.party_uid} party={e.party} />}
+                      <PartyFlag uid={e.party_uid} party={e.party} />
                       <span>
                         {e.coalition && e.coalition !== "ALONE"
                           ? `${e.party} (${e.coalition})`
