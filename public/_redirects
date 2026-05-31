@@ -1,0 +1,20 @@
+# Cloudflare Pages redirects.
+# Astro middleware does not run in static deployments — these rules are the
+# production equivalent of the ENGLISH_ONLY_PATHS check in src/middleware.ts.
+
+/ms-MY/openapi          /openapi    301
+/ms-MY/openapi/*        /openapi/:splat  301
+/ms-MY/query-builder    /query-builder  301
+/ms-MY/query-builder/*  /query-builder/:splat   301
+/ms-MY/signin           /signin     301
+/ms-MY/signin/*         /signin/:splat   301
+/ms-MY/console          /console    301
+/ms-MY/console/*        /console/:splat  301
+/ms-MY/map              /map        301
+/ms-MY/map/*            /map/:splat 301
+/ms-MY/data-catalogue   /data-catalogue 301
+/ms-MY/data-catalogue/* /data-catalogue/:splat  301
+
+# Auth proxy: rewrite /api/auth/* to the auth Worker (production equivalent of
+# the fetch proxy in src/middleware.ts, which doesn't run in static deployments).
+/api/auth/*  https://auth.electiondata.my/:splat  200

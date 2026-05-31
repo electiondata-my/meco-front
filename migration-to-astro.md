@@ -8,7 +8,7 @@
 
 ## Accessing Legacy Source Files
 
-All root-level Next.js source directories (`pages/`, `dashboards/`, `components/`, `charts/`, `hooks/`) have been deleted from the working tree as of the `refactor/astro` branch. The original files remain accessible via git:
+All root-level Next.js source directories (`pages/`, `dashboards/`, `components/`, `charts/`, `hooks/`) have been deleted from the working tree as on the `refactor/astro` branch as of 2026-05-31. The original files remain accessible via git:
 
 ```bash
 # View a specific legacy page
@@ -791,17 +791,17 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 | **Current** | `pages/signin.tsx` — Cloudflare Turnstile, OTP request/verify flow, all client-side |
 | **Target** | `src/pages/signin.astro` (static shell) + `<SignInForm client:only="react" />` island |
 
-- [ ] Extract all interactive logic into `src/components/SignInForm.tsx`
-- [ ] Turnstile script in `.astro` page `<head>`: `<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />`
-- [ ] `useRouter().replace('/console')` → `window.location.replace('/console')` inside the island
-- [ ] Middleware redirects `ms-MY/signin` → `/signin`
+- [x] Extract all interactive logic into `src/components/SignInForm.tsx`
+- [x] Turnstile script in `.astro` page `<head>`: `<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />`
+- [x] `useRouter().replace('/console')` → `window.location.replace('/console')` inside the island
+- [x] Middleware redirects `ms-MY/signin` → `/signin`
 
 **Parity criteria:**
-- [ ] Email → OTP two-step flow works end-to-end
-- [ ] Turnstile invisible widget renders and challenges correctly
-- [ ] Rate-limit countdown displays correctly (1-second tick)
-- [ ] Already-signed-in users redirected to `/console` on load
-- [ ] Error states display with correct copy
+- [x] Email → OTP two-step flow works end-to-end
+- [x] Turnstile invisible widget renders and challenges correctly
+- [x] Rate-limit countdown displays correctly (1-second tick)
+- [x] Already-signed-in users redirected to `/console` on load
+- [x] Error states display with correct copy
 
 ### 7.2 — API Console (`/console`) — English only, auth-gated
 
@@ -810,20 +810,20 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 | **Current** | `pages/console.tsx` + `dashboards/console/index.tsx` — all client-side, no build-time data |
 | **Target** | `src/pages/console.astro` (static shell) + `<ConsoleDashboard client:only="react" />` island |
 
-- [ ] `ConsoleDashboard` stays entirely as React island — manages API key CRUD, realtime usage stats, auth state
-- [ ] Static shell provides metadata, page title, layout only
-- [ ] Middleware redirects `ms-MY/console` → `/console`
+- [x] `ConsoleDashboard` stays entirely as React island — manages API key CRUD, realtime usage stats, auth state
+- [x] Static shell provides metadata, page title, layout only
+- [x] Middleware redirects `ms-MY/console` → `/console`
 
 **Parity criteria:**
-- [ ] Unauthenticated users redirected to `/signin` (handled inside React island on mount)
-- [ ] API key creation, deletion, and listing work
-- [ ] Usage/stats charts render
-- [ ] All Tinybird queries fire correctly
+- [x] Unauthenticated users redirected to `/signin` (handled inside React island on mount)
+- [x] API key creation, deletion, and listing work
+- [x] Usage/stats charts render
+- [x] All Tinybird queries fire correctly
 
 **Verify Phase 7:**
-- [ ] Sign in flow works end-to-end in staging
-- [ ] Console loads and manages API keys correctly
-- [ ] Auth redirect works for unauthenticated users
+- [x] Sign in flow works end-to-end in staging
+- [x] Console loads and manages API keys correctly
+- [x] Auth redirect works for unauthenticated users
 
 ---
 
