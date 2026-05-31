@@ -1,0 +1,12 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import QueryBuilderDashboard from "@src/components/QueryBuilder/QueryBuilderDashboard";
+
+---
+
+<Layout
+  title="Query Builder — ElectionData.MY"
+  description="Write SQL queries against Malaysian election datasets using DuckDB WASM — runs privately in your browser."
+>
+  <QueryBuilderDashboard client:only="react" />
+</Layout>
