@@ -46,6 +46,7 @@ import { useDuckDB } from "@dashboards/query-builder/useDuckDB";
 
 const MAX_DISPLAY_ROWS = 500;
 const QUERY_SHORTENER_URL = "https://querybuilder.electiondata.my";
+const QUERY_SHORTENER_ALLOWED_ORIGIN = "https://electiondata.my";
 
 interface QueryResult {
   columns: string[];
@@ -653,12 +654,16 @@ export default function QueryBuilderDashboard() {
       "#query-builder-turnstile",
       {
         sitekey: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "",
-        callback: (token: string) =>
-          turnstileCallbackRef.current?.resolve(token),
-        "error-callback": () =>
-          turnstileCallbackRef.current?.reject(
-            new Error("Verification failed"),
-          ),
+        callback: (token: string) => {
+          const cb = turnstileCallbackRef.current;
+          turnstileCallbackRef.current = null;
+          cb?.resolve(token);
+        },
+        "error-callback": () => {
+          const cb = turnstileCallbackRef.current;
+          turnstileCallbackRef.current = null;
+          cb?.reject(new Error("Verification failed"));
+        },
         size: "invisible",
         execution: "execute",
       },
@@ -675,6 +680,13 @@ export default function QueryBuilderDashboard() {
       turnstileCallbackRef.current = { resolve, reject };
       window.turnstile.reset(turnstileWidgetRef.current);
       window.turnstile.execute(turnstileWidgetRef.current);
+
+      setTimeout(() => {
+        if (turnstileCallbackRef.current) {
+          turnstileCallbackRef.current = null;
+          reject(new Error("Verification timed out"));
+        }
+      }, 15000);
     });
   }, []);
 
@@ -957,6 +969,11 @@ export default function QueryBuilderDashboard() {
 
     setShortenState("shortening");
     try {
+      if (window.location.origin !== QUERY_SHORTENER_ALLOWED_ORIGIN) {
+        throw new Error(
+          `The link shortening service cannot be accessed from ${window.location.origin}. It only works on ${QUERY_SHORTENER_ALLOWED_ORIGIN}.`,
+        );
+      }
       const turnstile_token = await getTurnstileToken();
       const res = await fetch(`${QUERY_SHORTENER_URL}/shorten`, {
         method: "POST",
@@ -980,13 +997,17 @@ export default function QueryBuilderDashboard() {
         setShortenError(
           "The query is valid, but Turnstile is not available yet. Try again shortly.",
         );
+      } else if (message === "Verification timed out") {
+        setShortenError(
+          "The query is valid, but Turnstile verification timed out. Please try again.",
+        );
       } else if (message === "Verification failed") {
         setShortenError(
           "The query is valid, but Turnstile verification failed. Please try again.",
         );
       } else if (message === "Failed to fetch") {
         setShortenError(
-          "The query is valid, but the link shortening service could not be reached. Not your fault.",
+          "The query is valid, but the link shortening service could not be reached due to a network failure. Check your connection and try again.",
         );
       } else {
         setShortenError(
