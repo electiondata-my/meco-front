@@ -6,7 +6,6 @@
     "dev": "astro dev",
     "build": "astro build",
     "start": "astro preview",
-    "postbuild": "node scripts/compress-sitemaps.mjs",
     "lint": "eslint .",
     "deploy": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=main",
     "deploy-staging": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=staging"

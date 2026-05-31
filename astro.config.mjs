@@ -12,7 +12,7 @@ export default defineConfig({
   output: 'static',
   site: 'https://electiondata.my',
   build: {
-    concurrency: 25,
+    concurrency: 20,
   },
   integrations: [
     react(),

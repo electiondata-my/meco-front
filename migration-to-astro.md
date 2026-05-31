@@ -1000,7 +1000,8 @@ The catalogue index is a searchable grid of items where all data is already load
     }
   })
   ```
-- [ ] Keep `scripts/compress-sitemaps.mjs` (runs via `postbuild`)
+- [ ] **Sitemap splitting:** With ~40k pages (candidates × 2 locales alone), `@astrojs/sitemap` will split the output into multiple files (`sitemap-0.xml`, `sitemap-1.xml`, etc.) with a `sitemap.xml` index. The exact number of files depends on final page count — verify after a full build.
+- [ ] **Compression:** `scripts/compress-sitemaps.mjs` gzips each sub-sitemap and updates the index to point to `.gz` files. It is currently hardcoded to `sitemap-0.xml` through `sitemap-3.xml` — update the `SUB_SITEMAPS` array once the actual file count is known from a full build. Re-add `"postbuild": "node scripts/compress-sitemaps.mjs"` to `package.json` scripts at that point.
 - [ ] Add Cloudflare Pages `_headers` file for `sitemap.xml.gz` content-encoding header
 
 ### 12.3 — Cloudflare Pages config
@@ -1120,3 +1121,21 @@ All risks are low-severity with known mitigations. None are blockers.
 | **`POST_TO_BUILD` + full site consistency** | Surgical builds only update specific pages. If a data change affects multiple pages (e.g. a candidate appears on elections pages too), the webhook payload must list all affected paths. Backend team to document which data changes affect which routes. |
 | **next-themes removal / ImageTheme** | Replace `useTheme` with CSS `.dark img` selector or pass theme as prop. Low-impact, affects a small number of components. |
 | **chartjs-adapter-luxon** | Remove `transpilePackages` workaround from Next config — not needed in Vite. Verify chart rendering after migration. |
+
+---
+
+## Post-Launch Cleanup
+
+These are known inconsistencies and housekeeping items to address after the June 4th launch. None are blockers.
+
+### Component directory structure inconsistency
+`src/components/` has two different conventions that emerged during the incremental migration:
+- Page components with simple React islands live directly under `src/components/[PageName]/` (e.g. `Candidates/`, `Parties/`, `ByElections/`)
+- Complex React dashboard islands live under `src/components/dashboards/[name]/` (e.g. `dashboards/console/`, `dashboards/query-builder/`)
+
+**Fix:** Standardise to one convention. Recommended: move all page-specific components to `src/components/[PageName]/` and rename `src/components/dashboards/` to `src/components/features/` or eliminate the subdirectory entirely. Update tsconfig aliases and all imports accordingly.
+
+### `src/components/dashboards/` naming
+The `dashboards/` directory name is a holdover from the Next.js architecture. In a standard Astro project, `features/` is a more conventional name for page-specific complex components.
+
+**Fix:** Rename `src/components/dashboards/` → `src/components/features/`. One find-and-replace in tsconfig and imports.
