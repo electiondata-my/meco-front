@@ -15,10 +15,9 @@ electiondata.my is a public Malaysian election data platform. The vast majority 
 ## Non-Negotiable Constraints
 
 - Every page is statically generated at build time (`output: 'static'`). SSR is forbidden.
-- Client islands use either `client:only="react"` or `client:load` — **these are not interchangeable**. The rule:
-  - **`client:load`** — default for any React component whose browser API usage is confined to `useEffect`. Astro SSRs the component to HTML at build time (content is in the static HTML, crawlable by Google) and hydrates it client-side. Use this for interactive data tables, dashboards with tabs/filters, and anything where content SEO matters.
-  - **`client:only="react"`** — use only when a component calls browser APIs at module or render scope (not inside `useEffect`), making SSR impossible: Leaflet, Mapbox GL, DuckDB WASM, Cloudflare Turnstile. `client:only` skips SSR entirely — **the component's rendered content is absent from static HTML and is invisible to search crawlers.**
-  - A `useEffect`-wrapped `window` or `document` call is safe for `client:load`. Only render-scope browser calls require `client:only`.
+- Client islands use either `client:only="react"` or `client:load` — these are not interchangeable:
+  - `client:load` — default for any React component whose browser API usage is confined to `useEffect`. Astro SSRs the component to HTML at build time (content is crawlable by Google) and hydrates client-side.
+  - `client:only="react"` — use only when a component calls browser APIs at module or render scope (Leaflet, Mapbox GL, DuckDB WASM, Cloudflare Turnstile). Skips SSR entirely — content is absent from static HTML.
 - All data fetching happens in Astro frontmatter `---` blocks (build-time `fetch()`). No runtime data fetch on static pages.
 - The migrated site must have 100% production parity: identical UI, identical features, nothing dropped.
 
@@ -150,18 +149,20 @@ The endpoint is not currently in use. If embed functionality is needed in future
 > **How to work through this:** Complete each phase fully before starting the next. After each page/component, verify against production parity criteria before marking done. Errors found early stay cheap.
 
 ```
-Phase 0 — Project scaffold & infrastructure
-Phase 1 — Global layout & i18n system
-Phase 2 — Simple static pages (lowest risk, validate the system)
-Phase 3 — MDX pages
-Phase 4 — Static data pages (small known path sets)
-Phase 5 — Pages previously assumed to need React islands (now static or minimal JS)
-Phase 6 — Data Catalogue (largest path set)
-Phase 7 — Mapbox-heavy pages
-Phase 8 — Auth pages
-Phase 9 — Query Builder (DuckDB WASM — most technically isolated)
-Phase 10 — PWA, sitemap, deploy pipeline
-Phase 11 — Full parity audit
+Phase 0 — Project scaffold & infrastructure ✅ COMPLETE
+Phase 1 — Global layout & i18n system ✅ COMPLETE
+Phase 2 — Simple static pages ✅ COMPLETE
+Phase 3 — MDX pages ✅ COMPLETE
+Phase 4 — Static data pages ✅ COMPLETE
+Phase 5 — Home, Candidates, Parties, Site Metrics ✅ COMPLETE
+Phase 6 — Query Builder (DuckDB WASM)
+Phase 7 — Sign In + API Console (auth pages)
+Phase 8 — Redelineation
+Phase 9 — Elections Explorer
+Phase 10 — Seats (Mapbox + charts, most complex)
+Phase 11 — Data Catalogue
+Phase 12 — PWA, sitemap, deploy pipeline
+Phase 13 — Launch
 ```
 
 ---
@@ -603,9 +604,7 @@ Replaces `components/Layout/index.tsx`. Shell with Header + Footer via slots.
 
 ---
 
-## Phase 5 — Pages Previously Assumed to Need React Islands
-
-> These pages were flagged as React islands in the original audit. After review, most are static or require only vanilla JS. The key rule: if user interaction is navigation (select → go to URL), it's static. If interaction re-renders data on the same page without a navigation, evaluate vanilla JS first before reaching for React.
+## Phase 5 — Home, Candidates, Parties, Site Metrics
 
 ### 5.1 — Home (`/`) ✅ COMPLETE
 
@@ -642,7 +641,207 @@ Replaces `components/Layout/index.tsx`. Shell with Header + Footer via slots.
 - [x] Both locale URLs serve correctly translated content
 - [x] Zero React JS shipped to the browser for this page
 
-### 5.2 — Elections Explorer (`/elections/[[...election]]`)
+### 5.2 — Candidates (`/candidates/[[...slug]]`) 🔄 IN PROGRESS
+
+| | |
+|---|---|
+| **Current** | `pages/candidates/[[...slug]].tsx` — `fallback: "blocking"`. `CandidateDashboard` is React. |
+| **Target** | `src/pages/candidates/[...slug].astro` + `src/pages/ms-MY/candidates/[...slug].astro` — **fully static, no React island** |
+
+All candidate data is fetched at build time. The page is purely presentational — bio, election history, results. No interactive filtering exists that would require a framework.
+
+- [x] `getStaticPaths()` fetches `/candidates/dropdown.json` → enumerates all slugs (with `POST_TO_BUILD` filter)
+- [x] `src/pages/candidates/index.astro` handles the no-param case
+- [x] `src/pages/candidates/[...slug].astro` delegates to `src/components/Candidates/CandidatePage.astro`
+- [x] Fetch full candidate data in frontmatter (`/candidates/{slug}.json`)
+- [x] Hero section, election history table (All / Parlimen / DUN tabs), result badge rendered as `.astro`
+- [x] Party flag shown inline in table rows
+- [x] **`POST_TO_BUILD` support:** implemented
+
+**Still needed (polishing phase):**
+- [x] Search box: currently uses native `<select>` — replace with same custom combobox as home page (rounded pill, red gradient button, fuzzy search)
+- [x] `FullResults` column: production table has a 6th column with a button that opens a popover showing all candidates + vote counts for that specific election/seat (fetches `/results/{seat}/{date}.json` on demand). Astro version has only 5 columns. Decision needed: pre-fetch all result sets at build time and inline them, or add a React island for this column only.
+- [x] Table mobile layout: production `ElectionTable` has a compact mobile view (`hideNameInMobileParty`). Astro version is a plain horizontal-scroll table on mobile.
+- [x] Vote percentage bar: production table shows a bar visual for vote percentage alongside the count. Missing from Astro version.
+- [x] Both locale URLs tested
+
+**Parity criteria:**
+- [ ] `/candidates` index page renders candidates list
+- [x] Individual candidate pages render election history with All/Parlimen/DUN tabs
+- [x] Invalid slugs redirect (no 404 loop)
+- [x] Both locales
+- [x] Custom combobox search matching home page style
+- [ ] FullResults column (decision on pre-fetch vs island)
+- [x] `CandidateElectionTable` mounted as `client:load` — electoral history table (seat names, parties, vote counts) is SSR'd into static HTML and fully crawlable. Confirmed via `curl | grep "Iskandar Puteri"` returning 3 matches (JSON hydration payload + mobile card `<p>` + desktop `<td>`). Was incorrectly `client:only="react"` initially — corrected as part of SEO audit.
+
+### 5.3 — Parties (`/parties/[[...party]]`)
+
+| | |
+|---|---|
+| **Current** | `pages/parties/[[...party]].tsx` — optional catch-all `[party_uid, state_code]`, handles coalitions |
+| **Target** | `src/pages/parties/[...party].astro` + `src/pages/ms-MY/parties/[...party].astro` |
+
+- [ ] `getStaticPaths()` fetches `/parties/dropdown.json`
+- [ ] Party data fetched in frontmatter
+- [ ] `src/pages/parties/index.astro` handles no-param case (party list)
+- [ ] Audit `dashboards/parties.tsx` — chart components stay as React islands; evaluate overall shell
+- [ ] **`POST_TO_BUILD` support:** filter by party UID
+
+**Parity criteria:**
+- [ ] Party profile page: logo, election history, seat wins/losses rendered
+- [ ] Coalition grouping renders correctly
+- [ ] State filter (if interactive) works within the React island
+- [ ] Both locales
+
+### 5.4 — Site Metrics (`/site-metrics`)
+
+| | |
+|---|---|
+| **Current** | `pages/site-metrics.tsx` |
+| **Target** | `src/pages/site-metrics.astro` + `src/pages/ms-MY/site-metrics.astro` |
+
+- [ ] Fetch site metrics data in frontmatter
+- [ ] Audit dashboard components — evaluate which require React islands vs static `.astro`
+- [ ] **`POST_TO_BUILD` not applicable** (single page)
+
+**Parity criteria:**
+- [ ] Page renders correctly in both locales
+- [ ] All charts and metrics display correctly
+
+### Stress-test deployment (Phase 5 checkpoint)
+
+Before fully implementing Parties, a Cloudflare Pages stress-test was run with ~30k candidate pages to validate build time and deployment pipeline.
+
+**Approach:** Parties pages were temporarily replaced with "Coming soon" stubs (their real implementations preserved in commit `cd1529011c0440204a61dafadb88f3b435b3f08c`). Stubs kept the correct `getStaticPaths()` (real dropdown fetches, real POST_TO_BUILD filtering) so the path count was accurate, but the component body was just a `<Layout>` wrapper with a heading.
+
+**To restore the real implementations:**
+```bash
+git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/parties/[...party].astro
+git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...party].astro
+```
+
+**Verify Phase 5:**
+- [ ] Home page fully functional in both locales — dropdown navigation works, zero React JS in bundle
+- [ ] Candidates and Parties render correctly as pure `.astro` in both locales
+- [ ] Site Metrics page renders correctly in both locales
+- [ ] `POST_TO_BUILD` surgical rebuild works end-to-end for at least one candidate — test with Wrangler deploy
+
+---
+
+## Phase 6 — Query Builder (DuckDB WASM)
+
+### 6.1 — Query Builder (`/query-builder`) — English only
+
+| | |
+|---|---|
+| **Current** | `pages/query-builder.tsx` — DuckDB WASM initialised client-side, CodeMirror SQL editor, `@tanstack/react-table` |
+| **Target** | `src/pages/query-builder.astro` + `<QueryBuilderDashboard client:only="react" />` island |
+
+- [ ] `QueryBuilderDashboard` is fully browser-side — `client:only="react"` is non-negotiable
+- [ ] **DuckDB WASM config** — add to `astro.config.mjs`:
+  ```js
+  vite: {
+    optimizeDeps: { exclude: ['@duckdb/duckdb-wasm'] },
+    plugins: [wasm()], // vite-plugin-wasm
+  }
+  ```
+  This resolves the known Vite worker file resolution error. One-line fix.
+- [ ] Remove webpack `asyncWebAssembly: true` experiment from old config (not needed in Vite)
+- [ ] Middleware redirects `ms-MY/query-builder` → `/query-builder`
+
+**Parity criteria:**
+- [ ] DuckDB initialises without errors in browser console
+- [ ] SQL editor (CodeMirror) renders with syntax highlighting
+- [ ] Query runs and results display in table
+- [ ] Dataset selector works
+- [ ] Export to CSV/Parquet works
+
+**Verify Phase 6:**
+- [ ] Query builder loads and DuckDB initialises in Chrome, Firefox, Safari
+- [ ] Run a sample query against a dataset and verify results match production
+
+---
+
+## Phase 7 — Sign In + API Console (auth pages)
+
+### 7.1 — Sign In (`/signin`) — English only
+
+| | |
+|---|---|
+| **Current** | `pages/signin.tsx` — Cloudflare Turnstile, OTP request/verify flow, all client-side |
+| **Target** | `src/pages/signin.astro` (static shell) + `<SignInForm client:only="react" />` island |
+
+- [ ] Extract all interactive logic into `src/components/SignInForm.tsx`
+- [ ] Turnstile script in `.astro` page `<head>`: `<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />`
+- [ ] `useRouter().replace('/console')` → `window.location.replace('/console')` inside the island
+- [ ] Middleware redirects `ms-MY/signin` → `/signin`
+
+**Parity criteria:**
+- [ ] Email → OTP two-step flow works end-to-end
+- [ ] Turnstile invisible widget renders and challenges correctly
+- [ ] Rate-limit countdown displays correctly (1-second tick)
+- [ ] Already-signed-in users redirected to `/console` on load
+- [ ] Error states display with correct copy
+
+### 7.2 — API Console (`/console`) — English only, auth-gated
+
+| | |
+|---|---|
+| **Current** | `pages/console.tsx` + `dashboards/console/index.tsx` — all client-side, no build-time data |
+| **Target** | `src/pages/console.astro` (static shell) + `<ConsoleDashboard client:only="react" />` island |
+
+- [ ] `ConsoleDashboard` stays entirely as React island — manages API key CRUD, realtime usage stats, auth state
+- [ ] Static shell provides metadata, page title, layout only
+- [ ] Middleware redirects `ms-MY/console` → `/console`
+
+**Parity criteria:**
+- [ ] Unauthenticated users redirected to `/signin` (handled inside React island on mount)
+- [ ] API key creation, deletion, and listing work
+- [ ] Usage/stats charts render
+- [ ] All Tinybird queries fire correctly
+
+**Verify Phase 7:**
+- [ ] Sign in flow works end-to-end in staging
+- [ ] Console loads and manages API keys correctly
+- [ ] Auth redirect works for unauthenticated users
+
+---
+
+## Phase 8 — Redelineation
+
+### 8.1 — Redelineation (`/redelineation/[area-year]`)
+
+| | |
+|---|---|
+| **Current** | `pages/redelineation/[[...explorer]].tsx` — complex multi-segment catch-all |
+| **Target** | `src/pages/redelineation/[area-year].astro` + `src/pages/ms-MY/redelineation/[area-year].astro` |
+
+- [ ] `getStaticPaths()` fetches `redelineation/filter.json` → enumerates `area-year` combinations (e.g. `peninsular-2018`, `sabah-2023`)
+- [ ] Default: `src/pages/redelineation/index.astro` redirects to `peninsular-2018`
+- [ ] `?level=parlimen&seat=p001-padang-besar-perlis` query params — read by React island on mount via `window.location.search`. Island calls `history.pushState` when user changes selection so URL stays shareable.
+- [ ] **Mapbox island:** `MapProvider` + full redelineation map → `client:only="react"`. Pass area/year data as props.
+- [ ] **`POST_TO_BUILD` support:** filter by `area-year` slug
+
+**Parity criteria:**
+- [ ] Default `/redelineation` shows peninsular 2018 map
+- [ ] All area-year combinations render
+- [ ] `?level=` toggle switches between parlimen/dun within the island
+- [ ] `?seat=` param highlights/zooms to the correct seat on load
+- [ ] Full URL (e.g. `/redelineation/peninsular-2018?level=parlimen&seat=p001-...`) is shareable and restores state on load
+- [ ] Seat comparison panel shows old vs new boundary data
+- [ ] Both locales
+
+**Map Explorer — deferred.** Feature scope under review; will be reimplemented from scratch post-launch.
+
+**Verify Phase 8:**
+- [ ] Redelineation map renders; query params restore state correctly on load
+- [ ] No `window is not defined` errors during build
+
+---
+
+## Phase 9 — Elections Explorer
+
+### 9.1 — Elections Explorer (`/elections/[[...election]]`)
 
 | | |
 |---|---|
@@ -672,83 +871,47 @@ Replaces `components/Layout/index.tsx`. Shell with Header + Footer via slots.
 - [ ] Invalid state/election combinations return 404
 - [ ] Both locales
 
-### 5.3 — Candidates (`/candidates/[[...slug]]`) 🔄 IN PROGRESS
-
-| | |
-|---|---|
-| **Current** | `pages/candidates/[[...slug]].tsx` — `fallback: "blocking"`. `CandidateDashboard` is React. |
-| **Target** | `src/pages/candidates/[...slug].astro` + `src/pages/ms-MY/candidates/[...slug].astro` — **fully static, no React island** |
-
-All candidate data is fetched at build time. The page is purely presentational — bio, election history, results. No interactive filtering exists that would require a framework.
-
-- [x] `getStaticPaths()` fetches `/candidates/dropdown.json` → enumerates all slugs (with `POST_TO_BUILD` filter)
-- [x] `src/pages/candidates/index.astro` handles the no-param case
-- [x] `src/pages/candidates/[...slug].astro` delegates to `src/components/Candidates/CandidatePage.astro`
-- [x] Fetch full candidate data in frontmatter (`/candidates/{slug}.json`)
-- [x] Hero section, election history table (All / Parlimen / DUN tabs), result badge rendered as `.astro`
-- [x] Party flag shown inline in table rows
-- [x] **`POST_TO_BUILD` support:** implemented
-
-**Still needed (polishing phase):**
-- [ ] Search box: currently uses native `<select>` — replace with same custom combobox as home page (rounded pill, red gradient button, fuzzy search)
-- [ ] `FullResults` column: production table has a 6th column with a button that opens a popover showing all candidates + vote counts for that specific election/seat (fetches `/results/{seat}/{date}.json` on demand). Astro version has only 5 columns. Decision needed: pre-fetch all result sets at build time and inline them, or add a React island for this column only.
-- [ ] Table mobile layout: production `ElectionTable` has a compact mobile view (`hideNameInMobileParty`). Astro version is a plain horizontal-scroll table on mobile.
-- [ ] Vote percentage bar: production table shows a bar visual for vote percentage alongside the count. Missing from Astro version.
-- [ ] Both locale URLs tested
-
-**Parity criteria:**
-- [ ] `/candidates` index page renders candidates list
-- [x] Individual candidate pages render election history with All/Parlimen/DUN tabs
-- [x] Invalid slugs redirect (no 404 loop)
-- [ ] Both locales
-- [ ] Custom combobox search matching home page style
-- [ ] FullResults column (decision on pre-fetch vs island)
-- [x] `CandidateElectionTable` mounted as `client:load` — electoral history table (seat names, parties, vote counts) is SSR'd into static HTML and fully crawlable. Confirmed via `curl | grep "Iskandar Puteri"` returning 3 matches (JSON hydration payload + mobile card `<p>` + desktop `<td>`). Was incorrectly `client:only="react"` initially — corrected as part of SEO audit.
-
-### 5.4 — Parties (`/parties/[[...party]]`)
-
-| | |
-|---|---|
-| **Current** | `pages/parties/[[...party]].tsx` — optional catch-all `[party_uid, state_code]`, handles coalitions |
-| **Target** | `src/pages/parties/[...party].astro` + `src/pages/ms-MY/parties/[...party].astro` |
-
-- [ ] `getStaticPaths()` fetches `/parties/dropdown.json`
-- [ ] Party data fetched in frontmatter
-- [ ] `src/pages/parties/index.astro` handles no-param case (party list)
-- [ ] Audit `dashboards/parties.tsx` — chart components stay as React islands; evaluate overall shell
-- [ ] **`POST_TO_BUILD` support:** filter by party UID
-
-**Parity criteria:**
-- [ ] Party profile page: logo, election history, seat wins/losses rendered
-- [ ] Coalition grouping renders correctly
-- [ ] State filter (if interactive) works within the React island
-- [ ] Both locales
-
-### Stress-test deployment (Phase 5 checkpoint)
-
-Before fully implementing Parties, Elections, and Seats, a Cloudflare Pages stress-test was run with ~30k candidate pages to validate build time and deployment pipeline.
-
-**Approach:** Parties and Elections pages were temporarily replaced with "Coming soon" stubs (their real implementations preserved in commit `cd1529011c0440204a61dafadb88f3b435b3f08c`). Stubs kept the correct `getStaticPaths()` (real dropdown fetches, real POST_TO_BUILD filtering) so the path count was accurate, but the component body was just a `<Layout>` wrapper with a heading. Seats pages did not exist yet and were stubbed with `return []` (no `seats/dropdown.json` endpoint).
-
-**To restore the real implementations:**
-```bash
-git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/parties/[...party].astro
-git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...party].astro
-git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/elections/[...election].astro
-git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/elections/[...election].astro
-```
-
-**Verify Phase 5:**
-- [ ] Home page fully functional in both locales — dropdown navigation works, zero React JS in bundle
+**Verify Phase 9:**
 - [ ] Elections page: static content renders, choropleth map island loads, table column sort works with vanilla JS
-- [ ] Candidates and Parties render correctly as pure `.astro` in both locales
-- [ ] `POST_TO_BUILD` surgical rebuild works end-to-end for at least one candidate — test with Wrangler deploy
+- [ ] No `window is not defined` errors during build
 
 ---
 
-## Phase 6 — Data Catalogue
+## Phase 10 — Seats (Mapbox + charts, most complex)
 
-### 6.1 — Data Catalogue Index (`/data-catalogue`)
+> All Mapbox components must be `client:only="react"`. No SSR attempt. The `.astro` page mounts the island with map config as props. Vite config must have `noExternal: ['mapbox-gl', 'react-map-gl']`.
+
+### 10.1 — Seats (`/seats/[[...seat]]`)
+
+| | |
+|---|---|
+| **Current** | `pages/seats/[[...seat]].tsx` — optional catch-all `[type, seat_slug]`, `fallback: "blocking"` |
+| **Target** | `src/pages/seats/[...seat].astro` + `src/pages/ms-MY/seats/[...seat].astro` |
+
+- [ ] `getStaticPaths()` fetches `/seats/current/dropdown.json` → enumerates all `type/slug` pairs
+- [ ] Seat static data (stats, election history) fetched in frontmatter and passed as props
+- [ ] `src/pages/seats/index.astro` redirects to default seat
+- [ ] **Mapbox island:** `dashboards/my-area/mapbox.tsx` → `<MapboxDashboard client:only="react" {...props} />`. Pass vector tile source config as props from Astro frontmatter. Note: Mapbox GL calls browser APIs at module scope — `client:only` is correct here (unlike data tables, which should use `client:load`).
+- [ ] `NEXT_PUBLIC_MAPBOX_TOKEN` → `PUBLIC_MAPBOX_TOKEN` (already covered in env var section)
+- [ ] **`POST_TO_BUILD` support:** filter by `type/slug`
+
+**Parity criteria:**
+- [ ] Seat page loads with static stats rendered above the map
+- [ ] Mapbox map renders with vector tiles from `mapbox://` sources
+- [ ] Map popups work on feature click
+- [ ] Seat type toggle (parlimen/dun) works within the React island
+- [ ] Both locales
+
+**Verify Phase 10:**
+- [ ] Seats map renders with vector tiles
+- [ ] No `window is not defined` errors during build
+- [ ] `POST_TO_BUILD` surgical rebuild works end-to-end for at least one seat — test with Wrangler deploy
+
+---
+
+## Phase 11 — Data Catalogue
+
+### 11.1 — Data Catalogue Index (`/data-catalogue`)
 
 | | |
 |---|---|
@@ -769,6 +932,8 @@ The catalogue index is a searchable grid of items where all data is already load
 - [ ] Category filter works (vanilla JS)
 - [ ] Locale-specific labels render
 - [ ] Zero React JS shipped to the browser for this page (`/data-catalogue/[id]`)
+
+### 11.2 — Data Catalogue Variable Pages (`/data-catalogue/[id]`)
 
 | | |
 |---|---|
@@ -791,168 +956,16 @@ The catalogue index is a searchable grid of items where all data is already load
 - [ ] Methodology and metadata tabs render
 - [ ] Both locale paths work
 
-**Verify Phase 6:**
+**Verify Phase 11:**
 - [ ] Full catalogue index renders
 - [ ] Spot-check 10+ individual catalogue variable pages across different chart types
 - [ ] Surgical rebuild test: `POST_TO_BUILD=some-catalogue-id` builds only that ID's pages
 
 ---
 
-## Phase 7 — Mapbox-Heavy Pages
+## Phase 12 — PWA, Sitemap, Deploy Pipeline
 
-> All Mapbox components must be `client:only="react"`. No SSR attempt. The `.astro` page mounts the island with map config as props. Vite config must have `noExternal: ['mapbox-gl', 'react-map-gl']`.
-
-### 7.1 — Seats (`/seats/[[...seat]]`)
-
-| | |
-|---|---|
-| **Current** | `pages/seats/[[...seat]].tsx` — optional catch-all `[type, seat_slug]`, `fallback: "blocking"` |
-| **Target** | `src/pages/seats/[...seat].astro` + `src/pages/ms-MY/seats/[...seat].astro` |
-
-- [ ] `getStaticPaths()` fetches `/seats/current/dropdown.json` → enumerates all `type/slug` pairs
-- [ ] Seat static data (stats, election history) fetched in frontmatter and passed as props
-- [ ] `src/pages/seats/index.astro` redirects to default seat
-- [ ] **Mapbox island:** `dashboards/my-area/mapbox.tsx` → `<MapboxDashboard client:only="react" {...props} />`. Pass vector tile source config as props from Astro frontmatter. Note: Mapbox GL calls browser APIs at module scope — `client:only` is correct here (unlike data tables, which should use `client:load`).
-- [ ] `NEXT_PUBLIC_MAPBOX_TOKEN` → `PUBLIC_MAPBOX_TOKEN` (already covered in env var section)
-- [ ] **`POST_TO_BUILD` support:** filter by `type/slug`
-
-**Parity criteria:**
-- [ ] Seat page loads with static stats rendered above the map
-- [ ] Mapbox map renders with vector tiles from `mapbox://` sources
-- [ ] Map popups work on feature click
-- [ ] Seat type toggle (parlimen/dun) works within the React island
-- [ ] Both locales
-
-### 7.2 — Redelineation (`/redelineation/[area-year]`)
-
-| | |
-|---|---|
-| **Current** | `pages/redelineation/[[...explorer]].tsx` — complex multi-segment catch-all |
-| **Target** | `src/pages/redelineation/[area-year].astro` + `src/pages/ms-MY/redelineation/[area-year].astro` |
-
-- [ ] `getStaticPaths()` fetches `redelineation/filter.json` → enumerates `area-year` combinations (e.g. `peninsular-2018`, `sabah-2023`)
-- [ ] Default: `src/pages/redelineation/index.astro` redirects to `peninsular-2018`
-- [ ] `?level=parlimen&seat=p001-padang-besar-perlis` query params — read by React island on mount via `window.location.search`. Island calls `history.pushState` when user changes selection so URL stays shareable.
-- [ ] **Mapbox island:** `MapProvider` + full redelineation map → `client:only="react"`. Pass area/year data as props.
-- [ ] **`POST_TO_BUILD` support:** filter by `area-year` slug
-
-**Parity criteria:**
-- [ ] Default `/redelineation` shows peninsular 2018 map
-- [ ] All area-year combinations render
-- [ ] `?level=` toggle switches between parlimen/dun within the island
-- [ ] `?seat=` param highlights/zooms to the correct seat on load
-- [ ] Full URL (e.g. `/redelineation/peninsular-2018?level=parlimen&seat=p001-...`) is shareable and restores state on load
-- [ ] Seat comparison panel shows old vs new boundary data
-- [ ] Both locales
-
-### 7.3 — Map Explorer (`/map/explorer`)
-
-| | |
-|---|---|
-| **Current** | `pages/map/explorer/index.tsx` — custom layout (no header/footer), `getStaticProps` fetches two JSON endpoints |
-| **Target** | `src/pages/map/explorer/index.astro` (English only) |
-
-- [ ] Fetch `map/map-layers.json` and `map/dropdown_peninsular_2018_parlimen.json` in frontmatter
-- [ ] Page uses `FullscreenLayout.astro` (no header/footer) — create this layout
-- [ ] **Mapbox island:** `MapExplorerDelimitation` → `client:only="react"` with `MapProvider`. Pass `sidebar` prop (locale-specific map layers) from frontmatter.
-- [ ] Middleware redirects `ms-MY/map/*` → `/map/*`
-
-**Parity criteria:**
-- [ ] Full-screen map renders without header/footer
-- [ ] Sidebar shows map layer options
-- [ ] Map responds to sidebar selections
-- [ ] Dropdown for area/year/type works
-
-**Verify Phase 7:**
-- [ ] Seats map renders with vector tiles
-- [ ] Redelineation map renders; query params restore state correctly on load
-- [ ] Map explorer fullscreen layout correct
-- [ ] No `window is not defined` errors during build
-
----
-
-## Phase 8 — Auth Pages
-
-### 8.1 — Sign In (`/signin`) — English only
-
-| | |
-|---|---|
-| **Current** | `pages/signin.tsx` — Cloudflare Turnstile, OTP request/verify flow, all client-side |
-| **Target** | `src/pages/signin.astro` (static shell) + `<SignInForm client:only="react" />` island |
-
-- [ ] Extract all interactive logic into `src/components/SignInForm.tsx`
-- [ ] Turnstile script in `.astro` page `<head>`: `<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />`
-- [ ] `useRouter().replace('/console')` → `window.location.replace('/console')` inside the island
-- [ ] Middleware redirects `ms-MY/signin` → `/signin`
-
-**Parity criteria:**
-- [ ] Email → OTP two-step flow works end-to-end
-- [ ] Turnstile invisible widget renders and challenges correctly
-- [ ] Rate-limit countdown displays correctly (1-second tick)
-- [ ] Already-signed-in users redirected to `/console` on load
-- [ ] Error states display with correct copy
-
-### 8.2 — API Console (`/console`) — English only, auth-gated
-
-| | |
-|---|---|
-| **Current** | `pages/console.tsx` + `dashboards/console/index.tsx` — all client-side, no build-time data |
-| **Target** | `src/pages/console.astro` (static shell) + `<ConsoleDashboard client:only="react" />` island |
-
-- [ ] `ConsoleDashboard` stays entirely as React island — manages API key CRUD, realtime usage stats, auth state
-- [ ] Static shell provides metadata, page title, layout only
-- [ ] Middleware redirects `ms-MY/console` → `/console`
-
-**Parity criteria:**
-- [ ] Unauthenticated users redirected to `/signin` (handled inside React island on mount)
-- [ ] API key creation, deletion, and listing work
-- [ ] Usage/stats charts render
-- [ ] All Tinybird queries fire correctly
-
-**Verify Phase 8:**
-- [ ] Sign in flow works end-to-end in staging
-- [ ] Console loads and manages API keys correctly
-- [ ] Auth redirect works for unauthenticated users
-
----
-
-## Phase 9 — Query Builder
-
-### 9.1 — Query Builder (`/query-builder`) — English only
-
-| | |
-|---|---|
-| **Current** | `pages/query-builder.tsx` — DuckDB WASM initialised client-side, CodeMirror SQL editor, `@tanstack/react-table` |
-| **Target** | `src/pages/query-builder.astro` + `<QueryBuilderDashboard client:only="react" />` island |
-
-- [ ] `QueryBuilderDashboard` is fully browser-side — `client:only="react"` is non-negotiable
-- [ ] **DuckDB WASM config** — add to `astro.config.mjs`:
-  ```js
-  vite: {
-    optimizeDeps: { exclude: ['@duckdb/duckdb-wasm'] },
-    plugins: [wasm()], // vite-plugin-wasm
-  }
-  ```
-  This resolves the known Vite worker file resolution error. One-line fix.
-- [ ] Remove webpack `asyncWebAssembly: true` experiment from old config (not needed in Vite)
-- [ ] Middleware redirects `ms-MY/query-builder` → `/query-builder`
-
-**Parity criteria:**
-- [ ] DuckDB initialises without errors in browser console
-- [ ] SQL editor (CodeMirror) renders with syntax highlighting
-- [ ] Query runs and results display in table
-- [ ] Dataset selector works
-- [ ] Export to CSV/Parquet works
-
-**Verify Phase 9:**
-- [ ] Query builder loads and DuckDB initialises in Chrome, Firefox, Safari
-- [ ] Run a sample query against a dataset and verify results match production
-
----
-
-## Phase 10 — PWA, Sitemap, Deploy Pipeline
-
-### 10.1 — PWA
+### 12.1 — PWA
 
 - [ ] Replace `next-pwa` with `@vite-pwa/astro`
 - [ ] Copy `public/manifest.json`, icons, splash screens unchanged
@@ -960,7 +973,7 @@ The catalogue index is a searchable grid of items where all data is already load
 - [ ] Configure `@vite-pwa/astro` with same cache strategy + `navigateFallback`
 - [ ] PWA meta tags + apple touch icons move to `BaseLayout.astro`
 
-### 10.2 — Sitemap
+### 12.2 — Sitemap
 
 - [ ] `@astrojs/sitemap` configured in `astro.config.mjs`:
   ```js
@@ -974,7 +987,7 @@ The catalogue index is a searchable grid of items where all data is already load
 - [ ] Keep `scripts/compress-sitemaps.mjs` (runs via `postbuild`)
 - [ ] Add Cloudflare Pages `_headers` file for `sitemap.xml.gz` content-encoding header
 
-### 10.3 — Cloudflare Pages config
+### 12.3 — Cloudflare Pages config
 
 - [ ] `public/_redirects`:
   ```
@@ -984,13 +997,13 @@ The catalogue index is a searchable grid of items where all data is already load
 - [ ] `public/_headers` for sitemap, caching, security headers
 - [ ] Confirm Cloudflare Pages project is set to **Direct Upload** mode (not Git integration) to support surgical `POST_TO_BUILD` deploys
 
-### 10.4 — Tailwind
+### 12.4 — Tailwind
 
 - [ ] Update `tailwind.config.ts` content globs to `src/**` instead of root-level dirs
 - [ ] All custom colours, keyframes, animations carry over unchanged
 - [ ] `@govtechmy/myds-style` preset unchanged
 
-**Verify Phase 10:**
+**Verify Phase 12:**
 - [ ] PWA installs correctly on mobile
 - [ ] Sitemap generated and accessible at `/sitemap.xml`
 - [ ] Redirects work (`/openapi/introduction` → `/openapi`, auth proxy)
@@ -998,22 +1011,32 @@ The catalogue index is a searchable grid of items where all data is already load
 
 ---
 
-## Phase 11 — Full Parity Audit
+## Phase 13 — Launch
 
-Go through every production URL and compare against the migrated site:
+Pages have been verified incrementally throughout the migration. Phase 13 is not a full re-audit — it is the launch sequence.
 
-- [ ] **All pages render** — no blank pages, no JS errors in console
-- [ ] **Dark mode** — correct on all pages, system default respected, toggle works
-- [ ] **Both locales** — every bilingual page checked in both `/` (en) and `/ms-MY/` (ms)
-- [ ] **Interactive components** — all dropdowns, filters, charts, maps functional
-- [ ] **Mapbox** — seats, redelineation, map explorer all render tiles correctly
-- [ ] **Auth flow** — sign in, console, API key management end-to-end
-- [ ] **Query builder** — DuckDB loads, queries run, exports work
-- [ ] **Tinybird** — view counts appear on catalogue pages
-- [ ] **PWA** — installs and works offline
-- [ ] **Sitemap** — all URLs present
-- [ ] **Surgical rebuild** — test `POST_TO_BUILD` for at least: one candidate, one catalogue item, one election
-- [ ] **Performance** — Lighthouse scores on home, a catalogue page, and a seat page
+### 13.1 — Pre-launch checks
+- [ ] **Smoke test** — home, one candidate, one party, one election, sign in, console all load correctly on `astro.electiondata.my`
+- [ ] **Dark mode** — toggle works, system preference respected, no flash on load
+- [ ] **Both locales** — spot-check `/ms-MY/` home, about, candidates
+- [ ] **OG images** — test with [https://developers.facebook.com/tools/debug/](https://developers.facebook.com/tools/debug/) and [https://cards-dev.twitter.com/validator](https://cards-dev.twitter.com/validator). Verify correct image, title, and description render for: home, a candidate page, a party page, an election page
+- [ ] **Security headers** — add `public/_headers` with CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy
+- [ ] **Sitemap** — verify `/sitemap.xml` is accessible and contains all expected URLs
+- [ ] **PWA** — install on mobile, verify offline fallback works
+- [ ] **Surgical rebuild** — test `POST_TO_BUILD` end-to-end: trigger a GitHub Actions rebuild for one candidate and one party, verify only those pages are rebuilt and deployed
+- [ ] **Lighthouse** — run on home, a candidate page, and a seat page. Document scores.
+
+### 13.2 — DNS cutover
+- [ ] Point `electiondata.my` DNS A record to Cloudflare Pages (remove Vercel IP)
+- [ ] Verify `electiondata.my` loads from Cloudflare Pages (check `cf-ray` header)
+- [ ] Verify SSL certificate is active
+- [ ] Verify all redirects work on the live domain
+
+### 13.3 — Post-launch
+- [ ] Cancel Vercel subscription
+- [ ] Monitor Cloudflare analytics for 24 hours — confirm zero Functions usage (flat billing confirmed)
+- [ ] Submit sitemap to Google Search Console
+- [ ] Tag the launch commit: `git tag v2.0.0-astro && git push --tags`
 
 ---
 
@@ -1026,7 +1049,6 @@ Go through every production URL and compare against the migrated site:
 | `ChoroplethMap` | `client:only="react"` | Leaflet — browser APIs at module scope, SSR impossible |
 | `MapboxDashboard` (seats) | `client:only="react"` | Mapbox GL — browser APIs at module scope |
 | `RedelineationMap` | `client:only="react"` | Mapbox GL + `history.pushState` state |
-| `MapExplorerDelimitation` | `client:only="react"` | Mapbox GL fullscreen |
 | `SignInForm` | `client:only="react"` | Turnstile renders into DOM on mount — browser only |
 | `ConsoleDashboard` | `client:only="react"` | Auth state, no meaningful SSR output |
 | `QueryBuilderDashboard` | `client:only="react"` | DuckDB WASM, CodeMirror — browser only |
