@@ -3,7 +3,6 @@ import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
-import AstroPWA from '@vite-pwa/astro';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,7 +20,6 @@ export default defineConfig({
     // applyBaseStyles: false — globals.css already imports Tailwind directives
     tailwind({ applyBaseStyles: false }),
     sitemap(),
-    AstroPWA({}),
   ],
   i18n: {
     defaultLocale: 'en-GB',

@@ -139,7 +139,7 @@ The endpoint is not currently in use. If embed functionality is needed in future
 | i18n | `next-i18next` + HTTP backend | Build-time fetch + custom `t()` helper |
 | MDX | `next-mdx-remote` | `@astrojs/mdx` (native) |
 | Styling | Tailwind 3 + `@govtechmy/myds-style` | Identical (no changes needed) |
-| PWA | `next-pwa` | `@vite-pwa/astro` |
+| ~~PWA~~ | ~~`next-pwa`~~ | removed — see Phase 12.1 |
 | Hosting | Vercel (serverless) | Cloudflare Pages (static) |
 
 ---
@@ -155,7 +155,7 @@ Phase 2 — Simple static pages ✅ COMPLETE
 Phase 3 — MDX pages ✅ COMPLETE
 Phase 4 — Static data pages ✅ COMPLETE
 Phase 5 — Home, Candidates, Parties, Site Metrics ✅ COMPLETE
-Phase 6 — Query Builder (DuckDB WASM)
+Phase 6 — Query Builder (DuckDB WASM) ✅ COMPLETE
 Phase 7 — Sign In + API Console (auth pages)
 Phase 8 — Redelineation
 Phase 9 — Elections Explorer
@@ -189,7 +189,7 @@ Phase 13 — Launch
 ### 0.2 — Install integrations
 
 ```bash
-pnpm add @astrojs/react @astrojs/mdx @astrojs/sitemap @astrojs/tailwind @vite-pwa/astro
+pnpm add @astrojs/react @astrojs/mdx @astrojs/sitemap @astrojs/tailwind
 ```
 
 ### 0.3 — `astro.config.mjs`
@@ -200,12 +200,11 @@ import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
 import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
-import { AstroPWA } from '@vite-pwa/astro';
 
 export default defineConfig({
   output: 'static',
   site: 'https://electiondata.my',
-  integrations: [react(), mdx(), tailwind(), sitemap(), AstroPWA({})],
+  integrations: [react(), mdx(), tailwind(), sitemap()],
   i18n: {
     defaultLocale: 'en-GB',
     locales: ['en-GB', 'ms-MY'],
@@ -393,7 +392,6 @@ Replaces `_app.tsx` + `_document.tsx`.
 - [x] Body `class` from current `_app.tsx` (`inter poppins-variable box-border ...`) moved to `<body>` tag
 - [x] Tinybird Flock.js: `<script src="https://unpkg.com/@tinybirdco/flock.js" async defer is:inline />`
 - [x] Leaflet CSS: loaded conditionally via `needsLeaflet` prop
-- [x] PWA meta tags, apple touch icons (copied from `_document.tsx`)
 - [x] `<AutoToast client:load />` from `@govtechmy/myds-react`
 - [x] Remove `next-themes` — replaced by inline script above
 
@@ -728,7 +726,7 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 
 ---
 
-## Phase 6 — Query Builder (DuckDB WASM)
+## Phase 6 — Query Builder (DuckDB WASM) ✅ COMPLETE
 
 ### 6.1 — Query Builder (`/query-builder`) — English only
 
@@ -737,28 +735,31 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 | **Current** | `pages/query-builder.tsx` — DuckDB WASM initialised client-side, CodeMirror SQL editor, `@tanstack/react-table` |
 | **Target** | `src/pages/query-builder.astro` + `<QueryBuilderDashboard client:only="react" />` island |
 
-- [ ] `QueryBuilderDashboard` is fully browser-side — `client:only="react"` is non-negotiable
-- [ ] **DuckDB WASM config** — add to `astro.config.mjs`:
-  ```js
-  vite: {
-    optimizeDeps: { exclude: ['@duckdb/duckdb-wasm'] },
-    plugins: [wasm()], // vite-plugin-wasm
-  }
-  ```
-  This resolves the known Vite worker file resolution error. One-line fix.
-- [ ] Remove webpack `asyncWebAssembly: true` experiment from old config (not needed in Vite)
-- [ ] Middleware redirects `ms-MY/query-builder` → `/query-builder`
+- [x] `QueryBuilderDashboard` is fully browser-side — `client:only="react"` is non-negotiable
+- [x] **DuckDB WASM config** — `optimizeDeps: { exclude: ['@duckdb/duckdb-wasm'] }` already present in `astro.config.mjs` from Phase 0. `vite-plugin-wasm` not needed — `optimizeDeps.exclude` alone resolves the Vite worker resolution error.
+- [x] Middleware redirects `ms-MY/query-builder` → `/query-builder` — already in `ENGLISH_ONLY_PATHS`
+
+**Next.js deps replaced in `src/components/QueryBuilder/QueryBuilderDashboard.tsx`:**
+- `useRouter` → `history.replaceState` + `window.location` (URL reads on mount via `useEffect`)
+- `useTheme` (next-themes) → `useDarkMode()` hook: reads `document.documentElement.classList` on mount, listens to `theme-change` CustomEvent dispatched by `ThemeToggle`
+- `Link` (next/link) → `<a>`
+- `Script` (next/script) with `onLoad` → `useEffect` that injects the Turnstile script tag dynamically; falls back to calling the init function directly if `window.turnstile` already exists
+- `dynamic(CodeMirror, { ssr: false })` → direct import (SSR skipped automatically by `client:only`)
+
+**Additional implementation notes:**
+- Dataset preview queries use `LIMIT 30` instead of `USING SAMPLE 30 ROWS` — significantly faster
+- Hero heading computes years of data (`new Date().getFullYear() - 1955`) client-side at render time, not at build time, so it stays correct without rebuilding
 
 **Parity criteria:**
-- [ ] DuckDB initialises without errors in browser console
-- [ ] SQL editor (CodeMirror) renders with syntax highlighting
-- [ ] Query runs and results display in table
-- [ ] Dataset selector works
-- [ ] Export to CSV/Parquet works
+- [x] DuckDB initialises without errors in browser console
+- [x] SQL editor (CodeMirror) renders with syntax highlighting
+- [x] Query runs and results display in table
+- [x] Dataset selector works
+- [x] Export to CSV/Parquet works
 
 **Verify Phase 6:**
-- [ ] Query builder loads and DuckDB initialises in Chrome, Firefox, Safari
-- [ ] Run a sample query against a dataset and verify results match production
+- [x] Query builder loads and DuckDB initialises in Chrome, Firefox, Safari
+- [x] Run a sample query against a dataset and verify results match production
 
 ---
 
@@ -965,13 +966,9 @@ The catalogue index is a searchable grid of items where all data is already load
 
 ## Phase 12 — PWA, Sitemap, Deploy Pipeline
 
-### 12.1 — PWA
+### ~~12.1 — PWA~~
 
-- [ ] Replace `next-pwa` with `@vite-pwa/astro`
-- [ ] Copy `public/manifest.json`, icons, splash screens unchanged
-- [ ] Delete old PWA generated files from `public/`: `sw.js`, `workbox-*.js`, `fallback-*.js`
-- [ ] Configure `@vite-pwa/astro` with same cache strategy + `navigateFallback`
-- [ ] PWA meta tags + apple touch icons move to `BaseLayout.astro`
+~~PWA~~ — removed. electiondata.my is a reference platform with episodic usage patterns (traffic spikes around elections, not daily habitual use) — the core PWA benefits (offline support, install to home screen, push notifications) are not relevant to this use case. Cloudflare's edge CDN already provides fast repeat loads globally. The complexity of @vite-pwa/astro, service worker configuration, and ongoing maintenance is not justified by the marginal benefit.
 
 ### 12.2 — Sitemap
 
@@ -1001,10 +998,9 @@ The catalogue index is a searchable grid of items where all data is already load
 
 - [ ] Update `tailwind.config.ts` content globs to `src/**` instead of root-level dirs
 - [ ] All custom colours, keyframes, animations carry over unchanged
-- [ ] `@govtechmy/myds-style` preset unchanged
+- [x] `@govtechmy/myds-style` extracted and removed — all tokens now live in `src/styles/tokens/` and are inlined directly in `tailwind.config.ts`. No external design system dependency remains.
 
 **Verify Phase 12:**
-- [ ] PWA installs correctly on mobile
 - [ ] Sitemap generated and accessible at `/sitemap.xml`
 - [ ] Redirects work (`/openapi/introduction` → `/openapi`, auth proxy)
 - [ ] Full rebuild + surgical rebuild both deploy successfully via Wrangler
@@ -1015,14 +1011,13 @@ The catalogue index is a searchable grid of items where all data is already load
 
 Pages have been verified incrementally throughout the migration. Phase 13 is not a full re-audit — it is the launch sequence.
 
-### 13.1 — Pre-launch checks
+### 13.1 — Pre-launch checks (to be done by user)
 - [ ] **Smoke test** — home, one candidate, one party, one election, sign in, console all load correctly on `astro.electiondata.my`
 - [ ] **Dark mode** — toggle works, system preference respected, no flash on load
 - [ ] **Both locales** — spot-check `/ms-MY/` home, about, candidates
 - [ ] **OG images** — test with [https://developers.facebook.com/tools/debug/](https://developers.facebook.com/tools/debug/) and [https://cards-dev.twitter.com/validator](https://cards-dev.twitter.com/validator). Verify correct image, title, and description render for: home, a candidate page, a party page, an election page
 - [ ] **Security headers** — add `public/_headers` with CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy
 - [ ] **Sitemap** — verify `/sitemap.xml` is accessible and contains all expected URLs
-- [ ] **PWA** — install on mobile, verify offline fallback works
 - [ ] **Surgical rebuild** — test `POST_TO_BUILD` end-to-end: trigger a GitHub Actions rebuild for one candidate and one party, verify only those pages are rebuilt and deployed
 - [ ] **Lighthouse** — run on home, a candidate page, and a seat page. Document scores.
 
