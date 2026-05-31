@@ -1,7 +1,5 @@
 ---
-// STUB — restore real implementation from commit cd1529011c0440204a61dafadb88f3b435b3f08c
-// git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...party].astro
-import Layout from "@src/components/Layout/index.astro";
+import PartyPage from "@src/components/Parties/PartyPage.astro";
 import { fetchJSON } from "@src/lib/api";
 import { MALAYSIA, STATES } from "@src/lib/constants";
 
@@ -12,41 +10,59 @@ type DropdownEntry = {
   party_name_bm: string;
   type: string;
 };
+type PartyElection = {
+  party_type: string;
+  state: string;
+  type: "parlimen" | "dun";
+  coalition?: string;
+  coalition_uid?: string;
+  election_name: string;
+  date: string;
+  seats_total: number;
+  seats_contested: number;
+  seats_contested_perc: number;
+  seats_won: number;
+  seats_won_perc: number;
+  votes: number;
+  votes_perc: number;
+};
 
 export async function getStaticPaths() {
-  const scope      = import.meta.env.POST_TO_BUILD_PARTIES;
-  const anyScope   = !!(import.meta.env.POST_TO_BUILD_CANDIDATES || import.meta.env.POST_TO_BUILD_ELECTIONS || scope);
+  const scope    = import.meta.env.POST_TO_BUILD_PARTIES;
+  const anyScope = !!(scope || import.meta.env.POST_TO_BUILD_CANDIDATES || import.meta.env.POST_TO_BUILD_ELECTIONS);
   if (anyScope && !scope) return [];
-  const slugFilter = scope && scope !== 'all' ? new Set(scope.split(',')) : null;
+  const slugFilter = scope && scope !== "all" ? new Set(scope.split(",")) : null;
+  const r2 = import.meta.env.PUBLIC_API_URL_R2;
 
-  let entries: DropdownEntry[] = [];
-  try {
-    const json = await fetchJSON<{ data: DropdownEntry[] }>("/parties/dropdown.json");
-    entries = json.data ?? [];
-  } catch { /* non-fatal */ }
+  const [dropdownJson, allData] = await Promise.all([
+    fetchJSON<{ data: DropdownEntry[] }>("/parties/dropdown.json", r2).catch(() => ({ data: [] as DropdownEntry[] })),
+    fetchJSON<Record<string, PartyElection[]>>("/parties/all.json", r2).catch(() => ({} as Record<string, PartyElection[]>)),
+  ]);
 
+  const entries    = dropdownJson.data ?? [];
   const stateCodes = [MALAYSIA.key, ...STATES.map(s => s.key)];
 
-  return entries.flatMap(e =>
-    stateCodes
-      .filter(() => !slugFilter || slugFilter.has(e.party_uid))
-      .map(stateCode => ({
+  return entries
+    .filter(e => !slugFilter || slugFilter.has(e.party_uid))
+    .flatMap(e =>
+      stateCodes.map(stateCode => ({
         params: { party: `${e.party_uid}/${stateCode}` },
-        props:  { partyUid: e.party_uid, stateCode },
+        props: {
+          partyUid:       e.party_uid,
+          stateCode,
+          partyElections: allData[e.party_uid] ?? [],
+          dropdown:       entries,
+        },
       }))
-  );
+    );
 }
 
-const { partyUid, stateCode } = Astro.props as { partyUid: string; stateCode: string };
+const { partyUid, stateCode, partyElections, dropdown } = Astro.props as {
+  partyUid:       string;
+  stateCode:      string;
+  partyElections: PartyElection[];
+  dropdown:       DropdownEntry[];
+};
 ---
 
-<Layout title="Parti — Akan Datang">
-  <div class="mx-auto flex max-w-screen-xl flex-col items-center justify-center gap-4 px-4 py-32">
-    <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900">
-      Akan datang
-    </h1>
-    <p class="text-center text-body-sm text-txt-black-500">
-      {partyUid} / {stateCode}
-    </p>
-  </div>
-</Layout>
+<PartyPage partyUid={partyUid} stateCode={stateCode} partyElections={partyElections} dropdown={dropdown} />

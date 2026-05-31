@@ -1,3 +1,48 @@
 ---
-return Astro.redirect("/parties/001-UMNO/mys", 302);
+import PartyPage from "@src/components/Parties/PartyPage.astro";
+import { fetchJSON } from "@src/lib/api";
+import { MALAYSIA } from "@src/lib/constants";
+
+type DropdownEntry = {
+  party_uid: string;
+  party: string;
+  party_name_en: string;
+  party_name_bm: string;
+  type: string;
+};
+type PartyElection = {
+  party_type: string;
+  state: string;
+  type: "parlimen" | "dun";
+  coalition?: string;
+  coalition_uid?: string;
+  election_name: string;
+  date: string;
+  seats_total: number;
+  seats_contested: number;
+  seats_contested_perc: number;
+  seats_won: number;
+  seats_won_perc: number;
+  votes: number;
+  votes_perc: number;
+};
+
+const DEFAULT_PARTY = "001-UMNO";
+const DEFAULT_STATE = MALAYSIA.key;
+const r2 = import.meta.env.PUBLIC_API_URL_R2;
+
+const [dropdownJson, allData] = await Promise.all([
+  fetchJSON<{ data: DropdownEntry[] }>("/parties/dropdown.json", r2).catch(() => ({ data: [] as DropdownEntry[] })),
+  fetchJSON<Record<string, PartyElection[]>>("/parties/all.json", r2).catch(() => ({} as Record<string, PartyElection[]>)),
+]);
+
+const dropdown       = dropdownJson.data ?? [];
+const partyElections = allData[DEFAULT_PARTY] ?? [];
 ---
+
+<PartyPage
+  partyUid={DEFAULT_PARTY}
+  stateCode={DEFAULT_STATE}
+  partyElections={partyElections}
+  dropdown={dropdown}
+/>

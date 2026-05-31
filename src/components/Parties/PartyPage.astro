@@ -1,17 +1,8 @@
 ---
 import Layout from "@src/components/Layout/index.astro";
 import { getTranslations, t } from "@i18n/index";
-import { fetchJSON } from "@src/lib/api";
 import { CountryAndStates, STATES, MALAYSIA } from "@src/lib/constants";
-
-interface Props {
-  partyUid: string;
-  stateCode: string;
-}
-
-const { partyUid, stateCode } = Astro.props;
-const locale = Astro.currentLocale ?? "en-GB";
-const isMalay = locale.startsWith("ms");
+import PartyElectionTable from "./PartyElectionTable";
 
 type DropdownEntry = {
   party_uid: string;
@@ -21,13 +12,13 @@ type DropdownEntry = {
   type: string;
 };
 type PartyElection = {
-  party: string;
-  type: "parlimen" | "dun";
+  party_type: string;
   state: string;
-  election_name: string;
-  date: string;
+  type: "parlimen" | "dun";
   coalition?: string;
   coalition_uid?: string;
+  election_name: string;
+  date: string;
   seats_total: number;
   seats_contested: number;
   seats_contested_perc: number;
@@ -36,243 +27,328 @@ type PartyElection = {
   votes: number;
   votes_perc: number;
 };
-type PartyData = {
-  elections: { parlimen: PartyElection[]; dun: PartyElection[] };
-};
 
-const [dropdownRes, dataRes] = await Promise.allSettled([
-  fetchJSON<{ data: DropdownEntry[] }>("/parties/dropdown.json"),
-  fetchJSON<PartyData>(`/parties/${partyUid}/${stateCode}.json`),
-]);
+interface Props {
+  partyUid:       string;
+  stateCode:      string;
+  partyElections: PartyElection[];
+  dropdown:       DropdownEntry[];
+}
 
-const dropdown = dropdownRes.status === "fulfilled" ? (dropdownRes.value.data ?? []) : [];
-const partyData = dataRes.status    === "fulfilled" ? dataRes.value     : null;
+const { partyUid, stateCode, partyElections, dropdown } = Astro.props;
+const locale  = Astro.currentLocale ?? "en-GB";
+const isMalay = locale.startsWith("ms");
 
-const parlimen = partyData?.elections?.parlimen ?? [];
-const dun      = partyData?.elections?.dun      ?? [];
+const stateName = CountryAndStates[stateCode] ?? stateCode;
+const parlimen  = partyElections.filter(e => e.type === "parlimen" && e.state === stateName);
+const dun       = partyElections.filter(e => e.type === "dun"      && e.state === stateName);
 
 const currentParty = dropdown.find(d => d.party_uid === partyUid);
+const partyFolder  = currentParty?.type === "coalition" ? "coalitions" : "parties";
 
+// Combobox options — serialised into the page for instant client-side search
 const partyOptions = [...dropdown].sort((a, b) => {
   if (a.type !== b.type) return a.type === "party" ? -1 : 1;
   return a.party.localeCompare(b.party);
 }).map(p => ({
-  label: `${p.party} (${isMalay ? p.party_name_bm : p.party_name_en})`,
-  value: p.party_uid,
+  value:     p.party_uid,
+  label:     `${p.party} (${isMalay ? p.party_name_bm : p.party_name_en})`,
+  folder:    p.type === "coalition" ? "coalitions" : "parties",
+  typeBadge: p.type,
 }));
 
-const stateOptions = [MALAYSIA, ...STATES].map(s => ({
-  label: s.name,
-  value: s.key,
-}));
+const availableStates = new Set(partyElections.map(e => e.state));
+const stateOptions = [MALAYSIA, ...STATES]
+  .filter(s => availableStates.has(s.name))
+  .map(s => ({ value: s.key, label: s.name }));
 
 const i18n = await getTranslations(locale, ["common", "parties"]);
 const c  = (key: string) => t(i18n.common  ?? {}, key);
 const p  = (key: string) => t(i18n.parties ?? {}, key);
 
-const stateName = CountryAndStates[stateCode] ?? stateCode;
-const partyFolder = currentParty?.type === "coalition" ? "coalitions" : "parties";
-
 const localePrefix = isMalay ? "/ms-MY" : "";
-const pageTitle = currentParty
+const pageTitle    = currentParty
   ? `${currentParty.party} | ${p("hero.header") || "Parties"}`
   : p("hero.header") || "Parties";
 
-// WPs have no DUN
 const NO_DUN_STATES = ["mys", "kul", "lbn", "pjy"];
+const noDunState    = NO_DUN_STATES.includes(stateCode);
+
+const tbToken  = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
+const tbHost   = import.meta.env.PUBLIC_API_URL_TB;
+const s3Base   = import.meta.env.PUBLIC_API_URL_S3;
 ---
 
 <Layout title={pageTitle}>
   <!-- Hero -->
   <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
-    <div class="mx-auto flex max-w-[727px] flex-col items-center justify-center gap-4 px-4 pb-8 pt-16 md:px-6 lg:gap-6">
+    <div class="mx-auto flex max-w-[800px] flex-col items-center space-y-4 px-4 pb-8 pt-16 text-center md:px-6 lg:space-y-6">
       <p class="text-center text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger lg:text-body-lg">
         {p("hero.category") || "Parties"}
       </p>
       <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
-        {p("hero.header") || "Parties Explorer"}
+        {p("hero.header") || "Parties & Coalitions"}
       </h1>
       {p("hero.description") !== "hero.description" && (
         <p class="w-full text-center text-body-sm text-txt-black-700 lg:text-body-md">{p("hero.description")}</p>
       )}
+      <p class="flex items-center justify-center gap-0.5 text-body-sm text-txt-black-500">
+        <svg class="size-4.5 self-center" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+          <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd" />
+        </svg>
+        <span id="party-view-count" data-token={tbToken} data-host={tbHost}>---</span>
+      </p>
     </div>
   </section>
 
   <!-- Main content -->
-  <div class="mx-auto w-full max-w-screen-xl space-y-6 px-4 pb-6 pt-2 md:px-6 lg:space-y-16 lg:pb-16">
+  <div class="px-4.5 pb-6 pt-4 md:px-6 lg:pb-16">
+  <div class="mx-auto w-full max-w-screen-xl space-y-8 lg:space-y-16">
 
-    <!-- Party search + state filter -->
-    <div class="mt-3 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-      <div class="w-full md:w-[480px]">
-        <select id="party-select" class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-3 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger">
-          <option value="">{p("search_party") || "Search party…"}</option>
-          {partyOptions.map(o => (
-            <option value={o.value} selected={o.value === partyUid}>{o.label}</option>
-          ))}
-        </select>
-      </div>
-      <div class="w-full md:w-[200px]">
-        <select id="state-select" class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-3 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger">
-          {stateOptions.map(o => (
-            <option value={o.value} selected={o.value === stateCode}>{o.label}</option>
-          ))}
-        </select>
+    <!-- Party combobox search -->
+    <div class="mx-auto mt-3 w-full md:w-[727px]">
+      <div class="combobox relative" data-type="party">
+        <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
+          {currentParty && (
+            <div class="ml-3 flex h-[28px] w-[28px] shrink-0 items-center justify-center">
+              <img
+                src={`/static/images/${partyFolder}/${partyUid}.png`}
+                alt={currentParty.party}
+                class="h-auto max-h-[28px] w-auto max-w-[28px] border border-otl-gray-200 object-contain"
+              />
+            </div>
+          )}
+          <input
+            type="text"
+            class="combobox-input w-full border-0 bg-transparent py-2.5 pl-3 pr-2 text-body-md text-txt-black-700 placeholder:text-txt-black-500 focus:outline-none"
+            placeholder={p("search_party") || "Search for a party or coalition…"}
+            autocomplete="off"
+            spellcheck="false"
+            value={currentParty ? `${currentParty.party} (${isMalay ? currentParty.party_name_bm : currentParty.party_name_en})` : ""}
+          />
+          <button
+            type="button"
+            class={`combobox-clear mr-1 h-5 w-5 shrink-0 items-center justify-center rounded-full text-txt-black-500 hover:text-txt-black-700 ${currentParty ? "flex" : "hidden"}`}
+            aria-label="Clear"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="combobox-btn mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-danger-400 to-danger-600 text-white"
+            aria-label="Search"
+          >
+            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+        <ul class="combobox-list absolute left-0 right-0 top-full z-50 mt-1.5 hidden max-h-72 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1 shadow-lg"></ul>
       </div>
     </div>
 
-    <!-- Party identity + election history -->
-    {currentParty && (
-      <div class="flex items-center gap-3">
-        <img
-          src={`/static/images/${partyFolder}/${partyUid}.png`}
-          alt={currentParty.party}
-          class="h-8 w-auto border border-otl-gray-200 object-contain"
-        />
-        <div>
-          <span class="text-heading-2xs font-bold">{currentParty.party}</span>
-          <span class="ml-2 text-body-sm text-txt-black-500">
-            {isMalay ? currentParty.party_name_bm : currentParty.party_name_en}
-          </span>
-        </div>
-        <span class:list={[
-          "ml-2 rounded-full border px-2 py-0.5 text-xs font-medium",
-          currentParty.type === "coalition"
-            ? "border-blue-400 bg-blue-50/60 text-blue-600"
-            : "border-red-400 bg-red-50/60 text-red-600",
-        ]}>
-          {p(currentParty.type) || currentParty.type}
-        </span>
-      </div>
-    )}
-
-    <div class="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
-      <h2 class="text-heading-2xs font-bold">
-        {p("title") ? `${p("title")} ${currentParty?.party ?? partyUid}` : `${currentParty?.party ?? partyUid} — ${stateName}`}
-      </h2>
-
-      <!-- Tabs -->
-      <div class="border-b border-otl-gray-200">
-        <div class="flex gap-4">
-          {[c("parlimen") || "Parlimen", c("dun") || "DUN"].map((tab, i) => (
-            <button
-              class:list={[
-                "party-tab -mb-px border-b-2 pb-3 pt-1 text-body-sm font-medium transition-colors",
-                i === 0
-                  ? "border-txt-danger text-txt-danger"
-                  : "border-transparent text-txt-black-500 hover:text-txt-black-900",
-              ]}
-              data-tab={i}
-            >{tab}</button>
-          ))}
-        </div>
-      </div>
-
-      <!-- Parlimen tab -->
-      <div class="party-panel overflow-x-auto" data-panel="0">
-        {parlimen.length === 0
-          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{p("no_data") || "No parlimen data."}</p>
-          : (
-            <table class="w-full text-left text-body-sm">
-              <thead>
-                <tr class="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
-                  <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
-                  {currentParty?.type !== "coalition" && <th class="whitespace-nowrap px-4 py-3">{c("coalition_name") || "Coalition"}</th>}
-                  <th class="whitespace-nowrap px-4 py-3">{c("seats_won") || "Seats Won"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
-                  <th class="whitespace-nowrap px-4 py-3">{c("seats_contested") || "Contested"}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {parlimen.map(e => (
-                  <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                    <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
-                    {currentParty?.type !== "coalition" && (
-                      <td class="whitespace-nowrap px-4 py-3">
-                        {e.coalition_uid && (
-                          <img src={`/static/images/coalitions/${e.coalition_uid}.png`} alt={e.coalition ?? ""} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
-                        )}
-                        {e.coalition ?? "—"}
-                      </td>
-                    )}
-                    <td class="whitespace-nowrap px-4 py-3">{e.seats_won} / {e.seats_total} ({e.seats_won_perc?.toFixed(1)}%)</td>
-                    <td class="whitespace-nowrap px-4 py-3">{e.votes?.toLocaleString()} ({e.votes_perc?.toFixed(1)}%)</td>
-                    <td class="whitespace-nowrap px-4 py-3">{e.seats_contested} ({e.seats_contested_perc?.toFixed(1)}%)</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )
-        }
-      </div>
-
-      <!-- DUN tab -->
-      <div class="party-panel hidden overflow-x-auto" data-panel="1">
-        {NO_DUN_STATES.includes(stateCode)
-          ? <p class="py-8 text-center text-body-sm text-txt-black-500">{p("no_data_dun_wp") || "No DUN (Federal Territory)."}</p>
-          : dun.length === 0
-            ? <p class="py-8 text-center text-body-sm text-txt-black-500">{p("no_data") || "No DUN data."}</p>
-            : (
-              <table class="w-full text-left text-body-sm">
-                <thead>
-                  <tr class="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
-                    <th class="whitespace-nowrap py-3 pl-0 pr-4">{c("election_name") || "Election"}</th>
-                    {currentParty?.type !== "coalition" && <th class="whitespace-nowrap px-4 py-3">{c("coalition_name") || "Coalition"}</th>}
-                    <th class="whitespace-nowrap px-4 py-3">{c("seats_won") || "Seats Won"}</th>
-                    <th class="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
-                    <th class="whitespace-nowrap px-4 py-3">{c("seats_contested") || "Contested"}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dun.map(e => (
-                    <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                      <td class="whitespace-nowrap py-3 pl-0 pr-4 font-medium">{e.election_name}</td>
-                      {currentParty?.type !== "coalition" && (
-                        <td class="whitespace-nowrap px-4 py-3">
-                          {e.coalition_uid && (
-                            <img src={`/static/images/coalitions/${e.coalition_uid}.png`} alt={e.coalition ?? ""} class="mr-1 inline-block h-4 w-auto border border-otl-gray-200" />
-                          )}
-                          {e.coalition ?? "—"}
-                        </td>
-                      )}
-                      <td class="whitespace-nowrap px-4 py-3">{e.seats_won} / {e.seats_total} ({e.seats_won_perc?.toFixed(1)}%)</td>
-                      <td class="whitespace-nowrap px-4 py-3">{e.votes?.toLocaleString()} ({e.votes_perc?.toFixed(1)}%)</td>
-                      <td class="whitespace-nowrap px-4 py-3">{e.seats_contested} ({e.seats_contested_perc?.toFixed(1)}%)</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )
-        }
-      </div>
+    <!-- Election table React island -->
+    <div class="mt-6 lg:mt-10">
+      <PartyElectionTable
+        client:load
+        parlimen={parlimen}
+        dun={dun}
+        partyName={currentParty?.party ?? partyUid}
+        partyUid={partyUid}
+        partyType={currentParty?.type ?? "party"}
+        stateCode={stateCode}
+        stateName={stateName}
+        stateOptions={stateOptions}
+        isMalay={isMalay}
+        localePrefix={localePrefix}
+        apiBase={s3Base}
+        translations={{ common: i18n.common ?? {}, parties: i18n.parties ?? {} }}
+        noDunState={noDunState}
+      />
     </div>
+  </div>
   </div>
 </Layout>
 
-<script define:vars={{ localePrefix, partyUid, stateCode }}>
-  // Party select
-  document.getElementById("party-select")?.addEventListener("change", e => {
-    const val = e.target.value;
-    if (val) window.location.href = `${localePrefix}/parties/${val}/${stateCode}`;
-  });
+<script define:vars={{ localePrefix, partyUid, stateCode, partyOptions }}>
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
 
-  // State select
-  document.getElementById("state-select")?.addEventListener("change", e => {
-    const val = e.target.value;
-    if (val) window.location.href = `${localePrefix}/parties/${partyUid}/${val}`;
-  });
+  var _options = partyOptions;
 
-  // Tabs
-  const tabs   = document.querySelectorAll(".party-tab");
-  const panels = document.querySelectorAll(".party-panel");
+  function initCombobox(wrapper) {
+    const input    = wrapper.querySelector(".combobox-input");
+    const btn      = wrapper.querySelector(".combobox-btn");
+    const clearBtn = wrapper.querySelector(".combobox-clear");
+    const list     = wrapper.querySelector(".combobox-list");
+    let selected   = "";
+    let activeIdx  = -1;
 
-  tabs.forEach(tab => tab.addEventListener("click", () => {
-    const idx = Number(tab.dataset.tab);
-    tabs.forEach((t, i) => {
-      t.classList.toggle("border-txt-danger",  i === idx);
-      t.classList.toggle("text-txt-danger",    i === idx);
-      t.classList.toggle("border-transparent", i !== idx);
-      t.classList.toggle("text-txt-black-500", i !== idx);
+    function focusInputWithoutScroll() {
+      const y = window.scrollY;
+      input.focus({ preventScroll: true });
+      window.scrollTo({ top: y, left: window.scrollX });
+    }
+
+    function goToParty(value) {
+      try {
+        sessionStorage.setItem("partySearchScrollY", String(window.scrollY));
+      } catch {}
+      window.location.href = `${localePrefix}/parties/${value}/${stateCode}`;
+    }
+
+    function updateClear() {
+      if (!clearBtn) return;
+      if (input.value.length > 0) {
+        clearBtn.classList.remove("hidden");
+        clearBtn.classList.add("flex");
+      } else {
+        clearBtn.classList.add("hidden");
+        clearBtn.classList.remove("flex");
+      }
+    }
+
+    function highlight(idx) {
+      const items = [...list.querySelectorAll("li[data-value]")];
+      items.forEach((li, i) => {
+        i === idx ? li.classList.add("bg-bg-black-50") : li.classList.remove("bg-bg-black-50");
+      });
+      activeIdx = idx;
+      if (idx >= 0) items[idx]?.scrollIntoView({ block: "nearest" });
+    }
+
+    function render(options) {
+      activeIdx = -1;
+      if (options.length === 0) {
+        list.innerHTML = `<li class="px-4 py-2 text-sm italic text-txt-black-500">No results</li>`;
+        return;
+      }
+      list.innerHTML = options.map(o => `
+        <li class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
+          <img src="/static/images/${esc(o.folder)}/${esc(o.value)}.png"
+               class="h-auto max-h-[18px] w-auto max-w-[28px] shrink-0 border border-otl-gray-200 object-contain"
+               onerror="this.style.visibility='hidden'" alt="" />
+          <span class="grow truncate">${esc(o.label)}</span>
+          <span class="shrink-0 rounded-full border px-1.5 py-0.5 text-xs font-medium ${o.typeBadge === 'coalition' ? 'border-blue-400 bg-blue-50/60 text-blue-600' : 'border-red-400 bg-red-50/60 text-red-600'}">
+            ${esc(o.typeBadge)}
+          </span>
+        </li>`).join("");
+      list.querySelectorAll("li[data-value]").forEach(li => {
+        li.addEventListener("mousedown", e => {
+          e.preventDefault();
+          selected = li.dataset.value;
+          input.value = _options.find(o => o.value === selected)?.label ?? "";
+          list.classList.add("hidden");
+          goToParty(selected);
+        });
+      });
+    }
+
+    function open() {
+      const q = input.value.toLowerCase().trim();
+      const tokens = q ? q.split(/\s+/) : [];
+      const filtered = tokens.length
+        ? _options.filter(o => tokens.every(tok => o.label.toLowerCase().includes(tok)))
+        : _options;
+      render(filtered);
+      list.classList.remove("hidden");
+    }
+
+    function close() { list.classList.add("hidden"); activeIdx = -1; }
+
+    input.addEventListener("input",  () => { selected = ""; open(); updateClear(); });
+    input.addEventListener("focus",  open);
+    input.addEventListener("blur",   () => setTimeout(close, 150));
+    input.addEventListener("keydown", e => {
+      const items  = [...list.querySelectorAll("li[data-value]")];
+      const isOpen = !list.classList.contains("hidden");
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (!isOpen) { open(); return; }
+        highlight(Math.min(activeIdx + 1, items.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!isOpen) return;
+        highlight(Math.max(activeIdx - 1, 0));
+      } else if (e.key === "Enter") {
+        if (isOpen && activeIdx >= 0 && items[activeIdx]) {
+          e.preventDefault();
+          selected = items[activeIdx].dataset.value;
+          input.value = _options.find(o => o.value === selected)?.label ?? "";
+          close();
+          goToParty(selected);
+        }
+      } else if (e.key === "Escape") {
+        close();
+      }
     });
-    panels.forEach((p, i) => p.classList.toggle("hidden", i !== idx));
-  }));
+    btn.addEventListener("click", () => { if (selected) goToParty(selected); else focusInputWithoutScroll(); });
+    clearBtn?.addEventListener("mousedown", e => {
+      e.preventDefault();
+      input.value = "";
+      selected = "";
+      close();
+      updateClear();
+      focusInputWithoutScroll();
+    });
+    document.addEventListener("click", e => { if (!wrapper.contains(e.target)) close(); });
+  }
+
+  document.querySelectorAll(".combobox").forEach(initCombobox);
+
+  // ── Cmd/Ctrl+K shortcut ───────────────────────────────────────────────────
+  document.addEventListener("keydown", e => {
+    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      const input = document.querySelector(".combobox-input");
+      const clearBtn = document.querySelector(".combobox-clear");
+      if (input) {
+        input.value = "";
+        clearBtn?.classList.add("hidden");
+        clearBtn?.classList.remove("flex");
+        input.focus({ preventScroll: true });
+      }
+    }
+  });
+
+  let savedScrollY = null;
+  try {
+    savedScrollY = sessionStorage.getItem("partySearchScrollY");
+  } catch {}
+  if (savedScrollY != null) {
+    try {
+      sessionStorage.removeItem("partySearchScrollY");
+    } catch {}
+    const targetScrollY = Number(savedScrollY);
+    if (Number.isFinite(targetScrollY)) {
+      let attempts = 0;
+      const restoreScroll = () => {
+        attempts += 1;
+        window.scrollTo({ top: targetScrollY, left: window.scrollX });
+        if (Math.abs(window.scrollY - targetScrollY) > 1 && attempts < 60) {
+          requestAnimationFrame(restoreScroll);
+        }
+      };
+      requestAnimationFrame(restoreScroll);
+    }
+  }
+
+  // Tinybird view count
+  const vcEl = document.getElementById("party-view-count");
+  if (vcEl) {
+    const { token, host } = vcEl.dataset;
+    if (token && host) {
+      fetch(`${host}/v0/pipes/views_by_page.json?token=${token}&page_id=/parties`)
+        .then(r => r.json())
+        .then(data => {
+          const views = data?.data?.[0]?.hits;
+          if (views != null) vcEl.textContent = `${Number(views).toLocaleString()} views`;
+        })
+        .catch(() => {});
+    }
+  }
 </script>
