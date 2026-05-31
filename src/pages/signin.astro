@@ -1,0 +1,11 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import SignInForm from "@src/components/Auth/SignInForm";
+---
+
+<Layout
+  title="Sign In — ElectionData.MY"
+  description="Sign in to the ElectionData.MY API Console."
+>
+  <SignInForm client:only="react" />
+</Layout>

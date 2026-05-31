@@ -1,0 +1,11 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import ConsoleDashboard from "@dashboards/console/index";
+---
+
+<Layout
+  title="API Console — ElectionData.MY"
+  description="Manage your ElectionData.MY API keys and monitor usage."
+>
+  <ConsoleDashboard client:only="react" />
+</Layout>

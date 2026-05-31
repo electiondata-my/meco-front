@@ -47,5 +47,15 @@ export default defineConfig({
     optimizeDeps: {
       exclude: ['@duckdb/duckdb-wasm'], // Prevents Vite worker resolution error
     },
+    server: {
+      proxy: {
+        '/api/auth': {
+          target: 'https://auth.electiondata.my',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/auth/, ''),
+          cookieDomainRewrite: 'localhost',
+        },
+      },
+    },
   },
 });

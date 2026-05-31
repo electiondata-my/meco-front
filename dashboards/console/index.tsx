@@ -1,11 +1,10 @@
-import { Button, Card } from "@components/index";
+import Button from "@components/Button";
+import Card from "@components/Card";
 import Dropdown from "@components/Dropdown";
 import Container from "@components/Container";
-import { useTranslation } from "@hooks/useTranslation";
 import { clx } from "@lib/helpers";
 import { COLOR } from "@lib/constants";
 import { Bar, Line } from "react-chartjs-2";
-import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCopyToClipboard } from "@hooks/useCopyToClipboard";
 
@@ -41,9 +40,43 @@ import {
   timeXAxis,
 } from "./chart-utils";
 
+// English-only page — inline translations (no runtime i18n needed)
+const translations: Record<string, any> = {
+  header: "API Console",
+  description: "Manage your API keys and monitor usage in real time. You can generate up to 15 keys, giving you enough to run five separate dev-test-prod pipelines. There's no hard rate limit and no charge for access, but all requests are logged and monitored—please use the API responsibly.",
+  loading: "Loading…",
+  sign_out: "Sign out",
+  cancel: "Cancel",
+  copy: "Copy",
+  copied: "Copied!",
+  revoke: "Revoke",
+  not_used: "Not used",
+  no_data: "No data for this period",
+  generating: "Generating…",
+  generate_key: "Generate key",
+  loading_keys: "Loading keys…",
+  loading_logs: "Loading logs…",
+  no_keys: "No API keys yet. Generate one to get started.",
+  no_logs: "No logs match the current filters",
+  no_health_data: "No health data for this period",
+  max_keys_reached: "Maximum of {{count}} keys reached. Revoke a key to generate a new one.",
+  key_placeholder: "key-name (letters, numbers, dashes)",
+  section: { keys: "API Keys", health: "API Health", endpoint_health: "Endpoint Health", raw_logs: "Raw Logs (latest 50 requests)" },
+  table: { name: "Name", actions: "Actions", requests: "Requests", success_rate: "Success Rate", p50_latency: "P50 Latency", p95_latency: "P95 Latency", p99_latency: "P99 Latency", last_used: "Last Used", endpoint: "Endpoint", timestamp: "Timestamp", key: "Key", params: "Params", status: "Status", latency: "Latency", country: "Country" },
+  stat: { total_requests: "Total Requests", success_rate: "Success Rate" },
+  chart: { request_volume: "Request Volume by Status", median_tail_latency: "Median & Tail Latency", successful: "Successful", client_errors: "Client Errors", server_errors: "Server Errors", median_p50: "Median (p50)", near_tail_p95: "Near-tail (p95)", tail_p99: "Tail (p99)" },
+  filter: { errors_only: "Errors only", slow_only: "Slow only (>500ms)", all_keys: "All keys" },
+  error: { name_required: "Key name is required", name_format: "Lowercase letters, numbers and dashes only", name_length: "40 characters max", name_duplicate: "A key with that name already exists", generate_failed: "Failed to generate key" },
+  revoke_modal: { title: 'Revoke "{{name}}"?', description: "Any requests using this key will immediately stop working. This cannot be undone." },
+};
+
+function t(key: string, params?: Record<string, string | number>): string {
+  const val = key.split(".").reduce((o: any, k) => o?.[k], translations) ?? key;
+  if (!params) return String(val);
+  return String(val).replace(/\{\{(\w+)\}\}/g, (_, k) => String(params[k] ?? _));
+}
+
 export default function ConsoleDashboard() {
-  const { t } = useTranslation("console");
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
 
@@ -71,10 +104,10 @@ export default function ConsoleDashboard() {
     setMounted(true);
     fetch(`${AUTH_URL}/me`, { credentials: "include" })
       .then((r) => {
-        if (!r.ok) router.replace("/signin");
+        if (!r.ok) window.location.replace("/signin");
         else setSessionChecked(true);
       })
-      .catch(() => router.replace("/signin"));
+      .catch(() => window.location.replace("/signin"));
   }, []);
 
   const fetchAnalytics = useCallback((p: Period, silent = false) => {
@@ -185,7 +218,7 @@ export default function ConsoleDashboard() {
       method: "POST",
       credentials: "include",
     }).catch(() => {});
-    router.replace("/openapi");
+    window.location.replace("/openapi");
   };
 
   const handleGenerateKey = async () => {

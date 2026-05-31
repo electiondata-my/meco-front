@@ -156,12 +156,12 @@ Phase 3 — MDX pages ✅ COMPLETE
 Phase 4 — Static data pages ✅ COMPLETE
 Phase 5 — Home, Candidates, Parties, Site Metrics ✅ COMPLETE
 Phase 6 — Query Builder (DuckDB WASM) ✅ COMPLETE
-Phase 7 — Sign In + API Console (auth pages)
+Phase 7 — Sign In + API Console (auth pages) ✅ COMPLETE
 Phase 8 — Redelineation
 Phase 9 — Elections Explorer
 Phase 10 — Seats (Mapbox + charts, most complex)
 Phase 11 — Data Catalogue
-Phase 12 — PWA, sitemap, deploy pipeline
+Phase 12 — Sitemap, deploy pipeline
 Phase 13 — Launch
 ```
 
@@ -763,7 +763,7 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 
 ---
 
-## Phase 7 — Sign In + API Console (auth pages)
+## Phase 7 — Sign In + API Console (auth pages) ✅ COMPLETE
 
 ### 7.1 — Sign In (`/signin`) — English only
 

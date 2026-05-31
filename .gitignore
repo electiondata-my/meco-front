@@ -1,5 +1,7 @@
 # secrets
 .env
+.env.production
+.env.development
 .env.old
 .env.next
 .env.astro

@@ -10,8 +10,6 @@ import {
 } from "@heroicons/react/20/solid";
 import { clx } from "@lib/helpers";
 import { matchSorter } from "match-sorter";
-import { useTranslation } from "next-i18next";
-import { default as Image } from "next/image";
 import {
   Fragment,
   FunctionComponent,
@@ -77,7 +75,6 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
 }) => {
   const [search, setSearch] = useState<string>("");
   const optionsRef = useRef<HTMLDivElement>(null);
-  const { t } = useTranslation();
   const isSelected = (option: OptionType): boolean => {
     return (
       multiple &&
@@ -135,7 +132,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
     >
       {/* State flag - optional */}
       {enableFlag && (
-        <Image
+        <img
           src={`/static/images/states/${option.value}.jpeg`}
           width={20}
           height={12}
@@ -217,7 +214,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
                 {/* Flag (selected) */}
                 {enableFlag && selected && (
                   <div className="self-center">
-                    <Image
+                    <img
                       src={`/static/images/states/${(selected as OptionType).value}.jpeg`}
                       width={20}
                       height={12}
@@ -279,7 +276,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
                       icon={<MagnifyingGlassIcon className="h-4 w-4" />}
                       value={search}
                       className="border-none focus:ring-transparent"
-                      placeholder={t("common:placeholder.search") + "..."}
+                      placeholder="Search..."
                       onChange={(value) => setSearch(value)}
                     />
                   </div>
@@ -331,7 +328,7 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
                     className="group relative flex w-full cursor-default select-none items-center gap-2 border-t py-3 pl-10 pr-4 text-txt-black-500 hover:bg-bg-black-100 disabled:cursor-not-allowed disabled:opacity-50"
                     disabled={Array.isArray(selected) && selected.length === 0}
                   >
-                    <p>{t("common:clear")}</p>
+                    <p>Clear</p>
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3">
                       <XMarkIcon className="h-5 w-5" />
                     </span>
