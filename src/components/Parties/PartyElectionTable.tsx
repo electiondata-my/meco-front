@@ -7,6 +7,8 @@ type PartyElection = {
   type: "parlimen" | "dun";
   coalition?: string;
   coalition_uid?: string;
+  known_as?: string;
+  known_as_uid?: string;
   election_name: string;
   date: string;
   seats_total: number;
@@ -290,7 +292,7 @@ function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (key: st
 
 function OverviewNumbers({ seats, votes, total, seatWidth, voteWidth, percentage }: { seats?: number; votes?: number; total?: number; seatWidth?: string; voteWidth?: string; percentage: number }) {
   return (
-    <td className={`px-3 py-[11px] ${monoNumberClass}`}>
+    <td className={`px-4 py-[11px] ${monoNumberClass}`}>
       <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
         <Bar value={percentage} />
         <span className="whitespace-nowrap">
@@ -469,6 +471,7 @@ export default function PartyElectionTable({
   const voteWidth = `${Math.max(1, ...elections.map((e) => num(e.votes).length))}ch`;
   const isCoalition = partyType === "coalition";
   const partyFolder = isCoalition ? "coalitions" : "parties";
+  const showKnownAs = !isCoalition && new Set(elections.map((e) => e.known_as ?? "")).size > 1;
 
   const fetchFullResult = useCallback(
     async (e: PartyElection, index: number, list: PartyElection[]) => {
@@ -590,6 +593,15 @@ export default function PartyElectionTable({
                       <p className="shrink-0 text-body-sm font-medium">
                         {fmt(e.election_name, isMalay)} ({year})
                       </p>
+                      {showKnownAs && e.known_as && (
+                        <>
+                          <span className="shrink-0 text-txt-black-500" aria-hidden="true">&bull;</span>
+                          <div className="flex items-center gap-1.5">
+                            <OverviewLogo uid={e.known_as_uid} name={e.known_as} folder="parties" />
+                            <span>{e.known_as}</span>
+                          </div>
+                        </>
+                      )}
                       {!isCoalition && e.coalition && e.coalition !== "ALONE" && (
                         <>
                           <span className="shrink-0 text-txt-black-500" aria-hidden="true">&bull;</span>
@@ -634,12 +646,13 @@ export default function PartyElectionTable({
             <table className="w-full text-left text-body-sm">
               <thead>
                 <tr className="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
-                  <th className="whitespace-nowrap py-3 pl-4 pr-3">{c("election_name") || "Election"}</th>
-                  {!isCoalition && <th className="whitespace-nowrap px-3 py-3">{c("coalition_name") || "Coalition"}</th>}
-                  <th className="whitespace-nowrap px-3 py-3">{c("seats_won") || "Seats Won"}</th>
-                  <th className="whitespace-nowrap px-3 py-3">{c("votes_won") || "Votes"}</th>
-                  <th className="whitespace-nowrap px-3 py-3">{c("seats_contested") || "Seats Contested"}</th>
-                  <th className="whitespace-nowrap px-3 py-3 text-right"></th>
+                  <th className="whitespace-nowrap py-3 pl-4 pr-4">{c("election_name") || "Election"}</th>
+                  {showKnownAs && <th className="whitespace-nowrap px-4 py-3">{p("known_as") || "Known As"}</th>}
+                  {!isCoalition && <th className="whitespace-nowrap px-4 py-3">{c("coalition_name") || "Coalition"}</th>}
+                  <th className="whitespace-nowrap px-4 py-3">{c("seats_won") || "Seats Won"}</th>
+                  <th className="whitespace-nowrap px-4 py-3">{c("votes_won") || "Votes"}</th>
+                  <th className="whitespace-nowrap px-4 py-3">{c("seats_contested") || "Seats Contested"}</th>
+                  <th className="whitespace-nowrap px-4 py-3 text-right"></th>
                 </tr>
               </thead>
               <tbody>
@@ -647,16 +660,28 @@ export default function PartyElectionTable({
                   const year = new Date(e.date).getFullYear();
                   return (
                     <tr key={idx} className="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                      <td className={`whitespace-nowrap py-[11px] pl-4 pr-3 ${monoCellClass}`}>
+                      <td className={`whitespace-nowrap py-[11px] pl-4 pr-4 ${monoCellClass}`}>
                         {fmt(e.election_name, isMalay)} ({year})
                       </td>
+                      {showKnownAs && (
+                        <td className="whitespace-nowrap px-4 py-[11px]">
+                          {e.known_as ? (
+                            <div className="flex items-center gap-1.5">
+                              <OverviewLogo uid={e.known_as_uid} name={e.known_as} folder="parties" />
+                              <span>{e.known_as}</span>
+                            </div>
+                          ) : (
+                            <span className="font-light text-txt-black-400">&nbsp;—</span>
+                          )}
+                        </td>
+                      )}
                       {!isCoalition && (
-                        <td className="whitespace-nowrap px-3 py-[11px]">
+                        <td className="whitespace-nowrap px-4 py-[11px]">
                           <CoalitionCell coalition={e.coalition} uid={e.coalition_uid} />
                         </td>
                       )}
                       {/* Seats Won — bar + text */}
-                      <td className={`px-3 py-[11px] ${monoNumberClass}`}>
+                      <td className={`px-4 py-[11px] ${monoNumberClass}`}>
                         <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
                           <Bar value={e.seats_won_perc} />
                           <p className="whitespace-nowrap">
@@ -668,7 +693,7 @@ export default function PartyElectionTable({
                         </div>
                       </td>
                       {/* Votes — bar + text */}
-                      <td className={`px-3 py-[11px] ${monoNumberClass}`}>
+                      <td className={`px-4 py-[11px] ${monoNumberClass}`}>
                         <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
                           <Bar value={e.votes_perc} />
                           <p className="whitespace-nowrap">
@@ -678,7 +703,7 @@ export default function PartyElectionTable({
                         </div>
                       </td>
                       {/* Seats Contested — bar + text */}
-                      <td className={`px-3 py-[11px] ${monoNumberClass}`}>
+                      <td className={`px-4 py-[11px] ${monoNumberClass}`}>
                         <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
                           <Bar value={e.seats_contested_perc} />
                           <p className="whitespace-nowrap">
@@ -690,7 +715,7 @@ export default function PartyElectionTable({
                         </div>
                       </td>
                       {/* Details button */}
-                      <td className="px-3 py-[11px] text-right">
+                      <td className="px-4 py-[11px] text-right">
                         <button
                           onClick={() => fetchFullResult(e, idx, elections)}
                           className="flex items-center gap-1.5 text-body-sm font-medium text-txt-black-700 hover:text-txt-black-900"
