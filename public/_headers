@@ -1,0 +1,29 @@
+# Cloudflare Pages headers. Applies to every response.
+# NOTE: each header value must be a single line. CSP is long by necessity.
+#
+# CSP rationale (origins actually used by this site):
+#   challenges.cloudflare.com → Turnstile (script + iframe)
+#   unpkg.com                 → Flock analytics script, Leaflet CSS
+#   cdn.jsdelivr.net          → DuckDB-WASM bundles + blob worker (importScripts)
+#   *.tinybird.co             → analytics read/ingest + Flock
+#   {auth,internal,static}.electiondata.my → auth Worker, i18n/R2, S3 data
+#   api/events.mapbox.com     → Mapbox GL tiles + telemetry
+#   fonts.googleapis/gstatic  → Google Fonts
+# 'unsafe-inline' (script) is required by the inline theme script + Astro's
+# hydration bootstrap; static hosting can't issue per-request nonces. The hard
+# clickjacking control here is frame-ancestors 'none' (+ X-Frame-Options).
+# 'wasm-unsafe-eval' + blob workers are required by DuckDB-WASM and Mapbox GL.
+#
+# CSP is in REPORT-ONLY mode for the first deploy: violations are logged to the
+# browser console but nothing is blocked. Clickjacking is still enforced via
+# X-Frame-Options below (that header is independent of CSP). Once the console is
+# clean across query builder / maps / signin / catalogue pages, rename the
+# header from "Content-Security-Policy-Report-Only" to "Content-Security-Policy".
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  Content-Security-Policy-Report-Only: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://auth.electiondata.my https://internal.electiondata.my https://static.electiondata.my https://api.us-west-2.aws.tinybird.co https://api.mapbox.com https://events.mapbox.com https://cdn.jsdelivr.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://challenges.cloudflare.com; manifest-src 'self'
