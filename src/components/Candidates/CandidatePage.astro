@@ -20,9 +20,10 @@ interface Props {
   candidateOptions?: { label: string; value: string }[] | null;
   currentOption: { name: string; slug: string; w: string; l: string } | undefined;
   candData: CandidateElection[] | null;
+  isRoot?: boolean;
 }
 
-const { slug, candidateOptions, currentOption, candData } = Astro.props;
+const { slug, candidateOptions, currentOption, candData, isRoot = false } = Astro.props;
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 
@@ -37,9 +38,7 @@ const cd = (key: string) => t(i18n.candidates ?? {}, key);
 
 
 const localePrefix = isMalay ? "/ms-MY" : "";
-const pageTitle = currentOption
-  ? `${currentOption.name} | ${cd("hero.header") || "Candidates"}`
-  : cd("hero.header") || "Candidates";
+const pageTitle = `${isRoot ? "Candidates" : currentOption?.name ?? "Candidates"} | ElectionData.MY`;
 
 const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
 const tbHost  = import.meta.env.PUBLIC_API_URL_TB;

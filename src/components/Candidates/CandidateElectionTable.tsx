@@ -265,8 +265,8 @@ export default function CandidateElectionTable({
 
   return (
     <div className="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
-      {/* Heading + tab pills in same row */}
-      <div className="flex items-start justify-between gap-3">
+      {/* Heading stacks above tab pills on mobile */}
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:justify-between">
         <h2 className="min-w-0 text-heading-2xs font-semibold">
           {cd("title") || "Complete electoral history for "}
           <span className="text-txt-danger">{displayName}</span>

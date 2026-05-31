@@ -33,9 +33,10 @@ interface Props {
   stateCode:      string;
   partyElections: PartyElection[];
   dropdown:       DropdownEntry[];
+  isRoot?:        boolean;
 }
 
-const { partyUid, stateCode, partyElections, dropdown } = Astro.props;
+const { partyUid, stateCode, partyElections, dropdown, isRoot = false } = Astro.props;
 const locale  = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 
@@ -67,9 +68,7 @@ const c  = (key: string) => t(i18n.common  ?? {}, key);
 const p  = (key: string) => t(i18n.parties ?? {}, key);
 
 const localePrefix = isMalay ? "/ms-MY" : "";
-const pageTitle    = currentParty
-  ? `${currentParty.party} | ${p("hero.header") || "Parties"}`
-  : p("hero.header") || "Parties";
+const pageTitle    = `${isRoot ? "Parties" : currentParty?.party ?? "Parties"} | ElectionData.MY`;
 
 const NO_DUN_STATES = ["mys", "kul", "lbn", "pjy"];
 const noDunState    = NO_DUN_STATES.includes(stateCode);
@@ -110,15 +109,6 @@ const s3Base   = import.meta.env.PUBLIC_API_URL_S3;
     <div class="mx-auto mt-3 w-full md:w-[727px]">
       <div class="combobox relative" data-type="party">
         <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
-          {currentParty && (
-            <div class="ml-3 flex h-[28px] w-[28px] shrink-0 items-center justify-center">
-              <img
-                src={`/static/images/${partyFolder}/${partyUid}.png`}
-                alt={currentParty.party}
-                class="h-auto max-h-[28px] w-auto max-w-[28px] border border-otl-gray-200 object-contain"
-              />
-            </div>
-          )}
           <input
             type="text"
             class="combobox-input w-full border-0 bg-transparent py-2.5 pl-3 pr-2 text-body-md text-txt-black-700 placeholder:text-txt-black-500 focus:outline-none"
@@ -138,12 +128,25 @@ const s3Base   = import.meta.env.PUBLIC_API_URL_S3;
           </button>
           <button
             type="button"
-            class="combobox-btn mr-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-b from-danger-400 to-danger-600 text-white"
+            class={`combobox-btn flex h-8 w-8 shrink-0 items-center justify-center ${currentParty ? "mr-4" : "mr-2 rounded-full bg-gradient-to-b from-danger-400 to-danger-600 text-white"}`}
             aria-label="Search"
           >
-            <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
-            </svg>
+            {currentParty ? (
+              <span class="relative flex h-[28px] w-[28px] items-center justify-center text-xs text-txt-black-400">
+                <span>?</span>
+                <img
+                  src={`/static/images/${partyFolder}/${partyUid}.png`}
+                  alt={currentParty.party}
+                  class="absolute inset-0 h-full w-full object-contain opacity-0"
+                  onload="this.style.opacity='1'"
+                  onerror="this.remove()"
+                />
+              </span>
+            ) : (
+              <svg class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z" clip-rule="evenodd" />
+              </svg>
+            )}
           </button>
         </div>
         <ul class="combobox-list absolute left-0 right-0 top-full z-50 mt-1.5 hidden max-h-72 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1 shadow-lg"></ul>
@@ -229,9 +232,13 @@ const s3Base   = import.meta.env.PUBLIC_API_URL_S3;
       }
       list.innerHTML = options.map(o => `
         <li class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
-          <img src="/static/images/${esc(o.folder)}/${esc(o.value)}.png"
-               class="h-auto max-h-[18px] w-auto max-w-[28px] shrink-0 border border-otl-gray-200 object-contain"
-               onerror="this.style.visibility='hidden'" alt="" />
+          <span class="relative flex h-[18px] w-8 shrink-0 items-center justify-center text-xs text-txt-black-400">
+            ?
+            <img src="/static/images/${esc(o.folder)}/${esc(o.value)}.png"
+                 class="absolute inset-0 h-full w-full object-contain opacity-0"
+                 onload="this.style.opacity='1'"
+                 onerror="this.remove()" alt="" />
+          </span>
           <span class="grow truncate">${esc(o.label)}</span>
           <span class="shrink-0 rounded-full border px-1.5 py-0.5 text-xs font-medium ${o.typeBadge === 'coalition' ? 'border-blue-400 bg-blue-50/60 text-blue-600' : 'border-red-400 bg-red-50/60 text-red-600'}">
             ${esc(o.typeBadge)}

@@ -115,18 +115,32 @@ type OverviewRow =
 
 function OverviewLogo({ uid, name, folder }: { uid?: string; name: string; folder: "parties" | "coalitions" }) {
   const [err, setErr] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (imgRef.current?.complete) {
+      imgRef.current.naturalWidth === 0 ? setErr(true) : setLoaded(true);
+    }
+  }, []);
+
   if (!uid || err) {
     return <span className="flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">?</span>;
   }
   return (
-    <img
-      src={`/static/images/${folder}/${uid}.png`}
-      alt={name}
-      width={32}
-      height={18}
-      className="shrink-0 border border-otl-gray-200 object-contain"
-      onError={() => setErr(true)}
-    />
+    <span className="relative flex h-[18px] w-8 shrink-0 items-center justify-center text-xs text-txt-black-400">
+      ?
+      <img
+        ref={imgRef}
+        src={`/static/images/${folder}/${uid}.png`}
+        alt={name}
+        width={32}
+        height={18}
+        className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
+        onLoad={() => setLoaded(true)}
+        onError={() => setErr(true)}
+      />
+    </span>
   );
 }
 
@@ -298,19 +312,31 @@ function OverviewNumbers({ seats, votes, total, seatWidth, voteWidth, percentage
 
 function CoalitionCell({ coalition, uid }: { coalition?: string; uid?: string }) {
   const [err, setErr] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (imgRef.current?.complete) {
+      imgRef.current.naturalWidth === 0 ? setErr(true) : setLoaded(true);
+    }
+  }, []);
+
   if (!coalition || coalition === "ALONE") {
     return <span className="font-light text-txt-black-400">&nbsp;—</span>;
   }
   return (
     <div className="flex items-center gap-1.5">
       {uid && !err ? (
-        <div className="relative flex h-[18px] w-8 shrink-0 justify-center">
+        <div className="relative flex h-[18px] w-8 shrink-0 items-center justify-center text-xs text-txt-black-400">
+          ?
           <img
+            ref={imgRef}
             src={`/static/images/coalitions/${uid}.png`}
             alt={coalition}
             width={32}
             height={18}
-            className="border border-otl-gray-200 object-contain"
+            className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
+            onLoad={() => setLoaded(true)}
             onError={() => setErr(true)}
           />
         </div>
@@ -491,15 +517,7 @@ export default function PartyElectionTable({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-heading-2xs font-bold">
           <div className="flex items-center gap-2">
-            <div className="relative flex h-[18px] w-8 shrink-0 justify-center">
-              <img
-                src={`/static/images/${partyFolder}/${partyUid}.png`}
-                alt={partyName}
-                width={32}
-                height={18}
-                className="border border-otl-gray-200 object-contain"
-              />
-            </div>
+            <OverviewLogo uid={partyUid} name={partyName} folder={partyFolder} />
             <span>
               <strong>{partyName}'s history</strong>
               {" in "}
@@ -562,43 +580,48 @@ export default function PartyElectionTable({
       ) : (
         <>
           {/* Mobile: card layout */}
-          <div className="divide-y divide-otl-gray-200 border-y border-otl-gray-200 sm:hidden">
+          <div className="divide-y divide-otl-gray-200 border-y border-otl-gray-200 md:hidden">
             {elections.map((e, idx) => {
               const year = new Date(e.date).getFullYear();
               return (
                 <div key={idx} className="space-y-3 py-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-body-sm font-medium">
-                      {fmt(e.election_name, isMalay)} ({year})
-                    </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <p className="shrink-0 text-body-sm font-medium">
+                        {fmt(e.election_name, isMalay)} ({year})
+                      </p>
+                      {!isCoalition && e.coalition && e.coalition !== "ALONE" && (
+                        <>
+                          <span className="shrink-0 text-txt-black-500" aria-hidden="true">&bull;</span>
+                          <CoalitionCell coalition={e.coalition} uid={e.coalition_uid} />
+                        </>
+                      )}
+                    </div>
                     <button
                       onClick={() => fetchFullResult(e, idx, elections)}
-                      className="flex shrink-0 items-center gap-1 text-body-sm text-txt-black-700"
+                      className="flex shrink-0 items-center gap-1.5 text-body-sm font-medium text-txt-black-700 hover:text-txt-black-900"
                       aria-label={c("full_result") || "Details"}
                     >
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <svg className="h-4.5 w-4.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                       </svg>
                     </button>
                   </div>
-                  {!isCoalition && (
-                    <div className="text-body-sm">
-                      <span className="text-txt-black-500">{c("coalition_name") || "Coalition"}: </span>
-                      <CoalitionCell coalition={e.coalition} uid={e.coalition_uid} />
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-2 text-body-sm">
+                  <div className="flex flex-col gap-2.5 text-body-sm">
                     <div className="flex items-center gap-2">
-                      <Bar value={e.seats_won_perc} size="w-[80px] h-[5px]" />
-                      <span className="whitespace-nowrap">
-                        {c("seats_won") || "Seats Won"}: {e.seats_won} / {e.seats_total} ({perc(e.seats_won_perc)})
-                      </span>
+                      <p className="w-[120px] shrink-0 whitespace-nowrap font-medium text-txt-black-500">{c("seats_won") || "Seats Won"}:</p>
+                      <Bar value={e.seats_won_perc} size="h-[5px] flex-1" />
+                      <p className="shrink-0 whitespace-nowrap">{e.seats_won} / {e.seats_total} ({perc(e.seats_won_perc)})</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Bar value={e.votes_perc} size="w-[80px] h-[5px]" />
-                      <span className="whitespace-nowrap">
-                        {c("votes_won") || "Votes"}: {num(e.votes)} ({perc(e.votes_perc)})
-                      </span>
+                      <p className="w-[120px] shrink-0 whitespace-nowrap font-medium text-txt-black-500">{c("seats_contested") || "Seats Contested"}:</p>
+                      <Bar value={e.seats_contested_perc} size="h-[5px] flex-1" />
+                      <p className="shrink-0 whitespace-nowrap">{e.seats_contested} / {e.seats_total} ({perc(e.seats_contested_perc)})</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="w-[120px] shrink-0 whitespace-nowrap font-medium text-txt-black-500">{c("votes_won") || "Votes Won"}:</p>
+                      <Bar value={e.votes_perc} size="h-[5px] flex-1" />
+                      <p className="shrink-0 whitespace-nowrap">{num(e.votes)} ({perc(e.votes_perc)})</p>
                     </div>
                   </div>
                 </div>
@@ -607,7 +630,7 @@ export default function PartyElectionTable({
           </div>
 
           {/* Desktop: full table */}
-          <div className="hidden overflow-x-auto sm:block">
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left text-body-sm">
               <thead>
                 <tr className="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
