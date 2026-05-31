@@ -1,0 +1,140 @@
+@import "mapbox-gl/dist/mapbox-gl.css";
+
+@import "./tokens/color.css";
+
+/* Import Light theme */
+@import "./tokens/light.css";
+
+/* Import Dark theme */
+@import "./tokens/dark.css";
+
+/* TAILWIND CSS */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* MODULE CSS */
+/* @import "./dashboards/general.css";
+@import "./dashboards/table.css";
+@import "leaflet.markercluster";
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css"; */
+
+@import "./markdown.css";
+
+/* Reserve scrollbar space to prevent layout shift when switching languages */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Default border color */
+*,
+::before,
+::after {
+  @apply border-otl-gray-200;
+}
+
+/* Heading base styles */
+h1 {
+  @apply font-poppins text-4xl font-bold leading-[54px] text-txt-black-900;
+}
+
+h2 {
+  @apply font-poppins text-3xl font-bold leading-[38px] text-txt-black-900;
+}
+
+h3 {
+  @apply font-poppins text-2xl font-bold text-txt-black-900;
+}
+
+h4 {
+  @apply font-poppins text-xl font-bold text-txt-black-900;
+}
+
+h5 {
+  @apply text-lg font-bold text-txt-black-900;
+}
+
+h6 {
+  @apply text-base font-semibold text-txt-black-900;
+}
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  appearance: none;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  border-top-color: #18181b;
+}
+
+.dark .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  border-top-color: rgb(255, 255, 255);
+}
+.mapboxgl-popup-content {
+  background: #18181b;
+  padding: 0;
+}
+
+.dark .mapboxgl-popup-content {
+  background: rgb(255, 255, 255);
+}
+
+/* Hides outline for GeoChoropleth onclick */
+/* g:focus {
+  outline: none;
+}
+
+path:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: unset;
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  @apply z-0;
+} */
+
+/* Mobile nav: thinner icon strokes for a more refined look */
+@media (max-width: 1023px) {
+  .nav-mobile-menu .nav-mobile-icon svg,
+  .nav-mobile-menu .nav-mobile-icon path,
+  .nav-mobile-menu .nav-mobile-icon line,
+  .nav-mobile-menu .nav-mobile-icon circle,
+  .nav-mobile-menu .nav-mobile-icon rect,
+  .nav-mobile-menu .nav-mobile-icon polyline,
+  .nav-mobile-menu .nav-mobile-icon polygon,
+  .nav-mobile-menu .nav-mobile-icon ellipse,
+  .nav-mobile-menu .nav-mobile-icon [stroke],
+  .nav-mobile-menu .nav-mobile-icon g path,
+  .nav-mobile-menu .nav-mobile-icon g line,
+  .nav-mobile-menu .nav-mobile-icon g [stroke] {
+    stroke-width: 1.25px !important;
+  }
+}
+
+/* MapPlot Popup Marker */
+/* .leaflet-popup-content {
+  width: fit-content !important;
+}
+
+.leaflet-popup-content-wrapper .leaflet-popup-content {
+  @apply whitespace-pre font-mono text-xs;
+} */

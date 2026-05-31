@@ -105,7 +105,6 @@
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.13",
     "tailwindcss": "3",
-    "webpack": "^5.106.2",
     "wrangler": "4.95.0"
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1"

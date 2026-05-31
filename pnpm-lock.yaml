@@ -294,9 +294,6 @@ importers:
       tailwindcss:
         specifier: '3'
         version: 3.4.17
-      webpack:
-        specifier: 5.106.2
-        version: 5.106.2
       wrangler:
         specifier: 4.95.0
         version: 4.95.0

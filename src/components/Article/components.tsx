@@ -1,5 +1,5 @@
 import { ArrowDownTrayIcon, ScaleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
-import { createElement, type ReactNode, type SVGProps } from 'react';
+import { createElement, type ReactElement, type ReactNode, type SVGProps } from 'react';
 
 export type Principle = {
   number: string;
@@ -10,7 +10,7 @@ export type Principle = {
 
 const articleSerif = { fontFamily: 'Georgia, "Times New Roman", serif' };
 
-type IconComp = (props: SVGProps<SVGSVGElement>) => JSX.Element;
+type IconComp = (props: SVGProps<SVGSVGElement>) => ReactElement;
 
 const principleIcons: Record<string, IconComp> = {
   'arrow-down-tray': ArrowDownTrayIcon as IconComp,

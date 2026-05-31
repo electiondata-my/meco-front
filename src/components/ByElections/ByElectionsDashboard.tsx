@@ -72,7 +72,7 @@ const getStateCode = (state: string) =>
     ? state
     : (Object.entries(CountryAndStates).find(([, name]) => name === state)?.[0] ?? state);
 
-const stateOptions = [MALAYSIA].concat(STATES).map(s => ({ label: s.name as string, value: s.key as string }));
+const stateOptions = [MALAYSIA, ...STATES].map(s => ({ label: s.name as string, value: s.key as string }));
 
 const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
   seats,

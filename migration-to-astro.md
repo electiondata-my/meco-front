@@ -6,6 +6,25 @@
 
 ---
 
+## Accessing Legacy Source Files
+
+All root-level Next.js source directories (`pages/`, `dashboards/`, `components/`, `charts/`, `hooks/`) have been deleted from the working tree as of the `refactor/astro` branch. The original files remain accessible via git:
+
+```bash
+# View a specific legacy page
+git show origin/main:pages/elections/[[...election]].tsx
+
+# View a legacy dashboard
+git show origin/main:dashboards/elections/index.tsx
+
+# List all files in a legacy directory
+git ls-tree -r origin/main --name-only | grep "^pages/"
+```
+
+Use these when implementing remaining unmigrated pages (Redelineation, Elections, Seats, Data Catalogue) to understand the original structure and component wiring.
+
+---
+
 ## Context
 
 electiondata.my is a public Malaysian election data platform. The vast majority of pages are content + static data display fetched at build time from a JSON/S3 API (`static.electiondata.my`). The current Next.js setup ships a full React bundle to every visitor even for pages that have zero interactivity, hurting load time and requiring expensive Vercel hosting. Astro's static-first, island architecture generates pure HTML by default and adds JavaScript only at the component level where strictly necessary.

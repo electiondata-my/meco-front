@@ -1,5 +1,37 @@
 /// <reference types="astro/client" />
 
+declare module "canvas2svg" {
+  function canvas2svg(width: number, height: number): any;
+  export default canvas2svg;
+}
+
+declare module "*.md" {
+  const content: string;
+  export default content;
+}
+
+declare module "chartjs-adapter-luxon";
+
+interface TurnstileWidget {
+  render(
+    container: string | HTMLElement,
+    options: {
+      sitekey: string;
+      callback?: (token: string) => void;
+      "error-callback"?: () => void;
+      size?: "normal" | "compact" | "invisible";
+      execution?: "render" | "execute";
+      [key: string]: unknown;
+    },
+  ): string;
+  reset(widgetId: string): void;
+  execute(widgetId: string): void;
+}
+
+interface Window {
+  turnstile?: TurnstileWidget;
+}
+
 interface ImportMetaEnv {
   readonly PUBLIC_APP_URL: string;
   readonly PUBLIC_APP_ENV: string;

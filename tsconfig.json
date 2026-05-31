@@ -18,13 +18,11 @@
       "@src/*": ["*"],
       "@layouts/*": ["layouts/*"],
       "@i18n/*": ["i18n/*"],
-      "@charts/*": ["../charts/*"],
-      "@components/*": ["../components/*"],
-      "@dashboards/*": ["../dashboards/*"],
-      "@data-catalogue/*": ["../data-catalogue/*"],
-      "@hooks/*": ["../hooks/*"],
-      "@icons/*": ["../icons/*"],
-      "@lib/*": ["../lib/*"]
+      "@charts/*": ["components/charts/*"],
+      "@components/*": ["components/ui/*"],
+      "@dashboards/*": ["components/dashboards/*"],
+      "@hooks/*": ["hooks/*"],
+      "@lib/*": ["lib/*"]
     }
   },
   "include": ["src", "**/*.ts", "**/*.tsx"],
