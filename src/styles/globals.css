@@ -93,6 +93,10 @@ input[type="search"]::-webkit-search-results-decoration {
   background: rgb(255, 255, 255);
 }
 
+.mapbox-improve-map {
+  display: none !important;
+}
+
 /* Hides outline for GeoChoropleth onclick */
 /* g:focus {
   outline: none;

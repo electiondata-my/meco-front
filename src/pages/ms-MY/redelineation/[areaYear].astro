@@ -1,0 +1,65 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import RedelineationDashboard from "@src/components/Redelineation/RedelineationDashboard";
+import { getTranslations, t } from "@i18n/index";
+import { fetchJSON } from "@lib/api";
+
+export async function getStaticPaths() {
+  type FilterJSON = Record<string, string[]>;
+  const filter = await fetchJSON<FilterJSON>("/redelineation/filter.json");
+  const filter_var = import.meta.env.POST_TO_BUILD;
+
+  const slugSet = new Set<string>();
+  for (const key of Object.keys(filter)) {
+    const [area] = key.split("_");
+    for (const year of filter[key]) {
+      slugSet.add(`${area}-${year}`);
+    }
+  }
+
+  const slugs = Array.from(slugSet);
+
+  return slugs
+    .filter((slug) => !filter_var || slug === filter_var)
+    .map((slug) => {
+      const [area, year] = slug.split("-");
+      return {
+        params: { areaYear: slug },
+        props: { area, year, yearOptions: filter },
+      };
+    });
+}
+
+interface Props {
+  area: string;
+  year: string;
+  yearOptions: Record<string, string[]>;
+}
+
+const { area, year, yearOptions } = Astro.props;
+const locale = Astro.currentLocale ?? "ms-MY";
+const apiBaseUrl = import.meta.env.PUBLIC_API_URL_S3 ?? "";
+const mapboxToken = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
+const mapboxAccount = import.meta.env.PUBLIC_MAPBOX_ACCOUNT ?? "";
+
+const i18n = await getTranslations(locale, ["common", "redelineation", "home"]);
+const title = t(i18n.redelineation ?? {}, "hero.header");
+---
+
+<Layout title={title}>
+  <RedelineationDashboard
+    client:only="react"
+    area={area}
+    year={year}
+    yearOptions={yearOptions}
+    apiBaseUrl={apiBaseUrl}
+    mapboxToken={mapboxToken}
+    mapboxAccount={mapboxAccount}
+    locale={locale}
+    translations={{
+      common: i18n.common ?? {},
+      redelineation: i18n.redelineation ?? {},
+      home: i18n.home ?? {},
+    }}
+  />
+</Layout>
