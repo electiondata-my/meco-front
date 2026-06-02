@@ -44,9 +44,10 @@ const mapboxAccount = import.meta.env.PUBLIC_MAPBOX_ACCOUNT ?? "";
 
 const i18n = await getTranslations(locale, ["common", "redelineation", "home"]);
 const title = t(i18n.redelineation ?? {}, "hero.header");
+const description = t(i18n.redelineation ?? {}, "hero.description");
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
   <RedelineationDashboard
     client:only="react"
     area={area}

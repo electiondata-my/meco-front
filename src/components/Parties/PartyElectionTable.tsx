@@ -127,17 +127,17 @@ function OverviewLogo({ uid, name, folder }: { uid?: string; name: string; folde
   }, []);
 
   if (!uid || err) {
-    return <span className="flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">?</span>;
+    return <span className="flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">?</span>;
   }
   return (
-    <span className="relative flex h-[18px] w-8 shrink-0 items-center justify-center text-xs text-txt-black-400">
+    <span className="relative flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
       ?
       <img
         ref={imgRef}
         src={`/static/images/${folder}/${uid}.png`}
         alt={name}
         width={32}
-        height={18}
+        height={16}
         className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
         onLoad={() => setLoaded(true)}
         onError={() => setErr(true)}
@@ -231,7 +231,7 @@ function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (key: st
       <table className="w-full text-left text-body-sm">
         <thead>
           <tr className="border-b-2 border-otl-gray-200 font-medium">
-            <th className="sticky left-0 z-20 whitespace-nowrap bg-bg-white py-3 pl-4 pr-3">{c("party_name") || "Party"}</th>
+            <th className="sticky left-0 z-20 whitespace-nowrap bg-bg-white py-3 pr-3 text-left">{c("party_name") || "Party"}</th>
             <th className="whitespace-nowrap px-3 py-3">{c("seats_won") || "Seats Won"}</th>
             <th className="whitespace-nowrap px-3 py-3">{c("votes_won") || "Votes Won"}</th>
             <th className="whitespace-nowrap px-3 py-3">{c("seats_contested") || "Seats Contested"}</th>
@@ -248,7 +248,7 @@ function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (key: st
                   className="cursor-pointer border-b border-otl-gray-200 bg-bg-washed hover:bg-bg-black-50"
                   onClick={() => toggle(group.coalition_uid)}
                 >
-                  <td className="sticky left-0 z-10 whitespace-nowrap bg-bg-washed py-[11px] pl-4 pr-3 font-semibold">
+                  <td className="sticky left-0 z-10 whitespace-nowrap bg-bg-washed py-[11px] pl-2 pr-3 text-left font-semibold">
                     <div className="flex items-center gap-1.5">
                       <OverviewLogo uid={group.coalition_uid} name={group.coalition} folder="coalitions" />
                       <span>{group.coalition}</span>
@@ -272,7 +272,7 @@ function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (key: st
             const { party, isChild } = row;
             return (
               <tr key={`party-${party.party}-${index}`} className="border-b border-otl-gray-200">
-                <td className={`sticky left-0 z-10 whitespace-nowrap bg-bg-white py-[11px] pr-3 ${isChild ? "pl-10" : "pl-4"}`}>
+                <td className={`sticky left-0 z-10 whitespace-nowrap bg-bg-white py-[11px] pr-3 text-left ${isChild ? "pl-8" : "pl-2"}`}>
                   <div className="flex items-center gap-1.5">
                     <OverviewLogo uid={party.party_uid} name={party.party} folder="parties" />
                     <span>{party.party}</span>
@@ -329,21 +329,21 @@ function CoalitionCell({ coalition, uid }: { coalition?: string; uid?: string })
   return (
     <div className="flex items-center gap-1.5">
       {uid && !err ? (
-        <div className="relative flex h-[18px] w-8 shrink-0 items-center justify-center text-xs text-txt-black-400">
+        <div className="relative flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
           ?
           <img
             ref={imgRef}
             src={`/static/images/coalitions/${uid}.png`}
             alt={coalition}
             width={32}
-            height={18}
+            height={16}
             className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
             onLoad={() => setLoaded(true)}
             onError={() => setErr(true)}
           />
         </div>
       ) : (
-        <span className="flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">?</span>
+        <span className="flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">?</span>
       )}
       <span>{coalition}</span>
     </div>

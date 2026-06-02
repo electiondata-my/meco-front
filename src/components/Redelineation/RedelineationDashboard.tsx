@@ -2,7 +2,6 @@ import {
   FC,
   Fragment,
   FunctionComponent,
-  ReactNode,
   useEffect,
   useRef,
   useState,
@@ -195,12 +194,22 @@ const SeatCombobox: FC<SeatComboboxProps> = ({
 }) => {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const close = () => {
+    setOpen(false);
+    setActiveIndex(-1);
+  };
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
-      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!wrapperRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+        setActiveIndex(-1);
+      }
     };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
@@ -213,6 +222,20 @@ const SeatCombobox: FC<SeatComboboxProps> = ({
   const filteredOptions = options.filter((option) =>
     option.label.toLowerCase().includes(query.toLowerCase()),
   );
+
+  useEffect(() => {
+    setActiveIndex(-1);
+  }, [query]);
+
+  useEffect(() => {
+    optionRefs.current[activeIndex]?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
+
+  const selectOption = (option: SeatOption) => {
+    setQuery(option.label);
+    onChange(option);
+    close();
+  };
 
   return (
     <div ref={wrapperRef} className="relative w-full text-left">
@@ -230,6 +253,30 @@ const SeatCombobox: FC<SeatComboboxProps> = ({
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              if (!open) {
+                setOpen(true);
+                return;
+              }
+              setActiveIndex((index) =>
+                Math.min(index + 1, filteredOptions.length - 1),
+              );
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              if (!open) return;
+              setActiveIndex((index) => Math.max(index - 1, 0));
+            } else if (event.key === "Enter") {
+              const activeOption = filteredOptions[activeIndex];
+              if (open && activeOption) {
+                event.preventDefault();
+                selectOption(activeOption);
+              }
+            } else if (event.key === "Escape") {
+              close();
+            }
+          }}
         />
         {query && (
           <button
@@ -257,18 +304,20 @@ const SeatCombobox: FC<SeatComboboxProps> = ({
         </button>
       </div>
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1 shadow-lg">
+        <div className="shadow-lg absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-y-auto rounded-xl border border-otl-gray-200 bg-bg-white py-1">
           {filteredOptions.length > 0 ? (
-            filteredOptions.map((option) => (
+            filteredOptions.map((option, index) => (
               <button
                 key={option.value}
-                type="button"
-                className="block w-full truncate px-4 py-2 text-left text-sm text-txt-black-700 hover:bg-bg-black-50"
-                onClick={() => {
-                  setQuery(option.label);
-                  onChange(option);
-                  setOpen(false);
+                ref={(element) => {
+                  optionRefs.current[index] = element;
                 }}
+                type="button"
+                className={clx(
+                  "block w-full truncate px-4 py-2 text-left text-sm text-txt-black-700 hover:bg-bg-black-50",
+                  index === activeIndex && "bg-bg-black-50",
+                )}
+                onClick={() => selectOption(option)}
               >
                 {option.label}
               </button>
@@ -284,25 +333,20 @@ const SeatCombobox: FC<SeatComboboxProps> = ({
   );
 };
 
-const AttributionText: FC<{ children: string }> = ({ children }) => {
-  const match = children.match(/^(.*)\[([^\]]+)\]\(([^)]+)\)(.*)$/);
-  if (!match) return <>{children}</>;
-
-  return (
-    <>
-      {match[1]}
-      <a
-        className="underline underline-offset-2 hover:text-txt-black-700"
-        href={match[3]}
-        rel="noreferrer"
-        target="_blank"
-      >
-        {match[2]}
-      </a>
-      {match[4]}
-    </>
+const escapeHTML = (text: string) =>
+  text.replace(
+    /[&<>"']/g,
+    (char) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        char
+      ]!,
   );
-};
+
+const attributionHTML = (text: string) =>
+  escapeHTML(text).replace(
+    /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noreferrer">$1</a>',
+  );
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -341,6 +385,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
   const r = (key: string, vars?: Record<string, string | number>) =>
     tFrom(translations.redelineation, key, vars);
   const c = (key: string) => tFrom(translations.common, key);
+  const boundaryAttribution = `(CC0) ${attributionHTML(c("attribution_boundary_data"))}`;
 
   const [level, setLevel] = useState<ElectionType>("parlimen");
   const [toggleState, setToggleState] = useState<ToggleState>("new");
@@ -349,6 +394,9 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [views, setViews] = useState<number | null>(null);
   const [viewsLoading, setViewsLoading] = useState(true);
+  const _pendingSeatSlug = useRef<string | null>(null);
+  const pendingSeatScroll = useRef(false);
+  const redistributionRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
@@ -370,10 +418,9 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
     if (params.seat) {
       // seat slug → actual seat name will be resolved after data loads
       _pendingSeatSlug.current = params.seat;
+      pendingSeatScroll.current = true;
     }
   }, []);
-
-  const _pendingSeatSlug = useRef<string | null>(null);
 
   // Fetch data whenever area, year, or level changes
   useEffect(() => {
@@ -400,7 +447,8 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
           const exists = seats.some(
             (s: any) => s[`seat_${toggle}`] === seatValue,
           );
-          if (!exists) setSeatValue((seats[0] as any)?.[`seat_${toggle}`] ?? "");
+          if (!exists)
+            setSeatValue((seats[0] as any)?.[`seat_${toggle}`] ?? "");
         }
       })
       .catch(() => setData(null))
@@ -419,6 +467,18 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
     (s: any) => s[`seat_${toggleState}`] === seatValue,
   ) as any;
 
+  useEffect(() => {
+    if (!pendingSeatScroll.current || !currentSeat) return;
+    pendingSeatScroll.current = false;
+    const frame = requestAnimationFrame(() => {
+      redistributionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [currentSeat]);
+
   const dropdown = currentSeats.map((s: any) => ({
     value: s[`seat_${toggleState}`] as string,
     label: `${s[`seat_${toggleState}`]}, ${s.state}` as string,
@@ -427,8 +487,10 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
     state: s.state as string,
   }));
 
-  const new_year = data?.map_new.split("_").find((p) => /^\d{4}$/.test(p)) ?? "";
-  const old_year = data?.map_old.split("_").find((p) => /^\d{4}$/.test(p)) ?? "";
+  const new_year =
+    data?.map_new.split("_").find((p) => /^\d{4}$/.test(p)) ?? "";
+  const old_year =
+    data?.map_old.split("_").find((p) => /^\d{4}$/.test(p)) ?? "";
 
   const handleToggleChange = (value: ToggleState) => {
     setToggleState(value);
@@ -437,14 +499,18 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
       ? ((currentSeat[`seat_${value}`] as string[] | string | undefined) ?? "")
       : "";
     const resolved = Array.isArray(newSeatValue)
-      ? newSeatValue[0] ?? ""
+      ? (newSeatValue[0] ?? "")
       : newSeatValue;
     const nextSeats = value === "new" ? data?.new : data?.old;
     const nextSeat = nextSeats?.find(
       (seat: any) => seat[`seat_${value}`] === resolved,
     ) as any;
     setSeatValue(resolved);
-    pushParams({ level, type: value, seat: resolved ? seatSlug(resolved) : null });
+    pushParams({
+      level,
+      type: value,
+      seat: resolved ? seatSlug(resolved) : null,
+    });
     if (redelineation_map && nextSeat) {
       redelineation_map.flyTo({
         center: nextSeat.center,
@@ -542,6 +608,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
           type={area}
           mapboxToken={mapboxToken}
           mapboxAccount={mapboxAccount}
+          attribution={boundaryAttribution}
           r={r}
         />
       )}
@@ -550,7 +617,10 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
       <Container className="gap-8 pb-8 pt-36 lg:gap-16 lg:pb-16 lg:pt-20">
         <SectionGrid>
           <div className="mx-auto w-full space-y-6">
-            <h2 className="mx-auto max-w-[727px] text-center font-heading text-heading-2xs font-semibold">
+            <h2
+              ref={redistributionRef}
+              className="mx-auto max-w-[727px] scroll-mt-24 text-center font-heading text-heading-2xs font-semibold sm:scroll-mt-40"
+            >
               {r("constituency_redistribution")}
             </h2>
 
@@ -564,7 +634,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
                     className={clx(
                       "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium transition-all",
                       toggleState === val
-                        ? "border border-otl-gray-200 bg-bg-dialog-active shadow-button text-txt-black-900"
+                        ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
                         : "text-txt-black-500",
                     )}
                   >
@@ -598,6 +668,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
                     <MapboxRedelineation
                       mapboxToken={mapboxToken}
                       mapboxAccount={mapboxAccount}
+                      attribution={boundaryAttribution}
                       initialState={{
                         longitude: currentSeat.center[0],
                         latitude: currentSeat.center[1],
@@ -638,9 +709,6 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
                     </div>
                   )}
                 </div>
-                <p className="text-center text-sm italic text-txt-black-500">
-                  <AttributionText>{r("attribution_tindak")}</AttributionText>
-                </p>
               </div>
 
               {/* Geohistory table */}
@@ -753,7 +821,9 @@ const RedelineationFilters: FC<FiltersProps> = ({
             width="max-sm:w-full"
             options={TYPE_OPTIONS}
             selected={TYPE_OPTIONS.find((opt) => opt.value === state.typeValue)}
-            onChange={(selected) => setData("typeValue", selected.value as Region)}
+            onChange={(selected) =>
+              setData("typeValue", selected.value as Region)
+            }
           />
 
           {/* Year dropdown */}
@@ -777,7 +847,7 @@ const RedelineationFilters: FC<FiltersProps> = ({
                 className={clx(
                   "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium transition-all disabled:opacity-40",
                   level === lv
-                    ? "border border-otl-gray-200 bg-bg-dialog-active shadow-button text-txt-black-900"
+                    ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
                     : "text-txt-black-500",
                 )}
               >
@@ -794,7 +864,7 @@ const RedelineationFilters: FC<FiltersProps> = ({
         onOpenChange={(open) => setData("openFilter", open)}
       >
         <DrawerTrigger asChild>
-          <button className="fixed bottom-4 right-3 z-20 flex items-center gap-2 rounded-full border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium shadow-md lg:hidden">
+          <button className="shadow-md fixed bottom-4 right-3 z-20 flex items-center gap-2 rounded-full border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium lg:hidden">
             {r("filters") || c("filters") || "Filters"}
           </button>
         </DrawerTrigger>
@@ -816,7 +886,9 @@ const RedelineationFilters: FC<FiltersProps> = ({
               <Dropdown
                 anchor="left"
                 options={TYPE_OPTIONS}
-                selected={TYPE_OPTIONS.find((o) => o.value === state.mobileType)}
+                selected={TYPE_OPTIONS.find(
+                  (o) => o.value === state.mobileType,
+                )}
                 onChange={(selected) => {
                   if (selected.value !== state.mobileType)
                     setData("mobileYear", "");
@@ -851,7 +923,7 @@ const RedelineationFilters: FC<FiltersProps> = ({
                     className={clx(
                       "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium",
                       state.mobileLevel === lv
-                        ? "border border-otl-gray-200 bg-bg-dialog-active shadow-button text-txt-black-900"
+                        ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
                         : "text-txt-black-500",
                     )}
                   >
@@ -870,10 +942,13 @@ const RedelineationFilters: FC<FiltersProps> = ({
               {c("close") || "Close"}
             </button>
             <button
-              disabled={!state.mobileLevel || !state.mobileType || !state.mobileYear}
+              disabled={
+                !state.mobileLevel || !state.mobileType || !state.mobileYear
+              }
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2.5 text-body-sm font-medium text-white disabled:opacity-40"
               onClick={() => {
-                if (state.mobileLevel !== level) onLevelChange(state.mobileLevel);
+                if (state.mobileLevel !== level)
+                  onLevelChange(state.mobileLevel);
                 onAreaYearChange(state.mobileType, state.mobileYear);
                 setData("openFilter", false);
               }}
@@ -898,6 +973,7 @@ interface BeforeAfterProps {
   type: string;
   mapboxToken: string;
   mapboxAccount: string;
+  attribution: string;
   r: (key: string) => string;
 }
 
@@ -918,6 +994,7 @@ interface BoundaryMapProps {
   map_old: string;
   mapboxToken: string;
   mapboxAccount: string;
+  attribution: string;
   onMove: (event: ViewStateChangeEvent) => void;
   styleUrl: string;
   tooltipOwner?: string | null;
@@ -943,6 +1020,7 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
   type,
   mapboxToken,
   mapboxAccount,
+  attribution,
   r,
 }) => {
   const dark = useDarkMode();
@@ -968,7 +1046,8 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
   const secondaryColor = "#DC2626";
   const referenceOpacity = dark ? 0.45 : 0.35;
 
-  const handleMove = (event: ViewStateChangeEvent) => setViewState(event.viewState);
+  const handleMove = (event: ViewStateChangeEvent) =>
+    setViewState(event.viewState);
 
   const newBoundaries: BoundarySpec[] = [
     {
@@ -1028,7 +1107,7 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
               className={clx(
                 "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium transition-all",
                 tab === value
-                  ? "border border-otl-gray-200 bg-bg-dialog-active shadow-button text-txt-black-900"
+                  ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
                   : "text-txt-black-500",
               )}
             >
@@ -1049,6 +1128,7 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
                 map_old={map_old}
                 mapboxToken={mapboxToken}
                 mapboxAccount={mapboxAccount}
+                attribution={attribution}
                 styleUrl={styleUrl}
                 tooltipOwner={tooltipOwner}
                 tooltipResetKey={tooltipResetKey}
@@ -1070,6 +1150,7 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
                   map_old={map_old}
                   mapboxToken={mapboxToken}
                   mapboxAccount={mapboxAccount}
+                  attribution={attribution}
                   styleUrl={styleUrl}
                   tooltipOwner={tooltipOwner}
                   tooltipResetKey={tooltipResetKey}
@@ -1092,7 +1173,9 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
                 min={0}
                 max={100}
                 step={1}
-                aria-label={r("map_explorer.slider_label") || "Slide to compare"}
+                aria-label={
+                  r("map_explorer.slider_label") || "Slide to compare"
+                }
                 onValueChange={([value]) => {
                   setSlider(value);
                   setTooltipOwner(null);
@@ -1101,7 +1184,9 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
               >
                 <Track className="relative h-full grow bg-transparent" />
                 <Thumb className="shadow-floating flex h-9 w-[94px] cursor-col-resize items-center justify-center gap-1.5 rounded-full bg-[#18181B] px-3 text-body-xs font-semibold text-white outline-none focus-visible:ring-4 focus-visible:ring-fr-primary">
-                  <span className="font-mono text-body-sm leading-none">&lt;&gt;</span>
+                  <span className="font-mono text-body-sm leading-none">
+                    &lt;&gt;
+                  </span>
                   <span>{r("map_explorer.slide") || "Slide"}</span>
                 </Thumb>
               </Root>
@@ -1113,9 +1198,6 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
                 {r("old_constituency")} ({old_year})
               </div>
             </div>
-            <p className="text-center text-sm italic text-txt-black-500">
-              <AttributionText>{r("attribution_tindak")}</AttributionText>
-            </p>
           </div>
         )}
 
@@ -1129,6 +1211,7 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
             map_old={map_old}
             mapboxToken={mapboxToken}
             mapboxAccount={mapboxAccount}
+            attribution={attribution}
             onMove={handleMove}
             styleUrl={styleUrl}
             viewState={viewState}
@@ -1146,6 +1229,7 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
             map_old={map_old}
             mapboxToken={mapboxToken}
             mapboxAccount={mapboxAccount}
+            attribution={attribution}
             onMove={handleMove}
             styleUrl={styleUrl}
             viewState={viewState}
@@ -1165,9 +1249,6 @@ const SingleMapFrame: FC<BoundaryMapProps> = (props) => {
         <BoundaryMap {...props} />
         <MapLegend boundaries={props.boundaries} r={r} />
       </div>
-      <p className="text-center text-sm italic text-txt-black-500">
-        <AttributionText>{r("attribution_tindak")}</AttributionText>
-      </p>
     </div>
   );
 };
@@ -1180,6 +1261,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
   map_old,
   mapboxToken,
   mapboxAccount,
+  attribution,
   onMove,
   onTooltipOwnerChange,
   styleUrl,
@@ -1244,7 +1326,12 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
       return;
     }
 
-    const next: PopupInfo = { newSeat, oldSeat, x: event.point.x, y: event.point.y };
+    const next: PopupInfo = {
+      newSeat,
+      oldSeat,
+      x: event.point.x,
+      y: event.point.y,
+    };
     if (tooltipFrame.current) cancelAnimationFrame(tooltipFrame.current);
     tooltipFrame.current = requestAnimationFrame(() => {
       setPopupInfo((cur) => {
@@ -1265,11 +1352,15 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
       className="absolute inset-0"
       onMouseLeave={() => {
         clearTooltip();
-        onTooltipOwnerChange?.(tooltipOwner === id ? null : (tooltipOwner ?? null));
+        onTooltipOwnerChange?.(
+          tooltipOwner === id ? null : (tooltipOwner ?? null),
+        );
       }}
       onPointerLeave={() => {
         clearTooltip();
-        onTooltipOwnerChange?.(tooltipOwner === id ? null : (tooltipOwner ?? null));
+        onTooltipOwnerChange?.(
+          tooltipOwner === id ? null : (tooltipOwner ?? null),
+        );
       }}
     >
       <Map
@@ -1285,7 +1376,7 @@ const BoundaryMap: FC<BoundaryMapProps> = ({
         onMove={onMove}
         onMouseMove={handleMouseMove}
       >
-        <AttributionControl compact={true} customAttribution="ElectionData.MY" />
+        <AttributionControl compact={true} customAttribution={attribution} />
         {orderedSources.map((source) => (
           <Fragment key={source}>
             <Source
@@ -1349,7 +1440,10 @@ const MapLegend: FC<{
           key={b.source}
           className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700"
         >
-          <div className="h-0.5 w-3 shrink-0" style={{ backgroundColor: b.color }} />
+          <div
+            className="h-0.5 w-3 shrink-0"
+            style={{ backgroundColor: b.color }}
+          />
           <p>
             {r(b.labelKey)} ({b.year})
           </p>
@@ -1364,6 +1458,7 @@ const MapLegend: FC<{
 interface MapboxRedelineationProps {
   mapboxToken: string;
   mapboxAccount: string;
+  attribution: string;
   initialState: Partial<ViewState>;
   sources: [string, string];
   useOutline: string | string[];
@@ -1378,6 +1473,7 @@ interface MapboxRedelineationProps {
 const MapboxRedelineation: FC<MapboxRedelineationProps> = ({
   mapboxToken,
   mapboxAccount,
+  attribution,
   initialState,
   sources,
   useOutline,
@@ -1453,115 +1549,116 @@ const MapboxRedelineation: FC<MapboxRedelineationProps> = ({
         interactiveLayerIds={[outlineFillLayer, shadedFillLayer]}
         onMouseMove={handleMouseMove}
       >
-      <AttributionControl compact={true} customAttribution="ElectionData.MY" />
+        <AttributionControl compact={true} customAttribution={attribution} />
 
-      {/* Shaded source (old/counterpart) */}
-      <Source
-        key={shadedSource}
-        id={shadedSource}
-        type="vector"
-        url={`mapbox://${mapboxAccount}.${sources[1]}`}
-      >
-        <Layer
-          id={`${shadedSource}-line`}
-          type="line"
-          source-layer={sources[1]}
-          paint={{
-            "line-color": dark ? "#3F3F46" : "#D4D4D8",
-            "line-width": 1,
-            "line-opacity": 1,
-          }}
-          filter={["in", prop, ...shadedArr]}
-        />
-        <Layer
-          id={shadedFillLayer}
-          type="fill"
-          source-layer={sources[1]}
-          paint={{
-            "fill-color": [
-              "match",
-              ["get", prop],
-              ...shadedArr.flatMap((seat, i) => [
-                seat,
-                SHADED_COLOR_INDEX[i % SHADED_COLOR_INDEX.length],
-              ]),
-              "transparent",
-            ],
-          }}
-          filter={["in", prop, ...shadedArr]}
-        />
-      </Source>
+        {/* Shaded source (old/counterpart) */}
+        <Source
+          key={shadedSource}
+          id={shadedSource}
+          type="vector"
+          url={`mapbox://${mapboxAccount}.${sources[1]}`}
+        >
+          <Layer
+            id={`${shadedSource}-line`}
+            type="line"
+            source-layer={sources[1]}
+            paint={{
+              "line-color": dark ? "#3F3F46" : "#D4D4D8",
+              "line-width": 1,
+              "line-opacity": 1,
+            }}
+            filter={["in", prop, ...shadedArr]}
+          />
+          <Layer
+            id={shadedFillLayer}
+            type="fill"
+            source-layer={sources[1]}
+            paint={{
+              "fill-color": [
+                "match",
+                ["get", prop],
+                ...shadedArr.flatMap((seat, i) => [
+                  seat,
+                  SHADED_COLOR_INDEX[i % SHADED_COLOR_INDEX.length],
+                ]),
+                "transparent",
+              ],
+            }}
+            filter={["in", prop, ...shadedArr]}
+          />
+        </Source>
 
-      {/* Outline source (current) */}
-      <Source
-        key={outlineSource}
-        id={outlineSource}
-        type="vector"
-        url={`mapbox://${mapboxAccount}.${sources[0]}`}
-      >
-        <Layer
-          id={`${outlineSource}-line`}
-          type="line"
-          source-layer={sources[0]}
-          paint={{
-            "line-color": dark ? "white" : "#18181B",
-            "line-width": 2,
-            "line-opacity": 1,
-          }}
-          filter={["in", prop, ...outlineArr]}
-        />
-        <Layer
-          id={outlineFillLayer}
-          type="fill"
-          source-layer={sources[0]}
-          paint={{ "fill-color": "transparent" }}
-          filter={["in", prop, ...outlineArr]}
-        />
-      </Source>
+        {/* Outline source (current) */}
+        <Source
+          key={outlineSource}
+          id={outlineSource}
+          type="vector"
+          url={`mapbox://${mapboxAccount}.${sources[0]}`}
+        >
+          <Layer
+            id={`${outlineSource}-line`}
+            type="line"
+            source-layer={sources[0]}
+            paint={{
+              "line-color": dark ? "white" : "#18181B",
+              "line-width": 2,
+              "line-opacity": 1,
+            }}
+            filter={["in", prop, ...outlineArr]}
+          />
+          <Layer
+            id={outlineFillLayer}
+            type="fill"
+            source-layer={sources[0]}
+            paint={{ "fill-color": "transparent" }}
+            filter={["in", prop, ...outlineArr]}
+          />
+        </Source>
 
-      {/* Legend */}
-      <div className="absolute right-4 top-4">
-        <div className="flex w-[120px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog p-[5px] shadow-context-menu">
-          <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="h-0.5 w-2 shrink-0 bg-bg-black-900" />
-            <p>
-              {r(mapLabel[0])} ({year[0]})
-            </p>
-          </div>
-          <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
-            <div className="grid grid-cols-2 gap-0.5">
-              {shadedArr.map((seat, i) => (
-                <div
-                  key={seat}
-                  className="size-2 rounded-full ring-[0.5px] ring-gray-300"
-                  style={{
-                    background: SHADED_COLOR_INDEX[i % SHADED_COLOR_INDEX.length],
-                  }}
-                />
-              ))}
+        {/* Legend */}
+        <div className="absolute right-4 top-4">
+          <div className="flex w-max min-w-[120px] flex-col rounded-md border border-otl-gray-200 bg-bg-dialog p-[5px] shadow-context-menu">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
+              <div className="h-0.5 w-2 shrink-0 bg-bg-black-900" />
+              <p className="whitespace-nowrap">
+                {r(mapLabel[0])} ({year[0]})
+              </p>
             </div>
-            <p>
-              {r(mapLabel[1])} ({year[1]})
-            </p>
+            <div className="flex items-center gap-2 px-2.5 py-1.5 text-body-xs text-txt-black-700">
+              <div className="grid grid-cols-2 gap-0.5">
+                {shadedArr.map((seat, i) => (
+                  <div
+                    key={seat}
+                    className="size-2 rounded-full ring-[0.5px] ring-gray-300"
+                    style={{
+                      background:
+                        SHADED_COLOR_INDEX[i % SHADED_COLOR_INDEX.length],
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="whitespace-nowrap">
+                {r(mapLabel[1])} ({year[1]})
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {popupInfo && (
-        <Popup
-          longitude={popupInfo.longitude}
-          latitude={popupInfo.latitude}
-          closeButton={false}
-          closeOnClick={false}
-          anchor="bottom"
-        >
-          <p className="px-3 py-2 font-body text-body-xs text-txt-white">
-            {popupInfo.feature.properties?.["dun"] ||
-              popupInfo.feature.properties?.["parlimen"]}{" "}
-            ({popupInfo.feature.year})
-          </p>
-        </Popup>
-      )}
+        {popupInfo && (
+          <Popup
+            longitude={popupInfo.longitude}
+            latitude={popupInfo.latitude}
+            closeButton={false}
+            closeOnClick={false}
+            anchor="bottom"
+          >
+            <p className="px-3 py-2 font-body text-body-xs text-txt-white">
+              {popupInfo.feature.properties?.["dun"] ||
+                popupInfo.feature.properties?.["parlimen"]}{" "}
+              ({popupInfo.feature.year})
+            </p>
+          </Popup>
+        )}
       </Map>
     </div>
   );
@@ -1585,7 +1682,12 @@ interface GeohistoryTableProps {
   r: (key: string) => string;
 }
 
-const GeohistoryTable: FC<GeohistoryTableProps> = ({ type, table, year, r }) => {
+const GeohistoryTable: FC<GeohistoryTableProps> = ({
+  type,
+  table,
+  year,
+  r,
+}) => {
   if (!table?.length) return null;
 
   const isNew = type === "new";
@@ -1669,9 +1771,14 @@ const GeohistoryTable: FC<GeohistoryTableProps> = ({ type, table, year, r }) => 
             </thead>
             <tbody>
               {table.map((row, i) => (
-                <tr key={i} className="border-b border-otl-gray-200 hover:bg-bg-washed">
+                <tr
+                  key={i}
+                  className="border-b border-otl-gray-200 hover:bg-bg-washed"
+                >
                   <td className="border-r border-otl-gray-200 px-3 py-3">
-                    <p className="text-sm text-txt-black-700">{row[otherKey]}</p>
+                    <p className="text-sm text-txt-black-700">
+                      {row[otherKey]}
+                    </p>
                   </td>
                   <td className="px-3 py-3 text-right">
                     <p className="font-mono text-sm tabular-nums text-txt-black-700">

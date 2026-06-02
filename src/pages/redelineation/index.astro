@@ -1,3 +1,36 @@
 ---
-return Astro.redirect("/redelineation/peninsular-2018", 302);
+import Layout from "@src/components/Layout/index.astro";
+import RedelineationDashboard from "@src/components/Redelineation/RedelineationDashboard";
+import { getTranslations, t } from "@i18n/index";
+import { fetchJSON } from "@lib/api";
+
+const area = "peninsular";
+const year = "2018";
+const locale = Astro.currentLocale ?? "en-GB";
+const apiBaseUrl = import.meta.env.PUBLIC_API_URL_R2 ?? "";
+const mapboxToken = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
+const mapboxAccount = import.meta.env.PUBLIC_MAPBOX_ACCOUNT ?? "";
+const yearOptions = await fetchJSON<Record<string, string[]>>("/redelineation/filter.json");
+
+const i18n = await getTranslations(locale, ["common", "redelineation", "home"]);
+const title = t(i18n.redelineation ?? {}, "hero.header");
+const description = t(i18n.redelineation ?? {}, "hero.description");
 ---
+
+<Layout title={title} description={description}>
+  <RedelineationDashboard
+    client:only="react"
+    area={area}
+    year={year}
+    yearOptions={yearOptions}
+    apiBaseUrl={apiBaseUrl}
+    mapboxToken={mapboxToken}
+    mapboxAccount={mapboxAccount}
+    locale={locale}
+    translations={{
+      common: i18n.common ?? {},
+      redelineation: i18n.redelineation ?? {},
+      home: i18n.home ?? {},
+    }}
+  />
+</Layout>

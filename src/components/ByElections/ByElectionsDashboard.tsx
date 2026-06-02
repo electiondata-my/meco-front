@@ -323,7 +323,6 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                                 <PartyLogo uid={_seat.party_uid} name={party} />
                                 <span className="max-w-full truncate font-medium">{`${name} `}</span>
                                 <span>{`(${party})`}</span>
-                                <CheckCircleIcon className="h-4 w-4 shrink-0 text-txt-success" />
                               </div>
 
                               <div className="flex flex-col gap-1.5">
@@ -357,7 +356,6 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                         votes={data.results.votes}
                         loading={data.loading}
                         c={c}
-                        compactMobile
                       />
                     </DrawerContent>
                   </Drawer>
@@ -467,7 +465,7 @@ const PartyLogo = ({ uid, name }: { uid: string; name: string }) => {
   const [error, setError] = useState(false);
   if (error || !uid) {
     return (
-      <div className="flex h-5 w-8 items-center justify-center rounded border bg-bg-white text-xs text-txt-black-500">
+      <div className="flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
         ?
       </div>
     );
@@ -478,8 +476,7 @@ const PartyLogo = ({ uid, name }: { uid: string; name: string }) => {
       alt={name}
       width={32}
       height={18}
-      className="border border-otl-gray-200 object-contain"
-      style={{ width: "auto", maxWidth: "32px", height: "auto", maxHeight: "32px" }}
+      className="shrink-0 border border-otl-gray-200"
       onError={() => setError(true)}
     />
   );
@@ -498,14 +495,18 @@ const ResultHeader = ({
 }) => {
   const [area, state] = seat.seat.split(",");
   return (
-    <div className="flex grow flex-col gap-2">
-      <div className="flex flex-wrap gap-x-1.5 text-body-lg uppercase">
-        <h5 className="font-bold">{area}</h5>
-        <p className="text-txt-black-500">{state}</p>
+    <div className="flex grow flex-col gap-3 uppercase">
+      <div className="flex flex-wrap items-baseline gap-x-1.5 text-body-md">
+        <span className="font-semibold">{b("election_name")}</span>
+        <span className="text-txt-black-500" aria-hidden="true">&middot;</span>
+        <span className="text-txt-black-500">{toDate(seat.date, "dd MMM yyyy", locale)}</span>
       </div>
-      <div className="flex flex-wrap items-center gap-x-3 text-body-md">
-        <p>{b("election_name")}</p>
-        <p className="text-txt-black-500">{toDate(seat.date, "dd MMM yyyy", locale)}</p>
+      <div className="flex flex-wrap items-baseline gap-x-2 text-body-md">
+        <span className="font-semibold">
+          {area}
+          {state ? "," : ""}
+        </span>
+        {state && <span className="font-normal text-txt-black-500">{state}</span>}
       </div>
     </div>
   );
@@ -522,100 +523,32 @@ const ResultContent = ({
   votes,
   loading,
   c,
-  compactMobile = false,
 }: {
   data?: BallotEntry[];
   votes: VoteStat[];
   loading: boolean;
   c: (key: string, vars?: Record<string, string | number>) => string;
-  compactMobile?: boolean;
 }) => (
-  <div className="hide-scrollbar flex-1 space-y-4.5 overflow-scroll text-body-md max-md:px-4 max-md:pb-8">
+  <div className="hide-scrollbar flex-1 space-y-6 overflow-scroll text-body-md max-md:px-4 max-md:pb-8">
     {/* Candidate table */}
-    <div className="space-y-4">
-      <div className="font-bold">{c("election_result")}</div>
+    <div>
       {loading || !data ? (
         <div className="flex flex-col gap-2">
           {Array(3).fill(null).map((_, i) => <Skeleton key={i} className={["w-48", "w-64", "w-56"][i]} />)}
         </div>
       ) : (
-        <>
-          {/* Mobile — compact table (matches production compactMobileTable) */}
-          <div className="md:hidden overflow-y-auto max-h-[498px] [&::-webkit-scrollbar]:hidden">
-            <table className="w-full text-left text-body-sm">
-              <thead>
-                <tr>
-                  <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white py-3 pl-2 pr-3 font-medium">
-                    {c("candidate_name")}
-                  </th>
-                  <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white px-3 py-3 text-center font-medium">
-                    {c("party_name")}
-                  </th>
-                  <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white px-3 py-3 font-medium">
-                    {c("votes_won")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((row, i) => {
-                  const partyLabel = row.coalition && row.coalition !== "ALONE"
-                    ? `${row.party} (${row.coalition})`
-                    : row.party;
-                  return (
-                    <tr
-                      key={i}
-                      className={clx(
-                        "border-b border-otl-gray-200",
-                        i === 0 ? "bg-bg-washed" : "bg-inherit",
-                      )}
-                    >
-                      <td className={clx("align-middle py-3 pl-2 pr-3 w-full min-w-0", i === 0 && "font-medium")}>
-                        {row.name}
-                        {i === 0 && (
-                          <span className="ml-1 inline-flex translate-y-0.5">
-                            <CheckCircleIcon className="h-4 w-4 shrink-0 text-txt-success" />
-                          </span>
-                        )}
-                      </td>
-                      <td className="align-middle px-3 py-3">
-                        <div className="flex flex-col items-center gap-1">
-                          <PartyLogo uid={row.party_uid ?? ""} name={row.party} />
-                          <span className="whitespace-nowrap text-center text-xs text-txt-black-700">
-                            {partyLabel}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="align-middle px-3 py-3">
-                        <div className="flex flex-col gap-2">
-                          <BarPerc hidden value={row.votes_perc} size="w-[80px] h-[5px]" />
-                          <span className="whitespace-nowrap text-xs">
-                            {row.votes !== null ? numFormat(row.votes, "standard") : "—"}
-                            {row.votes_perc !== null
-                              ? ` (${numFormat(row.votes_perc, "compact", [1, 1])}%)`
-                              : " (—)"}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Desktop table */}
-          <table className="hidden md:table w-full text-left text-body-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed text-body-sm">
+            <colgroup>
+              <col className="w-[43%]" />
+              <col className="w-[26%]" />
+              <col className="w-[31%]" />
+            </colgroup>
             <thead>
-              <tr>
-                <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white pb-2 pr-3 font-semibold text-txt-black-700">
-                  {c("candidate_name")}
-                </th>
-                <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white pb-2 pr-3 font-semibold text-txt-black-700">
-                  {c("party_name")}
-                </th>
-                <th className="sticky top-0 z-10 border-b-2 border-otl-gray-200 bg-bg-white pb-2 font-semibold text-txt-black-700">
-                  {c("votes_won")}
-                </th>
+              <tr className="border-b-2 border-otl-gray-200 font-medium">
+                <th className="py-3 pr-3 text-left">{c("candidate_name")}</th>
+                <th className="px-3 py-3 text-center sm:text-left">{c("party_name")}</th>
+                <th className="py-3 pl-3 pr-4 text-left">{c("votes_won")}</th>
               </tr>
             </thead>
             <tbody>
@@ -624,32 +557,25 @@ const ResultContent = ({
                   ? `${row.party} (${row.coalition})`
                   : row.party;
                 return (
-                  <tr
-                    key={i}
-                    className={clx(
-                      "border-b border-otl-gray-200",
-                      i === 0 ? "bg-bg-washed" : "bg-inherit",
-                    )}
-                  >
-                    <td className="align-middle py-2 pr-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className={clx("truncate", i === 0 && "font-semibold")}>{row.name}</span>
-                        {i === 0 && <CheckCircleIcon className="h-4 w-4 shrink-0 text-txt-success" />}
-                      </div>
+                  <tr key={i} className="border-b border-otl-gray-200">
+                    <td className={clx("min-w-0 break-words py-3 pr-3 text-left", i === 0 && "font-medium")}>
+                      {row.name}
                     </td>
-                    <td className="align-middle py-2 pr-3">
-                      <div className="flex items-center gap-1.5">
+                    <td className="px-3 py-3">
+                      <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:gap-1.5">
                         <PartyLogo uid={row.party_uid ?? ""} name={row.party} />
-                        <span className="truncate">{partyLabel}</span>
+                        <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
+                          {partyLabel}
+                        </span>
                       </div>
                     </td>
-                    <td className="align-middle py-2">
-                      <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
-                        <div className="lg:self-center">
-                          <BarPerc hidden value={row.votes_perc} size="w-[72px] h-[5px]" />
-                        </div>
-                        <span className="whitespace-nowrap">
-                          {row.votes !== null ? numFormat(row.votes, "standard") : "—"}
+                    <td className="py-3 pl-3 pr-4 sm:font-['IBM_Plex_Mono','Roboto_Mono',monospace] sm:tabular-nums">
+                      <div className="flex flex-col gap-2 whitespace-nowrap sm:flex-row sm:items-center sm:gap-0.5">
+                        <BarPerc hidden value={row.votes_perc} size="h-[5px] w-[80px] sm:w-[72px]" />
+                        <span className="whitespace-nowrap text-xs sm:text-body-sm">
+                          <span className="sm:inline-block sm:min-w-[3.75rem] sm:text-right">
+                            {row.votes !== null ? numFormat(row.votes, "standard") : "—"}
+                          </span>
                           {row.votes_perc !== null
                             ? ` (${numFormat(row.votes_perc, "compact", [1, 1])}%)`
                             : " (—)"}
@@ -661,13 +587,13 @@ const ResultContent = ({
               })}
             </tbody>
           </table>
-        </>
+        </div>
       )}
     </div>
 
-    {/* Voting statistics */}
-    <div className="space-y-3 pt-4">
-      <p className="font-bold">{c("voting_statistics")}</p>
+    {/* Summary statistics */}
+    <div className="space-y-3">
+      <p className="font-bold">{c("summary_statistics")}</p>
       {votes && votes.length > 0 && !loading ? (
         <div className="flex flex-col gap-3 text-sm">
           {votes.map(({ x, abs, perc }) => (

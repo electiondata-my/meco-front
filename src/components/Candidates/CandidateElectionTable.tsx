@@ -141,29 +141,24 @@ function ResultIcon({ result }: { result: string }) {
 function ResultLine({
   result,
   cd,
-  c,
 }: {
   result: string;
   cd: (k: string) => string;
-  c: (k: string) => string;
 }) {
   const won = result.startsWith("won");
   return (
-    <div className="flex flex-wrap items-center gap-x-1.5 text-body-md">
-      <span className="font-bold">{c("election_result")}:</span>
-      <span className={`flex items-center gap-1 font-normal ${won ? "text-txt-success" : "text-txt-danger"}`}>
-        {resultLabel(result, cd).toUpperCase()}
-        {won ? (
-          <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-          </svg>
-        ) : (
-          <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-          </svg>
-        )}
-      </span>
-    </div>
+    <span className={`flex items-center gap-1 font-normal ${won ? "text-txt-success" : "text-txt-danger"}`}>
+      {resultLabel(result, cd).toUpperCase()}
+      {won ? (
+        <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+        </svg>
+      ) : (
+        <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+        </svg>
+      )}
+    </span>
   );
 }
 
@@ -468,6 +463,8 @@ export default function CandidateElectionTable({
                       <span className="font-semibold">{formatElectionName(modal.election_name, isMalay)}</span>
                       <span className="text-txt-black-500" aria-hidden="true">&middot;</span>
                       <span className="text-txt-black-500">{modal.date}</span>
+                      <span className="text-txt-black-500" aria-hidden="true">&middot;</span>
+                      <ResultLine result={modal.result} cd={cd} />
                     </div>
                     <div className="flex flex-wrap items-baseline gap-x-2 text-body-md">
                       <span className="font-semibold">
@@ -478,7 +475,6 @@ export default function CandidateElectionTable({
                         <span className="font-normal text-txt-black-500">{modal.state}</span>
                       )}
                     </div>
-                    <ResultLine result={modal.result} cd={cd} c={c} />
                   </div>
                   <div className="flex shrink-0 items-start">
                     <button
@@ -513,7 +509,7 @@ export default function CandidateElectionTable({
                           </colgroup>
                           <thead>
                             <tr className="border-b-2 border-otl-gray-200 font-medium">
-                              <th className="py-3 pl-2 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
+                              <th className="py-3 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
                               <th className="px-3 py-3 text-center sm:text-left">{c("party_name") || "Party"}</th>
                               <th className="py-3 pl-3 pr-4 text-left">{c("votes_won") || "Votes"}</th>
                             </tr>
@@ -521,13 +517,32 @@ export default function CandidateElectionTable({
                           <tbody>
                             {modal.ballot.map((b, i) => {
                               const highlight = b.name === candidateName;
+                              const lastSpace = b.name.lastIndexOf(" ");
+                              const nameStart = lastSpace === -1 ? "" : b.name.slice(0, lastSpace + 1);
+                              const nameEnd = lastSpace === -1 ? b.name : b.name.slice(lastSpace + 1);
                               return (
-                                <tr
-                                  key={i}
-                                  className={`border-b border-otl-gray-200 ${highlight ? "bg-bg-washed" : ""}`}
-                                >
-                                  <td className={`min-w-0 break-words py-3 pl-2 pr-3 ${highlight ? "font-medium" : ""}`}>
-                                    {b.name}
+                                <tr key={i} className="border-b border-otl-gray-200">
+                                  <td className="min-w-0 break-words py-3 pr-3 text-left">
+                                    {highlight ? (
+                                      <>
+                                        {nameStart}
+                                        <span className="whitespace-nowrap">
+                                          {nameEnd}
+                                          <svg
+                                            className="ml-2 inline-block h-5 w-7 translate-y-0.5 align-text-bottom text-txt-black-900"
+                                            viewBox="0 0 28 20"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            aria-hidden="true"
+                                          >
+                                            <path d="M25 10H3m0 0 5-5m-5 5 5 5" />
+                                          </svg>
+                                        </span>
+                                      </>
+                                    ) : b.name}
                                   </td>
                                   <td className="px-3 py-3">
                                     <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">

@@ -836,26 +836,26 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 | **Current** | `pages/redelineation/[[...explorer]].tsx` — complex multi-segment catch-all |
 | **Target** | `src/pages/redelineation/[area-year].astro` + `src/pages/ms-MY/redelineation/[area-year].astro` |
 
-- [ ] `getStaticPaths()` fetches `redelineation/filter.json` → enumerates `area-year` combinations (e.g. `peninsular-2018`, `sabah-2023`)
-- [ ] Default: `src/pages/redelineation/index.astro` redirects to `peninsular-2018`
-- [ ] `?level=parlimen&seat=p001-padang-besar-perlis` query params — read by React island on mount via `window.location.search`. Island calls `history.pushState` when user changes selection so URL stays shareable.
-- [ ] **Mapbox island:** `MapProvider` + full redelineation map → `client:only="react"`. Pass area/year data as props.
-- [ ] **`POST_TO_BUILD` support:** filter by `area-year` slug
+- [x] `getStaticPaths()` fetches `redelineation/filter.json` → enumerates `area-year` combinations (e.g. `peninsular-2018`, `sabah-2023`)
+- [x] Default: `src/pages/redelineation/index.astro` redirects to `peninsular-2018`
+- [x] `?level=parlimen&seat=p001-padang-besar-perlis` query params — read by React island on mount via `window.location.search`. Island calls `history.pushState` when user changes selection so URL stays shareable.
+- [x] **Mapbox island:** `MapProvider` + full redelineation map → `client:only="react"`. Pass area/year data as props.
+- [x] **`POST_TO_BUILD` support:** filter by `area-year` slug
 
 **Parity criteria:**
-- [ ] Default `/redelineation` shows peninsular 2018 map
-- [ ] All area-year combinations render
-- [ ] `?level=` toggle switches between parlimen/dun within the island
-- [ ] `?seat=` param highlights/zooms to the correct seat on load
-- [ ] Full URL (e.g. `/redelineation/peninsular-2018?level=parlimen&seat=p001-...`) is shareable and restores state on load
-- [ ] Seat comparison panel shows old vs new boundary data
-- [ ] Both locales
+- [x] Default `/redelineation` shows peninsular 2018 map
+- [x] All area-year combinations render
+- [x] `?level=` toggle switches between parlimen/dun within the island
+- [x] `?seat=` param highlights/zooms to the correct seat on load
+- [x] Full URL (e.g. `/redelineation/peninsular-2018?level=parlimen&seat=p001-...`) is shareable and restores state on load
+- [x] Seat comparison panel shows old vs new boundary data
+- [x] Both locales
 
 **Map Explorer — deferred.** Feature scope under review; will be reimplemented from scratch post-launch.
 
 **Verify Phase 8:**
-- [ ] Redelineation map renders; query params restore state correctly on load
-- [ ] No `window is not defined` errors during build
+- [x] Redelineation map renders; query params restore state correctly on load
+- [x] No `window is not defined` errors during build
 
 ---
 

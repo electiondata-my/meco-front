@@ -20,9 +20,10 @@ try {
 
 const i18n = await getTranslations(locale, ["common", "byelections"]);
 const title = t(i18n.byelections ?? {}, "hero.header");
+const description = t(i18n.byelections ?? {}, "hero.description", { count: String(seats.length) });
 ---
 
-<Layout title={title}>
+<Layout title={title} description={description}>
   <ByElectionsDashboard
     client:load
     seats={seats}
