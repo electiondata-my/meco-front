@@ -3,7 +3,7 @@ import Layout from "@src/components/Layout/index.astro";
 import BallotSeat from "./BallotSeat";
 import ElectionOverviewIsland from "./ElectionOverviewTable";
 import { getTranslations, t } from "@i18n/index";
-import { CountryAndStates, MALAYSIA, STATES } from "@src/lib/constants";
+import { CountryAndStates, MALAYSIA, SEMENANJUNG, STATES } from "@src/lib/constants";
 import type { ElectionParty } from "./ElectionOverviewTable";
 
 type ElectionEntry = { state: string; election: string; date: string };
@@ -16,6 +16,8 @@ type OverallSeat = {
   name: string;
   majority: number | null;
   majority_perc: number | null;
+  n_candidates?: number;
+  voters_total?: number;
   voter_turnout?: number;
   voter_turnout_perc?: number;
   votes_rejected?: number;
@@ -35,6 +37,12 @@ const { stateCode, electionName, seats, table, datesRaw } = Astro.props;
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 const apiBase = import.meta.env.PUBLIC_API_URL_R2 ?? "";
+const tinybirdBaseUrl = import.meta.env.PUBLIC_API_URL_TB ?? "";
+const tinybirdToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN ?? "";
+const i18n = await getTranslations(locale, ["common", "elections"]);
+const c = (key: string) => t(i18n.common ?? {}, key);
+const e = (key: string) => t(i18n.elections ?? {}, key);
+const localePrefix = isMalay ? "/ms-MY" : "";
 
 const isGE = electionName.startsWith("GE");
 
@@ -47,16 +55,32 @@ const datesMap = datesRaw.reduce(
   {} as Record<string, ElectionEntry[]>,
 );
 
-const NON_SE_STATES = ["mys", "kul", "lbn", "pjy"];
-const stateOptions = [MALAYSIA, ...STATES].map((s) => ({
+const NON_SE_STATES = ["mys", "smj", "kul", "lbn", "pjy"];
+const priorityStateKeys = ["mys", "smj", "swk", "sbh"];
+const allStateOptions = [MALAYSIA, SEMENANJUNG, ...STATES].map((s) => ({
   value: s.key,
   label: s.name,
 }));
+const stateOptions = [
+  ...priorityStateKeys
+    .map((key) => allStateOptions.find((option) => option.value === key))
+    .filter((option): option is (typeof allStateOptions)[number] => Boolean(option)),
+  ...allStateOptions
+    .filter((option) => !priorityStateKeys.includes(option.value))
+    .sort((a, b) => a.label.localeCompare(b.label)),
+];
+const electionOptionLabel = (election: string, date: string) => {
+  const displayElection = isMalay
+    ? election.replace(/^GE/, "PRU").replace(/^SE/, "PRN")
+    : election;
+  const year = date ? new Date(date).getFullYear() : null;
+  return year ? `${displayElection} (${year})` : displayElection;
+};
 
 const geOptions = (datesMap["Malaysia"] ?? [])
   .map((e) => ({
     value: e.election,
-    label: isMalay ? e.election.replace(/^GE/, "PRU") : e.election,
+    label: electionOptionLabel(e.election, e.date),
     date: e.date,
   }))
   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -66,10 +90,52 @@ const seOptions = NON_SE_STATES.includes(stateCode)
   ? []
   : (datesMap[stateName] ?? [])
       .filter((e) => !e.election.startsWith("GE"))
-      .map((e) => ({ value: e.election, label: e.election, date: e.date }))
+      .map((e) => ({ value: e.election, label: electionOptionLabel(e.election, e.date), date: e.date }))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 const currentElectionOptions = isGE ? geOptions : seOptions;
+const stateLinkOptions = stateOptions.map((o) => {
+  const targetStateName = CountryAndStates[o.value] ?? o.label;
+  const targetSe = NON_SE_STATES.includes(o.value)
+    ? ""
+    : (datesMap[targetStateName] ?? [])
+        .filter((entry) => !entry.election.startsWith("GE"))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]?.election;
+  return {
+    ...o,
+    href: `${localePrefix}/elections/${o.value}/${isGE ? electionName : (targetSe || "GE-15")}`,
+  };
+});
+const electionLinkOptions = currentElectionOptions.map((o) => ({
+  ...o,
+  href: `${localePrefix}/elections/${stateCode}/${o.value}`,
+}));
+const mobileElectionOptionsByState = Object.fromEntries(
+  stateOptions.map((o) => {
+    const targetStateName = CountryAndStates[o.value] ?? o.label;
+    const dunOptions = NON_SE_STATES.includes(o.value)
+      ? []
+      : (datesMap[targetStateName] ?? [])
+          .filter((entry) => !entry.election.startsWith("GE"))
+          .map((entry) => ({
+            value: entry.election,
+            label: electionOptionLabel(entry.election, entry.date),
+          }))
+          .sort((a, b) => Number(b.value.match(/\d+/)?.[0] ?? 0) - Number(a.value.match(/\d+/)?.[0] ?? 0));
+    return [
+      o.value,
+      {
+        parlimen: geOptions.map((entry) => ({ value: entry.value, label: entry.label })),
+        dun: dunOptions,
+      },
+    ];
+  }),
+);
+const selectedStateOption = stateLinkOptions.find((o) => o.value === stateCode) ?? stateLinkOptions[0];
+const selectedElectionOption = electionLinkOptions.find((o) => o.value === electionName) ?? electionLinkOptions[0];
+const selectElectionLabel = e("select_election") !== "select_election" ? e("select_election") : "Select election";
+const viewsOneLabel = c("views_one") || "view";
+const viewsOtherLabel = c("views_other") || "views";
 
 // Analysis table rows (from seats prop)
 const analysisRows = seats.map((s) => {
@@ -79,6 +145,8 @@ const analysisRows = seats.map((s) => {
     state: stParts.join(", "),
     majority: s.majority,
     majority_perc: s.majority_perc,
+    n_candidates: s.n_candidates,
+    voters_total: s.voters_total,
     voter_turnout: s.voter_turnout,
     voter_turnout_perc: s.voter_turnout_perc,
     votes_rejected: s.votes_rejected,
@@ -86,15 +154,24 @@ const analysisRows = seats.map((s) => {
   };
 });
 
-const i18n = await getTranslations(locale, ["common", "elections", "election"]);
-const c = (key: string) => t(i18n.common ?? {}, key);
-const e = (key: string) => t(i18n.elections ?? {}, key);
-const el = (key: string) => t(i18n.election ?? {}, key);
-
-const localePrefix = isMalay ? "/ms-MY" : "";
 const electionDisplay = isMalay
   ? electionName.replace(/^GE/, "PRU").replace(/^SE/, "PRN")
   : electionName;
+const electionYear = selectedElectionOption?.date
+  ? String(new Date(selectedElectionOption.date).getFullYear())
+  : (electionName.match(/\d+/)?.[0] ?? electionName);
+const electionTypeLabel =
+  (isGE ? e("general_election") : e("state_election")) !== (isGE ? "general_election" : "state_election")
+    ? (isGE ? e("general_election") : e("state_election"))
+    : isGE
+      ? (isMalay ? "Pilihan Raya Umum" : "General Election")
+      : (isMalay ? "Pilihan Raya Negeri" : "State Election");
+const sectionTitle = isMalay
+  ? `${stateName}: ${electionTypeLabel} ${electionYear}`
+  : `${stateName}: ${electionYear} ${electionTypeLabel}`;
+const titleCaseSectionTitle = sectionTitle.replace(/\p{L}[\p{L}'-]*/gu, (word) =>
+  word.length <= 2 ? word : `${word[0].toLocaleUpperCase(locale)}${word.slice(1).toLocaleLowerCase(locale)}`,
+);
 
 // Title format: "GE-15 (Malaysia) | ElectionData.MY"
 const pageTitle = `${electionDisplay} (${stateName}) | ElectionData.MY`;
@@ -103,6 +180,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   if (n == null) return "—";
   return n.toLocaleString("en-MY", { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
+
 ---
 
 <Layout title={pageTitle} description={e("hero.description")}>
@@ -120,16 +198,23 @@ function numFmt(n: number | null | undefined, dp = 0): string {
           {e("hero.description")}
         </p>
       )}
+      <p class="flex gap-0.5 text-body-sm text-txt-black-500">
+        <svg class="h-4.5 w-4.5 self-center" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+          <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.18C1.856 6.496 5.19 3.75 10 3.75s8.144 2.746 9.336 5.66c.16.39.16.78 0 1.18C18.144 13.504 14.81 16.25 10 16.25S1.856 13.504.664 10.59ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd" />
+        </svg>
+        <span id="views-counter">...</span>
+      </p>
     </div>
   </section>
 
   <!-- Navigation controls -->
-  <div class="mx-auto w-full max-w-screen-xl px-4 md:px-6">
+  <div class="mx-auto grid w-full grid-cols-4 gap-4.5 px-4.5 md:grid-cols-8 md:gap-6 md:px-6 lg:sticky lg:top-16 lg:z-30 lg:grid-cols-12 lg:border lg:border-transparent lg:bg-bg-white lg:py-2">
     <!-- Mobile: filter button -->
-    <div class="lg:hidden py-3">
+    <div class="fixed bottom-4 right-3 z-20 lg:hidden">
       <button
         id="filter-open"
-        class="flex items-center gap-2 rounded-full border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700"
+        class="flex items-center gap-2 rounded-full border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 shadow-md"
       >
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
@@ -139,134 +224,234 @@ function numFmt(n: number | null | undefined, dp = 0): string {
     </div>
 
     <!-- Desktop: sticky filter bar -->
-    <div class="sticky top-16 z-20 mt-3 hidden w-fit items-center gap-2 lg:flex py-2">
-      <!-- Parlimen / DUN toggle -->
-      <div class="rounded-full border border-otl-gray-200 bg-bg-white p-1">
-        <div class="flex text-body-sm">
-          <a
-            href={`${localePrefix}/elections/${stateCode}/${isGE ? electionName : "GE-15"}`}
-            class:list={[
-              "flex items-center gap-1 rounded-full px-3 py-1.5 font-medium transition-colors no-underline",
-              isGE ? "bg-bg-danger-50 text-txt-danger" : "text-txt-black-500 hover:text-txt-black-900",
-            ]}
-          >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 1.5a.75.75 0 0 1 .75.75V7.5h-1.5V2.25A.75.75 0 0 1 12 1.5ZM11.25 7.5v5.69l-1.72-1.72a.75.75 0 0 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V7.5h3.75a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6.75a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3h4.5Z" />
-            </svg>
-            {c("parlimen") || "Parlimen"}
-          </a>
-          {NON_SE_STATES.includes(stateCode) ? (
-            <span class="flex cursor-not-allowed items-center gap-1 rounded-full px-3 py-1.5 font-medium opacity-40 text-txt-black-500">
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" />
-              </svg>
-              {c("dun") || "DUN"}
-            </span>
-          ) : (
-            <a
-              href={`${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
-              class:list={[
-                "flex items-center gap-1 rounded-full px-3 py-1.5 font-medium transition-colors no-underline",
-                !isGE ? "bg-bg-danger-50 text-txt-danger" : "text-txt-black-500 hover:text-txt-black-900",
-              ]}
-            >
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" />
-              </svg>
-              {c("dun") || "DUN"}
-            </a>
-          )}
-        </div>
+    <div class="col-span-full mx-auto hidden w-full max-w-screen-xl items-center justify-center gap-2 lg:flex">
+      <!-- State dropdown -->
+      <div class="site-menu relative w-fit">
+        <button
+          type="button"
+          class="site-menu-button flex select-none items-center gap-1.5 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 text-start text-body-sm font-medium text-txt-black-900 shadow-button outline-none hover:border-bg-black-400 active:bg-bg-black-100"
+          aria-haspopup="menu"
+          aria-expanded="false"
+        >
+          <img src={`/static/images/states/${selectedStateOption.value}.jpeg`} width="20" height="12" alt={selectedStateOption.label} class="self-center" />
+          <span class="grow truncate">{selectedStateOption.label}</span>
+          <svg class="-mx-[5px] h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <ul class="site-menu-list absolute left-0 top-full z-50 mt-1 hidden max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
+          {stateLinkOptions.map((o) => (
+            <li>
+              <a href={o.href} class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-body-sm text-txt-black-900 no-underline hover:bg-bg-black-100">
+                <img src={`/static/images/states/${o.value}.jpeg`} width="20" height="12" alt={o.label} />
+                <span class:list={["grow truncate", o.value === stateCode ? "font-medium" : "font-normal"]}>{o.label}</span>
+                {o.value === stateCode && (
+                  <svg class="h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
+                  </svg>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      <!-- State dropdown -->
-      <select
-        id="state-select"
-        class="rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger"
-      >
-        {stateOptions.map((o) => <option value={o.value} selected={o.value === stateCode}>{o.label}</option>)}
-      </select>
+      <!-- Parlimen / DUN tabs -->
+      <div class="flex h-8 items-center rounded-lg bg-bg-washed p-0">
+        <a
+          href={`${localePrefix}/elections/${stateCode}/${isGE ? electionName : "GE-15"}`}
+          class:list={[
+            "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium no-underline transition-all",
+            isGE
+              ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
+              : "text-txt-black-500",
+          ]}
+        >
+          {c("parlimen") || "Parlimen"}
+        </a>
+        {NON_SE_STATES.includes(stateCode) ? (
+          <span class="flex h-8 min-h-8 cursor-not-allowed items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium text-txt-black-500 opacity-40">
+            {c("dun") || "DUN"}
+          </span>
+        ) : (
+          <a
+            href={`${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
+            class:list={[
+              "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium no-underline transition-all",
+              !isGE
+                ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
+                : "text-txt-black-500",
+            ]}
+          >
+            {c("dun") || "DUN"}
+          </a>
+        )}
+      </div>
 
       <!-- Election dropdown -->
-      <select
-        id="election-select"
-        class="rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger"
-      >
-        <option value="">{e("select_election") || "Select election…"}</option>
-        {currentElectionOptions.map((o) => (
-          <option value={o.value} selected={o.value === electionName}>{o.label}</option>
-        ))}
-      </select>
+      <div class="site-menu relative w-fit">
+        <button
+          type="button"
+          class="site-menu-button flex select-none items-center gap-1.5 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 text-start text-body-sm font-medium text-txt-black-900 shadow-button outline-none hover:border-bg-black-400 active:bg-bg-black-100"
+          aria-haspopup="menu"
+          aria-expanded="false"
+        >
+          <span class="grow truncate">{selectedElectionOption?.label ?? selectElectionLabel}</span>
+          <svg class="-mx-[5px] h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <ul class="site-menu-list absolute right-0 top-full z-50 mt-1 hidden max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
+          {electionLinkOptions.map((o) => (
+            <li>
+              <a href={o.href} class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-body-sm text-txt-black-900 no-underline hover:bg-bg-black-100">
+                <span class:list={["grow truncate", o.value === electionName ? "font-medium" : "font-normal"]}>{o.label}</span>
+                {o.value === electionName && (
+                  <svg class="h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
+                  </svg>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
 
     <!-- Mobile filter drawer -->
     <div id="mobile-filter" class="fixed inset-0 z-50 hidden lg:hidden">
-      <div class="absolute inset-0 bg-black/40" id="mobile-filter-backdrop"></div>
-      <div class="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-bg-white pb-6">
-        <div class="flex items-center justify-between px-4 py-3">
-          <p class="font-bold">{c("filters") || "Filters"}</p>
-          <button id="filter-close" aria-label="Close filters" class="p-1 text-txt-black-500">
+      <div class="absolute inset-0 bg-black/40 backdrop-blur-[1px]" id="mobile-filter-backdrop"></div>
+      <div class="absolute bottom-0 left-0 right-0 max-h-[calc(100%-72px)] overflow-hidden rounded-t-2xl bg-bg-white shadow-floating">
+        <div class="flex justify-center pt-2.5">
+          <span class="h-1 w-10 rounded-full bg-bg-black-200" aria-hidden="true"></span>
+        </div>
+        <div class="flex items-center justify-between border-b border-otl-gray-200 px-4 py-4">
+          <div class="min-w-0">
+            <p class="text-body-md font-bold text-txt-black-900">{c("filters") || "Filters"}</p>
+            <p id="mobile-filter-summary" class="truncate text-body-sm text-txt-black-500">
+              {selectedStateOption.label} · {isGE ? (c("parlimen") || "Parlimen") : (c("dun") || "DUN")} · {selectedElectionOption?.label ?? electionName}
+            </p>
+          </div>
+          <button id="filter-close" aria-label="Close filters" class="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-txt-black-500 hover:bg-bg-black-100">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <div class="divide-y divide-otl-divider px-4">
-          <div class="space-y-3 py-3">
-            <p class="text-body-sm font-medium">{e("election") || "Election type"}</p>
-            <div class="flex gap-2">
-              <a
-                href={`${localePrefix}/elections/${stateCode}/${isGE ? electionName : "GE-15"}`}
-                class:list={[
-                  "rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline",
-                  isGE
-                    ? "border-txt-danger bg-bg-danger-50 text-txt-danger"
-                    : "border-otl-gray-200 text-txt-black-500",
-                ]}
-              >
-                {c("parlimen") || "Parlimen"}
-              </a>
-              {NON_SE_STATES.includes(stateCode) ? (
-                <span class="rounded-full border border-otl-gray-200 px-3 py-1.5 text-body-sm font-medium text-txt-black-500 opacity-40 cursor-not-allowed">
-                  {c("dun") || "DUN"}
-                </span>
-              ) : (
-                <a
-                  href={`${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
+        <div class="max-h-[calc(100vh-230px)] space-y-4 overflow-y-auto px-4 py-4.5">
+          <div class="space-y-1.5">
+            <p class="text-body-sm font-medium text-txt-black-700">{c("state") || "State"}</p>
+            <input id="mobile-state-select" type="hidden" value={stateCode} />
+            <div class="grid grid-cols-3 gap-1.5">
+              {stateOptions.map((o) => (
+                <Fragment>
+                  <button
+                    type="button"
+                    data-mobile-state={o.value}
+                    data-state-label={o.label}
+                    title={o.label}
+                    aria-label={o.label}
+                    class:list={[
+                      "flex h-9 min-w-0 items-center justify-start gap-1.5 rounded-lg border px-2 text-left text-body-xs font-medium shadow-button transition-colors",
+                      o.value === stateCode
+                        ? "border-primary-600 bg-primary-600/10 text-primary-600"
+                        : "border-otl-gray-200 bg-bg-white text-txt-black-700 hover:border-bg-black-400 hover:bg-bg-black-50",
+                    ]}
+                  >
+                    <img src={`/static/images/states/${o.value}.jpeg`} width="18" height="11" alt="" class="shrink-0" />
+                    <span class="truncate">{o.label}</span>
+                  </button>
+                  {o.value === "mys" && <span class="col-span-2" aria-hidden="true"></span>}
+                </Fragment>
+              ))}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="min-w-0 space-y-1.5">
+              <p class="text-body-sm font-medium text-txt-black-700">{e("election") || "Election type"}</p>
+              <input id="mobile-election-type" type="hidden" value={isGE ? "parlimen" : "dun"} />
+              <div class="grid h-10 grid-cols-2 rounded-lg bg-bg-washed p-0.5">
+                <button
+                  type="button"
+                  data-mobile-type="parlimen"
                   class:list={[
-                    "rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline",
+                    "flex h-9 items-center justify-center rounded-md px-2 text-body-sm font-medium transition-all",
+                    isGE
+                      ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
+                      : "text-txt-black-500",
+                  ]}
+                >
+                  {c("parlimen") || "Parlimen"}
+                </button>
+                <button
+                  type="button"
+                  data-mobile-type="dun"
+                  disabled={NON_SE_STATES.includes(stateCode)}
+                  class:list={[
+                    "flex h-9 items-center justify-center rounded-md px-2 text-body-sm font-medium transition-all disabled:cursor-not-allowed disabled:opacity-40",
                     !isGE
-                      ? "border-txt-danger bg-bg-danger-50 text-txt-danger"
-                      : "border-otl-gray-200 text-txt-black-500",
+                      ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
+                      : "text-txt-black-500",
                   ]}
                 >
                   {c("dun") || "DUN"}
-                </a>
-              )}
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="grid grid-cols-2 gap-3 py-3">
-            <div>
-              <p class="mb-1 text-body-sm font-medium">{c("state") || "State"}</p>
-              <select id="mobile-state-select" class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-3 py-2 text-body-sm">
-                {stateOptions.map((o) => <option value={o.value} selected={o.value === stateCode}>{o.label}</option>)}
-              </select>
-            </div>
-            <div>
-              <p class="mb-1 text-body-sm font-medium">{e("election_year") || "Election"}</p>
-              <select id="mobile-election-select" class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-3 py-2 text-body-sm">
-                <option value="">{e("select_election") || "Select…"}</option>
-                {currentElectionOptions.map((o) => (
-                  <option value={o.value} selected={o.value === electionName}>{o.label}</option>
-                ))}
-              </select>
+
+            <div class="min-w-0 pt-[1.625rem]">
+              <input id="mobile-election-select" type="hidden" value={electionName} />
+              <div class="site-menu mobile-election-menu relative w-full">
+                <button
+                  type="button"
+                  class="site-menu-button flex h-10 w-full select-none items-center gap-1.5 rounded-lg border border-otl-gray-200 bg-bg-white px-3 py-2 text-start text-body-sm font-medium text-txt-black-900 shadow-button outline-none hover:border-bg-black-400 active:bg-bg-black-100"
+                  aria-haspopup="menu"
+                  aria-expanded="false"
+                >
+                  <span data-election-current-label class="grow truncate">{selectedElectionOption?.label ?? electionName}</span>
+                  <svg class="-mx-[5px] h-5 w-5 shrink-0 text-txt-black-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+                <ul id="mobile-election-options" class="site-menu-list absolute bottom-full right-0 z-50 mb-1 hidden max-h-48 min-w-full overflow-y-auto rounded-lg bg-bg-white text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
+                  {currentElectionOptions.map((o) => (
+                    <li>
+                      <button
+                        type="button"
+                        data-mobile-election={o.value}
+                        data-election-label={o.label}
+                        class="flex min-h-10 w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-3 pr-3 text-left text-body-sm text-txt-black-900 hover:bg-bg-black-100"
+                      >
+                        <span data-election-option-label class:list={["grow truncate", o.value === electionName ? "font-medium" : "font-normal"]}>{o.label}</span>
+                        {o.value === electionName && (
+                          <svg data-election-check class="h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
+                          </svg>
+                        )}
+                        {o.value !== electionName && (
+                          <svg data-election-check class="hidden h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
+                          </svg>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
         </div>
-        <div class="flex gap-3 px-4 pt-4">
+        <div class="grid grid-cols-2 gap-3 border-t border-otl-gray-200 bg-bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
+          <button
+            id="filter-cancel"
+            class="flex min-h-11 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2.5 text-body-sm font-medium text-txt-black-700"
+          >
+            {c("close") || "Close"}
+          </button>
           <button
             id="filter-apply"
-            class="flex-1 rounded-xl bg-txt-danger py-2.5 text-body-sm font-medium text-white"
+            class="flex min-h-11 items-center justify-center rounded-lg bg-danger-600 px-4 py-2.5 text-body-sm font-medium text-white"
           >
             {c("filter") || "Apply"}
           </button>
@@ -276,18 +461,17 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   </div>
 
   <!-- Main content -->
-  <div class="mx-auto w-full max-w-screen-xl px-4 pb-16 md:px-6">
+  <div class="mx-auto flex w-full flex-col px-4.5 pb-16 md:px-6">
+    <div class="mx-auto flex w-full max-w-screen-xl flex-col">
 
     <!-- Section 1: Coalition & party summary -->
-    <section class="py-8 lg:space-y-12">
+    <section class="space-y-6 pb-8 pt-4 lg:pb-10 lg:pt-5">
       <h4 class="text-center font-heading text-heading-2xs font-bold">
-        {e("election_of") !== "election_of"
-          ? `${e("election_of")} ${stateName}: ${el(electionName) || electionName}`
-          : `${stateName}: ${electionDisplay}`}
+        {titleCaseSectionTitle}
       </h4>
 
       {table.length > 0 && (
-        <div class="pt-6">
+        <div>
           <ElectionOverviewIsland
             client:load
             data={table}
@@ -297,8 +481,6 @@ function numFmt(n: number | null | undefined, dp = 0): string {
       )}
     </section>
 
-    <hr class="h-px w-full border-otl-gray-200" />
-
     <!-- Section 2: Full ballot per seat (React island) -->
     {seats.length > 0 && (
       <BallotSeat
@@ -307,20 +489,20 @@ function numFmt(n: number | null | undefined, dp = 0): string {
         election={electionName}
         state={stateCode}
         apiBaseUrl={apiBase}
+        locale={locale}
         translations={{ common: i18n.common ?? {}, elections: i18n.elections ?? {} }}
       />
     )}
 
-    <hr class="h-px w-full border-otl-gray-200" />
-
     <!-- Section 3: Aggregate stats by constituency -->
     {analysisRows.length > 0 && (
-      <section class="space-y-6 py-8 lg:space-y-12 lg:py-12">
+      <section class="space-y-6 py-8 lg:py-10">
         <h4 class="text-center font-heading text-heading-2xs font-bold">
           {e("header_3") || "Breakdown by constituency"}
         </h4>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-body-sm">
+        <div id="analysis-table-shell" class="analysis-table-shell relative">
+          <div id="analysis-table-scroll" class="analysis-table-scroll overflow-x-auto pb-2">
+            <table id="analysis-table" class="w-full text-left text-body-sm">
             <thead>
               <tr class="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
                 <th class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4">
@@ -329,77 +511,480 @@ function numFmt(n: number | null | undefined, dp = 0): string {
                 {stateCode === "mys" && (
                   <th class="whitespace-nowrap px-4 py-3">{c("state") || "State"}</th>
                 )}
-                <th class="whitespace-nowrap px-4 py-3">{c("majority") || "Majority"}</th>
-                <th class="whitespace-nowrap px-4 py-3">{c("majority_%") || "Majority %"}</th>
-                <th class="whitespace-nowrap px-4 py-3">{c("voter_turnout") || "Turnout"}</th>
-                <th class="whitespace-nowrap px-4 py-3">{c("voter_turnout_%") || "Turnout %"}</th>
-                <th class="whitespace-nowrap px-4 py-3">{c("rejected_votes") || "Rejected"}</th>
-                <th class="whitespace-nowrap px-4 py-3">{c("rejected_votes_%") || "Rejected %"}</th>
+                <th class="whitespace-nowrap px-4 py-3 text-right">
+                  <button type="button" data-sort-key="n_candidates" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("n_candidates") || "Candidates"}`}>
+                    <span>{c("n_candidates") || "Candidates"}</span>
+                    <span data-sort-indicator="n_candidates" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th class="whitespace-nowrap px-4 py-3 text-right">
+                  <button type="button" data-sort-key="voters_total" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("voters_total") || "Voters"}`}>
+                    <span>{c("voters_total") || "Voters"}</span>
+                    <span data-sort-indicator="voters_total" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th class="whitespace-nowrap px-4 py-3 text-right">
+                  <button type="button" data-sort-key="voter_turnout" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("voter_turnout") || "Turnout"}`}>
+                    <span>{c("voter_turnout") || "Turnout"}</span>
+                    <span data-sort-indicator="voter_turnout" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th class="whitespace-nowrap px-4 py-3 text-right">
+                  <button type="button" data-sort-key="voter_turnout_perc" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("voter_turnout_perc") || "Turnout %"}`}>
+                    <span>{c("voter_turnout_perc") || "Turnout %"}</span>
+                    <span data-sort-indicator="voter_turnout_perc" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th class="whitespace-nowrap px-4 py-3 text-right">
+                  <button type="button" data-sort-key="majority" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("majority") || "Majority"}`}>
+                    <span>{c("majority") || "Majority"}</span>
+                    <span data-sort-indicator="majority" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th class="whitespace-nowrap px-4 py-3 text-right">
+                  <button type="button" data-sort-key="majority_perc" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("majority_perc") || "Majority %"}`}>
+                    <span>{c("majority_perc") || "Majority %"}</span>
+                    <span data-sort-indicator="majority_perc" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th class="whitespace-nowrap px-4 py-3 text-right">
+                  <button type="button" data-sort-key="votes_rejected" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("rejected_votes") || "Rejected"}`}>
+                    <span>{c("rejected_votes") || "Rejected"}</span>
+                    <span data-sort-indicator="votes_rejected" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                  </button>
+                </th>
+                <th class="whitespace-nowrap px-4 py-3 text-right">
+                  <button type="button" data-sort-key="votes_rejected_perc" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("rejected_votes_perc") || "Rejected %"}`}>
+                    <span>{c("rejected_votes_perc") || "Rejected %"}</span>
+                    <span data-sort-indicator="votes_rejected_perc" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>
               {analysisRows.map((row) => (
-                <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                  <td class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4 font-medium">
+                <tr class="analysis-row group border-b border-otl-gray-200 hover:bg-bg-black-50">
+                  <td class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4 font-medium group-hover:bg-bg-black-50">
                     {row.seat}
                   </td>
                   {stateCode === "mys" && (
                     <td class="whitespace-nowrap px-4 py-3 text-txt-black-500">{row.state}</td>
                   )}
-                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
-                    {numFmt(row.majority)}
+                  <td data-sort-key="n_candidates" data-sort-value={row.n_candidates ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.n_candidates)}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
-                    {numFmt(row.majority_perc, 1)}
+                  <td data-sort-key="voters_total" data-sort-value={row.voters_total ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.voters_total)}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  <td data-sort-key="voter_turnout" data-sort-value={row.voter_turnout ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
                     {numFmt(row.voter_turnout)}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  <td data-sort-key="voter_turnout_perc" data-sort-value={row.voter_turnout_perc ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
                     {numFmt(row.voter_turnout_perc, 1)}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  <td data-sort-key="majority" data-sort-value={row.majority ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.majority)}
+                  </td>
+                  <td data-sort-key="majority_perc" data-sort-value={row.majority_perc ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.majority_perc, 1)}
+                  </td>
+                  <td data-sort-key="votes_rejected" data-sort-value={row.votes_rejected ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
                     {numFmt(row.votes_rejected)}
                   </td>
-                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  <td data-sort-key="votes_rejected_perc" data-sort-value={row.votes_rejected_perc ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
                     {numFmt(row.votes_rejected_perc, 1)}
                   </td>
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
+        </div>
+        <div id="analysis-pagination" class="hidden shrink-0 items-center justify-center gap-4 px-6 py-4 text-body-sm font-medium">
+          <button id="analysis-prev" type="button" class="flex items-center gap-1.5 rounded-md border border-otl-gray-200 px-3 py-1.5 text-txt-black-700 hover:bg-bg-black-50 disabled:opacity-40">
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+            </svg>
+              {c("previous") || "Previous"}
+          </button>
+          <span id="analysis-page-count" class="text-txt-black-900"></span>
+          <span id="analysis-page-range" class="sr-only"></span>
+          <button id="analysis-next" type="button" class="flex items-center gap-1.5 rounded-md border border-otl-gray-200 px-3 py-1.5 text-txt-black-700 hover:bg-bg-black-50 disabled:opacity-40">
+              {c("next") || "Next"}
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+            </svg>
+          </button>
         </div>
       </section>
     )}
+    </div>
   </div>
 </Layout>
 
-<script define:vars={{ localePrefix, stateCode, electionName, isGE }}>
-  const NON_SE_STATES = ["mys", "kul", "lbn", "pjy"];
+<style>
+  .analysis-table-scroll {
+    overscroll-behavior-x: contain;
+    scrollbar-color: rgba(24, 24, 27, 0.28) transparent;
+    scrollbar-width: thin;
+  }
 
-  document.getElementById("state-select")?.addEventListener("change", (e) => {
-    const state = e.target.value;
-    if (state) window.location.href = `${localePrefix}/elections/${state}/${electionName}`;
-  });
+  .analysis-table-scroll::-webkit-scrollbar {
+    height: 8px;
+  }
 
-  document.getElementById("election-select")?.addEventListener("change", (e) => {
-    const elec = e.target.value;
-    if (elec) window.location.href = `${localePrefix}/elections/${stateCode}/${elec}`;
-  });
+  .analysis-table-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    margin-inline: 16px;
+  }
 
+  .analysis-table-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(24, 24, 27, 0.18);
+    border: 2px solid #ffffff;
+    border-radius: 999px;
+  }
+
+  .analysis-table-scroll:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(24, 24, 27, 0.34);
+  }
+
+  .analysis-table-shell::after {
+    content: "";
+    position: absolute;
+    bottom: 10px;
+    top: 0;
+    z-index: 20;
+    width: 28px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease;
+  }
+
+  .analysis-table-shell::after {
+    right: 0;
+    background: linear-gradient(to left, #ffffff 10%, rgba(255, 255, 255, 0));
+  }
+
+  .analysis-table-shell[data-scroll-end="false"]::after {
+    opacity: 1;
+  }
+</style>
+
+<script define:vars={{ localePrefix, stateCode, electionName, tinybirdBaseUrl, tinybirdToken, viewsOneLabel, viewsOtherLabel, mobileElectionOptionsByState }}>
   const mobileFilter = document.getElementById("mobile-filter");
   const filterOpen = document.getElementById("filter-open");
   const filterClose = document.getElementById("filter-close");
+  const filterCancel = document.getElementById("filter-cancel");
   const filterBackdrop = document.getElementById("mobile-filter-backdrop");
+  const mobileFilterSummary = document.getElementById("mobile-filter-summary");
+  const viewsCounter = document.getElementById("views-counter");
 
-  filterOpen?.addEventListener("click", () => mobileFilter?.classList.remove("hidden"));
-  filterClose?.addEventListener("click", () => mobileFilter?.classList.add("hidden"));
-  filterBackdrop?.addEventListener("click", () => mobileFilter?.classList.add("hidden"));
+  if (viewsCounter) {
+    if (!tinybirdBaseUrl || !tinybirdToken) {
+      viewsCounter.textContent = "---";
+    } else {
+      fetch(`${tinybirdBaseUrl}/v0/pipes/views_by_page.json?token=${tinybirdToken}&page_id=/elections`)
+        .then((response) => (response.ok ? response.json() : Promise.reject()))
+        .then((payload) => {
+          const views = payload?.data?.[0]?.hits;
+          if (typeof views !== "number") {
+            viewsCounter.textContent = "---";
+            return;
+          }
+          const formatted = views.toLocaleString("en-MY");
+          viewsCounter.textContent = `${formatted} ${views === 1 ? viewsOneLabel : viewsOtherLabel}`;
+        })
+        .catch(() => {
+          viewsCounter.textContent = "---";
+        });
+    }
+  }
+
+  function closeMobileFilter() {
+    mobileFilter?.classList.add("hidden");
+    document.body.style.overflow = "";
+  }
+
+  filterOpen?.addEventListener("click", () => {
+    mobileFilter?.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  });
+  filterClose?.addEventListener("click", closeMobileFilter);
+  filterCancel?.addEventListener("click", closeMobileFilter);
+  filterBackdrop?.addEventListener("click", closeMobileFilter);
+
+  const mobileStateSelect = document.getElementById("mobile-state-select");
+  const mobileElectionType = document.getElementById("mobile-election-type");
+  const mobileElectionSelect = document.getElementById("mobile-election-select");
+  const mobileElectionOptions = document.getElementById("mobile-election-options");
+  const mobileElectionCurrentLabel = document.querySelector("[data-election-current-label]");
+
+  function updateMobileFilterSummary() {
+    if (!mobileFilterSummary) return;
+    const selectedStateButton = document.querySelector("[data-mobile-state].border-primary-600");
+    const stateLabel = selectedStateButton?.getAttribute("data-state-label") || "";
+    const typeLabel = mobileElectionType instanceof HTMLInputElement && mobileElectionType.value === "dun"
+      ? "DUN"
+      : "Parlimen";
+    const electionLabel = mobileElectionCurrentLabel?.textContent?.trim() || "";
+    mobileFilterSummary.textContent = [stateLabel, typeLabel, electionLabel].filter(Boolean).join(" · ");
+  }
+
+  function setMobileTypeButtonState(type) {
+    document.querySelectorAll("[data-mobile-type]").forEach((button) => {
+      const active = button.getAttribute("data-mobile-type") === type;
+      button.classList.toggle("border", active);
+      button.classList.toggle("border-otl-gray-200", active);
+      button.classList.toggle("bg-bg-dialog-active", active);
+      button.classList.toggle("text-txt-black-900", active);
+      button.classList.toggle("shadow-button", active);
+      button.classList.toggle("text-txt-black-500", !active);
+    });
+  }
+
+  function populateMobileElectionOptions(preferredElection = "") {
+    if (!(mobileStateSelect instanceof HTMLInputElement) || !(mobileElectionType instanceof HTMLInputElement) || !(mobileElectionSelect instanceof HTMLInputElement) || !mobileElectionOptions) return;
+    const state = mobileStateSelect.value || stateCode;
+    const type = mobileElectionType.value || "parlimen";
+    const options = mobileElectionOptionsByState?.[state]?.[type] ?? [];
+    const selectedValue = options.some((option) => option.value === preferredElection)
+      ? preferredElection
+      : (options[0]?.value ?? "");
+    mobileElectionSelect.value = selectedValue;
+    mobileElectionOptions.replaceChildren();
+    options.forEach((option) => {
+      const li = document.createElement("li");
+      const button = document.createElement("button");
+      const label = document.createElement("span");
+      const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      const selected = option.value === selectedValue;
+
+      button.type = "button";
+      button.dataset.mobileElection = option.value;
+      button.dataset.electionLabel = option.label;
+      button.className = "flex min-h-10 w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-3 pr-3 text-left text-body-sm text-txt-black-900 hover:bg-bg-black-100";
+      label.dataset.electionOptionLabel = "";
+      label.className = `grow truncate ${selected ? "font-medium" : "font-normal"}`;
+      label.textContent = option.label;
+      check.dataset.electionCheck = "";
+      check.setAttribute("viewBox", "0 0 24 24");
+      check.setAttribute("fill", "currentColor");
+      check.setAttribute("aria-hidden", "true");
+      check.setAttribute("class", `${selected ? "" : "hidden "}h-4 w-4 text-primary-600`);
+      path.setAttribute("fill-rule", "evenodd");
+      path.setAttribute("clip-rule", "evenodd");
+      path.setAttribute("d", "M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z");
+      check.appendChild(path);
+      button.append(label, check);
+      li.appendChild(button);
+      mobileElectionOptions.appendChild(li);
+    });
+    const selectedOption = options.find((option) => option.value === selectedValue);
+    if (mobileElectionCurrentLabel) mobileElectionCurrentLabel.textContent = selectedOption?.label ?? "";
+    updateMobileFilterSummary();
+  }
+
+  function syncMobileTypeAvailability(preferredType = "") {
+    if (!(mobileStateSelect instanceof HTMLInputElement) || !(mobileElectionType instanceof HTMLInputElement)) return;
+    const state = mobileStateSelect.value || stateCode;
+    const dunButton = document.querySelector('[data-mobile-type="dun"]');
+    const hasDun = (mobileElectionOptionsByState?.[state]?.dun ?? []).length > 0;
+    if (dunButton instanceof HTMLButtonElement) dunButton.disabled = !hasDun;
+    const nextType = preferredType === "dun" && hasDun ? "dun" : "parlimen";
+    mobileElectionType.value = nextType;
+    setMobileTypeButtonState(nextType);
+    populateMobileElectionOptions(nextType === (electionName.startsWith("GE") ? "parlimen" : "dun") ? electionName : "");
+  }
+
+  document.querySelectorAll("[data-mobile-type]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (button instanceof HTMLButtonElement && button.disabled) return;
+      const type = button.getAttribute("data-mobile-type") || "parlimen";
+      if (mobileElectionType instanceof HTMLInputElement) mobileElectionType.value = type;
+      setMobileTypeButtonState(type);
+      populateMobileElectionOptions(type === (electionName.startsWith("GE") ? "parlimen" : "dun") ? electionName : "");
+    });
+  });
+  syncMobileTypeAvailability(electionName.startsWith("GE") ? "parlimen" : "dun");
 
   document.getElementById("filter-apply")?.addEventListener("click", () => {
-    const state = document.getElementById("mobile-state-select")?.value ?? stateCode;
-    const elec = document.getElementById("mobile-election-select")?.value ?? electionName;
+    const state = mobileStateSelect?.value ?? stateCode;
+    const elec = mobileElectionSelect?.value ?? electionName;
     if (elec) window.location.href = `${localePrefix}/elections/${state}/${elec}`;
     else window.location.href = `${localePrefix}/elections/${state}/${electionName}`;
   });
+
+  mobileElectionOptions?.addEventListener("click", (event) => {
+    const item = event.target instanceof Element ? event.target.closest("[data-mobile-election]") : null;
+    if (!(item instanceof HTMLButtonElement) || !(mobileElectionSelect instanceof HTMLInputElement)) return;
+    const value = item.getAttribute("data-mobile-election") ?? "";
+    const label = item.getAttribute("data-election-label") ?? value;
+    mobileElectionSelect.value = value;
+    if (mobileElectionCurrentLabel) mobileElectionCurrentLabel.textContent = label;
+    mobileElectionOptions.querySelectorAll("[data-mobile-election]").forEach((option) => {
+      const selected = option.getAttribute("data-mobile-election") === value;
+      option.querySelector("[data-election-option-label]")?.classList.toggle("font-medium", selected);
+      option.querySelector("[data-election-option-label]")?.classList.toggle("font-normal", !selected);
+      option.querySelector("[data-election-check]")?.classList.toggle("hidden", !selected);
+    });
+    mobileElectionOptions.classList.add("hidden");
+    updateMobileFilterSummary();
+  });
+
+  function setMobileStateButtonState(nextState) {
+    document.querySelectorAll("[data-mobile-state]").forEach((button) => {
+      const selected = button.getAttribute("data-mobile-state") === nextState;
+      button.classList.toggle("border-primary-600", selected);
+      button.classList.toggle("bg-primary-600/10", selected);
+      button.classList.toggle("text-primary-600", selected);
+      button.classList.toggle("border-otl-gray-200", !selected);
+      button.classList.toggle("bg-bg-white", !selected);
+      button.classList.toggle("text-txt-black-700", !selected);
+      button.classList.toggle("hover:border-bg-black-400", !selected);
+      button.classList.toggle("hover:bg-bg-black-50", !selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+  }
+
+  document.querySelectorAll("[data-mobile-state]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextState = button.getAttribute("data-mobile-state") ?? stateCode;
+      if (mobileStateSelect instanceof HTMLInputElement) mobileStateSelect.value = nextState;
+      setMobileStateButtonState(nextState);
+      syncMobileTypeAvailability(mobileElectionType instanceof HTMLInputElement ? mobileElectionType.value : "parlimen");
+      updateMobileFilterSummary();
+    });
+  });
+  setMobileStateButtonState(stateCode);
+
+  document.querySelectorAll(".site-menu").forEach((menu) => {
+    const button = menu.querySelector(".site-menu-button");
+    const list = menu.querySelector(".site-menu-list");
+    button?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      document.querySelectorAll(".site-menu-list").forEach((other) => {
+        if (other !== list) other.classList.add("hidden");
+      });
+      list?.classList.toggle("hidden");
+      button.setAttribute("aria-expanded", String(!list?.classList.contains("hidden")));
+    });
+  });
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".site-menu-list").forEach((list) => list.classList.add("hidden"));
+    document.querySelectorAll(".site-menu-button").forEach((button) => button.setAttribute("aria-expanded", "false"));
+  });
+
+  const tableBody = document.querySelector("#analysis-table tbody");
+  const tableShell = document.getElementById("analysis-table-shell");
+  const tableScroll = document.getElementById("analysis-table-scroll");
+  const rows = Array.from(document.querySelectorAll(".analysis-row"));
+  const pagination = document.getElementById("analysis-pagination");
+  const prev = document.getElementById("analysis-prev");
+  const next = document.getElementById("analysis-next");
+  const range = document.getElementById("analysis-page-range");
+  const count = document.getElementById("analysis-page-count");
+  const perPage = 12;
+  let page = 1;
+  let sortKey = "";
+  let sortDirection = "desc";
+
+  rows.forEach((row, index) => {
+    row.setAttribute("data-original-index", String(index));
+  });
+
+  function updateTableScrollFades() {
+    if (!tableShell || !tableScroll) return;
+    const maxScrollLeft = tableScroll.scrollWidth - tableScroll.clientWidth;
+    const hasOverflow = maxScrollLeft > 1;
+    tableShell.dataset.scrollEnd = String(!hasOverflow || tableScroll.scrollLeft >= maxScrollLeft - 1);
+  }
+
+  tableScroll?.addEventListener("scroll", updateTableScrollFades, { passive: true });
+  window.addEventListener("resize", updateTableScrollFades);
+
+  function sortValue(row, key) {
+    const cell = row.querySelector(`[data-sort-key="${key}"]`);
+    const rawValue = cell?.getAttribute("data-sort-value") ?? "";
+    return rawValue === "" ? null : Number(rawValue);
+  }
+
+  function updateSortIndicators() {
+    document.querySelectorAll("[data-sort-indicator]").forEach((indicator) => {
+      const key = indicator.getAttribute("data-sort-indicator");
+      indicator.textContent = key === sortKey ? (sortDirection === "asc" ? "↑" : "↓") : "↕";
+    });
+  }
+
+  function sortRows(key) {
+    if (!tableBody) return;
+    if (sortKey === key) {
+      if (sortDirection === "desc") sortDirection = "asc";
+      else if (sortDirection === "asc") sortDirection = "";
+      else sortDirection = "desc";
+    } else {
+      sortKey = key;
+      sortDirection = "desc";
+    }
+
+    if (!sortDirection) {
+      sortKey = "";
+      rows.sort((a, b) => Number(a.getAttribute("data-original-index")) - Number(b.getAttribute("data-original-index")));
+    } else {
+      rows.sort((a, b) => {
+        const aValue = sortValue(a, key);
+        const bValue = sortValue(b, key);
+        if (aValue === null && bValue === null) {
+          return Number(a.getAttribute("data-original-index")) - Number(b.getAttribute("data-original-index"));
+        }
+        if (aValue === null) return 1;
+        if (bValue === null) return -1;
+        const delta = aValue - bValue;
+        if (delta === 0) {
+          return Number(a.getAttribute("data-original-index")) - Number(b.getAttribute("data-original-index"));
+        }
+        return sortDirection === "asc" ? delta : -delta;
+      });
+    }
+
+    rows.forEach((row) => tableBody.appendChild(row));
+    page = 1;
+    updateSortIndicators();
+    renderAnalysisPage();
+  }
+
+  document.querySelectorAll("[data-sort-key]").forEach((button) => {
+    if (!(button instanceof HTMLButtonElement)) return;
+    button.addEventListener("click", () => {
+      const key = button.getAttribute("data-sort-key");
+      if (key) sortRows(key);
+    });
+  });
+
+  function renderAnalysisPage() {
+    const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+    page = Math.min(Math.max(page, 1), totalPages);
+    const start = (page - 1) * perPage;
+    const end = Math.min(start + perPage, rows.length);
+    rows.forEach((row, index) => {
+      row.classList.toggle("hidden", index < start || index >= end);
+    });
+    if (range) range.textContent = `${start + 1}-${end} / ${rows.length}`;
+    if (count) count.textContent = `${page} of ${totalPages}`;
+    if (prev instanceof HTMLButtonElement) prev.disabled = page === 1;
+    if (next instanceof HTMLButtonElement) next.disabled = page === totalPages;
+    pagination?.classList.toggle("hidden", rows.length <= perPage);
+    pagination?.classList.toggle("flex", rows.length > perPage);
+    updateTableScrollFades();
+  }
+
+  prev?.addEventListener("click", () => {
+    page -= 1;
+    renderAnalysisPage();
+  });
+  next?.addEventListener("click", () => {
+    page += 1;
+    renderAnalysisPage();
+  });
+  renderAnalysisPage();
 </script>

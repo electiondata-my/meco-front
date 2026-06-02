@@ -248,10 +248,10 @@ export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (
               return (
                 <tr
                   key={`coalition-${group.coalition_uid}`}
-                  className="cursor-pointer border-b border-otl-gray-200 bg-bg-washed hover:bg-bg-black-50"
+                  className="group cursor-pointer border-b border-otl-gray-200 bg-bg-washed hover:bg-bg-black-50"
                   onClick={() => toggle(group.coalition_uid)}
                 >
-                  <td className="sticky left-0 z-10 whitespace-nowrap bg-bg-washed py-[11px] pl-2 pr-3 text-left font-semibold">
+                  <td className="sticky left-0 z-10 whitespace-nowrap bg-bg-washed py-[11px] pl-2 pr-3 text-left font-semibold group-hover:bg-bg-black-50">
                     <div className="flex items-center gap-1.5">
                       <OverviewLogo uid={group.coalition_uid} name={group.coalition} folder="coalitions" />
                       <span>{group.coalition}</span>
@@ -291,9 +291,9 @@ export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (
             }
             const { party, isChild } = row;
             return (
-              <tr key={`party-${party.party}-${index}`} className="border-b border-otl-gray-200">
+              <tr key={`party-${party.party}-${index}`} className="group border-b border-otl-gray-200 hover:bg-bg-black-50">
                 <td
-                  className={`sticky left-0 z-10 whitespace-nowrap bg-bg-white py-[11px] pr-3 text-left ${isChild ? "pl-8" : "pl-2"}`}
+                  className={`sticky left-0 z-10 whitespace-nowrap bg-bg-white py-[11px] pr-3 text-left group-hover:bg-bg-black-50 ${isChild ? "pl-8" : "pl-2"}`}
                 >
                   <div className="flex items-center gap-1.5">
                     <OverviewLogo uid={party.party_uid} name={party.party} folder="parties" />

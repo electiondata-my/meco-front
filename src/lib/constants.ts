@@ -20,7 +20,7 @@ export const STATES = [
   { key: "trg", name: "Terengganu" },
 ] as const;
 
-export const CountryAndStates: Record<string, string> = [MALAYSIA, ...STATES].reduce(
+export const CountryAndStates: Record<string, string> = [MALAYSIA, SEMENANJUNG, ...STATES].reduce(
   (acc, s) => ({ ...acc, [s.key]: s.name }),
   {} as Record<string, string>,
 );

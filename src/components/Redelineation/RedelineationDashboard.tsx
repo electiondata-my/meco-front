@@ -797,6 +797,16 @@ const RedelineationFilters: FC<FiltersProps> = ({
     value: y,
     label: y,
   }));
+  const getMobileYears = (type: Region, lv: ElectionType) =>
+    yearOptions[`${type}_${lv}`] ?? [];
+  const resolveMobileYear = (
+    type: Region,
+    lv: ElectionType,
+    preferred = state.mobileYear,
+  ) => {
+    const years = getMobileYears(type, lv);
+    return years.includes(preferred) ? preferred : (years[0] ?? "");
+  };
 
   return (
     <>
@@ -868,60 +878,92 @@ const RedelineationFilters: FC<FiltersProps> = ({
             {r("filters") || c("filters") || "Filters"}
           </button>
         </DrawerTrigger>
-        <DrawerContent className="max-h-[calc(100%-96px)] pt-0">
-          <DrawerHeader className="flex w-full items-center justify-between border-b border-otl-gray-200 px-4 py-4.5">
-            <DrawerTitle className="text-body-md font-bold">
-              {r("filters") || c("filters") || "Filters"}
-            </DrawerTitle>
-            <DrawerClose>
-              <span className="h-5 w-5 text-txt-black-500">✕</span>
+        <DrawerContent className="max-h-[calc(100%-72px)] overflow-hidden pt-0">
+          <DrawerHeader className="flex w-full items-center justify-between border-b border-otl-gray-200 px-4 py-4 text-left">
+            <div className="min-w-0 text-left">
+              <DrawerTitle className="text-left text-body-md font-bold">
+                {r("filters") || c("filters") || "Filters"}
+              </DrawerTitle>
+              <p className="truncate text-body-sm text-txt-black-500">
+                {(TYPE_OPTIONS.find((o) => o.value === state.mobileType)?.label ?? state.mobileType)} · {state.mobileYear || "-"} · {c(state.mobileLevel) || state.mobileLevel}
+              </p>
+            </div>
+            <DrawerClose className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-txt-black-500 hover:bg-bg-black-100">
+              <span className="h-5 w-5">✕</span>
             </DrawerClose>
           </DrawerHeader>
 
-          <div className="flex flex-col space-y-6 px-4 py-4.5">
+          <div className="max-h-[calc(100vh-230px)] space-y-4 overflow-y-auto px-4 py-4.5">
             <div className="space-y-1.5">
-              <p className="text-body-sm text-txt-black-700">
-                {r("filter.area") || "Area"}:
+              <p className="text-body-sm font-medium text-txt-black-700">
+                {r("filter.area") || "Area"}
               </p>
-              <Dropdown
-                anchor="left"
-                options={TYPE_OPTIONS}
-                selected={TYPE_OPTIONS.find(
-                  (o) => o.value === state.mobileType,
-                )}
-                onChange={(selected) => {
-                  if (selected.value !== state.mobileType)
-                    setData("mobileYear", "");
-                  setData("mobileType", selected.value as Region);
-                }}
-              />
+              <div className="grid grid-cols-3 gap-1.5">
+                {TYPE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      const nextType = option.value as Region;
+                      setData("mobileType", nextType);
+                      setData(
+                        "mobileYear",
+                        resolveMobileYear(nextType, state.mobileLevel),
+                      );
+                    }}
+                    className={clx(
+                      "flex h-9 min-w-0 items-center justify-center rounded-lg border px-2 text-body-xs font-medium shadow-button transition-colors",
+                      state.mobileType === option.value
+                        ? "border-primary-600 bg-primary-600/10 text-primary-600"
+                        : "border-otl-gray-200 bg-bg-white text-txt-black-700 hover:border-bg-black-400 hover:bg-bg-black-50",
+                    )}
+                  >
+                    <span className="truncate">{option.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-body-sm text-txt-black-700">
-                {r("filter.year") || "Year"}:
+              <p className="text-body-sm font-medium text-txt-black-700">
+                {r("filter.year") || "Year"}
               </p>
-              <Dropdown
-                anchor="left-0 max-h-36"
-                options={YEAR_OPTIONS_MOBILE}
-                selected={YEAR_OPTIONS_MOBILE.find(
-                  (o) => o.value === state.mobileYear,
-                )}
-                onChange={(selected) => setData("mobileYear", selected.value)}
-              />
+              <div className="grid grid-cols-4 gap-1.5">
+                {YEAR_OPTIONS_MOBILE.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setData("mobileYear", option.value)}
+                    className={clx(
+                      "flex h-9 items-center justify-center rounded-lg border px-2 text-body-xs font-medium shadow-button transition-colors",
+                      state.mobileYear === option.value
+                        ? "border-primary-600 bg-primary-600/10 text-primary-600"
+                        : "border-otl-gray-200 bg-bg-white text-txt-black-700 hover:border-bg-black-400 hover:bg-bg-black-50",
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <p className="text-body-sm text-txt-black-700">
-                {r("filter.election_type") || "Election type"}:
+              <p className="text-body-sm font-medium text-txt-black-700">
+                {r("filter.type") || "Election type"}
               </p>
-              <div className="flex h-8 items-center rounded-lg bg-bg-washed p-0">
+              <div className="grid h-10 grid-cols-2 rounded-lg bg-bg-washed p-0.5">
                 {(["parlimen", "dun"] as ElectionType[]).map((lv) => (
                   <button
                     key={lv}
-                    onClick={() => setData("mobileLevel", lv)}
+                    onClick={() => {
+                      setData("mobileLevel", lv);
+                      setData(
+                        "mobileYear",
+                        resolveMobileYear(state.mobileType, lv),
+                      );
+                    }}
                     className={clx(
-                      "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium",
+                      "flex h-9 min-h-9 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium",
                       state.mobileLevel === lv
                         ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
                         : "text-txt-black-500",
@@ -934,9 +976,9 @@ const RedelineationFilters: FC<FiltersProps> = ({
             </div>
           </div>
 
-          <DrawerFooter className="flex-row gap-3">
+          <DrawerFooter className="grid grid-cols-2 gap-3 border-t border-otl-gray-200 bg-bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4">
             <button
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2.5 text-body-sm font-medium"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2.5 text-body-sm font-medium"
               onClick={() => setData("openFilter", false)}
             >
               {c("close") || "Close"}
@@ -945,7 +987,7 @@ const RedelineationFilters: FC<FiltersProps> = ({
               disabled={
                 !state.mobileLevel || !state.mobileType || !state.mobileYear
               }
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2.5 text-body-sm font-medium text-white disabled:opacity-40"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2.5 text-body-sm font-medium text-white disabled:opacity-40"
               onClick={() => {
                 if (state.mobileLevel !== level)
                   onLevelChange(state.mobileLevel);
