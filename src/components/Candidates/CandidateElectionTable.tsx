@@ -107,19 +107,28 @@ const monoCellClass = "font-['IBM_Plex_Mono','Roboto_Mono',monospace]";
 const monoNumberClass = `${monoCellClass} tabular-nums`;
 const desktopMonoNumberClass = "sm:font-['IBM_Plex_Mono','Roboto_Mono',monospace] sm:tabular-nums";
 
+function WonCircle({ className }: { className: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function LostCircle({ className }: { className: string }) {
+  return (
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
 function ResultBadge({ result, cd }: { result: string; cd: (k: string) => string }) {
   const won = result.startsWith("won");
+  const Icon = won ? WonCircle : LostCircle;
   return (
     <span className={`flex items-center gap-1.5 text-body-sm ${won ? "text-txt-success" : "text-txt-danger"}`}>
-      {won ? (
-        <svg className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-        </svg>
-      ) : (
-        <svg className="h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-        </svg>
-      )}
+      <Icon className="h-5 w-5 shrink-0" />
       {resultLabel(result, cd).toUpperCase()}
     </span>
   );
@@ -127,37 +136,17 @@ function ResultBadge({ result, cd }: { result: string; cd: (k: string) => string
 
 function ResultIcon({ result }: { result: string }) {
   const won = result.startsWith("won");
-  return won ? (
-    <svg className="h-5 w-5 shrink-0 text-txt-success" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-    </svg>
-  ) : (
-    <svg className="h-5 w-5 shrink-0 text-txt-danger" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-    </svg>
-  );
+  const Icon = won ? WonCircle : LostCircle;
+  return <Icon className={`h-5 w-5 shrink-0 ${won ? "text-txt-success" : "text-txt-danger"}`} />;
 }
 
-function ResultLine({
-  result,
-  cd,
-}: {
-  result: string;
-  cd: (k: string) => string;
-}) {
+function ResultLine({ result, cd }: { result: string; cd: (k: string) => string }) {
   const won = result.startsWith("won");
+  const Icon = won ? WonCircle : LostCircle;
   return (
     <span className={`flex items-center gap-1 font-normal ${won ? "text-txt-success" : "text-txt-danger"}`}>
       {resultLabel(result, cd).toUpperCase()}
-      {won ? (
-        <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-        </svg>
-      ) : (
-        <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
-        </svg>
-      )}
+      <Icon className="h-4 w-4 shrink-0" />
     </span>
   );
 }
@@ -500,84 +489,75 @@ export default function CandidateElectionTable({
                   <>
                     {/* Ballot table */}
                     <div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full table-fixed text-body-sm">
-                          <colgroup>
-                            <col className="w-[43%]" />
-                            <col className="w-[26%]" />
-                            <col className="w-[31%]" />
-                          </colgroup>
-                          <thead>
-                            <tr className="border-b-2 border-otl-gray-200 font-medium">
-                              <th className="py-3 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
-                              <th className="px-3 py-3 text-center sm:text-left">{c("party_name") || "Party"}</th>
-                              <th className="py-3 pl-3 pr-4 text-left">{c("votes_won") || "Votes"}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {modal.ballot.map((b, i) => {
-                              const highlight = b.name === candidateName;
-                              const lastSpace = b.name.lastIndexOf(" ");
-                              const nameStart = lastSpace === -1 ? "" : b.name.slice(0, lastSpace + 1);
-                              const nameEnd = lastSpace === -1 ? b.name : b.name.slice(lastSpace + 1);
-                              return (
-                                <tr key={i} className="border-b border-otl-gray-200">
-                                  <td className="min-w-0 break-words py-3 pr-3 text-left">
-                                    {highlight ? (
-                                      <>
-                                        {nameStart}
-                                        <span className="whitespace-nowrap">
-                                          {nameEnd}
-                                          <svg
-                                            className="ml-2 inline-block h-5 w-7 translate-y-0.5 align-text-bottom text-txt-black-900"
-                                            viewBox="0 0 28 20"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            aria-hidden="true"
-                                          >
-                                            <path d="M25 10H3m0 0 5-5m-5 5 5 5" />
-                                          </svg>
-                                        </span>
-                                      </>
-                                    ) : b.name}
-                                  </td>
-                                  <td className="px-3 py-3">
-                                    <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
-                                      {b.party_uid && <PartyFlag uid={b.party_uid} party={b.party} />}
-                                      <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
-                                        {b.coalition && b.coalition !== "ALONE"
-                                          ? `${b.party} (${b.coalition})`
-                                          : b.party}
-                                      </span>
+                      <table className="w-full table-fixed text-body-sm">
+                        <colgroup>
+                          <col className="w-[43%]" />
+                          <col className="w-[26%]" />
+                          <col className="w-[31%]" />
+                        </colgroup>
+                        <thead>
+                          <tr className="border-b-2 border-otl-gray-200 font-medium">
+                            <th className="py-3 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
+                            <th className="px-3 py-3 text-center sm:text-left">{c("party_name") || "Party"}</th>
+                            <th className="py-3 pl-3 pr-4 text-left">{c("votes_won") || "Votes"}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {modal.ballot.map((b, i) => {
+                            const highlight = b.name === candidateName;
+                            const highlightColor = b.result.startsWith("won")
+                              ? "rgb(var(--bg-success-100))"
+                              : "rgb(var(--bg-danger-100))";
+                            return (
+                              <tr
+                                key={i}
+                                  className="border-b border-otl-gray-200"
+                                style={
+                                  highlight
+                                    ? {
+                                        backgroundColor: highlightColor,
+                                        boxShadow: `0 0 0 100vmax ${highlightColor}`,
+                                        clipPath: "inset(0 -100vmax)",
+                                      }
+                                    : undefined
+                                }
+                              >
+                                <td className="min-w-0 break-words py-3 pr-3 text-left">
+                                  {b.name}
+                                </td>
+                                <td className="px-3 py-3">
+                                  <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
+                                    {b.party_uid && <PartyFlag uid={b.party_uid} party={b.party} />}
+                                    <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
+                                      {b.coalition && b.coalition !== "ALONE"
+                                        ? `${b.party} (${b.coalition})`
+                                        : b.party}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className={`py-3 pl-3 pr-4 ${desktopMonoNumberClass}`}>
+                                  <div className="flex flex-col gap-2 whitespace-nowrap sm:flex-row sm:items-center sm:gap-0.5">
+                                    <div className="h-[5px] w-[80px] shrink-0 overflow-x-hidden rounded-full bg-bg-washed sm:w-[72px]">
+                                      {b.votes_perc != null && (
+                                        <div
+                                          className="h-full overflow-hidden rounded-full bg-bg-black-900"
+                                          style={{ width: `${Math.min(b.votes_perc, 100)}%` }}
+                                        />
+                                      )}
                                     </div>
-                                  </td>
-                                  <td className={`py-3 pl-3 pr-4 ${desktopMonoNumberClass}`}>
-                                    <div className="flex flex-col gap-2 whitespace-nowrap sm:flex-row sm:items-center sm:gap-0.5">
-                                      <div className="h-[5px] w-[80px] shrink-0 overflow-x-hidden rounded-full bg-bg-washed sm:w-[72px]">
-                                        {b.votes_perc != null && (
-                                          <div
-                                            className="h-full overflow-hidden rounded-full bg-bg-black-900"
-                                            style={{ width: `${Math.min(b.votes_perc, 100)}%` }}
-                                          />
-                                        )}
-                                      </div>
-                                      <span className="whitespace-nowrap text-xs sm:text-body-sm">
-                                        <span className="sm:inline-block sm:min-w-[3.75rem] sm:text-right">
-                                          {b.votes?.toLocaleString() ?? "0"}
-                                        </span>
-                                        <span>{` (${b.votes_perc != null ? `${b.votes_perc.toFixed(1)}%` : "—"})`}</span>
+                                    <span className="whitespace-nowrap text-xs sm:text-body-sm">
+                                      <span className="sm:inline-block sm:min-w-[3.75rem] sm:text-right">
+                                        {b.votes?.toLocaleString() ?? "0"}
                                       </span>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                                      <span>{` (${b.votes_perc != null ? `${b.votes_perc.toFixed(1)}%` : "—"})`}</span>
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
 
                     {/* Voting stats — matches FullResultContent layout */}
