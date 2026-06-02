@@ -39,7 +39,7 @@ interface Props {
 
 const { area, year, yearOptions } = Astro.props;
 const locale = Astro.currentLocale ?? "en-GB";
-const apiBaseUrl = import.meta.env.PUBLIC_API_URL_S3 ?? "";
+const apiBaseUrl = import.meta.env.PUBLIC_API_URL_R2 ?? "";
 const mapboxToken = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
 const mapboxAccount = import.meta.env.PUBLIC_MAPBOX_ACCOUNT ?? "";
 

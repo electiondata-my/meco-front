@@ -1,7 +1,7 @@
 ---
 import Layout from "@src/components/Layout/index.astro";
 import { getTranslations, t } from "@i18n/index";
-import { CountryAndStates, STATES, MALAYSIA } from "@src/lib/constants";
+import { CountryAndStates, STATES, MALAYSIA, SEMENANJUNG } from "@src/lib/constants";
 import PartyElectionTable from "./PartyElectionTable";
 
 type DropdownEntry = {
@@ -40,7 +40,7 @@ const { partyUid, stateCode, partyElections, dropdown, isRoot = false } = Astro.
 const locale  = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 
-const stateName = CountryAndStates[stateCode] ?? stateCode;
+const stateName = stateCode === SEMENANJUNG.key ? SEMENANJUNG.name : CountryAndStates[stateCode] ?? stateCode;
 const parlimen  = partyElections.filter(e => e.type === "parlimen" && e.state === stateName);
 const dun       = partyElections.filter(e => e.type === "dun"      && e.state === stateName);
 
@@ -59,8 +59,17 @@ const partyOptions = [...dropdown].sort((a, b) => {
 }));
 
 const availableStates = new Set(partyElections.map(e => e.state));
-const stateOptions = [MALAYSIA, ...STATES]
+const statePriority = ["Malaysia", "Semenanjung", "Sarawak", "Sabah"];
+const stateOptions = [MALAYSIA, SEMENANJUNG, ...STATES]
   .filter(s => availableStates.has(s.name))
+  .sort((a, b) => {
+    const aPriority = statePriority.indexOf(a.name);
+    const bPriority = statePriority.indexOf(b.name);
+    if (aPriority !== -1 || bPriority !== -1) {
+      return (aPriority === -1 ? statePriority.length : aPriority) - (bPriority === -1 ? statePriority.length : bPriority);
+    }
+    return a.name.localeCompare(b.name);
+  })
   .map(s => ({ value: s.key, label: s.name }));
 
 const i18n = await getTranslations(locale, ["common", "parties"]);
@@ -70,12 +79,12 @@ const p  = (key: string) => t(i18n.parties ?? {}, key);
 const localePrefix = isMalay ? "/ms-MY" : "";
 const pageTitle    = `${isRoot ? "Parties" : currentParty?.party ?? "Parties"} | ElectionData.MY`;
 
-const NO_DUN_STATES = ["mys", "kul", "lbn", "pjy"];
+const NO_DUN_STATES = ["mys", "smj", "kul", "lbn", "pjy"];
 const noDunState    = NO_DUN_STATES.includes(stateCode);
 
 const tbToken  = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
 const tbHost   = import.meta.env.PUBLIC_API_URL_TB;
-const s3Base   = import.meta.env.PUBLIC_API_URL_S3;
+const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
 ---
 
 <Layout title={pageTitle}>
@@ -167,7 +176,7 @@ const s3Base   = import.meta.env.PUBLIC_API_URL_S3;
         stateOptions={stateOptions}
         isMalay={isMalay}
         localePrefix={localePrefix}
-        apiBase={s3Base}
+        apiBase={r2Base}
         translations={{ common: i18n.common ?? {}, parties: i18n.parties ?? {} }}
         noDunState={noDunState}
       />

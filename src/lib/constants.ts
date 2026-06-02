@@ -1,4 +1,5 @@
 export const MALAYSIA = { key: "mys", name: "Malaysia" } as const;
+export const SEMENANJUNG = { key: "smj", name: "Semenanjung" } as const;
 
 export const STATES = [
   { key: "jhr", name: "Johor" },

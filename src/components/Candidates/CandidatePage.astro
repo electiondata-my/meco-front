@@ -115,7 +115,7 @@ const r2Url   = import.meta.env.PUBLIC_API_URL_R2;
         dun={dun}
         candidateName={currentOption?.name ?? slug}
         candidateStats={currentOption ? `W${currentOption.w}, L${currentOption.l}` : undefined}
-        apiBase={import.meta.env.PUBLIC_API_URL_S3}
+        apiBase={import.meta.env.PUBLIC_API_URL_R2}
         isMalay={isMalay}
         translations={{ common: i18n.common ?? {}, candidates: i18n.candidates ?? {} }}
       />

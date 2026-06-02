@@ -27,7 +27,7 @@ jobs:
           PUBLIC_APP_ENV: production
           PUBLIC_API_URL_TB: ${{ secrets.PUBLIC_API_URL_TB }}
           PUBLIC_API_TOKEN_TB: ${{ secrets.PUBLIC_API_TOKEN_TB }}
-          PUBLIC_API_URL_S3: ${{ secrets.PUBLIC_API_URL_S3 }}
+          PUBLIC_API_URL_R2: ${{ secrets.PUBLIC_API_URL_R2 }}
           PUBLIC_I18N_URL: ${{ secrets.PUBLIC_I18N_URL }}
           PUBLIC_TINYBIRD_TOKEN: ${{ secrets.PUBLIC_TINYBIRD_TOKEN }}
           PUBLIC_TINYBIRD_TOKEN_READ: ${{ secrets.PUBLIC_TINYBIRD_TOKEN_READ }}

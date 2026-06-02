@@ -439,12 +439,16 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
     const resolved = Array.isArray(newSeatValue)
       ? newSeatValue[0] ?? ""
       : newSeatValue;
+    const nextSeats = value === "new" ? data?.new : data?.old;
+    const nextSeat = nextSeats?.find(
+      (seat: any) => seat[`seat_${value}`] === resolved,
+    ) as any;
     setSeatValue(resolved);
     pushParams({ level, type: value, seat: resolved ? seatSlug(resolved) : null });
-    if (redelineation_map && currentSeat) {
+    if (redelineation_map && nextSeat) {
       redelineation_map.flyTo({
-        center: currentSeat.center,
-        zoom: currentSeat.zoom,
+        center: nextSeat.center,
+        zoom: nextSeat.zoom,
         duration: 2000,
       });
     }
@@ -1402,10 +1406,14 @@ const MapboxRedelineation: FC<MapboxRedelineationProps> = ({
   const prop = election_type === "parlimen" ? "parlimen" : "dun";
   const outlineArr = Array.isArray(useOutline) ? useOutline : [useOutline];
   const shadedArr = Array.isArray(useShaded) ? useShaded : [useShaded];
+  const outlineSource = `${sources[0]}-outline`;
+  const shadedSource = `${sources[1]}-shaded`;
+  const outlineFillLayer = `${outlineSource}-fill`;
+  const shadedFillLayer = `${shadedSource}-fill`;
 
   const handleMouseMove = (e: mapboxgl.MapMouseEvent) => {
     const features = mapRef.current?.queryRenderedFeatures(e.point, {
-      layers: sources.map((s) => `${s}-fill`),
+      layers: [outlineFillLayer, shadedFillLayer],
     });
 
     if (features && features.length > 0) {
@@ -1442,20 +1450,20 @@ const MapboxRedelineation: FC<MapboxRedelineationProps> = ({
         style={{ width: "100%", height: "100%" }}
         mapStyle={state.styleUrl}
         attributionControl={false}
-        interactiveLayerIds={sources as unknown as string[]}
+        interactiveLayerIds={[outlineFillLayer, shadedFillLayer]}
         onMouseMove={handleMouseMove}
       >
       <AttributionControl compact={true} customAttribution="ElectionData.MY" />
 
       {/* Shaded source (old/counterpart) */}
       <Source
-        key={sources[1]}
-        id={sources[1]}
+        key={shadedSource}
+        id={shadedSource}
         type="vector"
         url={`mapbox://${mapboxAccount}.${sources[1]}`}
       >
         <Layer
-          id={`${sources[1]}-line`}
+          id={`${shadedSource}-line`}
           type="line"
           source-layer={sources[1]}
           paint={{
@@ -1466,7 +1474,7 @@ const MapboxRedelineation: FC<MapboxRedelineationProps> = ({
           filter={["in", prop, ...shadedArr]}
         />
         <Layer
-          id={`${sources[1]}-fill`}
+          id={shadedFillLayer}
           type="fill"
           source-layer={sources[1]}
           paint={{
@@ -1486,13 +1494,13 @@ const MapboxRedelineation: FC<MapboxRedelineationProps> = ({
 
       {/* Outline source (current) */}
       <Source
-        key={sources[0]}
-        id={sources[0]}
+        key={outlineSource}
+        id={outlineSource}
         type="vector"
         url={`mapbox://${mapboxAccount}.${sources[0]}`}
       >
         <Layer
-          id={`${sources[0]}-line`}
+          id={`${outlineSource}-line`}
           type="line"
           source-layer={sources[0]}
           paint={{
@@ -1503,7 +1511,7 @@ const MapboxRedelineation: FC<MapboxRedelineationProps> = ({
           filter={["in", prop, ...outlineArr]}
         />
         <Layer
-          id={`${sources[0]}-fill`}
+          id={outlineFillLayer}
           type="fill"
           source-layer={sources[0]}
           paint={{ "fill-color": "transparent" }}

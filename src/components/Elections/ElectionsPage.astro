@@ -13,7 +13,7 @@ interface Props {
 const { stateCode, electionName } = Astro.props;
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
-const apiBase = import.meta.env.PUBLIC_API_URL_S3 ?? "";
+const apiBase = import.meta.env.PUBLIC_API_URL_R2 ?? "";
 
 const isGE   = electionName.startsWith("GE");
 const isParl = isGE || !electionName.startsWith("SE");

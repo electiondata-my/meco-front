@@ -488,11 +488,11 @@ export default function PartyElectionTable({
       });
 
       try {
-        const url = `${apiBase}/elections/${encodeURIComponent(e.state)}/${elType}-${e.election_name}.json`;
+        const url = `${apiBase}/elections/${encodeURIComponent(e.state)}/${elType}-${e.election_name}-aggregate.json`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`Failed to fetch election result: ${res.status}`);
         const json = await res.json();
-        const table: ElectionParty[] = json?.ballot ?? json?.data?.ballot ?? [];
+        const table: ElectionParty[] = json?.by_party ?? [];
         setModal((prev) => ({
           ...prev,
           loading: false,

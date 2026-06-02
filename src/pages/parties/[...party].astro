@@ -1,7 +1,7 @@
 ---
 import PartyPage from "@src/components/Parties/PartyPage.astro";
 import { fetchJSON } from "@src/lib/api";
-import { MALAYSIA, STATES } from "@src/lib/constants";
+import { MALAYSIA, SEMENANJUNG, STATES } from "@src/lib/constants";
 
 type DropdownEntry = {
   party_uid: string;
@@ -40,7 +40,7 @@ export async function getStaticPaths() {
   ]);
 
   const entries    = dropdownJson.data ?? [];
-  const stateCodes = [MALAYSIA.key, ...STATES.map(s => s.key)];
+  const stateCodes = [MALAYSIA.key, SEMENANJUNG.key, ...STATES.map(s => s.key)];
 
   return entries
     .filter(e => !slugFilter || slugFilter.has(e.party_uid))

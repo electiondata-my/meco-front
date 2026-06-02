@@ -4,7 +4,7 @@ import ByElectionsDashboard, { type ByElectionSeat } from "@src/components/ByEle
 import { getTranslations, t } from "@i18n/index";
 
 const locale = Astro.currentLocale ?? "en-GB";
-const apiBase = import.meta.env.PUBLIC_API_URL_S3 ?? "";
+const apiBase = import.meta.env.PUBLIC_API_URL_R2 ?? "";
 
 let seats: ByElectionSeat[] = [];
 try {
