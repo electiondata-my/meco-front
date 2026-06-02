@@ -1,152 +1,103 @@
 ---
 import Layout from "@src/components/Layout/index.astro";
 import BallotSeat from "./BallotSeat";
+import ElectionOverviewIsland from "./ElectionOverviewTable";
 import { getTranslations, t } from "@i18n/index";
-import { fetchJSON } from "@src/lib/api";
-import { CountryAndStates, MALAYSIA, STATES, StateKeyByName } from "@src/lib/constants";
+import { CountryAndStates, MALAYSIA, STATES } from "@src/lib/constants";
+import type { ElectionParty } from "./ElectionOverviewTable";
+
+type ElectionEntry = { state: string; election: string; date: string };
+
+type OverallSeat = {
+  seat: string;
+  date: string;
+  party: string;
+  party_uid?: string;
+  name: string;
+  majority: number | null;
+  majority_perc: number | null;
+  voter_turnout?: number;
+  voter_turnout_perc?: number;
+  votes_rejected?: number;
+  votes_rejected_perc?: number;
+  party_lost?: string[];
+};
 
 interface Props {
   stateCode: string;
   electionName: string;
+  seats: OverallSeat[];
+  table: ElectionParty[];
+  datesRaw: ElectionEntry[];
 }
 
-const { stateCode, electionName } = Astro.props;
+const { stateCode, electionName, seats, table, datesRaw } = Astro.props;
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 const apiBase = import.meta.env.PUBLIC_API_URL_R2 ?? "";
 
-const isGE   = electionName.startsWith("GE");
-const isParl = isGE || !electionName.startsWith("SE");
-const type   = isParl ? "parlimen" : "dun";
+const isGE = electionName.startsWith("GE");
 
-// All election dates (for nav dropdowns)
-type ElectionEntry = { state: string; election: string; date: string };
-type ElectionJson  = { data: ElectionEntry[] };
-type OverallSeat   = {
-  seat: string; date: string; party: string; party_uid?: string; name: string;
-  majority: number | null; majority_perc: number | null;
-  voter_turnout?: number; voter_turnout_perc?: number;
-  votes_rejected?: number; votes_rejected_perc?: number;
-  party_lost?: string[];
-};
-type PartyResult = Array<{
-  party: string; party_uid?: string; coalition?: string; coalition_uid?: string;
-  type: string; state: string; election_name: string; date: string;
-  seats_total: number; seats_contested: number; seats_contested_perc: number;
-  seats_won: number; seats_won_perc: number; seats_perc: number;
-  votes: number; votes_perc: number; votes_total?: number;
-}>;
-type ElectionData = { ballot: OverallSeat[]; table: PartyResult; summary?: any[] };
+// Build navigation data from the dates prop (no extra fetch)
+const datesMap = datesRaw.reduce(
+  (acc, e) => {
+    (acc[e.state] ??= []).push(e);
+    return acc;
+  },
+  {} as Record<string, ElectionEntry[]>,
+);
 
-const [datesRes, dataRes] = await Promise.allSettled([
-  fetchJSON<ElectionJson>("/dates.json"),
-  fetchJSON<ElectionData>(`/elections/${stateCode}/${type}-${electionName}.json`),
-]);
-
-const datesRaw   = datesRes.status === "fulfilled" ? datesRes.value.data : [];
-const datesMap   = datesRaw.reduce((acc, e) => {
-  (acc[e.state] ??= []).push(e);
-  return acc;
-}, {} as Record<string, ElectionEntry[]>);
-const elecData   = dataRes.status  === "fulfilled" ? dataRes.value  : null;
-
-const seats = elecData?.ballot ?? [];
-const table = elecData?.table  ?? [];
-
-// Build state options for nav
 const NON_SE_STATES = ["mys", "kul", "lbn", "pjy"];
-const stateOptions = [MALAYSIA, ...STATES].map(s => ({
+const stateOptions = [MALAYSIA, ...STATES].map((s) => ({
   value: s.key,
   label: s.name,
 }));
 
-// Build GE options (from Malaysia entry)
 const geOptions = (datesMap["Malaysia"] ?? [])
-  .map(e => ({ value: e.election, label: isMalay ? e.election.replace(/^GE/, "PRU") : e.election, date: e.date }))
+  .map((e) => ({
+    value: e.election,
+    label: isMalay ? e.election.replace(/^GE/, "PRU") : e.election,
+    date: e.date,
+  }))
   .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-// Build SE options for current state
-const stateName   = CountryAndStates[stateCode] ?? stateCode;
+const stateName = CountryAndStates[stateCode] ?? stateCode;
 const seOptions = NON_SE_STATES.includes(stateCode)
   ? []
-  : ((datesMap[stateName] ?? [])
-      .filter(e => !e.election.startsWith("GE"))
-      .map(e => ({ value: e.election, label: e.election, date: e.date }))
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+  : (datesMap[stateName] ?? [])
+      .filter((e) => !e.election.startsWith("GE"))
+      .map((e) => ({ value: e.election, label: e.election, date: e.date }))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
 const currentElectionOptions = isGE ? geOptions : seOptions;
 
-// Build overview table data (coalitions grouped)
-type CoalitionGroup = {
-  coalition_uid: string; coalition: string;
-  seats_won: number; seats_contested: number; votes: number;
-  seats_total: number; votes_total: number;
-  seats_won_perc: number; seats_contested_perc: number; votes_perc: number;
-  parties: typeof table;
-};
-
-function buildTableRows(rows: typeof table) {
-  const groupMap = new Map<string, typeof table>();
-  const alone: typeof table = [];
-  let seats_total = 222;
-  let votes_total = 0;
-
-  for (const r of rows) {
-    if (r.seats_total) seats_total = r.seats_total;
-    if (r.votes_total) votes_total = r.votes_total;
-    if (!r.coalition_uid || r.coalition_uid === "00-ALONE") {
-      alone.push(r);
-    } else {
-      const existing = groupMap.get(r.coalition_uid) ?? [];
-      groupMap.set(r.coalition_uid, [...existing, r]);
-    }
-  }
-
-  const groups: CoalitionGroup[] = [];
-  for (const [uid, parties] of groupMap.entries()) {
-    const seats_won = parties.reduce((s, p) => s + p.seats_won, 0);
-    const seats_contested = parties.reduce((s, p) => s + p.seats_contested, 0);
-    const votes = parties.reduce((s, p) => s + p.votes, 0);
-    const coalition = parties[0].coalition ?? uid;
-    groups.push({
-      coalition_uid: uid, coalition,
-      seats_won, seats_contested, votes, seats_total, votes_total,
-      seats_won_perc: (seats_won / seats_total) * 100,
-      seats_contested_perc: (seats_contested / seats_total) * 100,
-      votes_perc: votes_total > 0 ? (votes / votes_total) * 100 : 0,
-      parties: [...parties].sort((a, b) => b.seats_won - a.seats_won),
-    });
-  }
-
-  groups.sort((a, b) => b.seats_won - a.seats_won);
-  alone.sort((a, b) => b.seats_won - a.seats_won);
-  return { groups, alone, seats_total };
-}
-
-const { groups, alone, seats_total } = buildTableRows(table);
-
-// Analysis table data
-const analysisRows = seats.map(s => {
+// Analysis table rows (from seats prop)
+const analysisRows = seats.map((s) => {
   const [seat, ...stParts] = s.seat.split(", ");
   return {
-    seat, state: stParts.join(", "),
-    majority: s.majority, majority_perc: s.majority_perc,
-    voter_turnout: s.voter_turnout, voter_turnout_perc: s.voter_turnout_perc,
-    votes_rejected: s.votes_rejected, votes_rejected_perc: s.votes_rejected_perc,
-    party: s.party,
+    seat,
+    state: stParts.join(", "),
+    majority: s.majority,
+    majority_perc: s.majority_perc,
+    voter_turnout: s.voter_turnout,
+    voter_turnout_perc: s.voter_turnout_perc,
+    votes_rejected: s.votes_rejected,
+    votes_rejected_perc: s.votes_rejected_perc,
   };
 });
 
 const i18n = await getTranslations(locale, ["common", "elections", "election"]);
-const c  = (key: string) => t(i18n.common    ?? {}, key);
-const e  = (key: string) => t(i18n.elections ?? {}, key);
-const el = (key: string) => t(i18n.election  ?? {}, key);
+const c = (key: string) => t(i18n.common ?? {}, key);
+const e = (key: string) => t(i18n.elections ?? {}, key);
+const el = (key: string) => t(i18n.election ?? {}, key);
 
 const localePrefix = isMalay ? "/ms-MY" : "";
 const electionDisplay = isMalay
   ? electionName.replace(/^GE/, "PRU").replace(/^SE/, "PRN")
   : electionName;
-const pageTitle = `${CountryAndStates[stateCode] ?? stateCode} ${electionDisplay} | ${e("hero.header") || "Elections Explorer"}`;
+
+// Title format: "GE-15 (Malaysia) | ElectionData.MY"
+const pageTitle = `${electionDisplay} (${stateName}) | ElectionData.MY`;
 
 function numFmt(n: number | null | undefined, dp = 0): string {
   if (n == null) return "—";
@@ -154,7 +105,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 }
 ---
 
-<Layout title={pageTitle} description={e("hero.description")} needsLeaflet={false}>
+<Layout title={pageTitle} description={e("hero.description")}>
   <!-- Hero -->
   <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
     <div class="mx-auto flex max-w-[727px] flex-col items-center justify-center gap-4 px-4 pb-8 pt-16 md:px-6 lg:gap-6">
@@ -165,20 +116,24 @@ function numFmt(n: number | null | undefined, dp = 0): string {
         {e("hero.header") || "Elections Explorer"}
       </h1>
       {e("hero.description") !== "hero.description" && (
-        <p class="w-full text-center text-body-sm text-txt-black-700 lg:text-body-md">{e("hero.description")}</p>
+        <p class="w-full text-center text-body-sm text-txt-black-700 lg:text-body-md">
+          {e("hero.description")}
+        </p>
       )}
     </div>
   </section>
 
   <!-- Navigation controls -->
   <div class="mx-auto w-full max-w-screen-xl px-4 md:px-6">
-    <!-- Mobile: single filter button -->
+    <!-- Mobile: filter button -->
     <div class="lg:hidden py-3">
       <button
         id="filter-open"
         class="flex items-center gap-2 rounded-full border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700"
       >
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+        </svg>
         {c("filters") || "Filters"}
       </button>
     </div>
@@ -195,12 +150,16 @@ function numFmt(n: number | null | undefined, dp = 0): string {
               isGE ? "bg-bg-danger-50 text-txt-danger" : "text-txt-black-500 hover:text-txt-black-900",
             ]}
           >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1.5a.75.75 0 0 1 .75.75V7.5h-1.5V2.25A.75.75 0 0 1 12 1.5ZM11.25 7.5v5.69l-1.72-1.72a.75.75 0 0 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V7.5h3.75a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6.75a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3h4.5Z" /></svg>
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 1.5a.75.75 0 0 1 .75.75V7.5h-1.5V2.25A.75.75 0 0 1 12 1.5ZM11.25 7.5v5.69l-1.72-1.72a.75.75 0 0 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l3-3a.75.75 0 1 0-1.06-1.06l-1.72 1.72V7.5h3.75a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6.75a3 3 0 0 1-3-3v-9a3 3 0 0 1 3-3h4.5Z" />
+            </svg>
             {c("parlimen") || "Parlimen"}
           </a>
           {NON_SE_STATES.includes(stateCode) ? (
             <span class="flex cursor-not-allowed items-center gap-1 rounded-full px-3 py-1.5 font-medium opacity-40 text-txt-black-500">
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" /></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" />
+              </svg>
               {c("dun") || "DUN"}
             </span>
           ) : (
@@ -211,7 +170,9 @@ function numFmt(n: number | null | undefined, dp = 0): string {
                 !isGE ? "bg-bg-danger-50 text-txt-danger" : "text-txt-black-500 hover:text-txt-black-900",
               ]}
             >
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" /></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.7 5.25 1.851V4.533ZM12.75 20.601A8.26 8.26 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.736 9.736 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.068Z" />
+              </svg>
               {c("dun") || "DUN"}
             </a>
           )}
@@ -219,14 +180,22 @@ function numFmt(n: number | null | undefined, dp = 0): string {
       </div>
 
       <!-- State dropdown -->
-      <select id="state-select" class="rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger">
-        {stateOptions.map(o => <option value={o.value} selected={o.value === stateCode}>{o.label}</option>)}
+      <select
+        id="state-select"
+        class="rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger"
+      >
+        {stateOptions.map((o) => <option value={o.value} selected={o.value === stateCode}>{o.label}</option>)}
       </select>
 
       <!-- Election dropdown -->
-      <select id="election-select" class="rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger">
+      <select
+        id="election-select"
+        class="rounded-xl border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm text-txt-black-700 shadow-button focus:outline-none focus:ring-2 focus:ring-fr-danger"
+      >
         <option value="">{e("select_election") || "Select election…"}</option>
-        {currentElectionOptions.map(o => <option value={o.value} selected={o.value === electionName}>{o.label}</option>)}
+        {currentElectionOptions.map((o) => (
+          <option value={o.value} selected={o.value === electionName}>{o.label}</option>
+        ))}
       </select>
     </div>
 
@@ -237,15 +206,24 @@ function numFmt(n: number | null | undefined, dp = 0): string {
         <div class="flex items-center justify-between px-4 py-3">
           <p class="font-bold">{c("filters") || "Filters"}</p>
           <button id="filter-close" aria-label="Close filters" class="p-1 text-txt-black-500">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
         <div class="divide-y divide-otl-divider px-4">
           <div class="space-y-3 py-3">
             <p class="text-body-sm font-medium">{e("election") || "Election type"}</p>
             <div class="flex gap-2">
-              <a href={`${localePrefix}/elections/${stateCode}/${isGE ? electionName : "GE-15"}`}
-                class:list={["rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline", isGE ? "border-txt-danger bg-bg-danger-50 text-txt-danger" : "border-otl-gray-200 text-txt-black-500"]}>
+              <a
+                href={`${localePrefix}/elections/${stateCode}/${isGE ? electionName : "GE-15"}`}
+                class:list={[
+                  "rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline",
+                  isGE
+                    ? "border-txt-danger bg-bg-danger-50 text-txt-danger"
+                    : "border-otl-gray-200 text-txt-black-500",
+                ]}
+              >
                 {c("parlimen") || "Parlimen"}
               </a>
               {NON_SE_STATES.includes(stateCode) ? (
@@ -253,8 +231,15 @@ function numFmt(n: number | null | undefined, dp = 0): string {
                   {c("dun") || "DUN"}
                 </span>
               ) : (
-                <a href={`${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
-                  class:list={["rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline", !isGE ? "border-txt-danger bg-bg-danger-50 text-txt-danger" : "border-otl-gray-200 text-txt-black-500"]}>
+                <a
+                  href={`${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
+                  class:list={[
+                    "rounded-full border px-3 py-1.5 text-body-sm font-medium no-underline",
+                    !isGE
+                      ? "border-txt-danger bg-bg-danger-50 text-txt-danger"
+                      : "border-otl-gray-200 text-txt-black-500",
+                  ]}
+                >
                   {c("dun") || "DUN"}
                 </a>
               )}
@@ -264,20 +249,25 @@ function numFmt(n: number | null | undefined, dp = 0): string {
             <div>
               <p class="mb-1 text-body-sm font-medium">{c("state") || "State"}</p>
               <select id="mobile-state-select" class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-3 py-2 text-body-sm">
-                {stateOptions.map(o => <option value={o.value} selected={o.value === stateCode}>{o.label}</option>)}
+                {stateOptions.map((o) => <option value={o.value} selected={o.value === stateCode}>{o.label}</option>)}
               </select>
             </div>
             <div>
               <p class="mb-1 text-body-sm font-medium">{e("election_year") || "Election"}</p>
               <select id="mobile-election-select" class="w-full rounded-xl border border-otl-gray-200 bg-bg-white px-3 py-2 text-body-sm">
                 <option value="">{e("select_election") || "Select…"}</option>
-                {currentElectionOptions.map(o => <option value={o.value} selected={o.value === electionName}>{o.label}</option>)}
+                {currentElectionOptions.map((o) => (
+                  <option value={o.value} selected={o.value === electionName}>{o.label}</option>
+                ))}
               </select>
             </div>
           </div>
         </div>
         <div class="flex gap-3 px-4 pt-4">
-          <button id="filter-apply" class="flex-1 rounded-xl bg-txt-danger py-2.5 text-body-sm font-medium text-white">
+          <button
+            id="filter-apply"
+            class="flex-1 rounded-xl bg-txt-danger py-2.5 text-body-sm font-medium text-white"
+          >
             {c("filter") || "Apply"}
           </button>
         </div>
@@ -288,7 +278,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   <!-- Main content -->
   <div class="mx-auto w-full max-w-screen-xl px-4 pb-16 md:px-6">
 
-    <!-- Overview: election title + party results table -->
+    <!-- Section 1: Coalition & party summary -->
     <section class="py-8 lg:space-y-12">
       <h4 class="text-center font-heading text-heading-2xs font-bold">
         {e("election_of") !== "election_of"
@@ -297,67 +287,19 @@ function numFmt(n: number | null | undefined, dp = 0): string {
       </h4>
 
       {table.length > 0 && (
-        <div class="relative pt-6 overflow-x-auto">
-          <table class="w-full text-left text-body-sm">
-            <thead>
-              <tr class="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
-                <th class="whitespace-nowrap py-3 pl-4 pr-3">{c("party_name") || "Party"}</th>
-                <th class="whitespace-nowrap px-3 py-3">{c("seats_won") || "Seats Won"}</th>
-                <th class="whitespace-nowrap px-3 py-3">{c("votes_won") || "Votes"}</th>
-                <th class="whitespace-nowrap px-3 py-3">{c("seats_contested") || "Contested"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {groups.map(g => (
-                <>
-                  <tr class="border-b border-otl-gray-200 bg-bg-washed">
-                    <td class="py-[11px] pl-4 pr-3 font-semibold">
-                      <div class="flex items-center gap-1.5">
-                        <img src={`/static/images/coalitions/${g.coalition_uid}.png`} alt={g.coalition} class="h-[18px] w-8 border border-otl-gray-200 object-contain" />
-                        {g.coalition}
-                      </div>
-                    </td>
-                    <td class="px-3 py-[11px]">{g.seats_won} / {g.seats_total} ({numFmt(g.seats_won_perc, 1)}%)</td>
-                    <td class="px-3 py-[11px]">{numFmt(g.votes)} ({numFmt(g.votes_perc, 1)}%)</td>
-                    <td class="px-3 py-[11px]">{g.seats_contested} ({numFmt(g.seats_contested_perc, 1)}%)</td>
-                  </tr>
-                  {g.parties.map(party => (
-                    <tr class="border-b border-otl-gray-200">
-                      <td class="py-[11px] pl-10 pr-3">
-                        <div class="flex items-center gap-1.5">
-                          {party.party_uid && <img src={`/static/images/parties/${party.party_uid}.png`} alt={party.party} class="h-[18px] w-8 border border-otl-gray-200 object-contain" />}
-                          {party.party}
-                        </div>
-                      </td>
-                      <td class="px-3 py-[11px]">{party.seats_won} / {party.seats_total} ({numFmt(party.seats_won_perc, 1)}%)</td>
-                      <td class="px-3 py-[11px]">{numFmt(party.votes)} ({numFmt(party.votes_perc, 1)}%)</td>
-                      <td class="px-3 py-[11px]">{party.seats_contested} ({numFmt(party.seats_contested_perc, 1)}%)</td>
-                    </tr>
-                  ))}
-                </>
-              ))}
-              {alone.map(party => (
-                <tr class="border-b border-otl-gray-200">
-                  <td class="py-[11px] pl-4 pr-3">
-                    <div class="flex items-center gap-1.5">
-                      {party.party_uid && <img src={`/static/images/parties/${party.party_uid}.png`} alt={party.party} class="h-[18px] w-8 border border-otl-gray-200 object-contain" />}
-                      {party.party}
-                    </div>
-                  </td>
-                  <td class="px-3 py-[11px]">{party.seats_won} / {party.seats_total} ({numFmt(party.seats_won_perc, 1)}%)</td>
-                  <td class="px-3 py-[11px]">{numFmt(party.votes)} ({numFmt(party.votes_perc, 1)}%)</td>
-                  <td class="px-3 py-[11px]">{party.seats_contested} ({numFmt(party.seats_contested_perc, 1)}%)</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div class="pt-6">
+          <ElectionOverviewIsland
+            client:load
+            data={table}
+            translations={{ common: i18n.common ?? {} }}
+          />
         </div>
       )}
     </section>
 
     <hr class="h-px w-full border-otl-gray-200" />
 
-    <!-- Ballot seat — React island -->
+    <!-- Section 2: Full ballot per seat (React island) -->
     {seats.length > 0 && (
       <BallotSeat
         client:load
@@ -371,7 +313,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 
     <hr class="h-px w-full border-otl-gray-200" />
 
-    <!-- Analysis table -->
+    <!-- Section 3: Aggregate stats by constituency -->
     {analysisRows.length > 0 && (
       <section class="space-y-6 py-8 lg:space-y-12 lg:py-12">
         <h4 class="text-center font-heading text-heading-2xs font-bold">
@@ -381,8 +323,12 @@ function numFmt(n: number | null | undefined, dp = 0): string {
           <table class="w-full text-left text-body-sm">
             <thead>
               <tr class="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
-                <th class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4">{c("constituency") || "Constituency"}</th>
-                {stateCode === "mys" && <th class="whitespace-nowrap px-4 py-3">{c("state") || "State"}</th>}
+                <th class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4">
+                  {c("constituency") || "Constituency"}
+                </th>
+                {stateCode === "mys" && (
+                  <th class="whitespace-nowrap px-4 py-3">{c("state") || "State"}</th>
+                )}
                 <th class="whitespace-nowrap px-4 py-3">{c("majority") || "Majority"}</th>
                 <th class="whitespace-nowrap px-4 py-3">{c("majority_%") || "Majority %"}</th>
                 <th class="whitespace-nowrap px-4 py-3">{c("voter_turnout") || "Turnout"}</th>
@@ -392,16 +338,32 @@ function numFmt(n: number | null | undefined, dp = 0): string {
               </tr>
             </thead>
             <tbody>
-              {analysisRows.map(row => (
+              {analysisRows.map((row) => (
                 <tr class="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                  <td class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4 font-medium">{row.seat}</td>
-                  {stateCode === "mys" && <td class="whitespace-nowrap px-4 py-3 text-txt-black-500">{row.state}</td>}
-                  <td class="whitespace-nowrap px-4 py-3">{numFmt(row.majority)}</td>
-                  <td class="whitespace-nowrap px-4 py-3">{numFmt(row.majority_perc, 1)}</td>
-                  <td class="whitespace-nowrap px-4 py-3">{numFmt(row.voter_turnout)}</td>
-                  <td class="whitespace-nowrap px-4 py-3">{numFmt(row.voter_turnout_perc, 1)}</td>
-                  <td class="whitespace-nowrap px-4 py-3">{numFmt(row.votes_rejected)}</td>
-                  <td class="whitespace-nowrap px-4 py-3">{numFmt(row.votes_rejected_perc, 1)}</td>
+                  <td class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4 font-medium">
+                    {row.seat}
+                  </td>
+                  {stateCode === "mys" && (
+                    <td class="whitespace-nowrap px-4 py-3 text-txt-black-500">{row.state}</td>
+                  )}
+                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.majority)}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.majority_perc, 1)}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.voter_turnout)}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.voter_turnout_perc, 1)}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.votes_rejected)}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                    {numFmt(row.votes_rejected_perc, 1)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -415,22 +377,19 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 <script define:vars={{ localePrefix, stateCode, electionName, isGE }}>
   const NON_SE_STATES = ["mys", "kul", "lbn", "pjy"];
 
-  // Desktop state select
-  document.getElementById("state-select")?.addEventListener("change", e => {
+  document.getElementById("state-select")?.addEventListener("change", (e) => {
     const state = e.target.value;
     if (state) window.location.href = `${localePrefix}/elections/${state}/${electionName}`;
   });
 
-  // Desktop election select
-  document.getElementById("election-select")?.addEventListener("change", e => {
+  document.getElementById("election-select")?.addEventListener("change", (e) => {
     const elec = e.target.value;
     if (elec) window.location.href = `${localePrefix}/elections/${stateCode}/${elec}`;
   });
 
-  // Mobile filter open/close
-  const mobileFilter   = document.getElementById("mobile-filter");
-  const filterOpen     = document.getElementById("filter-open");
-  const filterClose    = document.getElementById("filter-close");
+  const mobileFilter = document.getElementById("mobile-filter");
+  const filterOpen = document.getElementById("filter-open");
+  const filterClose = document.getElementById("filter-close");
   const filterBackdrop = document.getElementById("mobile-filter-backdrop");
 
   filterOpen?.addEventListener("click", () => mobileFilter?.classList.remove("hidden"));
@@ -439,7 +398,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 
   document.getElementById("filter-apply")?.addEventListener("click", () => {
     const state = document.getElementById("mobile-state-select")?.value ?? stateCode;
-    const elec  = document.getElementById("mobile-election-select")?.value ?? electionName;
+    const elec = document.getElementById("mobile-election-select")?.value ?? electionName;
     if (elec) window.location.href = `${localePrefix}/elections/${state}/${elec}`;
     else window.location.href = `${localePrefix}/elections/${state}/${electionName}`;
   });

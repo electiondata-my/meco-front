@@ -1,47 +1,78 @@
 ---
-// STUB — restore real implementation from commit cd1529011c0440204a61dafadb88f3b435b3f08c
-// git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/elections/[...election].astro
-import Layout from "@src/components/Layout/index.astro";
+import ElectionsPage from "@src/components/Elections/ElectionsPage.astro";
 import { fetchJSON } from "@src/lib/api";
 import { StateKeyByName } from "@src/lib/constants";
+import type { ElectionParty } from "@src/components/Elections/ElectionOverviewTable";
 
 type ElectionEntry = { state: string; election: string; date: string };
-type DatesJson = { data: ElectionEntry[] };
+type DatesJson = ElectionEntry[] | { data: ElectionEntry[] };
+type OverallSeat = {
+  seat: string; date: string; party: string; party_uid?: string; name: string;
+  majority: number | null; majority_perc: number | null;
+  voter_turnout?: number; voter_turnout_perc?: number;
+  votes_rejected?: number; votes_rejected_perc?: number;
+  party_lost?: string[];
+};
+type ElectionData = { by_party: ElectionParty[]; by_seat: OverallSeat[]; stats?: Record<string, unknown> };
+type AllElections = Record<string, { parlimen?: Record<string, ElectionData>; dun?: Record<string, ElectionData> }>;
 
 export async function getStaticPaths() {
-  const scope      = import.meta.env.POST_TO_BUILD_ELECTIONS;
-  const anyScope   = !!(import.meta.env.POST_TO_BUILD_CANDIDATES || scope || import.meta.env.POST_TO_BUILD_PARTIES);
+  const scope = import.meta.env.POST_TO_BUILD_ELECTIONS;
+  const anyScope = !!(
+    import.meta.env.POST_TO_BUILD_CANDIDATES ||
+    scope ||
+    import.meta.env.POST_TO_BUILD_PARTIES
+  );
   if (anyScope && !scope) return [];
-  const slugFilter = scope && scope !== 'all' ? new Set(scope.split(',')) : null;
+  const slugFilter = scope && scope !== "all" ? new Set(scope.split(",")) : null;
 
-  let entries: ElectionEntry[] = [];
-  try {
-    const json = await fetchJSON<DatesJson>("/dates.json");
-    entries = json.data ?? [];
-  } catch { /* non-fatal */ }
+  // Fetch exactly twice total (module-level cache in api.ts deduplicates across both locales)
+  const [datesJson, allElections] = await Promise.all([
+    fetchJSON<DatesJson>("/dates.json").catch(() => ({ data: [] as ElectionEntry[] })),
+    fetchJSON<AllElections>("/elections/all.json").catch(() => ({} as AllElections)),
+  ]);
+
+  const entries = Array.isArray(datesJson) ? datesJson : (datesJson.data ?? []);
 
   return entries
-    .filter(e => !slugFilter || slugFilter.has(e.election))
-    .flatMap(e => {
+    .filter((e) => {
+      if (!slugFilter) return true;
+      const sc = StateKeyByName[e.state];
+      return sc ? slugFilter.has(`${sc}/${e.election}`) : false;
+    })
+    .flatMap((e) => {
       const stateCode = StateKeyByName[e.state];
       if (!stateCode) return [];
-      return [{
-        params: { election: `${stateCode}/${e.election}` },
-        props:  { stateCode, electionName: e.election },
-      }];
+      const type = e.election.startsWith("S") ? "dun" : "parlimen";
+      const electionData = allElections[e.state]?.[type]?.[e.election] ?? null;
+      return [
+        {
+          params: { election: `${stateCode}/${e.election}` },
+          props: {
+            stateCode,
+            electionName: e.election,
+            seats: electionData?.by_seat ?? [],
+            table: electionData?.by_party ?? [],
+            datesRaw: entries,
+          },
+        },
+      ];
     });
 }
 
-const { stateCode, electionName } = Astro.props as { stateCode: string; electionName: string };
+const { stateCode, electionName, seats, table, datesRaw } = Astro.props as {
+  stateCode: string;
+  electionName: string;
+  seats: OverallSeat[];
+  table: ElectionParty[];
+  datesRaw: ElectionEntry[];
+};
 ---
 
-<Layout title="Elections — Coming Soon">
-  <div class="mx-auto flex max-w-screen-xl flex-col items-center justify-center gap-4 px-4 py-32">
-    <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900">
-      Coming soon
-    </h1>
-    <p class="text-center text-body-sm text-txt-black-500">
-      {stateCode} / {electionName}
-    </p>
-  </div>
-</Layout>
+<ElectionsPage
+  stateCode={stateCode}
+  electionName={electionName}
+  seats={seats}
+  table={table}
+  datesRaw={datesRaw}
+/>
