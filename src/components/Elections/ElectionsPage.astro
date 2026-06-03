@@ -234,8 +234,8 @@ function numFmt(n: number | null | undefined, dp = 0): string {
           aria-haspopup="menu"
           aria-expanded="false"
         >
-          <img src={`/static/images/states/${selectedStateOption.value}.jpeg`} width="20" height="12" alt={selectedStateOption.label} class="self-center" />
-          <span class="grow truncate">{selectedStateOption.label}</span>
+          <img id="desktop-state-current-flag" src={`/static/images/states/${selectedStateOption.value}.jpeg`} width="20" height="12" alt={selectedStateOption.label} class="self-center" />
+          <span id="desktop-state-current-label" class="grow truncate">{selectedStateOption.label}</span>
           <svg class="-mx-[5px] h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
           </svg>
@@ -243,15 +243,20 @@ function numFmt(n: number | null | undefined, dp = 0): string {
         <ul class="site-menu-list absolute left-0 top-full z-50 mt-1 hidden max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
           {stateLinkOptions.map((o) => (
             <li>
-              <a href={o.href} class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-body-sm text-txt-black-900 no-underline hover:bg-bg-black-100">
+              <button type="button" data-desktop-state={o.value} data-state-label={o.label} class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-left text-body-sm text-txt-black-900 hover:bg-bg-black-100">
                 <img src={`/static/images/states/${o.value}.jpeg`} width="20" height="12" alt={o.label} />
                 <span class:list={["grow truncate", o.value === stateCode ? "font-medium" : "font-normal"]}>{o.label}</span>
                 {o.value === stateCode && (
-                  <svg class="h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <svg data-desktop-state-check class="h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
                   </svg>
                 )}
-              </a>
+                {o.value !== stateCode && (
+                  <svg data-desktop-state-check class="hidden h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
+                  </svg>
+                )}
+              </button>
             </li>
           ))}
         </ul>
@@ -259,8 +264,9 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 
       <!-- Parlimen / DUN tabs -->
       <div class="flex h-8 items-center rounded-lg bg-bg-washed p-0">
-        <a
-          href={`${localePrefix}/elections/${stateCode}/${isGE ? electionName : "GE-15"}`}
+        <button
+          type="button"
+          data-desktop-type="parlimen"
           class:list={[
             "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium no-underline transition-all",
             isGE
@@ -269,14 +275,15 @@ function numFmt(n: number | null | undefined, dp = 0): string {
           ]}
         >
           {c("parlimen") || "Parlimen"}
-        </a>
+        </button>
         {NON_SE_STATES.includes(stateCode) ? (
-          <span class="flex h-8 min-h-8 cursor-not-allowed items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium text-txt-black-500 opacity-40">
+          <button type="button" data-desktop-type="dun" disabled class="flex h-8 min-h-8 cursor-not-allowed items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium text-txt-black-500 opacity-40">
             {c("dun") || "DUN"}
-          </span>
+          </button>
         ) : (
-          <a
-            href={`${localePrefix}/elections/${stateCode}/${seOptions[0]?.value ?? ""}`}
+          <button
+            type="button"
+            data-desktop-type="dun"
             class:list={[
               "flex h-8 min-h-8 items-center justify-center rounded-md px-2.5 py-1.5 text-body-sm font-medium no-underline transition-all",
               !isGE
@@ -285,7 +292,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
             ]}
           >
             {c("dun") || "DUN"}
-          </a>
+          </button>
         )}
       </div>
 
@@ -297,22 +304,27 @@ function numFmt(n: number | null | undefined, dp = 0): string {
           aria-haspopup="menu"
           aria-expanded="false"
         >
-          <span class="grow truncate">{selectedElectionOption?.label ?? selectElectionLabel}</span>
+          <span id="desktop-election-current-label" class="grow truncate">{selectedElectionOption?.label ?? selectElectionLabel}</span>
           <svg class="-mx-[5px] h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
           </svg>
         </button>
-        <ul class="site-menu-list absolute right-0 top-full z-50 mt-1 hidden max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
+        <ul id="desktop-election-options" class="site-menu-list absolute right-0 top-full z-50 mt-1 hidden max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
           {electionLinkOptions.map((o) => (
             <li>
-              <a href={o.href} class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-body-sm text-txt-black-900 no-underline hover:bg-bg-black-100">
+              <button type="button" data-desktop-election={o.value} data-election-label={o.label} class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-left text-body-sm text-txt-black-900 hover:bg-bg-black-100">
                 <span class:list={["grow truncate", o.value === electionName ? "font-medium" : "font-normal"]}>{o.label}</span>
                 {o.value === electionName && (
-                  <svg class="h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <svg data-desktop-election-check class="h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
                   </svg>
                 )}
-              </a>
+                {o.value !== electionName && (
+                  <svg data-desktop-election-check class="hidden h-4 w-4 text-primary-600" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
+                  </svg>
+                )}
+              </button>
             </li>
           ))}
         </ul>
@@ -534,7 +546,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
                 <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
               </svg>
             </button>
-            <ul class="site-menu-list absolute right-0 top-full z-50 mt-1 hidden max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-left text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
+            <ul class="site-menu-list absolute left-0 top-full z-50 mt-1 hidden max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-left text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
               {[
                 { key: "voter_turnout_perc", label: c("voter_turnout_perc") || "Turnout %" },
                 { key: "majority_perc",       label: c("majority_perc")       || "Majority %" },
@@ -549,7 +561,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
                   <button
                     type="button"
                     data-var-key={key}
-                    class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-body-sm text-txt-black-900 hover:bg-bg-black-100"
+                    class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-left text-body-sm text-txt-black-900 hover:bg-bg-black-100"
                   >
                     <span class:list={["grow truncate", key === "voter_turnout_perc" ? "font-medium" : "font-normal"]}>{label}</span>
                     <svg
@@ -686,7 +698,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
         </div>{/* end analysis-table-view */}
 
         <!-- Chart view (hidden by default) -->
-        <div id="analysis-chart-view" class="hidden mx-auto w-full md:w-2/3">
+        <div id="analysis-chart-view" class="hidden mx-auto w-full md:w-3/4">
           <ElectionsAnalysisChart
             client:load
             rows={analysisRows}
@@ -847,7 +859,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   }
 </style>
 
-<script define:vars={{ localePrefix, stateCode, electionName, tinybirdBaseUrl, tinybirdToken, viewsOneLabel, viewsOtherLabel, mobileElectionOptionsByState }}>
+<script define:vars={{ localePrefix, stateCode, electionName, tinybirdBaseUrl, tinybirdToken, viewsOneLabel, viewsOtherLabel, mobileElectionOptionsByState, selectElectionLabel }}>
   const mobileFilter = document.getElementById("mobile-filter");
   const filterOpen = document.getElementById("filter-open");
   const filterClose = document.getElementById("filter-close");
@@ -895,6 +907,121 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   const mobileElectionSelect = document.getElementById("mobile-election-select");
   const mobileElectionOptions = document.getElementById("mobile-election-options");
   const mobileElectionCurrentLabel = document.querySelector("[data-election-current-label]");
+  const desktopStateCurrentFlag = document.getElementById("desktop-state-current-flag");
+  const desktopStateCurrentLabel = document.getElementById("desktop-state-current-label");
+  const desktopElectionCurrentLabel = document.getElementById("desktop-election-current-label");
+  const desktopElectionOptions = document.getElementById("desktop-election-options");
+  let desktopState = stateCode;
+  let desktopElectionType = electionName.startsWith("GE") ? "parlimen" : "dun";
+
+  function createCheckIcon(hidden = false, attr = "data-desktop-election-check") {
+    const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    check.setAttribute(attr, "");
+    check.setAttribute("viewBox", "0 0 24 24");
+    check.setAttribute("fill", "currentColor");
+    check.setAttribute("aria-hidden", "true");
+    check.setAttribute("class", `${hidden ? "hidden " : ""}h-4 w-4 text-primary-600`);
+    path.setAttribute("fill-rule", "evenodd");
+    path.setAttribute("clip-rule", "evenodd");
+    path.setAttribute("d", "M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z");
+    check.appendChild(path);
+    return check;
+  }
+
+  function setDesktopTypeButtonState(type) {
+    document.querySelectorAll("[data-desktop-type]").forEach((button) => {
+      const active = button.getAttribute("data-desktop-type") === type;
+      button.classList.toggle("border", active);
+      button.classList.toggle("border-otl-gray-200", active);
+      button.classList.toggle("bg-bg-dialog-active", active);
+      button.classList.toggle("text-txt-black-900", active);
+      button.classList.toggle("shadow-button", active);
+      button.classList.toggle("text-txt-black-500", !active);
+    });
+  }
+
+  function syncDesktopTypeAvailability(preferredType = desktopElectionType) {
+    const dunButton = document.querySelector('[data-desktop-type="dun"]');
+    const hasDun = (mobileElectionOptionsByState?.[desktopState]?.dun ?? []).length > 0;
+    if (dunButton instanceof HTMLButtonElement) {
+      dunButton.disabled = !hasDun;
+      dunButton.classList.toggle("cursor-not-allowed", !hasDun);
+      dunButton.classList.toggle("opacity-40", !hasDun);
+    }
+    desktopElectionType = preferredType === "dun" && hasDun ? "dun" : "parlimen";
+    setDesktopTypeButtonState(desktopElectionType);
+  }
+
+  function setDesktopStateButtonState(nextState) {
+    document.querySelectorAll("[data-desktop-state]").forEach((button) => {
+      const selected = button.getAttribute("data-desktop-state") === nextState;
+      const label = button.querySelector("span");
+      label?.classList.toggle("font-medium", selected);
+      label?.classList.toggle("font-normal", !selected);
+      button.querySelector("[data-desktop-state-check]")?.classList.toggle("hidden", !selected);
+    });
+  }
+
+  function populateDesktopElectionOptions(preferredElection = "") {
+    if (!desktopElectionOptions) return;
+    const options = mobileElectionOptionsByState?.[desktopState]?.[desktopElectionType] ?? [];
+    const selectedValue = options.some((option) => option.value === preferredElection) ? preferredElection : "";
+    desktopElectionOptions.replaceChildren();
+    options.forEach((option) => {
+      const li = document.createElement("li");
+      const button = document.createElement("button");
+      const label = document.createElement("span");
+      const selected = option.value === selectedValue;
+      button.type = "button";
+      button.dataset.desktopElection = option.value;
+      button.dataset.electionLabel = option.label;
+      button.className = "flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-left text-body-sm text-txt-black-900 hover:bg-bg-black-100";
+      label.className = `grow truncate ${selected ? "font-medium" : "font-normal"}`;
+      label.textContent = option.label;
+      button.append(label, createCheckIcon(!selected));
+      li.appendChild(button);
+      desktopElectionOptions.appendChild(li);
+    });
+    const selectedOption = options.find((option) => option.value === selectedValue);
+    if (desktopElectionCurrentLabel) desktopElectionCurrentLabel.textContent = selectedOption?.label ?? selectElectionLabel;
+  }
+
+  document.querySelectorAll("[data-desktop-state]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextState = button.getAttribute("data-desktop-state") ?? stateCode;
+      if (nextState === desktopState) return;
+      desktopState = nextState;
+      const label = button.getAttribute("data-state-label") ?? desktopState;
+      if (desktopStateCurrentLabel) desktopStateCurrentLabel.textContent = label;
+      if (desktopStateCurrentFlag instanceof HTMLImageElement) {
+        desktopStateCurrentFlag.src = `/static/images/states/${desktopState}.jpeg`;
+        desktopStateCurrentFlag.alt = label;
+      }
+      setDesktopStateButtonState(desktopState);
+      syncDesktopTypeAvailability(desktopElectionType);
+      populateDesktopElectionOptions("");
+    });
+  });
+
+  document.querySelectorAll("[data-desktop-type]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (button instanceof HTMLButtonElement && button.disabled) return;
+      const nextType = button.getAttribute("data-desktop-type") || "parlimen";
+      if (nextType === desktopElectionType) return;
+      desktopElectionType = nextType;
+      syncDesktopTypeAvailability(nextType);
+      populateDesktopElectionOptions("");
+    });
+  });
+
+  desktopElectionOptions?.addEventListener("click", (event) => {
+    const item = event.target instanceof Element ? event.target.closest("[data-desktop-election]") : null;
+    if (!(item instanceof HTMLButtonElement)) return;
+    const value = item.getAttribute("data-desktop-election") ?? "";
+    if (!value) return;
+    window.location.href = `${localePrefix}/elections/${desktopState}/${value}`;
+  });
 
   function updateMobileFilterSummary() {
     if (!mobileFilterSummary) return;
@@ -926,7 +1053,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
     const options = mobileElectionOptionsByState?.[state]?.[type] ?? [];
     const selectedValue = options.some((option) => option.value === preferredElection)
       ? preferredElection
-      : (options[0]?.value ?? "");
+      : "";
     mobileElectionSelect.value = selectedValue;
     mobileElectionOptions.replaceChildren();
     options.forEach((option) => {
@@ -958,11 +1085,11 @@ function numFmt(n: number | null | undefined, dp = 0): string {
       mobileElectionOptions.appendChild(li);
     });
     const selectedOption = options.find((option) => option.value === selectedValue);
-    if (mobileElectionCurrentLabel) mobileElectionCurrentLabel.textContent = selectedOption?.label ?? "";
+    if (mobileElectionCurrentLabel) mobileElectionCurrentLabel.textContent = selectedOption?.label ?? selectElectionLabel;
     updateMobileFilterSummary();
   }
 
-  function syncMobileTypeAvailability(preferredType = "") {
+  function syncMobileTypeAvailability(preferredType = "", preferredElection = "") {
     if (!(mobileStateSelect instanceof HTMLInputElement) || !(mobileElectionType instanceof HTMLInputElement)) return;
     const state = mobileStateSelect.value || stateCode;
     const dunButton = document.querySelector('[data-mobile-type="dun"]');
@@ -971,25 +1098,25 @@ function numFmt(n: number | null | undefined, dp = 0): string {
     const nextType = preferredType === "dun" && hasDun ? "dun" : "parlimen";
     mobileElectionType.value = nextType;
     setMobileTypeButtonState(nextType);
-    populateMobileElectionOptions(nextType === (electionName.startsWith("GE") ? "parlimen" : "dun") ? electionName : "");
+    populateMobileElectionOptions(preferredElection);
   }
 
   document.querySelectorAll("[data-mobile-type]").forEach((button) => {
     button.addEventListener("click", () => {
       if (button instanceof HTMLButtonElement && button.disabled) return;
       const type = button.getAttribute("data-mobile-type") || "parlimen";
+      if (mobileElectionType instanceof HTMLInputElement && mobileElectionType.value === type) return;
       if (mobileElectionType instanceof HTMLInputElement) mobileElectionType.value = type;
       setMobileTypeButtonState(type);
-      populateMobileElectionOptions(type === (electionName.startsWith("GE") ? "parlimen" : "dun") ? electionName : "");
+      populateMobileElectionOptions("");
     });
   });
-  syncMobileTypeAvailability(electionName.startsWith("GE") ? "parlimen" : "dun");
+  syncMobileTypeAvailability(electionName.startsWith("GE") ? "parlimen" : "dun", electionName);
 
   document.getElementById("filter-apply")?.addEventListener("click", () => {
     const state = mobileStateSelect?.value ?? stateCode;
     const elec = mobileElectionSelect?.value ?? electionName;
     if (elec) window.location.href = `${localePrefix}/elections/${state}/${elec}`;
-    else window.location.href = `${localePrefix}/elections/${state}/${electionName}`;
   });
 
   mobileElectionOptions?.addEventListener("click", (event) => {
@@ -1027,9 +1154,10 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   document.querySelectorAll("[data-mobile-state]").forEach((button) => {
     button.addEventListener("click", () => {
       const nextState = button.getAttribute("data-mobile-state") ?? stateCode;
+      if (mobileStateSelect instanceof HTMLInputElement && mobileStateSelect.value === nextState) return;
       if (mobileStateSelect instanceof HTMLInputElement) mobileStateSelect.value = nextState;
       setMobileStateButtonState(nextState);
-      syncMobileTypeAvailability(mobileElectionType instanceof HTMLInputElement ? mobileElectionType.value : "parlimen");
+      syncMobileTypeAvailability(mobileElectionType instanceof HTMLInputElement ? mobileElectionType.value : "parlimen", "");
       updateMobileFilterSummary();
     });
   });

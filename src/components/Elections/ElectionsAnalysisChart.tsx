@@ -1,4 +1,5 @@
 import "chart.js/auto";
+import { StateKeyByName } from "@lib/constants";
 import { useEffect, useState } from "react";
 import { Scatter } from "react-chartjs-2";
 
@@ -25,6 +26,12 @@ interface Props {
 const MULTI_STATE = ["mys", "smj"];
 const DOT_COLOR = "rgba(239, 68, 68, 0.8)";
 const STORAGE_KEY = "meco-elections-state";
+const AXIS_FONT_FAMILY =
+  "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+const AXIS_TICK_COLOR = "#52525B";
+const AXIS_TITLE_COLOR = "#3F3F46";
+const MOBILE_CHART_HEIGHT = 560;
+const DESKTOP_CHART_HEIGHT = 440;
 const INTEGER_VARS = new Set<VarKey>([
   "n_candidates",
   "voters_total",
@@ -33,8 +40,29 @@ const INTEGER_VARS = new Set<VarKey>([
   "votes_rejected",
 ]);
 
-function yMin(_values: number[]): number {
-  return 0;
+function yScaleFloor(values: number[]): { min?: number; suggestedMin?: number } {
+  if (values.length === 0) return {};
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const spread = max - min;
+  const padding = spread > 0 ? spread * 0.08 : Math.max(Math.abs(min) * 0.08, 1);
+  const floor = min - padding;
+
+  if (min >= 0 && floor < 0) {
+    const visiblePadding = Math.min(padding, Math.max(max * 0.015, 1));
+    return { min: -visiblePadding };
+  }
+
+  return { suggestedMin: floor };
+}
+
+function stateShortLabel(stateName: string): string {
+  return (StateKeyByName[stateName] ?? stateName).toUpperCase();
+}
+
+function singleStateXPadding(total: number): number {
+  return Math.min(Math.max(total * 0.02, 0.8), 1.25);
 }
 
 // Derive state order from minimum seat number found in the data
@@ -106,14 +134,43 @@ function savedVarKey(): VarKey {
 }
 
 function numLabel(v: number, key: VarKey): string {
-  if (key.endsWith("_perc")) return `${v.toFixed(1)}%`;
+  if (key.endsWith("_perc")) {
+    const value = Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1);
+    return `${value}%`;
+  }
   return v.toLocaleString("en-MY");
+}
+
+function axisNumLabel(v: number, key: VarKey): string {
+  if (key.endsWith("_perc")) {
+    const value = Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1);
+    return `${value}%`;
+  }
+
+  if (Math.abs(v) >= 1000) {
+    return Intl.NumberFormat("en-MY", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(v);
+  }
+
+  return Number.isInteger(v) ? v.toFixed(0) : v.toLocaleString("en-MY");
 }
 
 export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
   const [varKey, setVarKey] = useState<VarKey>(savedVarKey);
+  const [isMobile, setIsMobile] = useState(false);
   const isMulti = MULTI_STATE.includes(stateCode);
   const isInteger = INTEGER_VARS.has(varKey);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(media.matches);
+
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -126,20 +183,61 @@ export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
 
   const yScaleOpts = (values: number[]) => ({
     beginAtZero: false,
-    min: yMin(values),
-    ticks: isInteger ? { precision: 0 } : {},
+    ...yScaleFloor(values),
+    grid: {
+      color: "rgba(113, 113, 122, 0.16)",
+      drawBorder: false,
+    },
+    ticks: {
+      color: AXIS_TICK_COLOR,
+      font: {
+        family: AXIS_FONT_FAMILY,
+        size: 14,
+        weight: 500,
+      },
+      padding: 8,
+      maxRotation: 0,
+      minRotation: 0,
+      callback: (val: number | string) => {
+        const value = typeof val === "number" ? val : Number(val);
+        if (value < 0) return "";
+        return axisNumLabel(value, varKey);
+      },
+      ...(isInteger ? { precision: 0 } : {}),
+    },
   });
+
+  const xTickOpts = {
+    align: "center",
+    color: AXIS_TICK_COLOR,
+    font: {
+      family: AXIS_FONT_FAMILY,
+      size: 14,
+      weight: 500,
+    },
+    padding: 8,
+    maxRotation: 0,
+    minRotation: 0,
+  };
 
   let chartData: object;
   let chartOptions: object;
+  const chartHeight = isMobile ? MOBILE_CHART_HEIGHT : DESKTOP_CHART_HEIGHT;
 
   if (isMulti) {
     const { stateLabels, points } = buildMultiState(rows, varKey);
     const yValues = points.map((p) => p.y);
+    const chartPoints = isMobile
+      ? points.map((p) => ({
+          x: p.y,
+          y: stateLabels.length - 1 - p.x,
+          seat: p.seat,
+        }))
+      : points;
     chartData = {
       datasets: [
         {
-          data: points,
+          data: chartPoints,
           backgroundColor: DOT_COLOR,
           pointRadius: 8,
           pointHoverRadius: 10,
@@ -155,31 +253,60 @@ export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
         tooltip: {
           callbacks: {
             label: (ctx: { raw: { seat: string }; parsed: { y: number } }) =>
-              `${ctx.raw.seat}: ${numLabel(ctx.parsed.y, varKey)}`,
+              `${ctx.raw.seat}: ${numLabel(isMobile ? (ctx as { parsed: { x: number } }).parsed.x : ctx.parsed.y, varKey)}`,
             title: () => "",
           },
         },
       },
-      scales: {
-        x: {
-          min: -0.5,
-          max: stateLabels.length - 0.5,
-          grid: { display: false },
-          ticks: {
-            stepSize: 1,
-            callback: (val: number) => stateLabels[Math.round(val)] ?? "",
+      scales: isMobile
+        ? {
+            x: yScaleOpts(yValues),
+            y: {
+              min: -0.5,
+              max: stateLabels.length - 0.5,
+              grid: { display: false },
+              afterBuildTicks: (axis: { ticks: { value: number }[] }) => {
+                axis.ticks = stateLabels.map((_, i) => ({ value: i }));
+              },
+              ticks: {
+                ...xTickOpts,
+                stepSize: 1,
+                callback: (val: number) => stateShortLabel(stateLabels[stateLabels.length - 1 - Math.round(val)] ?? ""),
+              },
+            },
+          }
+        : {
+            x: {
+              min: -0.5,
+              max: stateLabels.length - 0.5,
+              grid: { display: false },
+              afterBuildTicks: (axis: { ticks: { value: number }[] }) => {
+                axis.ticks = stateLabels.map((_, i) => ({ value: i }));
+              },
+              ticks: {
+                ...xTickOpts,
+                stepSize: 1,
+                callback: (val: number) => stateShortLabel(stateLabels[Math.round(val)] ?? ""),
+              },
+            },
+            y: yScaleOpts(yValues),
           },
-        },
-        y: yScaleOpts(yValues),
-      },
     };
   } else {
     const { points, labelMap, total } = buildSingleState(rows, varKey);
+    const xPadding = singleStateXPadding(total);
     const yValues = points.map((p) => p.y);
+    const chartPoints = isMobile
+      ? points.map((p) => ({
+          x: p.y,
+          y: total - p.x + 1,
+          seat: p.seat,
+        }))
+      : points;
     chartData = {
       datasets: [
         {
-          data: points,
+          data: chartPoints,
           backgroundColor: DOT_COLOR,
           pointRadius: 8,
           pointHoverRadius: 10,
@@ -195,32 +322,75 @@ export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
         tooltip: {
           callbacks: {
             label: (ctx: { raw: { seat: string }; parsed: { y: number } }) =>
-              `${ctx.raw.seat}: ${numLabel(ctx.parsed.y, varKey)}`,
+              `${ctx.raw.seat}: ${numLabel(isMobile ? (ctx as { parsed: { x: number } }).parsed.x : ctx.parsed.y, varKey)}`,
             title: () => "",
           },
         },
       },
-      scales: {
-        x: {
-          min: 0.5,
-          max: total + 0.5,
-          title: {
-            display: true,
-            text: "Constituency (sorted by seat number)",
+      scales: isMobile
+        ? {
+            x: yScaleOpts(yValues),
+            y: {
+              min: 1 - xPadding,
+              max: total + xPadding,
+              title: {
+                display: true,
+                text: "Constituency (sorted by seat number)",
+                color: AXIS_TITLE_COLOR,
+                font: {
+                  family: AXIS_FONT_FAMILY,
+                  size: 14,
+                  weight: 600,
+                },
+                padding: {
+                  bottom: 0,
+                },
+              },
+              afterBuildTicks: (axis: { ticks: { value: number }[] }) => {
+                axis.ticks = Array.from({ length: total }, (_, i) => ({ value: i + 1 }));
+              },
+              ticks: {
+                ...xTickOpts,
+                stepSize: 1,
+                maxTicksLimit: 20,
+                callback: (val: number) => labelMap[total - Math.round(val) + 1] ?? "",
+              },
+            },
+          }
+        : {
+            x: {
+              min: 1 - xPadding,
+              max: total + xPadding,
+              afterBuildTicks: (axis: { ticks: { value: number }[] }) => {
+                axis.ticks = Array.from({ length: total }, (_, i) => ({ value: i + 1 }));
+              },
+              title: {
+                display: true,
+                text: "Constituency (sorted by seat number)",
+                color: AXIS_TITLE_COLOR,
+                font: {
+                  family: AXIS_FONT_FAMILY,
+                  size: 14,
+                  weight: 600,
+                },
+                padding: {
+                  top: 10,
+                },
+              },
+              ticks: {
+                ...xTickOpts,
+                stepSize: 1,
+                maxTicksLimit: 20,
+                callback: (val: number) => labelMap[val] ?? "",
+              },
+            },
+            y: yScaleOpts(yValues),
           },
-          ticks: {
-            stepSize: 1,
-            maxTicksLimit: 20,
-            callback: (val: number) => labelMap[val] ?? "",
-          },
-        },
-        y: yScaleOpts(yValues),
-      },
     };
   }
 
   return (
-    <div style={{ height: 400 }}>
+    <div style={{ height: chartHeight }}>
       <Scatter
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data={chartData as any}
