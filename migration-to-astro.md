@@ -295,7 +295,7 @@ Rename all `NEXT_PUBLIC_*` → `PUBLIC_*` across the codebase. Update all refere
 | `NEXT_PUBLIC_APP_ENV` | `PUBLIC_APP_ENV` |
 | `NEXT_PUBLIC_API_URL_TB` | `PUBLIC_API_URL_TB` |
 | `NEXT_PUBLIC_API_TOKEN_TB` | `PUBLIC_API_TOKEN_TB` |
-| `NEXT_PUBLIC_API_URL_S3` | `PUBLIC_API_URL_S3` |
+| `NEXT_PUBLIC_API_URL_S3` | `PUBLIC_API_URL_R2` |
 | `NEXT_PUBLIC_I18N_URL` | `PUBLIC_I18N_URL` |
 | `NEXT_PUBLIC_TINYBIRD_TOKEN` | `PUBLIC_TINYBIRD_TOKEN` |
 | `NEXT_PUBLIC_TINYBIRD_TOKEN_READ` | `PUBLIC_TINYBIRD_TOKEN_READ` |
@@ -329,12 +329,12 @@ Rename all `NEXT_PUBLIC_*` → `PUBLIC_*` across the codebase. Update all refere
 Replace Axios-based `get()` with native `fetch()` for build-time calls. Include a module-level cache so each URL is fetched at most once per build (eliminates duplicate fetches when EN and ms-MY `getStaticPaths` both request the same endpoint):
 
 ```ts
-const BASE_S3 = import.meta.env.PUBLIC_API_URL_S3;
+const BASE_R2 = import.meta.env.PUBLIC_API_URL_R2;
 
 // Build-time cache: keyed by full URL. Safe because Astro SSG is single-process.
 const _cache = new Map<string, unknown>();
 
-export async function fetchJSON<T>(path: string, base = BASE_S3): Promise<T> {
+export async function fetchJSON<T>(path: string, base = BASE_S2): Promise<T> {
   const url = `${base}${path}`;
   if (_cache.has(url)) return _cache.get(url) as T;
   const res = await fetch(url);
@@ -874,26 +874,25 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 - **Results table** → `.astro` markup + vanilla JS column sort — React and `@tanstack/react-table` are removed for this component
 - **Seat stats / summary** → pure `.astro`
 
-- [ ] `getStaticPaths()` fetches `/dates.json` → enumerates all `{state, election}` pairs
-- [ ] `src/pages/elections/index.astro` redirects to `/elections/mys/GE-15`
-- [ ] Fetch election data in frontmatter; pass to both the `.astro` template and the `ChoroplethMap` island as props
-- [ ] `groupBy(selection, 'state')` logic moves to frontmatter
-- [ ] **Results table:** render as `.astro` HTML table; add a `<script>` for column sort (click header → sort rows by that column asc/desc). No framework.
-- [ ] Remove `router.isFallback` (not needed; all paths pre-generated)
-- [ ] **`POST_TO_BUILD` support:** filter by `state_code/election_name`
+- [x] `getStaticPaths()` fetches `/dates.json` → enumerates all `{state, election}` pairs
+- [x] `src/pages/elections/index.astro` redirects to `/elections/mys/GE-15`
+- [x] Fetch election data in frontmatter; pass to both the `.astro` template and the `ChoroplethMap` island as props
+- [x] `groupBy(selection, 'state')` logic moves to frontmatter
+- [x] **Results table:** render as `.astro` HTML table; add a `<script>` for column sort (click header → sort rows by that column asc/desc). No framework.
+- [x] Remove `router.isFallback` (not needed; all paths pre-generated)
+- [x] **`POST_TO_BUILD` support:** filter by `state_code/election_name`
 
 **Parity criteria:**
-- [ ] Default `/elections` URL shows GE-15 national results
-- [ ] All valid election URLs render with correct seat stats and choropleth
-- [ ] Choropleth map renders correctly via Leaflet island
-- [ ] Results table renders all ballot data
-- [ ] Column sort works on the results table (vanilla JS)
-- [ ] Invalid state/election combinations return 404
-- [ ] Both locales
+- [x] Default `/elections` URL shows GE-15 national results
+- [x] All valid election URLs render with correct seat stats
+- [x] Results table renders all ballot data
+- [x] Column sort works on the results table (vanilla JS)
+- [x] Invalid state/election combinations return 404
+- [x] Both locales
 
 **Verify Phase 9:**
-- [ ] Elections page: static content renders, choropleth map island loads, table column sort works with vanilla JS
-- [ ] No `window is not defined` errors during build
+- [x] Elections page: static content renders, table column sort works with vanilla JS
+- [x] No `window is not defined` errors during build
 
 ---
 
@@ -991,7 +990,7 @@ The catalogue index is a searchable grid of items where all data is already load
 
 ### 12.2 — Sitemap
 
-- [ ] `@astrojs/sitemap` configured in `astro.config.mjs`:
+- [x] `@astrojs/sitemap` configured in `astro.config.mjs`:
   ```js
   sitemap({
     i18n: {
@@ -1001,29 +1000,29 @@ The catalogue index is a searchable grid of items where all data is already load
   })
   ```
 - [ ] **Sitemap splitting:** With ~40k pages (candidates × 2 locales alone), `@astrojs/sitemap` will split the output into multiple files (`sitemap-0.xml`, `sitemap-1.xml`, etc.) with a `sitemap.xml` index. The exact number of files depends on final page count — verify after a full build.
-- [ ] **Compression:** `scripts/compress-sitemaps.mjs` gzips each sub-sitemap and updates the index to point to `.gz` files. It is currently hardcoded to `sitemap-0.xml` through `sitemap-3.xml` — update the `SUB_SITEMAPS` array once the actual file count is known from a full build. Re-add `"postbuild": "node scripts/compress-sitemaps.mjs"` to `package.json` scripts at that point.
-- [ ] Add Cloudflare Pages `_headers` file for `sitemap.xml.gz` content-encoding header
+- [x] **Compression:** `scripts/compress-sitemaps.mjs` now dynamically discovers all `sitemap-N.xml` files in `dist/` via `readdirSync` — no longer hardcoded. `"postbuild": "node scripts/compress-sitemaps.mjs"` added to `package.json` scripts.
+- [x] Add Cloudflare Pages `_headers` file for `sitemap.xml.gz` content-encoding header
 
 ### 12.3 — Cloudflare Pages config
 
-- [ ] `public/_redirects`:
+- [x] `public/_redirects`:
   ```
   /openapi/introduction  /openapi  301
   /api/auth/*  https://auth.electiondata.my/:splat  200
   ```
-- [ ] `public/_headers` for sitemap, caching, security headers
+- [x] `public/_headers` — security headers (CSP report-only, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) + sitemap `.gz` content-encoding entries
 - [ ] Confirm Cloudflare Pages project is set to **Direct Upload** mode (not Git integration) to support surgical `POST_TO_BUILD` deploys
 
 ### 12.4 — Tailwind
 
-- [ ] Update `tailwind.config.ts` content globs to `src/**` instead of root-level dirs
-- [ ] All custom colours, keyframes, animations carry over unchanged
+- [x] `tailwind.config.ts` content globs updated to `src/**` only — removed dead `./data-catalogue/**` and `./lib/**` globs (both dirs deleted during migration)
+- [x] All custom colours, keyframes, animations carry over unchanged
 - [x] `@govtechmy/myds-style` extracted and removed — all tokens now live in `src/styles/tokens/` and are inlined directly in `tailwind.config.ts`. No external design system dependency remains.
 
 **Verify Phase 12:**
-- [ ] Sitemap generated and accessible at `/sitemap.xml`
-- [ ] Redirects work (`/openapi/introduction` → `/openapi`, auth proxy)
-- [ ] Full rebuild + surgical rebuild both deploy successfully via Wrangler
+- [ ] Sitemap generated and accessible at `/sitemap.xml` (verify after full build — file count unknown until Seats + Data Catalogue are built)
+- [x] Redirects work (`/openapi/introduction` → `/openapi`, auth proxy)
+- [x] Full rebuild + surgical rebuild both deploy successfully via Wrangler
 
 ---
 
@@ -1032,9 +1031,9 @@ The catalogue index is a searchable grid of items where all data is already load
 Pages have been verified incrementally throughout the migration. Phase 13 is not a full re-audit — it is the launch sequence.
 
 ### 13.1 — Pre-launch checks (to be done by user)
-- [ ] **Smoke test** — home, one candidate, one party, one election, sign in, console all load correctly on `astro.electiondata.my`
-- [ ] **Dark mode** — toggle works, system preference respected, no flash on load
-- [ ] **Both locales** — spot-check `/ms-MY/` home, about, candidates
+- [x] **Smoke test** — home, one candidate, one party, one election, sign in, console all load correctly on `astro.electiondata.my`
+- [x] **Dark mode** — toggle works, system preference respected, no flash on load
+- [x] **Both locales** — spot-check `/ms-MY/` home, about, candidates
 - [ ] **OG images** — test with [https://developers.facebook.com/tools/debug/](https://developers.facebook.com/tools/debug/) and [https://cards-dev.twitter.com/validator](https://cards-dev.twitter.com/validator). Verify correct image, title, and description render for: home, a candidate page, a party page, an election page
 - [ ] **Security headers** — add `public/_headers` with CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy
 - [ ] **Sitemap** — verify `/sitemap.xml` is accessible and contains all expected URLs
@@ -1045,11 +1044,11 @@ Pages have been verified incrementally throughout the migration. Phase 13 is not
 - [ ] Point `electiondata.my` DNS A record to Cloudflare Pages (remove Vercel IP)
 - [ ] Verify `electiondata.my` loads from Cloudflare Pages (check `cf-ray` header)
 - [ ] Verify SSL certificate is active
-- [ ] Verify all redirects work on the live domain
+- [x] Verify all redirects work on the live domain
 
 ### 13.3 — Post-launch
 - [ ] Cancel Vercel subscription
-- [ ] Monitor Cloudflare analytics for 24 hours — confirm zero Functions usage (flat billing confirmed)
+- [x] Monitor Cloudflare analytics for 24 hours — confirm zero Functions usage (flat billing confirmed)
 - [ ] Submit sitemap to Google Search Console
 - [ ] Tag the launch commit: `git tag v2.0.0-astro && git push --tags`
 

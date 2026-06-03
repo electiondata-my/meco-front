@@ -19,7 +19,12 @@ export default defineConfig({
     mdx(),
     // applyBaseStyles: false — globals.css already imports Tailwind directives
     tailwind({ applyBaseStyles: false }),
-    sitemap(),
+    sitemap({
+      i18n: {
+        defaultLocale: 'en-GB',
+        locales: { 'en-GB': 'en-GB', 'ms-MY': 'ms-MY' },
+      },
+    }),
   ],
   i18n: {
     defaultLocale: 'en-GB',

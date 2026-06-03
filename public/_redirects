@@ -15,6 +15,10 @@
 /ms-MY/data-catalogue   /data-catalogue 301
 /ms-MY/data-catalogue/* /data-catalogue/:splat  301
 
+# Sitemap: @astrojs/sitemap generates sitemap-index.xml (not sitemap.xml).
+# Redirect the conventional URL so Google Search Console submission works.
+/sitemap.xml  /sitemap-index.xml  301
+
 # Auth proxy: rewrite /api/auth/* to the auth Worker (production equivalent of
 # the fetch proxy in src/middleware.ts, which doesn't run in static deployments).
 /api/auth/*  https://auth.electiondata.my/:splat  200

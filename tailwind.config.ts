@@ -18,8 +18,6 @@ export default {
   content: {
     files: [
       "./src/**/*.{js,ts,jsx,tsx,astro,mdx}",
-      "./data-catalogue/**/*.{js,ts,jsx,tsx}",
-      "./lib/**/*.{js,ts,jsx,tsx}",
     ],
     transform: {
       DEFAULT: escapeAmbiguousTailwindClasses,
