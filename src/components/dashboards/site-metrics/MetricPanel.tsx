@@ -150,7 +150,8 @@ export function buildChartOptions(): ChartOptions<"line"> {
           displayFormats: { day: "d MMM" },
           tooltipFormat: "d MMM yyyy",
         },
-        grid: { display: false, drawBorder: false },
+        grid: { display: false },
+        border: { display: false },
         afterBuildTicks: (scale) => {
           const values = buildXTickValues(scale.min, scale.max);
           scale.ticks = values.map((value) => ({
@@ -168,10 +169,10 @@ export function buildChartOptions(): ChartOptions<"line"> {
       },
       y: {
         beginAtZero: true,
+        border: { display: false },
         grid: {
           color: GRID_COLOR,
           borderDash: [4, 4],
-          drawBorder: false,
         },
         ticks: {
           maxTicksLimit: 6,

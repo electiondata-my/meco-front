@@ -184,9 +184,9 @@ export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
   const yScaleOpts = (values: number[]) => ({
     beginAtZero: false,
     ...yScaleFloor(values),
+    border: { display: false },
     grid: {
       color: "rgba(113, 113, 122, 0.16)",
-      drawBorder: false,
     },
     ticks: {
       color: AXIS_TICK_COLOR,
