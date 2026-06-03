@@ -20,14 +20,6 @@
 # clean across query builder / maps / signin / catalogue pages, rename the
 # header from "Content-Security-Policy-Report-Only" to "Content-Security-Policy".
 
-/sitemap-index.xml.gz
-  Content-Type: application/xml
-  Content-Encoding: gzip
-
-/sitemap-*.xml.gz
-  Content-Type: application/xml
-  Content-Encoding: gzip
-
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff

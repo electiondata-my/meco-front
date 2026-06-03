@@ -1000,8 +1000,7 @@ The catalogue index is a searchable grid of items where all data is already load
   })
   ```
 - [ ] **Sitemap splitting:** With ~40k pages (candidates × 2 locales alone), `@astrojs/sitemap` will split the output into multiple files (`sitemap-0.xml`, `sitemap-1.xml`, etc.) with a `sitemap.xml` index. The exact number of files depends on final page count — verify after a full build.
-- [x] **Compression:** `scripts/compress-sitemaps.mjs` now dynamically discovers all `sitemap-N.xml` files in `dist/` via `readdirSync` — no longer hardcoded. `"postbuild": "node scripts/compress-sitemaps.mjs"` added to `package.json` scripts.
-- [x] Add Cloudflare Pages `_headers` file for `sitemap.xml.gz` content-encoding header
+- [x] ~~Compression~~ — not needed on Cloudflare Pages. CF strips `Content-Encoding` from `_headers` files and handles gzip transparently at the edge (`vary: accept-encoding` confirmed in production). The plain `.xml` files are served compressed automatically. `compress-sitemaps.mjs` and `postbuild` script removed.
 
 ### 12.3 — Cloudflare Pages config
 
@@ -1011,7 +1010,7 @@ The catalogue index is a searchable grid of items where all data is already load
   /api/auth/*  https://auth.electiondata.my/:splat  200
   ```
 - [x] `public/_headers` — security headers (CSP report-only, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy) + sitemap `.gz` content-encoding entries
-- [ ] Confirm Cloudflare Pages project is set to **Direct Upload** mode (not Git integration) to support surgical `POST_TO_BUILD` deploys
+- [x] Confirm Cloudflare Pages project is set to **Direct Upload** mode (not Git integration) to support surgical `POST_TO_BUILD` deploys
 
 ### 12.4 — Tailwind
 
