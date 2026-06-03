@@ -46,7 +46,7 @@ import { useDuckDB } from "@dashboards/query-builder/useDuckDB";
 
 const MAX_DISPLAY_ROWS = 500;
 const QUERY_SHORTENER_URL = "https://querybuilder.electiondata.my";
-const QUERY_SHORTENER_ALLOWED_ORIGIN = "https://electiondata.my";
+const QUERY_SHORTENER_ALLOWED_ORIGINS = ["https://electiondata.my", "https://staging.electiondata.my"];
 
 interface QueryResult {
   columns: string[];
@@ -554,6 +554,8 @@ export default function QueryBuilderDashboard() {
     resolve: (token: string) => void;
     reject: (err: Error) => void;
   } | null>(null);
+  const prefetchedTokenRef = useRef<{ token: string; ts: number } | null>(null);
+  const prefetchInProgressRef = useRef(false);
 
   // Client-side router state (replaces useRouter)
   const [isReady, setIsReady] = useState(false);
@@ -576,11 +578,10 @@ export default function QueryBuilderDashboard() {
   const [copyState, setCopyState] = useState<"idle" | "copied">("idle");
   const [csvCopyState, setCsvCopyState] = useState<"idle" | "copied">("idle");
   const [shareState, setShareState] = useState<"idle" | "copied">("idle");
-  const [shortenState, setShortenState] = useState<
-    "idle" | "validating" | "shortening"
-  >("idle");
+  const [shortenState, setShortenState] = useState<"idle" | "shortening">("idle");
   const [shortenError, setShortenError] = useState<string | null>(null);
   const [shortQueryId, setShortQueryId] = useState<string | null>(null);
+  const [lastSuccessfulQuery, setLastSuccessfulQuery] = useState<string | null>(null);
   const [queryCount, setQueryCount] = useState<number | null>(null);
   const [hasHydratedSharedQuery, setHasHydratedSharedQuery] = useState(false);
   const deferredQueryText = useDeferredValue(queryText);
@@ -650,24 +651,53 @@ export default function QueryBuilderDashboard() {
     if (typeof window === "undefined" || !window.turnstile) return;
     if (turnstileWidgetRef.current) return;
 
+    // Triggers a background Turnstile challenge so a token is ready before the
+    // user clicks "Shorten Link". Skips if a sync request or prefetch is already
+    // in flight. Also called after each token is consumed to keep the cache warm.
+    const triggerPrefetch = () => {
+      if (prefetchInProgressRef.current) return;
+      if (turnstileCallbackRef.current) return;
+      if (!turnstileWidgetRef.current || !window.turnstile) return;
+      prefetchInProgressRef.current = true;
+      window.turnstile.reset(turnstileWidgetRef.current);
+      window.turnstile.execute(turnstileWidgetRef.current);
+    };
+
     turnstileWidgetRef.current = window.turnstile.render(
       "#query-builder-turnstile",
       {
         sitekey: import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? "",
         callback: (token: string) => {
           const cb = turnstileCallbackRef.current;
-          turnstileCallbackRef.current = null;
-          cb?.resolve(token);
+          prefetchInProgressRef.current = false;
+          if (cb) {
+            // A synchronous getTurnstileToken() call was waiting — resolve it,
+            // then immediately warm up the next token in the background.
+            turnstileCallbackRef.current = null;
+            cb.resolve(token);
+            setTimeout(triggerPrefetch, 0);
+          } else {
+            // Background prefetch completed — cache the token.
+            prefetchedTokenRef.current = { token, ts: Date.now() };
+          }
         },
         "error-callback": () => {
           const cb = turnstileCallbackRef.current;
-          turnstileCallbackRef.current = null;
-          cb?.reject(new Error("Verification failed"));
+          prefetchInProgressRef.current = false;
+          if (cb) {
+            turnstileCallbackRef.current = null;
+            cb.reject(new Error("Verification failed"));
+          }
+          // Retry background prefetch after a short delay.
+          setTimeout(triggerPrefetch, 5000);
         },
         size: "invisible",
         execution: "execute",
       },
     );
+
+    // Start warming the token as soon as the widget is ready.
+    triggerPrefetch();
   }, []);
 
   const getTurnstileToken = useCallback((): Promise<string> => {
@@ -677,6 +707,22 @@ export default function QueryBuilderDashboard() {
         return;
       }
 
+      // Use the pre-fetched token if it's less than 4 minutes old.
+      const cached = prefetchedTokenRef.current;
+      if (cached && Date.now() - cached.ts < 4 * 60 * 1000) {
+        prefetchedTokenRef.current = null;
+        // Start warming the next token immediately after consuming this one.
+        // prefetchInProgressRef guards against double-execution inside the callback.
+        prefetchInProgressRef.current = true;
+        window.turnstile.reset(turnstileWidgetRef.current);
+        window.turnstile.execute(turnstileWidgetRef.current);
+        resolve(cached.token);
+        return;
+      }
+
+      // No fresh cached token — take over the widget (cancels any prefetch in flight).
+      prefetchedTokenRef.current = null;
+      prefetchInProgressRef.current = false;
       turnstileCallbackRef.current = { resolve, reject };
       window.turnstile.reset(turnstileWidgetRef.current);
       window.turnstile.execute(turnstileWidgetRef.current);
@@ -922,6 +968,7 @@ export default function QueryBuilderDashboard() {
           totalRows: arrowResult.numRows,
           truncated: arrowResult.numRows > MAX_DISPLAY_ROWS,
         });
+        setLastSuccessfulQuery(sqlToRun);
         return true;
       } catch (err) {
         setQueryError(err instanceof Error ? err.message : String(err));
@@ -952,26 +999,18 @@ export default function QueryBuilderDashboard() {
       !sqlToShorten ||
       !db ||
       running ||
-      shortenState !== "idle"
+      shortenState !== "idle" ||
+      sqlToShorten !== lastSuccessfulQuery
     ) {
       return;
     }
 
     setShortenError(null);
-    setShortenState("validating");
-    const isValid = await runQuery(sqlToShorten);
-    if (!isValid) {
-      setQueryError("Invalid Query");
-      setShortenError("Invalid Query");
-      setShortenState("idle");
-      return;
-    }
-
     setShortenState("shortening");
     try {
-      if (window.location.origin !== QUERY_SHORTENER_ALLOWED_ORIGIN) {
+      if (!QUERY_SHORTENER_ALLOWED_ORIGINS.includes(window.location.origin)) {
         throw new Error(
-          `The link shortening service cannot be accessed from ${window.location.origin}. It only works on ${QUERY_SHORTENER_ALLOWED_ORIGIN}.`,
+          `The link shortening service cannot be accessed from ${window.location.origin}. It only works on ${QUERY_SHORTENER_ALLOWED_ORIGINS.join(" or ")}.`,
         );
       }
       const turnstile_token = await getTurnstileToken();
@@ -1022,7 +1061,7 @@ export default function QueryBuilderDashboard() {
     db,
     getTurnstileToken,
     hasShortShareLink,
-    runQuery,
+    lastSuccessfulQuery,
     running,
     shortenState,
   ]);
@@ -1330,8 +1369,7 @@ export default function QueryBuilderDashboard() {
               Want to share your findings or save it for later? Use this
               shareable link that encodes your current SQL query. Anyone who
               clicks it will land on this page with the exact query ready to
-              run. We do not store the generated link, so even if your research
-              is top-secret, it remains as private as you want it to be.
+              run.{!hasShortShareLink && " We do not store the generated link, so even if your research is top-secret, it remains as private as you want it to be."}
             </p>
             <div className="mb-4 max-w-2xl rounded-lg border border-otl-gray-200 bg-bg-washed px-3 py-2">
               <div className="mb-1 flex items-center justify-between gap-3">
@@ -1388,21 +1426,25 @@ export default function QueryBuilderDashboard() {
                   !db ||
                   initializing ||
                   running ||
-                  shortenState !== "idle"
+                  shortenState !== "idle" ||
+                  activeQueryText.trim() !== lastSuccessfulQuery
                 }
                 className={clx(
                   "inline-flex items-center gap-2 rounded-lg border border-otl-gray-200 bg-bg-white px-4 py-2 text-body-sm font-medium text-txt-black-700 transition-colors hover:bg-bg-black-50",
                   "disabled:cursor-not-allowed disabled:opacity-50",
                 )}
               >
-                {shortenState === "validating"
-                  ? "Checking Query..."
-                  : shortenState === "shortening"
-                    ? "Shortening..."
-                    : hasShortShareLink
-                      ? "Link Shortened"
-                      : "Shorten Link"}
+                {shortenState === "shortening"
+                  ? "Shortening..."
+                  : hasShortShareLink
+                    ? "Link Shortened"
+                    : "Shorten Link"}
               </button>
+              {!hasShortShareLink && activeQueryText.trim() !== lastSuccessfulQuery ? (
+                <p className="mt-2 text-body-sm text-txt-danger">
+                  Run your query to ensure it works first.
+                </p>
+              ) : null}
             </div>
           </section>
         </main>
