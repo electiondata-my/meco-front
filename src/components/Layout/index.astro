@@ -18,16 +18,18 @@ const i18n = await getTranslations(locale, ["common"]);
 const c = (key: string) => t(i18n.common ?? {}, key);
 
 const currentPath = Astro.url.pathname;
+const homeHref = locale === "ms-MY" ? "/ms-MY" : "/";
+const lp = (href: string) => locale === "ms-MY" ? "/ms-MY" + href : href;
 
 type NavItem = { title: string; href: string; locale?: string };
 
 const mainNavItems: NavItem[] = [
-  { title: c("nav.seats"),        href: "/seats" },
-  { title: c("nav.candidates"),   href: "/candidates" },
-  { title: c("nav.parties"),      href: "/parties" },
-  { title: c("nav.elections"),    href: "/elections" },
-  { title: c("nav.byelections"),  href: "/byelections" },
-  { title: c("nav.redelineation"), href: "/redelineation" },
+  { title: c("nav.seats"),        href: lp("/seats") },
+  { title: c("nav.candidates"),   href: lp("/candidates") },
+  { title: c("nav.parties"),      href: lp("/parties") },
+  { title: c("nav.elections"),    href: lp("/elections") },
+  { title: c("nav.byelections"),  href: lp("/byelections") },
+  { title: c("nav.redelineation"), href: lp("/redelineation") },
 ];
 
 const toolItems: NavItem[] = [
@@ -52,9 +54,9 @@ const footerSections = [
   {
     title: c("footer.about"),
     links: [
-      { label: c("footer.background"),    href: "/about" },
-      { label: c("footer.site_metrics"),  href: locale === "ms-MY" ? "/ms-MY/site-metrics" : "/site-metrics" },
-      { label: c("footer.documentation"), href: "/research" },
+      { label: c("footer.background"),    href: lp("/about") },
+      { label: c("footer.site_metrics"),  href: lp("/site-metrics") },
+      { label: c("footer.documentation"), href: lp("/research") },
     ],
   },
   {
@@ -77,7 +79,7 @@ const footerSections = [
   >
     <div class="relative mx-auto flex h-16 max-w-screen-xl items-center justify-between gap-4 max-md:h-14">
       <!-- Logo -->
-      <a href="/" class="flex items-center gap-2.5 no-underline max-sm:gap-1.5">
+      <a href={homeHref} class="flex items-center gap-2.5 no-underline max-sm:gap-1.5">
         <img
           src="/static/logo/logo-default.png"
           alt="ElectionData.MY Logo"
@@ -184,7 +186,7 @@ const footerSections = [
       class="fixed left-0 top-16 hidden w-full grid-cols-3 gap-0 border-b border-otl-gray-200 bg-bg-white px-3 py-6 shadow-button max-md:top-14 lg:hidden"
       aria-label="Mobile navigation"
     >
-      <a href="/seats" class:list={["order-2 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive("/seats") ? "text-txt-danger" : "text-txt-black-500"]}>
+      <a href={lp("/seats")} class:list={["order-2 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive(lp("/seats")) ? "text-txt-danger" : "text-txt-black-500"]}>
         <svg class="size-8" viewBox="0 0 32 33" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <g clip-path="url(#seats-clip)">
             <path d="M1.08445 18.5478C0.846584 18.2591 -0.480895 15.9854 0.185061 15.3028C0.851017 14.6201 3.49969 16.4437 3.95074 16.5633C4.4018 16.6828 4.85286 16.8622 6.21584 17.0894C7.57881 17.3166 10.369 17.8422 11.4309 21.3C11.732 22.2805 11.4446 23.4809 12.343 24.1164C12.6665 24.3452 14.9059 27.1383 14.6001 27.3612C11.9758 29.2738 2.32971 26.3665 1.93795 21.0069C1.8921 20.3797 1.47145 19.0175 1.08445 18.5478Z" fill="currentColor"/>
@@ -197,35 +199,35 @@ const footerSections = [
         {c("nav.seats")}
       </a>
 
-      <a href="/candidates" class:list={["order-1 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive("/candidates") ? "text-txt-danger" : "text-txt-black-500"]}>
+      <a href={lp("/candidates")} class:list={["order-1 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive(lp("/candidates")) ? "text-txt-danger" : "text-txt-black-500"]}>
         <svg class="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
         </svg>
         {c("nav.candidates")}
       </a>
 
-      <a href="/parties" class:list={["order-3 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive("/parties") ? "text-txt-danger" : "text-txt-black-500"]}>
+      <a href={lp("/parties")} class:list={["order-3 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive(lp("/parties")) ? "text-txt-danger" : "text-txt-black-500"]}>
         <svg class="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5" />
         </svg>
         {c("nav.parties")}
       </a>
 
-      <a href="/elections" class:list={["order-5 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive("/elections") ? "text-txt-danger" : "text-txt-black-500"]}>
+      <a href={lp("/elections")} class:list={["order-5 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive(lp("/elections")) ? "text-txt-danger" : "text-txt-black-500"]}>
         <svg class="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75" />
         </svg>
         {c("nav.elections")}
       </a>
 
-      <a href="/byelections" class:list={["order-4 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive("/byelections") ? "text-txt-danger" : "text-txt-black-500"]}>
+      <a href={lp("/byelections")} class:list={["order-4 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive(lp("/byelections")) ? "text-txt-danger" : "text-txt-black-500"]}>
         <svg class="size-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
         </svg>
         {c("nav.byelections")}
       </a>
 
-      <a href="/redelineation" class:list={["order-6 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive("/redelineation") ? "text-txt-danger" : "text-txt-black-500"]}>
+      <a href={lp("/redelineation")} class:list={["order-6 flex flex-col items-center gap-1 px-2 py-2 text-body-sm font-medium text-center no-underline transition-colors", isActive(lp("/redelineation")) ? "text-txt-danger" : "text-txt-black-500"]}>
         <svg class="size-8" viewBox="0 0 32 33" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M10.4 5.76404L3.20001 8.96404V28.964L10.4 25.764M10.4 5.76404V25.764M10.4 5.76404L14.8 7.36404L15.9 7.76404M10.4 25.764L19.2 28.964M19.2 28.964L26.4 25.764V15.764V13.924M19.2 28.964V17.924" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M25.6647 9.62074L24.9775 10.3135L23.6032 11.699L20.8545 14.4701L17.1152 14.8198L17.5524 11.1411L20.3011 8.37009L21.6754 6.98457L22.3626 6.2918M25.6647 9.62074L26.3519 8.92797L28.0872 7.1785C28.3912 6.87208 28.3912 6.37528 28.0872 6.06885L25.8858 3.84957C25.5819 3.54314 25.0891 3.54314 24.7851 3.84957L23.0498 5.59904L22.3626 6.2918M25.6647 9.62074L22.3626 6.2918" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -266,7 +268,7 @@ const footerSections = [
     <div class="mx-auto grid max-w-screen-xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(520px,640px)] lg:gap-12">
       <div class="flex max-w-[420px] items-start gap-4">
         <a
-          href="/"
+          href={homeHref}
           class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-otl-gray-200 bg-bg-white shadow-button transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fr-danger"
         >
           <img
@@ -280,7 +282,7 @@ const footerSections = [
         </a>
         <div class="flex min-w-0 flex-col gap-1">
           <a
-            href="/"
+            href={homeHref}
             class="w-fit font-poppins text-body-lg font-bold text-txt-black-900 no-underline transition-opacity hover:opacity-80"
           >
             ElectionData.MY

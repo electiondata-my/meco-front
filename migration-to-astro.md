@@ -176,8 +176,8 @@ Phase 4 — Static data pages ✅ COMPLETE
 Phase 5 — Home, Candidates, Parties, Site Metrics ✅ COMPLETE
 Phase 6 — Query Builder (DuckDB WASM) ✅ COMPLETE
 Phase 7 — Sign In + API Console (auth pages) ✅ COMPLETE
-Phase 8 — Redelineation
-Phase 9 — Elections Explorer
+Phase 8 — Redelineation ✅ COMPLETE
+Phase 9 — Elections Explorer ✅ COMPLETE
 Phase 10 — Seats (Mapbox + charts, most complex)
 Phase 11 — Data Catalogue
 Phase 12 — Sitemap, deploy pipeline
