@@ -1,3 +1,37 @@
 ---
-return Astro.redirect("/elections/mys/GE-15", 302);
+import ElectionsPage from "@src/components/Elections/ElectionsPage.astro";
+import { fetchJSON } from "@src/lib/api";
+import type { ElectionParty } from "@src/components/Elections/ElectionOverviewTable";
+
+type ElectionEntry = { state: string; election: string; date: string };
+type DatesJson = ElectionEntry[] | { data: ElectionEntry[] };
+type OverallSeat = {
+  seat: string; date: string; party: string; party_uid?: string; name: string;
+  majority: number | null; majority_perc: number | null;
+  n_candidates?: number; voters_total?: number;
+  voter_turnout?: number; voter_turnout_perc?: number;
+  votes_rejected?: number; votes_rejected_perc?: number;
+  party_lost?: string[];
+};
+type ElectionData = { by_party: ElectionParty[]; by_seat: OverallSeat[] };
+type AllElections = Record<string, { parlimen?: Record<string, ElectionData>; dun?: Record<string, ElectionData> }>;
+
+const DEFAULT_STATE = "mys";
+const DEFAULT_ELECTION = "GE-15";
+
+const [datesJson, allElections] = await Promise.all([
+  fetchJSON<DatesJson>("/dates.json").catch(() => ({ data: [] as ElectionEntry[] })),
+  fetchJSON<AllElections>("/elections/all.json").catch(() => ({} as AllElections)),
+]);
+
+const datesRaw = Array.isArray(datesJson) ? datesJson : (datesJson.data ?? []);
+const electionData = allElections["Malaysia"]?.parlimen?.[DEFAULT_ELECTION] ?? null;
 ---
+
+<ElectionsPage
+  stateCode={DEFAULT_STATE}
+  electionName={DEFAULT_ELECTION}
+  seats={electionData?.by_seat ?? []}
+  table={electionData?.by_party ?? []}
+  datesRaw={datesRaw}
+/>
