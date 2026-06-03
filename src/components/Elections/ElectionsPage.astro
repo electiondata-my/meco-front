@@ -2,6 +2,7 @@
 import Layout from "@src/components/Layout/index.astro";
 import BallotSeat from "./BallotSeat";
 import ElectionOverviewIsland from "./ElectionOverviewTable";
+import ElectionsAnalysisChart from "./ElectionsAnalysisChart";
 import { getTranslations, t } from "@i18n/index";
 import { CountryAndStates, MALAYSIA, SEMENANJUNG, STATES } from "@src/lib/constants";
 import type { ElectionParty } from "./ElectionOverviewTable";
@@ -500,6 +501,72 @@ function numFmt(n: number | null | undefined, dp = 0): string {
         <h4 class="text-center font-heading text-heading-2xs font-bold">
           {e("header_3") || "Breakdown by constituency"}
         </h4>
+
+        <!-- Table / Chart tabs + variable selector -->
+        <div class="flex flex-wrap items-center justify-center gap-3">
+          <div class="flex h-8 items-center rounded-lg bg-bg-washed p-0.5">
+            <button
+              id="tab-analysis-table"
+              type="button"
+              class="flex h-7 items-center rounded-md px-3 text-body-sm font-medium border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
+            >
+              {c("table") || "table"}
+            </button>
+            <button
+              id="tab-analysis-chart"
+              type="button"
+              class="flex h-7 items-center rounded-md px-3 text-body-sm font-medium text-txt-black-500"
+            >
+              {c("chart") || "chart"}
+            </button>
+          </div>
+
+          <!-- Variable dropdown (hidden when Table tab is active) -->
+          <div id="analysis-var-dropdown" class="site-menu relative w-fit hidden">
+            <button
+              type="button"
+              class="site-menu-button flex select-none items-center gap-1.5 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 text-start text-body-sm font-medium text-txt-black-900 shadow-button outline-none hover:border-bg-black-400 active:bg-bg-black-100"
+              aria-haspopup="menu"
+              aria-expanded="false"
+            >
+              <span id="analysis-var-current-label">{c("voter_turnout_perc") || "Turnout %"}</span>
+              <svg class="-mx-[5px] h-5 w-5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+              </svg>
+            </button>
+            <ul class="site-menu-list absolute right-0 top-full z-50 mt-1 hidden max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-left text-txt-black-900 shadow-floating ring-1 ring-otl-gray-200 ring-opacity-5">
+              {[
+                { key: "voter_turnout_perc", label: c("voter_turnout_perc") || "Turnout %" },
+                { key: "majority_perc",       label: c("majority_perc")       || "Majority %" },
+                { key: "votes_rejected_perc", label: c("rejected_votes_perc") || "Rejected %" },
+                { key: "n_candidates",        label: c("n_candidates")        || "Candidates" },
+                { key: "voters_total",        label: c("voters_total")        || "Voters" },
+                { key: "voter_turnout",       label: c("voter_turnout")       || "Turnout" },
+                { key: "majority",            label: c("majority")            || "Majority" },
+                { key: "votes_rejected",      label: c("rejected_votes")      || "Rejected" },
+              ].map(({ key, label }) => (
+                <li>
+                  <button
+                    type="button"
+                    data-var-key={key}
+                    class="flex w-full select-none items-center gap-2 whitespace-nowrap py-2 pl-4 pr-4 text-body-sm text-txt-black-900 hover:bg-bg-black-100"
+                  >
+                    <span class:list={["grow truncate", key === "voter_turnout_perc" ? "font-medium" : "font-normal"]}>{label}</span>
+                    <svg
+                      class:list={["var-check h-4 w-4 text-primary-600", key !== "voter_turnout_perc" && "hidden"]}
+                      viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"
+                    >
+                      <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm14.03-2.03a.75.75 0 0 0-1.06-1.06l-4.72 4.72-1.72-1.72a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l5.25-5.25Z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Table view -->
+        <div id="analysis-table-view">
         <div id="analysis-table-shell" class="analysis-table-shell relative">
           <div id="analysis-table-scroll" class="analysis-table-scroll overflow-x-auto pb-2">
             <table id="analysis-table" class="w-full text-left text-body-sm">
@@ -616,11 +683,121 @@ function numFmt(n: number | null | undefined, dp = 0): string {
             </svg>
           </button>
         </div>
+        </div>{/* end analysis-table-view */}
+
+        <!-- Chart view (hidden by default) -->
+        <div id="analysis-chart-view" class="hidden mx-auto w-full md:w-2/3">
+          <ElectionsAnalysisChart
+            client:load
+            rows={analysisRows}
+            stateCode={stateCode}
+          />
+        </div>
       </section>
     )}
     </div>
   </div>
 </Layout>
+
+<script>
+  const STORAGE_KEY = "meco-elections-state";
+
+  const tabTable = document.getElementById("tab-analysis-table");
+  const tabChart = document.getElementById("tab-analysis-chart");
+  const viewTable = document.getElementById("analysis-table-view");
+  const viewChart = document.getElementById("analysis-chart-view");
+  const varDropdown = document.getElementById("analysis-var-dropdown");
+  const varCurrentLabel = document.getElementById("analysis-var-current-label");
+
+  let currentVarKey = "voter_turnout_perc";
+
+  const activeClasses = ["border", "border-otl-gray-200", "bg-bg-dialog-active", "text-txt-black-900", "shadow-button"];
+  const inactiveClasses = ["text-txt-black-500"];
+
+  function activateTable() {
+    viewTable?.classList.remove("hidden");
+    viewChart?.classList.add("hidden");
+    varDropdown?.classList.add("hidden");
+    tabTable?.classList.add(...activeClasses);
+    tabTable?.classList.remove(...inactiveClasses);
+    tabChart?.classList.remove(...activeClasses);
+    tabChart?.classList.add(...inactiveClasses);
+  }
+
+  function activateChart() {
+    viewTable?.classList.add("hidden");
+    viewChart?.classList.remove("hidden");
+    varDropdown?.classList.remove("hidden");
+    tabChart?.classList.add(...activeClasses);
+    tabChart?.classList.remove(...inactiveClasses);
+    tabTable?.classList.remove(...activeClasses);
+    tabTable?.classList.add(...inactiveClasses);
+  }
+
+  tabTable?.addEventListener("click", activateTable);
+  tabChart?.addEventListener("click", activateChart);
+
+  // Update dropdown button label + checkmarks, and dispatch to React chart
+  function selectVar(varKey: string) {
+    currentVarKey = varKey;
+
+    // Update displayed label from the clicked item's text
+    const item = document.querySelector(`[data-var-key="${varKey}"]`);
+    if (item && varCurrentLabel) {
+      varCurrentLabel.textContent = item.querySelector("span")?.textContent ?? varKey;
+    }
+
+    // Update checkmarks + font weight
+    document.querySelectorAll<HTMLElement>("[data-var-key]").forEach((btn) => {
+      const isSelected = btn.dataset.varKey === varKey;
+      btn.querySelector(".var-check")?.classList.toggle("hidden", !isSelected);
+      const span = btn.querySelector("span");
+      if (span) span.className = `grow truncate ${isSelected ? "font-medium" : "font-normal"}`;
+    });
+
+    document.dispatchEvent(new CustomEvent("elections-var-change", { detail: { varKey } }));
+  }
+
+  // Wire up variable item clicks
+  document.querySelectorAll<HTMLElement>("[data-var-key]").forEach((btn) => {
+    btn.addEventListener("click", () => selectVar(btn.dataset.varKey!));
+  });
+
+  // ── Session state: restore tab + variable + scroll across filter navigations ──
+  function loadSaved() {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (Date.now() - (parsed.ts ?? 0) < 10000) return parsed;
+    } catch {}
+    return null;
+  }
+
+  const saved = loadSaved();
+
+  if (saved?.tab === "chart") activateChart();
+
+  if (saved?.varKey && saved.varKey !== "voter_turnout_perc") {
+    // Update UI without dispatching (React reads sessionStorage itself on init)
+    selectVar(saved.varKey);
+  }
+
+  if (saved?.scrollY) {
+    requestAnimationFrame(() => window.scrollTo({ top: saved.scrollY, behavior: "instant" }));
+  }
+
+  window.addEventListener("beforeunload", () => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        tab: viewChart?.classList.contains("hidden") ? "table" : "chart",
+        varKey: currentVarKey,
+        scrollY: window.scrollY,
+        ts: Date.now(),
+      }));
+    } catch {}
+  });
+</script>
 
 <style>
   .analysis-table-scroll {
