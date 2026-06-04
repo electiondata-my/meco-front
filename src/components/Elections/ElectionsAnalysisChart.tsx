@@ -157,6 +157,19 @@ function axisNumLabel(v: number, key: VarKey): string {
   return Number.isInteger(v) ? v.toFixed(0) : v.toLocaleString("en-MY");
 }
 
+type TooltipContext = {
+  raw: { seat: string };
+  parsed: { x: number; y: number };
+};
+
+function tooltipValue(ctx: TooltipContext, isMobile: boolean): number {
+  return isMobile ? ctx.parsed.x : ctx.parsed.y;
+}
+
+function tooltipItemSort(a: TooltipContext, b: TooltipContext, isMobile: boolean): number {
+  return tooltipValue(b, isMobile) - tooltipValue(a, isMobile) || a.raw.seat.localeCompare(b.raw.seat);
+}
+
 export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
   const [varKey, setVarKey] = useState<VarKey>(savedVarKey);
   const [isMobile, setIsMobile] = useState(false);
@@ -251,9 +264,10 @@ export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
       plugins: {
         legend: { display: false },
         tooltip: {
+          itemSort: (a: TooltipContext, b: TooltipContext) => tooltipItemSort(a, b, isMobile),
           callbacks: {
-            label: (ctx: { raw: { seat: string }; parsed: { y: number } }) =>
-              `${ctx.raw.seat}: ${numLabel(isMobile ? (ctx as unknown as { parsed: { x: number } }).parsed.x : ctx.parsed.y, varKey)}`,
+            label: (ctx: TooltipContext) =>
+              `${ctx.raw.seat}: ${numLabel(tooltipValue(ctx, isMobile), varKey)}`,
             title: () => "",
           },
         },
@@ -320,9 +334,10 @@ export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
       plugins: {
         legend: { display: false },
         tooltip: {
+          itemSort: (a: TooltipContext, b: TooltipContext) => tooltipItemSort(a, b, isMobile),
           callbacks: {
-            label: (ctx: { raw: { seat: string }; parsed: { y: number } }) =>
-              `${ctx.raw.seat}: ${numLabel(isMobile ? (ctx as unknown as { parsed: { x: number } }).parsed.x : ctx.parsed.y, varKey)}`,
+            label: (ctx: TooltipContext) =>
+              `${ctx.raw.seat}: ${numLabel(tooltipValue(ctx, isMobile), varKey)}`,
             title: () => "",
           },
         },
