@@ -253,7 +253,7 @@ export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
         tooltip: {
           callbacks: {
             label: (ctx: { raw: { seat: string }; parsed: { y: number } }) =>
-              `${ctx.raw.seat}: ${numLabel(isMobile ? (ctx as { parsed: { x: number } }).parsed.x : ctx.parsed.y, varKey)}`,
+              `${ctx.raw.seat}: ${numLabel(isMobile ? (ctx as unknown as { parsed: { x: number } }).parsed.x : ctx.parsed.y, varKey)}`,
             title: () => "",
           },
         },
@@ -322,7 +322,7 @@ export default function ElectionsAnalysisChart({ rows, stateCode }: Props) {
         tooltip: {
           callbacks: {
             label: (ctx: { raw: { seat: string }; parsed: { y: number } }) =>
-              `${ctx.raw.seat}: ${numLabel(isMobile ? (ctx as { parsed: { x: number } }).parsed.x : ctx.parsed.y, varKey)}`,
+              `${ctx.raw.seat}: ${numLabel(isMobile ? (ctx as unknown as { parsed: { x: number } }).parsed.x : ctx.parsed.y, varKey)}`,
             title: () => "",
           },
         },

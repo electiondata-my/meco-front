@@ -3,6 +3,8 @@ import Layout from "@src/components/Layout/index.astro";
 import BallotSeat from "./BallotSeat";
 import ElectionOverviewIsland from "./ElectionOverviewTable";
 import ElectionsAnalysisChart from "./ElectionsAnalysisChart";
+import ElectionsAnalysisMap from "./ElectionsAnalysisMap";
+import ElectionsMap from "./ElectionsMap";
 import { getTranslations, t } from "@i18n/index";
 import { CountryAndStates, MALAYSIA, SEMENANJUNG, STATES } from "@src/lib/constants";
 import type { ElectionParty } from "./ElectionOverviewTable";
@@ -46,6 +48,16 @@ const e = (key: string) => t(i18n.elections ?? {}, key);
 const localePrefix = isMalay ? "/ms-MY" : "";
 
 const isGE = electionName.startsWith("GE");
+
+const electionSlug = electionName.toLowerCase();
+const filePrefix = isGE ? electionSlug : `${stateCode}_${electionSlug}`;
+const mapUrl = `${apiBase}/maps/${filePrefix}_choropleth.geojson`;
+const mapboxToken = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
+const EAST_MALAYSIA = ["Sabah", "Sarawak", "W.P. Labuan"];
+const mapStateFilter = (isGE && stateCode !== "mys" && stateCode !== "smj")
+  ? CountryAndStates[stateCode]
+  : undefined;
+const mapExcludeStates = (isGE && stateCode === "smj") ? EAST_MALAYSIA : undefined;
 
 // Build navigation data from the dates prop (no extra fetch)
 const datesMap = datesRaw.reduce(
@@ -123,10 +135,16 @@ const mobileElectionOptionsByState = Object.fromEntries(
             label: electionOptionLabel(entry.election, entry.date),
           }))
           .sort((a, b) => Number(b.value.match(/\d+/)?.[0] ?? 0) - Number(a.value.match(/\d+/)?.[0] ?? 0));
+    const stateGeEntries = (datesMap[targetStateName] ?? [])
+      .filter((entry) => entry.election.startsWith("GE"))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const parlimenOptions = stateGeEntries.length > 0
+      ? stateGeEntries.map((entry) => ({ value: entry.election, label: electionOptionLabel(entry.election, entry.date) }))
+      : geOptions.map((entry) => ({ value: entry.value, label: entry.label }));
     return [
       o.value,
       {
-        parlimen: geOptions.map((entry) => ({ value: entry.value, label: entry.label })),
+        parlimen: parlimenOptions,
         dun: dunOptions,
       },
     ];
@@ -552,12 +570,48 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
         {titleCaseSectionTitle}
       </h4>
 
+      {/* TODO: re-enable tab bar post-launch once the map tab goes live
+      {(table.length > 0 && seats.length > 0) && (
+        <div class="flex justify-center">
+          <div class="flex h-8 items-center rounded-lg bg-bg-washed p-0.5">
+            <button
+              id="tab-overview-table"
+              type="button"
+              class="flex h-7 items-center rounded-md px-3 text-body-sm font-medium border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
+            >
+              {c("table") || "Table"}
+            </button>
+            <button
+              id="tab-overview-map"
+              type="button"
+              class="flex h-7 items-center rounded-md px-3 text-body-sm font-medium text-txt-black-500"
+            >
+              {c("map") || "Map"}
+            </button>
+          </div>
+        </div>
+      )}
+      */}
+
       {table.length > 0 && (
-        <div>
+        <div id="overview-table-view">
           <ElectionOverviewIsland
             client:load
             data={table}
             translations={{ common: i18n.common ?? {} }}
+          />
+        </div>
+      )}
+
+      {seats.length > 0 && (
+        <div id="overview-map-view" class="hidden">
+          <ElectionsMap
+            client:load
+            mapUrl={mapUrl}
+            stateFilter={mapStateFilter}
+            excludeStates={mapExcludeStates}
+            viewEventName="elections-overview-view-change"
+            mapboxToken={mapboxToken}
           />
         </div>
       )}
@@ -601,6 +655,13 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
               class="flex h-7 items-center rounded-md px-3 text-body-sm font-medium text-txt-black-500"
             >
               {c("chart") || "chart"}
+            </button>
+            <button
+              id="tab-analysis-map"
+              type="button"
+              class="hidden flex h-7 items-center rounded-md px-3 text-body-sm font-medium text-txt-black-500"
+            >
+              {c("map") || "Map"}
             </button>
           </div>
 
@@ -832,6 +893,18 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
             stateCode={stateCode}
           />
         </div>
+
+        <!-- Map view (hidden by default) -->
+        <div id="analysis-map-view" class="hidden">
+          <ElectionsAnalysisMap
+            client:load
+            mapUrl={mapUrl}
+            stateFilter={mapStateFilter}
+            excludeStates={mapExcludeStates}
+            mapboxToken={mapboxToken}
+            rows={analysisRows}
+          />
+        </div>
       </section>
     )}
     </div>
@@ -842,10 +915,44 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
   const STORAGE_KEY = "meco-elections-state";
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
+  // ── Section 1: Overview tabs (Table | Map) ──
+  const tabOverviewTable = document.getElementById("tab-overview-table");
+  const tabOverviewMap = document.getElementById("tab-overview-map");
+  const viewOverviewTable = document.getElementById("overview-table-view");
+  const viewOverviewMap = document.getElementById("overview-map-view");
+
+  const overviewActiveClasses = ["border", "border-otl-gray-200", "bg-bg-dialog-active", "text-txt-black-900", "shadow-button"];
+  const overviewInactiveClasses = ["text-txt-black-500"];
+
+  function setOverviewTab(activeTab: Element | null) {
+    viewOverviewTable?.classList.toggle("hidden", activeTab !== tabOverviewTable);
+    viewOverviewMap?.classList.toggle("hidden", activeTab !== tabOverviewMap);
+
+    [tabOverviewTable, tabOverviewMap].forEach((tab) => {
+      if (tab === activeTab) {
+        tab?.classList.add(...overviewActiveClasses);
+        tab?.classList.remove(...overviewInactiveClasses);
+      } else {
+        tab?.classList.remove(...overviewActiveClasses);
+        tab?.classList.add(...overviewInactiveClasses);
+      }
+    });
+
+    if (activeTab === tabOverviewMap) {
+      document.dispatchEvent(new CustomEvent("elections-overview-view-change", {}));
+    }
+  }
+
+  tabOverviewTable?.addEventListener("click", () => setOverviewTab(tabOverviewTable));
+  tabOverviewMap?.addEventListener("click", () => setOverviewTab(tabOverviewMap));
+
+  // ── Section 3: Analysis tabs (Table | Chart | Map) ──
   const tabTable = document.getElementById("tab-analysis-table");
   const tabChart = document.getElementById("tab-analysis-chart");
+  const tabMap = document.getElementById("tab-analysis-map");
   const viewTable = document.getElementById("analysis-table-view");
   const viewChart = document.getElementById("analysis-chart-view");
+  const viewMap = document.getElementById("analysis-map-view");
   const varDropdown = document.getElementById("analysis-var-dropdown");
   const varCurrentLabel = document.getElementById("analysis-var-current-label");
 
@@ -854,28 +961,32 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
   const activeClasses = ["border", "border-otl-gray-200", "bg-bg-dialog-active", "text-txt-black-900", "shadow-button"];
   const inactiveClasses = ["text-txt-black-500"];
 
-  function activateTable() {
-    viewTable?.classList.remove("hidden");
-    viewChart?.classList.add("hidden");
-    varDropdown?.classList.add("hidden");
-    tabTable?.classList.add(...activeClasses);
-    tabTable?.classList.remove(...inactiveClasses);
-    tabChart?.classList.remove(...activeClasses);
-    tabChart?.classList.add(...inactiveClasses);
+  function setAnalysisTab(activeTab: Element | null, showVar: boolean) {
+    [tabTable, tabChart, tabMap].forEach((tab) => {
+      if (tab === activeTab) {
+        tab?.classList.add(...activeClasses);
+        tab?.classList.remove(...inactiveClasses);
+      } else {
+        tab?.classList.remove(...activeClasses);
+        tab?.classList.add(...inactiveClasses);
+      }
+    });
+    viewTable?.classList.toggle("hidden", activeTab !== tabTable);
+    viewChart?.classList.toggle("hidden", activeTab !== tabChart);
+    viewMap?.classList.toggle("hidden", activeTab !== tabMap);
+    varDropdown?.classList.toggle("hidden", !showVar);
   }
 
-  function activateChart() {
-    viewTable?.classList.add("hidden");
-    viewChart?.classList.remove("hidden");
-    varDropdown?.classList.remove("hidden");
-    tabChart?.classList.add(...activeClasses);
-    tabChart?.classList.remove(...inactiveClasses);
-    tabTable?.classList.remove(...activeClasses);
-    tabTable?.classList.add(...inactiveClasses);
+  function activateTable() { setAnalysisTab(tabTable, false); }
+  function activateChart() { setAnalysisTab(tabChart, true); }
+  function activateMap() {
+    setAnalysisTab(tabMap, true);
+    document.dispatchEvent(new CustomEvent("elections-analysis-view-change", {}));
   }
 
   tabTable?.addEventListener("click", activateTable);
   tabChart?.addEventListener("click", activateChart);
+  tabMap?.addEventListener("click", activateMap);
 
   // Update dropdown button label + checkmarks, and dispatch to React chart
   function selectVar(varKey: string) {
@@ -941,6 +1052,8 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
   const saved = loadSaved();
 
   if (saved?.tab === "chart") activateChart();
+  else if (saved?.tab === "map") activateMap();
+  if (saved?.overviewTab === "map") setOverviewTab(tabOverviewMap);
 
   if (saved?.varKey && saved.varKey !== "voter_turnout_perc") {
     // Update UI without dispatching (React reads sessionStorage itself on init)
@@ -961,7 +1074,8 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
       const existing = loadSaved() ?? {};
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
         ...existing,
-        tab: viewChart?.classList.contains("hidden") ? "table" : "chart",
+        tab: !viewChart?.classList.contains("hidden") ? "chart" : !viewMap?.classList.contains("hidden") ? "map" : "table",
+        overviewTab: viewOverviewMap?.classList.contains("hidden") ? "table" : "map",
         varKey: currentVarKey,
         ts: Date.now(),
       }));
@@ -1160,6 +1274,7 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
   const desktopElectionOptions = document.getElementById("desktop-election-options");
   let desktopState = stateCode;
   let desktopElectionType = electionName.startsWith("GE") ? "parlimen" : "dun";
+  let currentDesktopElection = electionName;
 
   function saveElectionsVisualAnchor() {
     const anchors = Array.from(document.querySelectorAll("[data-scroll-anchor]"));
@@ -1269,7 +1384,16 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
       }
       setDesktopStateButtonState(desktopState);
       syncDesktopTypeAvailability(desktopElectionType);
-      populateDesktopElectionOptions("");
+      const preferred = desktopElectionType === "parlimen" ? currentDesktopElection : "";
+      populateDesktopElectionOptions(preferred);
+      // For GE: if the election is already resolved, navigate immediately
+      if (desktopElectionType === "parlimen" && preferred) {
+        const available = mobileElectionOptionsByState?.[desktopState]?.parlimen ?? [];
+        if (available.some((o) => o.value === preferred)) {
+          saveElectionsVisualAnchor();
+          window.location.href = `${localePrefix}/elections/${desktopState}/${preferred}`;
+        }
+      }
     });
   });
 
@@ -1289,6 +1413,7 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
     if (!(item instanceof HTMLButtonElement)) return;
     const value = item.getAttribute("data-desktop-election") ?? "";
     if (!value) return;
+    currentDesktopElection = value;
     saveElectionsVisualAnchor();
     window.location.href = `${localePrefix}/elections/${desktopState}/${value}`;
   });
@@ -1430,7 +1555,10 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
       if (mobileStateSelect instanceof HTMLInputElement && mobileStateSelect.value === nextState) return;
       if (mobileStateSelect instanceof HTMLInputElement) mobileStateSelect.value = nextState;
       setMobileStateButtonState(nextState);
-      syncMobileTypeAvailability(mobileElectionType instanceof HTMLInputElement ? mobileElectionType.value : "parlimen", "");
+      const currentMobileType = mobileElectionType instanceof HTMLInputElement ? mobileElectionType.value : "parlimen";
+      const currentMobileElec = mobileElectionSelect instanceof HTMLInputElement ? mobileElectionSelect.value : "";
+      // For GE, keep the current election selected if the new state has it
+      syncMobileTypeAvailability(currentMobileType, currentMobileType === "parlimen" ? currentMobileElec : "");
       updateMobileFilterSummary();
     });
   });
