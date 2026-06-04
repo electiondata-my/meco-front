@@ -137,13 +137,23 @@ const selectedElectionOption = electionLinkOptions.find((o) => o.value === elect
 const selectElectionLabel = e("select_election") !== "select_election" ? e("select_election") : "Select election";
 const viewsOneLabel = c("views_one") || "view";
 const viewsOtherLabel = c("views_other") || "views";
+const compactStateLabel = (state: string) =>
+  ({
+    "W.P. Kuala Lumpur": "KL",
+    "W.P. Putrajaya": "Putrajaya",
+    "W.P. Labuan": "Labuan",
+    "Negeri Sembilan": "N9",
+    "Pulau Pinang": "P. Pinang",
+  }[state] ?? state);
 
 // Analysis table rows (from seats prop)
 const analysisRows = seats.map((s) => {
   const [seat, ...stParts] = s.seat.split(", ");
+  const state = stParts.join(", ");
   return {
     seat,
-    state: stParts.join(", "),
+    state,
+    stateDisplay: compactStateLabel(state),
     majority: s.majority,
     majority_perc: s.majority_perc,
     n_candidates: s.n_candidates,
@@ -181,6 +191,65 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   if (n == null) return "—";
   return n.toLocaleString("en-MY", { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
+
+const analysisColumnSpecs = [
+  {
+    key: "seat",
+    label: c("constituency") || "Constituency",
+    mobileWidthCh: 20,
+    widthCh: Math.max(c("constituency").length || 12, ...analysisRows.map((row) => row.seat.length)) + 3,
+  },
+  ...(stateCode === "mys"
+    ? [{
+        key: "state",
+        label: c("state") || "State",
+        mobileHidden: true,
+        widthCh: Math.max((c("state") || "State").length, ...analysisRows.map((row) => row.stateDisplay.length)) + 4,
+      }]
+    : []),
+  {
+    key: "n_candidates",
+    label: c("n_candidates") || "Candidates",
+    widthCh: Math.max((c("n_candidates") || "Candidates").length + 3, ...analysisRows.map((row) => numFmt(row.n_candidates).length)) + 5,
+  },
+  {
+    key: "voters_total",
+    label: c("voters_total") || "Voters",
+    widthCh: Math.max((c("voters_total") || "Voters").length + 3, ...analysisRows.map((row) => numFmt(row.voters_total).length)) + 5,
+  },
+  {
+    key: "voter_turnout",
+    label: c("voter_turnout") || "Turnout",
+    widthCh: Math.max((c("voter_turnout") || "Turnout").length + 3, ...analysisRows.map((row) => numFmt(row.voter_turnout).length)) + 5,
+  },
+  {
+    key: "voter_turnout_perc",
+    label: c("voter_turnout_perc") || "Turnout %",
+    widthCh: Math.max((c("voter_turnout_perc") || "Turnout %").length + 3, ...analysisRows.map((row) => numFmt(row.voter_turnout_perc, 1).length)) + 5,
+  },
+  {
+    key: "majority",
+    label: c("majority") || "Majority",
+    widthCh: Math.max((c("majority") || "Majority").length + 3, ...analysisRows.map((row) => numFmt(row.majority).length)) + 5,
+  },
+  {
+    key: "majority_perc",
+    label: c("majority_perc") || "Majority %",
+    widthCh: Math.max((c("majority_perc") || "Majority %").length + 3, ...analysisRows.map((row) => numFmt(row.majority_perc, 1).length)) + 5,
+  },
+  {
+    key: "votes_rejected",
+    label: c("rejected_votes") || "Rejected",
+    widthCh: Math.max((c("rejected_votes") || "Rejected").length + 3, ...analysisRows.map((row) => numFmt(row.votes_rejected).length)) + 5,
+  },
+  {
+    key: "votes_rejected_perc",
+    label: c("rejected_votes_perc") || "Rejected %",
+    widthCh: Math.max((c("rejected_votes_perc") || "Rejected %").length + 3, ...analysisRows.map((row) => numFmt(row.votes_rejected_perc, 1).length)) + 5,
+  },
+];
+const analysisTableMinWidth = `${analysisColumnSpecs.reduce((sum, column) => sum + column.widthCh, 0)}ch`;
+const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) => sum + (column.mobileHidden ? 0 : column.widthCh), 0)}ch`;
 
 ---
 
@@ -478,7 +547,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
     <div class="mx-auto flex w-full max-w-screen-xl flex-col">
 
     <!-- Section 1: Coalition & party summary -->
-    <section class="space-y-6 pb-8 pt-4 lg:pb-10 lg:pt-5">
+    <section data-scroll-anchor="overview" class="space-y-6 pb-8 pt-4 lg:pb-10 lg:pt-5">
       <h4 class="text-center font-heading text-heading-2xs font-bold">
         {titleCaseSectionTitle}
       </h4>
@@ -496,20 +565,22 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 
     <!-- Section 2: Full ballot per seat (React island) -->
     {seats.length > 0 && (
-      <BallotSeat
-        client:load
-        seats={seats}
-        election={electionName}
-        state={stateCode}
-        apiBaseUrl={apiBase}
-        locale={locale}
-        translations={{ common: i18n.common ?? {}, elections: i18n.elections ?? {} }}
-      />
+      <div data-scroll-anchor="ballot">
+        <BallotSeat
+          client:load
+          seats={seats}
+          election={electionName}
+          state={stateCode}
+          apiBaseUrl={apiBase}
+          locale={locale}
+          translations={{ common: i18n.common ?? {}, elections: i18n.elections ?? {} }}
+        />
+      </div>
     )}
 
     <!-- Section 3: Aggregate stats by constituency -->
     {analysisRows.length > 0 && (
-      <section class="space-y-6 py-8 lg:py-10">
+      <section data-scroll-anchor="analysis" class="space-y-6 py-8 lg:py-10">
         <h4 class="text-center font-heading text-heading-2xs font-bold">
           {e("header_3") || "Breakdown by constituency"}
         </h4>
@@ -581,61 +652,117 @@ function numFmt(n: number | null | undefined, dp = 0): string {
         <div id="analysis-table-view">
         <div id="analysis-table-shell" class="analysis-table-shell relative">
           <div id="analysis-table-scroll" class="analysis-table-scroll overflow-x-auto pb-2">
-            <table id="analysis-table" class="w-full text-left text-body-sm">
+            <table id="analysis-table" class="w-full table-fixed text-left text-body-sm" style={`--analysis-table-min-width: ${analysisTableMinWidth}; --analysis-table-mobile-min-width: ${analysisTableMobileMinWidth};`}>
+            <colgroup>
+              {analysisColumnSpecs.map((column) => (
+                <col
+                  class:list={[column.mobileHidden && "analysis-mobile-hidden-col"]}
+                  style={`width: ${column.mobileWidthCh ?? column.widthCh}ch; --analysis-desktop-col-width: ${column.widthCh}ch;`}
+                />
+              ))}
+            </colgroup>
             <thead>
               <tr class="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
-                <th class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4">
-                  {c("constituency") || "Constituency"}
+                <th class="analysis-seat-cell sticky left-0 z-10 bg-bg-white py-3 pl-0 pr-3 md:pr-4">
+                  <span class="block truncate">{c("constituency") || "Constituency"}</span>
                 </th>
                 {stateCode === "mys" && (
-                  <th class="whitespace-nowrap px-4 py-3">{c("state") || "State"}</th>
+                  <th class="hidden whitespace-nowrap px-4 py-3 md:table-cell">{c("state") || "State"}</th>
                 )}
                 <th class="whitespace-nowrap px-4 py-3 text-right">
                   <button type="button" data-sort-key="n_candidates" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("n_candidates") || "Candidates"}`}>
                     <span>{c("n_candidates") || "Candidates"}</span>
-                    <span data-sort-indicator="n_candidates" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                    <span data-sort-indicator="n_candidates" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                        <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                        <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                      </svg>
+                    </span>
                   </button>
                 </th>
                 <th class="whitespace-nowrap px-4 py-3 text-right">
                   <button type="button" data-sort-key="voters_total" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("voters_total") || "Voters"}`}>
                     <span>{c("voters_total") || "Voters"}</span>
-                    <span data-sort-indicator="voters_total" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                    <span data-sort-indicator="voters_total" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                        <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                        <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                      </svg>
+                    </span>
                   </button>
                 </th>
                 <th class="whitespace-nowrap px-4 py-3 text-right">
                   <button type="button" data-sort-key="voter_turnout" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("voter_turnout") || "Turnout"}`}>
                     <span>{c("voter_turnout") || "Turnout"}</span>
-                    <span data-sort-indicator="voter_turnout" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                    <span data-sort-indicator="voter_turnout" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                        <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                        <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                      </svg>
+                    </span>
                   </button>
                 </th>
                 <th class="whitespace-nowrap px-4 py-3 text-right">
                   <button type="button" data-sort-key="voter_turnout_perc" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("voter_turnout_perc") || "Turnout %"}`}>
                     <span>{c("voter_turnout_perc") || "Turnout %"}</span>
-                    <span data-sort-indicator="voter_turnout_perc" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                    <span data-sort-indicator="voter_turnout_perc" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                        <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                        <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                      </svg>
+                    </span>
                   </button>
                 </th>
                 <th class="whitespace-nowrap px-4 py-3 text-right">
                   <button type="button" data-sort-key="majority" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("majority") || "Majority"}`}>
                     <span>{c("majority") || "Majority"}</span>
-                    <span data-sort-indicator="majority" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                    <span data-sort-indicator="majority" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                        <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                        <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                      </svg>
+                    </span>
                   </button>
                 </th>
                 <th class="whitespace-nowrap px-4 py-3 text-right">
                   <button type="button" data-sort-key="majority_perc" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("majority_perc") || "Majority %"}`}>
                     <span>{c("majority_perc") || "Majority %"}</span>
-                    <span data-sort-indicator="majority_perc" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                    <span data-sort-indicator="majority_perc" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                        <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                        <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                      </svg>
+                    </span>
                   </button>
                 </th>
                 <th class="whitespace-nowrap px-4 py-3 text-right">
                   <button type="button" data-sort-key="votes_rejected" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("rejected_votes") || "Rejected"}`}>
                     <span>{c("rejected_votes") || "Rejected"}</span>
-                    <span data-sort-indicator="votes_rejected" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                    <span data-sort-indicator="votes_rejected" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                        <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                        <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                      </svg>
+                    </span>
                   </button>
                 </th>
                 <th class="whitespace-nowrap px-4 py-3 text-right">
                   <button type="button" data-sort-key="votes_rejected_perc" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("rejected_votes_perc") || "Rejected %"}`}>
                     <span>{c("rejected_votes_perc") || "Rejected %"}</span>
-                    <span data-sort-indicator="votes_rejected_perc" class="w-3 text-center text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">↕</span>
+                    <span data-sort-indicator="votes_rejected_perc" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                      <svg viewBox="0 0 16 16" fill="none">
+                        <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                        <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                        <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                      </svg>
+                    </span>
                   </button>
                 </th>
               </tr>
@@ -643,11 +770,11 @@ function numFmt(n: number | null | undefined, dp = 0): string {
             <tbody>
               {analysisRows.map((row) => (
                 <tr class="analysis-row group border-b border-otl-gray-200 hover:bg-bg-black-50">
-                  <td class="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-3 pl-0 pr-4 font-medium group-hover:bg-bg-black-50">
-                    {row.seat}
+                  <td class="analysis-seat-cell sticky left-0 z-10 bg-bg-white py-3 pl-0 pr-3 font-medium group-hover:bg-bg-black-50 md:pr-4">
+                    <span class="block truncate">{row.seat}</span>
                   </td>
                   {stateCode === "mys" && (
-                    <td class="whitespace-nowrap px-4 py-3 text-txt-black-500">{row.state}</td>
+                    <td class="hidden whitespace-nowrap px-4 py-3 text-txt-black-500 md:table-cell">{row.stateDisplay}</td>
                   )}
                   <td data-sort-key="n_candidates" data-sort-value={row.n_candidates ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
                     {numFmt(row.n_candidates)}
@@ -713,6 +840,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 
 <script>
   const STORAGE_KEY = "meco-elections-state";
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 
   const tabTable = document.getElementById("tab-analysis-table");
   const tabChart = document.getElementById("tab-analysis-chart");
@@ -786,6 +914,30 @@ function numFmt(n: number | null | undefined, dp = 0): string {
     return null;
   }
 
+  function restoreSavedAnchor(savedState) {
+    const anchor = savedState?.anchor;
+    if (!anchor?.name || typeof anchor.offset !== "number") return;
+    const target = document.querySelector(`[data-scroll-anchor="${anchor.name}"]`);
+    if (!target) return;
+
+    let attempts = 0;
+    let cancelled = false;
+    const cancel = () => {
+      cancelled = true;
+    };
+    window.addEventListener("wheel", cancel, { once: true, passive: true });
+    window.addEventListener("touchstart", cancel, { once: true, passive: true });
+    window.addEventListener("keydown", cancel, { once: true });
+    const restore = () => {
+      if (cancelled) return;
+      attempts += 1;
+      const top = window.scrollY + target.getBoundingClientRect().top - anchor.offset;
+      window.scrollTo({ top, left: window.scrollX, behavior: "instant" });
+      if (attempts < 90) requestAnimationFrame(restore);
+    };
+    requestAnimationFrame(restore);
+  }
+
   const saved = loadSaved();
 
   if (saved?.tab === "chart") activateChart();
@@ -795,16 +947,22 @@ function numFmt(n: number | null | undefined, dp = 0): string {
     selectVar(saved.varKey);
   }
 
-  if (saved?.scrollY) {
-    requestAnimationFrame(() => window.scrollTo({ top: saved.scrollY, behavior: "instant" }));
+  restoreSavedAnchor(saved);
+  if (saved?.anchor) {
+    try {
+      const rest = { ...saved };
+      delete rest.anchor;
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ ...rest, ts: Date.now() }));
+    } catch {}
   }
 
   window.addEventListener("beforeunload", () => {
     try {
+      const existing = loadSaved() ?? {};
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
+        ...existing,
         tab: viewChart?.classList.contains("hidden") ? "table" : "chart",
         varKey: currentVarKey,
-        scrollY: window.scrollY,
         ts: Date.now(),
       }));
     } catch {}
@@ -814,7 +972,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 <style>
   .analysis-table-scroll {
     overscroll-behavior-x: contain;
-    scrollbar-color: rgba(24, 24, 27, 0.28) transparent;
+    scrollbar-color: rgb(var(--bg-black-500) / 0.36) transparent;
     scrollbar-width: thin;
   }
 
@@ -828,38 +986,127 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   }
 
   .analysis-table-scroll::-webkit-scrollbar-thumb {
-    background-color: rgba(24, 24, 27, 0.18);
-    border: 2px solid #ffffff;
+    background-color: rgb(var(--bg-black-500) / 0.24);
+    border: 2px solid rgb(var(--bg-white));
     border-radius: 999px;
   }
 
   .analysis-table-scroll:hover::-webkit-scrollbar-thumb {
-    background-color: rgba(24, 24, 27, 0.34);
+    background-color: rgb(var(--bg-black-500) / 0.46);
   }
 
+  #analysis-table {
+    min-width: var(--analysis-table-mobile-min-width);
+  }
+
+  .analysis-mobile-hidden-col {
+    visibility: collapse;
+  }
+
+  .analysis-seat-cell {
+    max-width: 20ch;
+    width: 20ch;
+  }
+
+  @media (min-width: 768px) {
+    #analysis-table {
+      min-width: var(--analysis-table-min-width);
+    }
+
+    #analysis-table col {
+      width: var(--analysis-desktop-col-width);
+    }
+
+    .analysis-mobile-hidden-col {
+      visibility: visible;
+    }
+
+    .analysis-seat-cell {
+      max-width: none;
+      width: auto;
+    }
+
+  }
+
+  .analysis-table-shell::before,
   .analysis-table-shell::after {
     content: "";
     position: absolute;
-    bottom: 10px;
-    top: 0;
     z-index: 20;
-    width: 28px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 160ms ease;
   }
 
   .analysis-table-shell::after {
-    right: 0;
-    background: linear-gradient(to left, #ffffff 10%, rgba(255, 255, 255, 0));
+    top: 0.625rem;
+    right: 0.5rem;
+    z-index: 20;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    background: rgb(var(--bg-white) / 0.88);
+    box-shadow:
+      0 1px 3px rgb(var(--_black) / 0.08),
+      0 0 0 1px rgb(var(--bg-black-500) / 0.16);
+    backdrop-filter: blur(4px);
   }
 
+  .analysis-table-shell::before {
+    top: 1.25rem;
+    right: 1.1875rem;
+    z-index: 21;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 1.5px solid rgb(var(--txt-black-700));
+    border-bottom: 1.5px solid rgb(var(--txt-black-700));
+    transform: rotate(-45deg);
+  }
+
+  .analysis-table-shell[data-scroll-end="false"]::before,
   .analysis-table-shell[data-scroll-end="false"]::after {
     opacity: 1;
+  }
+
+  .sort-indicator {
+    display: inline-flex;
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 1rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sort-indicator svg {
+    width: 1rem;
+    height: 1rem;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.5;
+  }
+
+  .sort-indicator [data-sort-arrow="none"],
+  .sort-indicator[data-sort-state="none"] [data-sort-arrow="asc"],
+  .sort-indicator[data-sort-state="none"] [data-sort-arrow="desc"] {
+    display: none;
+  }
+
+  .sort-indicator[data-sort-state="none"] [data-sort-arrow="none"] {
+    display: block;
+    opacity: 0.72;
+  }
+
+  .sort-indicator[data-sort-state="asc"] [data-sort-arrow="none"],
+  .sort-indicator[data-sort-state="desc"] [data-sort-arrow="none"],
+  .sort-indicator[data-sort-state="asc"] [data-sort-arrow="desc"],
+  .sort-indicator[data-sort-state="desc"] [data-sort-arrow="asc"] {
+    display: none;
   }
 </style>
 
 <script define:vars={{ localePrefix, stateCode, electionName, tinybirdBaseUrl, tinybirdToken, viewsOneLabel, viewsOtherLabel, mobileElectionOptionsByState, selectElectionLabel }}>
+  const ELECTIONS_STORAGE_KEY = "meco-elections-state";
   const mobileFilter = document.getElementById("mobile-filter");
   const filterOpen = document.getElementById("filter-open");
   const filterClose = document.getElementById("filter-close");
@@ -913,6 +1160,28 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   const desktopElectionOptions = document.getElementById("desktop-election-options");
   let desktopState = stateCode;
   let desktopElectionType = electionName.startsWith("GE") ? "parlimen" : "dun";
+
+  function saveElectionsVisualAnchor() {
+    const anchors = Array.from(document.querySelectorAll("[data-scroll-anchor]"));
+    if (anchors.length === 0) return;
+    const anchor = anchors.reduce((best, candidate) => {
+      const candidateTop = candidate.getBoundingClientRect().top;
+      const bestTop = best.getBoundingClientRect().top;
+      return Math.abs(candidateTop) < Math.abs(bestTop) ? candidate : best;
+    });
+    try {
+      const raw = sessionStorage.getItem(ELECTIONS_STORAGE_KEY);
+      const existing = raw ? JSON.parse(raw) : {};
+      sessionStorage.setItem(ELECTIONS_STORAGE_KEY, JSON.stringify({
+        ...existing,
+        anchor: {
+          name: anchor.getAttribute("data-scroll-anchor"),
+          offset: anchor.getBoundingClientRect().top,
+        },
+        ts: Date.now(),
+      }));
+    } catch {}
+  }
 
   function createCheckIcon(hidden = false, attr = "data-desktop-election-check") {
     const check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1020,6 +1289,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
     if (!(item instanceof HTMLButtonElement)) return;
     const value = item.getAttribute("data-desktop-election") ?? "";
     if (!value) return;
+    saveElectionsVisualAnchor();
     window.location.href = `${localePrefix}/elections/${desktopState}/${value}`;
   });
 
@@ -1116,7 +1386,10 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   document.getElementById("filter-apply")?.addEventListener("click", () => {
     const state = mobileStateSelect?.value ?? stateCode;
     const elec = mobileElectionSelect?.value ?? electionName;
-    if (elec) window.location.href = `${localePrefix}/elections/${state}/${elec}`;
+    if (elec) {
+      saveElectionsVisualAnchor();
+      window.location.href = `${localePrefix}/elections/${state}/${elec}`;
+    }
   });
 
   mobileElectionOptions?.addEventListener("click", (event) => {
@@ -1217,7 +1490,7 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   function updateSortIndicators() {
     document.querySelectorAll("[data-sort-indicator]").forEach((indicator) => {
       const key = indicator.getAttribute("data-sort-indicator");
-      indicator.textContent = key === sortKey ? (sortDirection === "asc" ? "↑" : "↓") : "↕";
+      indicator.setAttribute("data-sort-state", key === sortKey && sortDirection ? sortDirection : "none");
     });
   }
 

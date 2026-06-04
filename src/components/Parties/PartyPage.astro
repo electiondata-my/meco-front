@@ -111,11 +111,11 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
   </section>
 
   <!-- Main content -->
-  <div class="px-4.5 pb-6 pt-4 md:px-6 lg:pb-16">
+  <div class="px-4.5 pb-6 pt-0 md:px-6 lg:pb-16">
   <div class="mx-auto w-full max-w-screen-xl space-y-8 lg:space-y-16">
 
     <!-- Party combobox search -->
-    <div class="mx-auto mt-3 w-full md:w-[727px]">
+    <div class="mx-auto w-full md:w-[680px]">
       <div class="combobox relative" data-type="party">
         <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
           <input
@@ -233,13 +233,23 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
       if (idx >= 0) items[idx]?.scrollIntoView({ block: "nearest" });
     }
 
+    list.addEventListener("mousedown", e => {
+      const li = e.target.closest("li[data-value]");
+      if (!li) return;
+      e.preventDefault();
+      selected = li.dataset.value;
+      input.value = _options.find(o => o.value === selected)?.label ?? "";
+      list.classList.add("hidden");
+      goToParty(selected);
+    });
+
     function render(options) {
       activeIdx = -1;
       if (options.length === 0) {
         list.innerHTML = `<li class="px-4 py-2 text-sm italic text-txt-black-500">No results</li>`;
         return;
       }
-      list.innerHTML = options.map(o => `
+      list.innerHTML = options.slice(0, 150).map(o => `
         <li class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
           <span class="relative flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
             ?
@@ -253,15 +263,6 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
             ${esc(o.typeBadge)}
           </span>
         </li>`).join("");
-      list.querySelectorAll("li[data-value]").forEach(li => {
-        li.addEventListener("mousedown", e => {
-          e.preventDefault();
-          selected = li.dataset.value;
-          input.value = _options.find(o => o.value === selected)?.label ?? "";
-          list.classList.add("hidden");
-          goToParty(selected);
-        });
-      });
     }
 
     function open() {
@@ -276,7 +277,8 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
 
     function close() { list.classList.add("hidden"); activeIdx = -1; }
 
-    input.addEventListener("input",  () => { selected = ""; open(); updateClear(); });
+    let _debounceTimer;
+    input.addEventListener("input",  () => { selected = ""; updateClear(); clearTimeout(_debounceTimer); _debounceTimer = setTimeout(open, 200); });
     input.addEventListener("focus",  open);
     input.addEventListener("blur",   () => setTimeout(close, 150));
     input.addEventListener("keydown", e => {

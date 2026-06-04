@@ -159,7 +159,7 @@ export default function BallotSeat({
     { label: LOST_BY, value: LOST_BY },
   ];
 
-  const allParties = useMemo(() => {
+  const contestedParties = useMemo(() => {
     const set = new Set<string>();
     for (const seat of seats) {
       set.add(seat.party);
@@ -167,6 +167,32 @@ export default function BallotSeat({
     }
     return [...set].sort();
   }, [seats]);
+
+  const winningParties = useMemo(() => {
+    const set = new Set<string>();
+    for (const seat of seats) set.add(seat.party);
+    return [...set].sort();
+  }, [seats]);
+
+  const losingParties = useMemo(() => {
+    const set = new Set<string>();
+    for (const seat of seats) {
+      for (const party of seat.party_lost ?? []) set.add(party);
+    }
+    return [...set].sort();
+  }, [seats]);
+
+  const partyOptions = useMemo(() => {
+    if (filterResult === WON_BY) return winningParties;
+    if (filterResult === LOST_BY) return losingParties;
+    return contestedParties;
+  }, [LOST_BY, WON_BY, contestedParties, filterResult, losingParties, winningParties]);
+
+  useEffect(() => {
+    if (!filterParty) return;
+    if (partyOptions.includes(filterParty)) return;
+    setFilterParty("");
+  }, [filterParty, partyOptions]);
 
   const filteredSeats = useMemo(
     () =>
@@ -230,7 +256,7 @@ export default function BallotSeat({
           <InlineDropdown
             options={[
               { label: e("all_parties") || "All Parties", value: "" },
-              ...allParties.map((party) => ({ label: party, value: party })),
+              ...partyOptions.map((party) => ({ label: party, value: party })),
             ]}
             value={filterParty}
             onChange={(value) => {

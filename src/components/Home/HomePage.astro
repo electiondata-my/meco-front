@@ -137,7 +137,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
     </div>
   </section>
 
-  <div class="mx-auto w-full max-w-screen-xl px-4 pb-8 pt-4 md:px-6 lg:pb-12 lg:pt-6">
+  <div class="mx-auto w-full max-w-screen-xl px-4 pb-8 pt-0 md:px-6 lg:pb-12 lg:pt-2">
 
     <!-- Tabs + search -->
     <section class="flex flex-col items-center gap-6 pb-8">
@@ -158,7 +158,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       </div>
 
       <!-- Seats -->
-      <div class="tab-panel w-full max-w-[727px]" data-panel="0">
+      <div class="tab-panel w-full max-w-[680px]" data-panel="0">
         <!-- Hidden select — data source for JS combobox -->
         <select id="seat-select" class="hidden" aria-hidden="true" tabindex="-1">
           {seatOptions.sort((a, b) => {
@@ -180,7 +180,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       </div>
 
       <!-- Candidates -->
-      <div class="tab-panel hidden w-full max-w-[727px]" data-panel="1">
+      <div class="tab-panel hidden w-full max-w-[680px]" data-panel="1">
         <select id="candidate-select" class="hidden" aria-hidden="true" tabindex="-1">
           {candidateOptions.map(o => <option value={o.value}>{o.label}</option>)}
         </select>
@@ -196,7 +196,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       </div>
 
       <!-- Parties -->
-      <div class="tab-panel hidden w-full max-w-[727px]" data-panel="2">
+      <div class="tab-panel hidden w-full max-w-[680px]" data-panel="2">
         <select id="party-select" class="hidden" aria-hidden="true" tabindex="-1">
           {partyOptions.map(o => <option value={o.value} data-party-type={o.type}>{o.label}</option>)}
         </select>
@@ -212,7 +212,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       </div>
 
       <!-- Elections -->
-      <div class="tab-panel hidden w-full max-w-[727px]" data-panel="3">
+      <div class="tab-panel hidden w-full max-w-[680px]" data-panel="3">
         <select id="election-select" class="hidden" aria-hidden="true" tabindex="-1">
           {electionOptions.map(o => <option value={o.value}>{o.label}</option>)}
         </select>
@@ -390,12 +390,21 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       return `/seats/${val}`;
     }
 
+    list.addEventListener("mousedown", (e: MouseEvent) => {
+      const li = (e.target as Element).closest<HTMLLIElement>("li[data-value]");
+      if (!li) return;
+      e.preventDefault();
+      selected = li.dataset.value!;
+      input.value = allOptions.find(o => o.value === selected)?.label ?? "";
+      list.classList.add("hidden");
+      window.location.href = href(selected);
+    });
+
     function render(options: typeof allOptions) {
       activeIdx = -1;
-      const items = options;
-      if (items.length === 0) {
+      const items = options.slice(0, 150);
+      if (options.length === 0) {
         list.innerHTML = `<li class="px-4 py-2 text-sm italic text-txt-black-500">No results</li>`;
-        list.querySelectorAll<HTMLLIElement>("li[data-value]").forEach(attachClick);
         return;
       }
 
@@ -428,18 +437,6 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
           `<li class="cursor-pointer truncate px-4 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">${esc(o.label)}</li>`
         ).join("");
       }
-
-      list.querySelectorAll<HTMLLIElement>("li[data-value]").forEach(attachClick);
-    }
-
-    function attachClick(li: HTMLLIElement) {
-      li.addEventListener("mousedown", e => {
-        e.preventDefault();
-        selected = li.dataset.value!;
-        input.value = allOptions.find(o => o.value === selected)?.label ?? "";
-        list.classList.add("hidden");
-        window.location.href = href(selected);
-      });
     }
 
     function highlight(idx: number) {
@@ -466,7 +463,8 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
 
     function close() { list.classList.add("hidden"); activeIdx = -1; }
 
-    input.addEventListener("input",  () => { selected = ""; open(); });
+    let _debounceTimer: ReturnType<typeof setTimeout>;
+    input.addEventListener("input",  () => { selected = ""; clearTimeout(_debounceTimer); _debounceTimer = setTimeout(open, 200); });
     input.addEventListener("focus",  open);
     input.addEventListener("blur",   () => setTimeout(close, 150));
     input.addEventListener("keydown", (e: KeyboardEvent) => {
