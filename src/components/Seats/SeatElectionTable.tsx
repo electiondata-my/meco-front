@@ -11,9 +11,9 @@ type ElectionRow = {
   coalition: string;
   name: string;
   majority: number;
-  majority_perc: number;
+  majority_perc: number | null;
   voter_turnout: number;
-  voter_turnout_perc: number;
+  voter_turnout_perc: number | null;
 };
 
 type RedelineationRow = {
@@ -30,11 +30,11 @@ type BallotEntry = {
   party_uid?: string;
   coalition?: string;
   votes: number;
-  votes_perc: number;
+  votes_perc: number | null;
   result: string;
 };
 
-type VoteStat = { x: string; abs: number; perc: number };
+type VoteStat = { x: string; abs: number; perc: number | null };
 
 type ModalState = {
   open: boolean;
@@ -66,11 +66,20 @@ function isRedelineation(row: ResultRow): row is RedelineationRow {
 }
 
 function formatElectionName(name: string, isMalay?: boolean): string {
+  if (!isMalay && name === "By-Election") return "By-Elec";
   if (!isMalay) return name;
   if (name.startsWith("GE-")) return name.replace(/^GE-/, "PRU-");
   if (name.startsWith("SE-")) return name.replace(/^SE-/, "PRN-");
   if (name === "By-Election") return "PRK";
   return name;
+}
+
+function formatDate(date: string): string {
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function PartyFlag({ uid, party }: { uid?: string; party: string }) {
@@ -96,26 +105,42 @@ function PartyFlag({ uid, party }: { uid?: string; party: string }) {
 
 function BarCell({ value, total = 100 }: { value: number | null; total?: number }) {
   if (value === null || value === undefined) {
-    return <span className="text-body-xs text-txt-black-400">—</span>;
+    return (
+      <span className="inline-block min-w-[3.75rem] text-right text-body-xs text-txt-black-400">
+        —
+      </span>
+    );
   }
   const pct = Math.min((value / total) * 100, 100);
   return (
-    <div className="space-y-1">
-      <p className="tabular-nums text-body-xs">
-        {value.toFixed(1)}%
-      </p>
-      <div className="h-[5px] w-[50px] overflow-hidden rounded-full bg-bg-washed">
+    <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
+      <div className="h-[5px] w-[100px] overflow-hidden rounded-full bg-bg-washed">
         <div
           className="h-full rounded-full bg-bg-black-900"
           style={{ width: `${pct}%` }}
         />
       </div>
+      <span className="inline-block min-w-[3.75rem] whitespace-nowrap text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+        {value.toFixed(1)}%
+      </span>
     </div>
   );
 }
 
+function pctWidth(value: number | null | undefined): string {
+  return `${Math.min(value ?? 0, 100)}%`;
+}
+
+function pctText(value: number | null | undefined): string {
+  return value == null ? "—" : `${value.toFixed(1)}%`;
+}
+
 const electionRows = (results: ResultRow[]): ElectionRow[] =>
   results.filter((r): r is ElectionRow => !isRedelineation(r));
+
+const monoCellClass = "font-['IBM_Plex_Mono','Roboto_Mono',monospace]";
+const monoNumberClass = `${monoCellClass} tabular-nums`;
+const desktopMonoNumberClass = "sm:font-['IBM_Plex_Mono','Roboto_Mono',monospace] sm:tabular-nums";
 
 export default function SeatElectionTable({
   results,
@@ -155,7 +180,7 @@ export default function SeatElectionTable({
         election_name: row.election_name,
         seat: row.seat,
         state: row.state,
-        date: row.date,
+        date: formatDate(row.date),
         ballot: cache.current.get(key)?.ballot ?? [],
         votes: cache.current.get(key)?.votes ?? [],
         currentIndex: index,
@@ -180,7 +205,7 @@ export default function SeatElectionTable({
         };
         cache.current.set(key, result);
         setModal((prev) =>
-          prev.open && prev.seat === row.seat && prev.date === row.date
+          prev.open && prev.seat === row.seat && prev.date === formatDate(row.date)
             ? { ...prev, loading: false, ballot: result.ballot, votes: result.votes }
             : prev,
         );
@@ -202,17 +227,74 @@ export default function SeatElectionTable({
 
   return (
     <>
-      <div className="w-full overflow-x-auto">
-        <table className="w-full text-body-sm">
+      {/* Mobile: compact card list, matching candidate/party pages */}
+      <div className="-mx-4.5 divide-y divide-otl-gray-200 border-y border-otl-gray-200 md:mx-0 md:hidden">
+        {results.map((row, i) => {
+          if (isRedelineation(row)) {
+            const msg = isMalay ? row.change_ms : row.change_en;
+            return (
+              <div key={i} className="bg-bg-washed px-4.5 py-3 text-center text-body-sm italic text-txt-black-700">
+                {msg}
+              </div>
+            );
+          }
+          const electionIdx = allElections.indexOf(row);
+          return (
+            <div key={i} className="space-y-3 px-4.5 py-4 text-body-sm">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-body-sm font-medium leading-snug text-txt-black-900">
+                  {formatElectionName(row.election_name, isMalay)} ({new Date(row.date).getFullYear()}) • {row.seat}
+                </p>
+                <button
+                  onClick={() => openModal(row, electionIdx)}
+                  className="flex shrink-0 items-center gap-1.5 text-body-sm font-medium text-txt-black-700"
+                  aria-label={c("full_result") || "Details"}
+                >
+                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+                <PartyFlag uid={row.party_uid} party={row.party} />
+                <span className="min-w-0 flex-1 truncate font-medium text-txt-black-900" title={row.name}>{row.name}</span>
+                <span className="shrink-0 text-txt-black-500">
+                  ({row.coalition && row.coalition !== "ALONE" ? `${row.party} / ${row.coalition}` : row.party})
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-txt-black-500">{c("majority") || "Majority"}:</span>
+                  <div className="h-[5px] w-[40px] overflow-hidden rounded-full bg-bg-washed">
+                    <div className="h-full rounded-full bg-bg-black-900" style={{ width: pctWidth(row.majority_perc) }} />
+                  </div>
+                  <span>{pctText(row.majority_perc)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-txt-black-500">{c("voter_turnout") || "Voter Turnout"}:</span>
+                  <div className="h-[5px] w-[40px] overflow-hidden rounded-full bg-bg-washed">
+                    <div className="h-full rounded-full bg-bg-black-900" style={{ width: pctWidth(row.voter_turnout_perc) }} />
+                  </div>
+                  <span>{pctText(row.voter_turnout_perc)}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: production table vocabulary */}
+      <div className="hidden overflow-x-auto md:block">
+        <table className="w-full text-left text-body-sm">
           <thead>
-            <tr className="border-b border-otl-gray-200 text-left text-body-xs font-medium text-txt-black-500">
-              <th className="py-3 pl-4 pr-3 whitespace-nowrap">{c("election_name") || "Election"}</th>
-              <th className="px-3 py-3 whitespace-nowrap">{c("constituency") || "Constituency"}</th>
-              <th className="px-3 py-3 whitespace-nowrap">{c("winning_party") || "Winning Party"}</th>
-              <th className="px-3 py-3 whitespace-nowrap">{c("candidate_name") || "Candidate"}</th>
-              <th className="px-3 py-3 whitespace-nowrap">{c("majority") || "Majority"}</th>
-              <th className="px-3 py-3 whitespace-nowrap">{c("voter_turnout") || "Voter Turnout"}</th>
-              <th className="py-3 pl-3 pr-4" />
+            <tr className="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
+              <th className="whitespace-nowrap py-3 pl-4 pr-3">{c("election_name") || "Election"}</th>
+              <th className="whitespace-nowrap px-3 py-3">{c("constituency") || "Constituency"}</th>
+              <th className="whitespace-nowrap px-3 py-3">{c("winning_party") || "Winning Party"}</th>
+              <th className="whitespace-nowrap px-3 py-3">{c("candidate_name") || "Candidate"}</th>
+              <th className="whitespace-nowrap px-3 py-3">{c("majority") || "Majority"}</th>
+              <th className="whitespace-nowrap px-3 py-3">{c("voter_turnout") || "Voter Turnout"}</th>
+              <th className="whitespace-nowrap py-3 pl-3 pr-1 text-right" />
             </tr>
           </thead>
           <tbody>
@@ -220,10 +302,10 @@ export default function SeatElectionTable({
               if (isRedelineation(row)) {
                 const msg = isMalay ? row.change_ms : row.change_en;
                 return (
-                  <tr key={i} className="bg-bg-washed">
+                  <tr key={i}>
                     <td
                       colSpan={7}
-                      className="py-3 pl-4 pr-4 text-body-xs italic text-txt-black-500"
+                      className="border-b border-otl-gray-200 bg-bg-washed p-3 text-center text-body-sm italic text-txt-black-700"
                     >
                       {msg}
                     </td>
@@ -232,38 +314,40 @@ export default function SeatElectionTable({
               }
               const electionIdx = allElections.indexOf(row);
               return (
-                <tr key={i} className="border-b border-otl-gray-200 last:border-0">
-                  <td className="py-3 pl-4 pr-3 whitespace-nowrap font-medium">
+                <tr key={i} className="border-b border-otl-gray-200 hover:bg-bg-black-50">
+                  <td className={`whitespace-nowrap py-[11px] pl-4 pr-3 ${monoCellClass}`}>
                     {formatElectionName(row.election_name, isMalay)}
+                    <span className="ml-1">({new Date(row.date).getFullYear()})</span>
                   </td>
-                  <td className="px-3 py-3 whitespace-nowrap text-txt-black-700">
+                  <td className="whitespace-nowrap px-3 py-[11px] text-txt-black-700">
                     {row.seat}
                   </td>
-                  <td className="px-3 py-3">
+                  <td className="whitespace-nowrap px-3 py-[11px]">
                     <div className="flex items-center gap-2">
                       <PartyFlag uid={row.party_uid} party={row.party} />
-                      <div className="min-w-0">
-                        <p className="font-medium leading-tight">{row.party}</p>
-                        {row.coalition && row.coalition !== "ALONE" && (
-                          <p className="text-body-xs text-txt-black-500">{row.coalition}</p>
-                        )}
-                      </div>
+                      <span>
+                        {row.coalition && row.coalition !== "ALONE"
+                          ? `${row.party} (${row.coalition})`
+                          : row.party}
+                      </span>
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-txt-black-700">{row.name}</td>
-                  <td className="px-3 py-3">
+                  <td className="max-w-[260px] px-3 py-[11px] text-txt-black-700">
+                    <span className="block truncate" title={row.name}>{row.name}</span>
+                  </td>
+                  <td className={`px-3 py-[11px] ${monoNumberClass}`}>
                     <BarCell value={row.majority_perc} />
                   </td>
-                  <td className="px-3 py-3">
+                  <td className={`px-3 py-[11px] ${monoNumberClass}`}>
                     <BarCell value={row.voter_turnout_perc} />
                   </td>
-                  <td className="py-3 pl-3 pr-4">
+                  <td className="whitespace-nowrap px-4 py-2.5">
                     <button
                       onClick={() => openModal(row, electionIdx)}
-                      className="flex items-center gap-1 whitespace-nowrap rounded-md border border-otl-gray-200 px-2.5 py-1.5 text-body-xs font-medium text-txt-black-700 hover:bg-bg-washed"
+                      className="flex items-center gap-1.5 text-body-sm font-medium text-txt-black-700"
                     >
-                      <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4.25 2A2.25 2.25 0 0 0 2 4.25v11.5A2.25 2.25 0 0 0 4.25 18h11.5A2.25 2.25 0 0 0 18 15.75V4.25A2.25 2.25 0 0 0 15.75 2H4.25ZM15 5.75a.75.75 0 0 0-1.5 0v8.5a.75.75 0 0 0 1.5 0v-8.5Zm-8.5 6a.75.75 0 0 0-1.5 0v2.5a.75.75 0 0 0 1.5 0v-2.5ZM8.584 9a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 8.584 9Zm3.58-1.25a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0v-6.5Z" clipRule="evenodd" />
+                      <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                       </svg>
                       {c("full_result") || "Details"}
                     </button>
@@ -303,14 +387,14 @@ export default function SeatElectionTable({
               aria-modal="true"
             >
               <div
-                className="absolute inset-0 bg-black/80"
+                className="absolute inset-0 bg-[#000]/80"
                 onClick={() => setModal((prev) => ({ ...prev, open: false }))}
               />
               <div className="seat-modal-panel relative z-10 flex max-h-[calc(100%-40px)] w-full flex-col overflow-hidden rounded-t-2xl bg-bg-white shadow-xl sm:max-w-4xl sm:rounded-xl">
                 {/* Header */}
-                <div className="flex flex-col gap-3 px-4 pb-0 pt-4 sm:px-6 sm:pb-2 sm:pt-5">
+                <div className="flex flex-col gap-3 px-4 pb-0 pt-4 uppercase sm:px-6 sm:pb-2 sm:pt-5">
                   <div className="flex w-full items-start justify-between gap-2">
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    <div className="flex min-w-0 flex-1 flex-col gap-3">
                       <div className="flex flex-wrap items-baseline gap-x-1.5 text-body-md">
                         <span className="font-semibold">
                           {formatElectionName(modal.election_name, isMalay)}
@@ -319,9 +403,12 @@ export default function SeatElectionTable({
                         <span className="text-txt-black-500">{modal.date}</span>
                       </div>
                       <div className="flex flex-wrap items-baseline gap-x-2 text-body-md">
-                        <span className="font-semibold">{modal.seat}</span>
+                        <span className="font-semibold">
+                          {modal.seat}
+                          {modal.state ? "," : ""}
+                        </span>
                         {modal.state && (
-                          <span className="text-txt-black-500">{modal.state}</span>
+                          <span className="font-normal text-txt-black-500">{modal.state}</span>
                         )}
                       </div>
                     </div>
@@ -339,75 +426,63 @@ export default function SeatElectionTable({
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-6 pt-3 sm:px-6">
+                <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-8 pt-2 text-body-md sm:px-6 sm:pt-2">
                   {modal.loading ? (
                     <div className="flex h-32 items-center justify-center">
-                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-otl-gray-200 border-t-txt-danger" />
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-txt-danger border-t-transparent" />
                     </div>
                   ) : (
                     <>
-                      {/* Vote stats */}
-                      {modal.votes.length > 0 && (
-                        <div className="flex flex-wrap gap-6">
-                          {modal.votes.map((v) => (
-                            <div key={v.x} className="flex flex-col gap-1">
-                              <p className="text-body-xs font-medium text-txt-black-500 uppercase tracking-wide">
-                                {c(v.x) || v.x}
-                              </p>
-                              <p className="text-body-md font-semibold tabular-nums">
-                                {v.abs.toLocaleString()}
-                                <span className="ml-1 text-body-sm font-normal text-txt-black-500">
-                                  ({v.perc.toFixed(1)}%)
-                                </span>
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
                       {/* Ballot table */}
                       {modal.ballot.length > 0 && (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-body-sm">
+                        <div>
+                          <table className="w-full table-fixed text-body-sm">
+                            <colgroup>
+                              <col className="w-[43%]" />
+                              <col className="w-[26%]" />
+                              <col className="w-[31%]" />
+                            </colgroup>
                             <thead>
-                              <tr className="border-b border-otl-gray-200 text-body-xs font-medium text-txt-black-500">
-                                <th className="pb-2 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
-                                <th className="pb-2 px-3 text-left">{c("party_name") || "Party"}</th>
-                                <th className="pb-2 pl-3 text-right">{c("votes_won") || "Votes"}</th>
+                              <tr className="border-b-2 border-otl-gray-200 font-medium">
+                                <th className="py-3 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
+                                <th className="px-3 py-3 text-center sm:text-left">{c("party_name") || "Party"}</th>
+                                <th className="py-3 pl-3 pr-4 text-left">{c("votes_won") || "Votes"}</th>
                               </tr>
                             </thead>
                             <tbody>
                               {modal.ballot.map((entry, i) => (
-                                <tr
-                                  key={i}
-                                  className={`border-b border-otl-gray-200 last:border-0 ${entry.result.startsWith("won") ? "bg-bg-success-50" : ""}`}
-                                >
-                                  <td className="py-2.5 pr-3">
-                                    <div className="flex items-center gap-1.5">
-                                      {entry.result.startsWith("won") && (
-                                        <svg className="h-4 w-4 shrink-0 text-txt-success" viewBox="0 0 20 20" fill="currentColor">
-                                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-                                        </svg>
-                                      )}
-                                      <span className="font-medium">{entry.name}</span>
-                                    </div>
+                                  <tr
+                                    key={i}
+                                    className="border-b border-otl-gray-200"
+                                  >
+                                  <td className="min-w-0 py-3 pr-3 text-left">
+                                    <span className="block truncate" title={entry.name}>{entry.name}</span>
                                   </td>
-                                  <td className="px-3 py-2.5">
-                                    <div className="flex items-center gap-2">
+                                  <td className="px-3 py-3">
+                                    <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
                                       <PartyFlag uid={entry.party_uid} party={entry.party} />
-                                      <div className="min-w-0">
-                                        <p>{entry.party}</p>
-                                        {entry.coalition && entry.coalition !== "ALONE" && (
-                                          <p className="text-body-xs text-txt-black-500">{entry.coalition}</p>
-                                        )}
-                                      </div>
+                                      <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
+                                        {entry.coalition && entry.coalition !== "ALONE"
+                                          ? `${entry.party} (${entry.coalition})`
+                                          : entry.party}
+                                      </span>
                                     </div>
                                   </td>
-                                  <td className="py-2.5 pl-3 text-right tabular-nums">
-                                    {entry.votes.toLocaleString()}
-                                    <span className="ml-1 text-body-xs text-txt-black-500">
-                                      ({entry.votes_perc.toFixed(1)}%)
-                                    </span>
+                                  <td className={`py-3 pl-3 pr-4 ${desktopMonoNumberClass}`}>
+                                    <div className="flex flex-col gap-2 whitespace-nowrap sm:flex-row sm:items-center sm:gap-0.5">
+                                      <div className="h-[5px] w-[80px] shrink-0 overflow-x-hidden rounded-full bg-bg-washed sm:w-[72px]">
+                                        <div
+                                          className="h-full overflow-hidden rounded-full bg-bg-black-900"
+                                          style={{ width: pctWidth(entry.votes_perc) }}
+                                        />
+                                      </div>
+                                      <span className="whitespace-nowrap text-xs sm:text-body-sm">
+                                        <span className="sm:inline-block sm:min-w-[3.75rem] sm:text-right">
+                                          {entry.votes.toLocaleString()}
+                                        </span>
+                                        <span>{` (${pctText(entry.votes_perc)})`}</span>
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                               ))}
@@ -415,29 +490,60 @@ export default function SeatElectionTable({
                           </table>
                         </div>
                       )}
+
+                      {/* Voting stats */}
+                      {modal.votes.length > 0 && (
+                        <div className="space-y-3">
+                          <p className="font-bold">{c("summary_statistics") || "Summary Statistics"}</p>
+                          <div className="flex flex-col gap-3 text-sm">
+                            {modal.votes.map(({ x, abs, perc }) => (
+                              <div key={x} className="flex w-[245px] flex-col gap-3 whitespace-nowrap">
+                                <div className="flex items-center justify-between gap-3 text-body-sm text-txt-black-500">
+                                  <span className="w-28 md:w-fit">
+                                    {c(x) || x.replace(/_/g, " ")}:
+                                  </span>
+                                  <span className="text-txt-black-700">
+                                    {abs?.toLocaleString() ?? "—"}{" "}
+                                    {`(${pctText(perc)})`}
+                                  </span>
+                                </div>
+                                {perc != null && (
+                                  <div className="h-[5px] w-[245px] overflow-x-hidden rounded-full bg-bg-washed">
+                                    <div
+                                      className="h-full overflow-hidden rounded-full bg-bg-black-900"
+                                      style={{ width: `${Math.min(perc, 100)}%` }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
 
                 {/* Prev/next navigation */}
-                <div className="flex items-center justify-between border-t border-otl-gray-200 px-4 py-3 sm:px-6">
+                {allElections.length > 1 && (
+                <div className="flex shrink-0 items-center justify-center gap-4 px-6 py-4 text-body-sm font-medium">
                   <button
                     onClick={() => navigateModal(-1)}
                     disabled={modal.currentIndex <= 0}
-                    className="flex items-center gap-1.5 rounded-md border border-otl-gray-200 px-3 py-2 text-body-xs font-medium text-txt-black-700 hover:bg-bg-washed disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex items-center gap-1.5 rounded-md border border-otl-gray-200 px-3 py-1.5 text-txt-black-700 hover:bg-bg-black-50 disabled:opacity-40"
                   >
                     <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
                     </svg>
                     {c("previous") || "Previous"}
                   </button>
-                  <span className="text-body-xs text-txt-black-500">
-                    {modal.currentIndex + 1} / {allElections.length}
+                  <span className="text-txt-black-900">
+                    {modal.currentIndex + 1} of {allElections.length}
                   </span>
                   <button
                     onClick={() => navigateModal(1)}
                     disabled={modal.currentIndex >= allElections.length - 1}
-                    className="flex items-center gap-1.5 rounded-md border border-otl-gray-200 px-3 py-2 text-body-xs font-medium text-txt-black-700 hover:bg-bg-washed disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex items-center gap-1.5 rounded-md border border-otl-gray-200 px-3 py-1.5 text-txt-black-700 hover:bg-bg-black-50 disabled:opacity-40"
                   >
                     {c("next") || "Next"}
                     <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -445,6 +551,7 @@ export default function SeatElectionTable({
                     </svg>
                   </button>
                 </div>
+                )}
               </div>
             </div>
           </>,

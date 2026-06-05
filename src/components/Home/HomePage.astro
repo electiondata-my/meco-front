@@ -7,7 +7,7 @@ import { StateKeyByName, STATE_ORDER } from "@src/lib/constants";
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 
-type SeatOption   = { seat_name: string; slug: string; type: "parlimen" | "dun" };
+type SeatOption   = { seat?: string; seat_name?: string; slug: string; type: "parlimen" | "dun" };
 type CandidateOpt = { name: string; slug: string; c: string; w: string; l: string };
 type PartyOpt     = { party_uid: string; party: string; party_name_en: string; party_name_bm: string; type: string };
 type ElectionOpt  = { state: string; election: string; date: string };
@@ -34,8 +34,8 @@ const datesMap = datesFlat.reduce((acc, e) => {
 
 const seatOptions = seats.map(s => ({
   value: `${s.type}/${s.slug}`,
-  label: s.seat_name,
-}));
+  label: s.seat_name ?? s.seat ?? "",
+})).filter(s => s.label);
 
 const candidateOptions = [...candidates].sort((a, b) => {
   const ca = Number(a.c), cb = Number(b.c);
@@ -110,9 +110,6 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
   <!-- Hero: full-width red gradient -->
   <section transition:name="page-hero" class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white px-4 md:px-6">
     <div class="mx-auto flex max-w-[727px] flex-col items-center space-y-4 pb-8 pt-16 text-center lg:space-y-6">
-      <h3 class="text-body-xs font-semibold uppercase leading-5 tracking-[0.1em] text-txt-danger lg:text-body-lg">
-        {h("hero.category") || "Democracy begins with transparency"}
-      </h3>
       <h1 class="font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
         {h("hero.header") || "Open election data for Malaysia"}
       </h1>

@@ -7,6 +7,7 @@ import Map, {
   Source,
 } from "react-map-gl/mapbox";
 import { maxBy } from "lodash";
+import { createPortal } from "react-dom";
 
 const MAPBOX_LIGHT_STYLE = "mapbox://styles/mapbox/light-v11";
 const MAPBOX_DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
@@ -44,7 +45,7 @@ interface Props {
   lineageNDunsLabel: string;
   lineageDunsLabel: string;
   lineage: LineageRow[];
-  closeLabel: string;
+  boundaryAttribution: string;
 }
 
 const SeatsMapbox: FC<Props> = ({
@@ -60,7 +61,7 @@ const SeatsMapbox: FC<Props> = ({
   lineageNDunsLabel,
   lineageDunsLabel,
   lineage: initialLineage,
-  closeLabel,
+  boundaryAttribution,
 }) => {
   const [styleUrl, setStyleUrl] = useState(MAPBOX_LIGHT_STYLE);
   const mapRef = useRef<MapRef | null>(null);
@@ -174,7 +175,7 @@ const SeatsMapbox: FC<Props> = ({
         interactiveLayerIds={boundData.map(([, [id]]) => `${id}-fill`)}
         onMouseMove={handleMouseMove}
       >
-        <AttributionControl compact={true} customAttribution="ElectionData.MY" />
+        <AttributionControl compact={true} customAttribution={boundaryAttribution} />
 
         {boundData.map(([year, [id, seats]], index) =>
           selectedBounds.includes(id) ? (
@@ -227,7 +228,7 @@ const SeatsMapbox: FC<Props> = ({
                   <p className="flex-1">{year}</p>
                   <input
                     type="checkbox"
-                    className="h-4 w-4 cursor-pointer accent-txt-danger"
+                    className="h-4 w-4 cursor-pointer accent-primary-600"
                     checked={selectedBounds.includes(id)}
                     disabled={selectedBounds.length === 1 && selectedBounds[0] === id}
                     onChange={(ev) => {
@@ -290,18 +291,18 @@ const SeatsMapbox: FC<Props> = ({
       </Map>
 
       {/* Lineage modal */}
-      {lineageOpen && (
+      {lineageOpen && createPortal(
         <div
           className="fixed inset-0 z-[60] flex items-end justify-center sm:items-center"
           role="dialog"
           aria-modal="true"
         >
           <div
-            className="absolute inset-0 bg-black/80"
+            className="absolute inset-0 bg-[#000]/80"
             onClick={() => setLineageOpen(false)}
           />
-          <div className="relative z-10 flex max-h-[calc(100%-40px)] w-full flex-col overflow-hidden rounded-t-2xl bg-bg-white shadow-xl sm:max-w-3xl sm:rounded-xl">
-            <div className="flex items-center justify-between px-4 py-4 sm:px-6">
+          <div className="relative z-10 flex max-h-[calc(100%-40px)] w-full max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-t-2xl bg-bg-white shadow-xl sm:w-fit sm:max-w-[calc(100vw-3rem)] sm:rounded-xl">
+            <div className="flex items-center justify-between border-b border-otl-gray-200 px-4 py-4 sm:px-6">
               <h6 className="flex items-center gap-2 text-body-lg font-semibold">
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -321,41 +322,41 @@ const SeatsMapbox: FC<Props> = ({
                 </svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto pb-6">
+            <div className="flex-1 overflow-y-auto">
               {/* Desktop table */}
-              <div className="hidden overflow-x-auto sm:block">
-                <table className="w-full text-body-sm">
+              <div className="hidden max-w-full overflow-x-auto sm:block">
+                <table className="w-max text-body-sm">
                   <thead>
-                    <tr className="border-b border-otl-gray-200 text-txt-black-500">
-                      <th className="px-4 py-3 text-left font-medium">{lineageYearLabel}</th>
+                    <tr className="border-b border-otl-gray-200 bg-bg-washed text-txt-black-500">
+                      <th className="whitespace-nowrap px-4 py-3 text-left font-medium">{lineageYearLabel}</th>
                       {isDun ? (
                         <>
-                          <th className="px-4 py-3 text-left font-medium">{lineageDunLabel}</th>
-                          <th className="px-4 py-3 text-left font-medium">{lineageParlimenLabel}</th>
+                          <th className="whitespace-nowrap px-4 py-3 text-left font-medium">{lineageDunLabel}</th>
+                          <th className="whitespace-nowrap px-4 py-3 text-left font-medium">{lineageParlimenLabel}</th>
                         </>
                       ) : (
                         <>
-                          <th className="px-4 py-3 text-left font-medium">{lineageParlimenLabel}</th>
-                          <th className="px-4 py-3 text-center font-medium">{lineageNDunsLabel}</th>
-                          <th className="px-4 py-3 text-left font-medium">{lineageDunsLabel}</th>
+                          <th className="whitespace-nowrap px-4 py-3 text-left font-medium">{lineageParlimenLabel}</th>
+                          <th className="whitespace-nowrap px-4 py-3 text-center font-medium">{lineageNDunsLabel}</th>
+                          <th className="whitespace-nowrap px-4 py-3 text-left font-medium">{lineageDunsLabel}</th>
                         </>
                       )}
                     </tr>
                   </thead>
                   <tbody>
                     {lineage.map((row, i) => (
-                      <tr key={i} className="border-b border-otl-gray-200 last:border-0">
-                        <td className="px-4 py-3 tabular-nums">{row.year}</td>
+                      <tr key={i} className="border-b border-otl-gray-200 odd:bg-bg-white even:bg-bg-black-50 last:border-0">
+                        <td className="whitespace-nowrap px-4 py-3 tabular-nums">{row.year}</td>
                         {isDun ? (
                           <>
-                            <td className="px-4 py-3">{"dun" in row ? row.dun : ""}</td>
-                            <td className="px-4 py-3 text-txt-black-500">{row.parlimen}</td>
+                            <td className="whitespace-nowrap px-4 py-3">{"dun" in row ? row.dun : ""}</td>
+                            <td className="whitespace-nowrap px-4 py-3 text-txt-black-500">{row.parlimen}</td>
                           </>
                         ) : (
                           <>
-                            <td className="px-4 py-3">{row.parlimen}</td>
-                            <td className="px-4 py-3 text-center tabular-nums">{"n_duns" in row ? row.n_duns : ""}</td>
-                            <td className="px-4 py-3 text-txt-black-500">{"duns" in row ? row.duns : ""}</td>
+                            <td className="whitespace-nowrap px-4 py-3">{row.parlimen}</td>
+                            <td className="whitespace-nowrap px-4 py-3 text-center tabular-nums">{"n_duns" in row ? row.n_duns : ""}</td>
+                            <td className="whitespace-nowrap px-4 py-3 text-txt-black-500">{"duns" in row ? row.duns : ""}</td>
                           </>
                         )}
                       </tr>
@@ -366,7 +367,7 @@ const SeatsMapbox: FC<Props> = ({
               {/* Mobile cards */}
               <div className="sm:hidden">
                 {lineage.map((row, i) => (
-                  <div key={i} className="flex flex-col gap-1 border-b border-otl-gray-200 p-4 last:border-0">
+                  <div key={i} className="flex flex-col gap-1 border-b border-otl-gray-200 px-4 py-3 odd:bg-bg-white even:bg-bg-black-50 last:border-0">
                     <div className="flex items-center justify-between">
                       <span className="text-body-sm font-medium">
                         {isDun ? ("dun" in row ? row.dun : "") : row.parlimen}
@@ -388,16 +389,9 @@ const SeatsMapbox: FC<Props> = ({
                 ))}
               </div>
             </div>
-            <div className="border-t border-otl-gray-200 px-4 py-3 sm:px-6">
-              <button
-                onClick={() => setLineageOpen(false)}
-                className="w-full rounded-md border border-otl-gray-200 py-2 text-body-sm font-medium hover:bg-bg-washed"
-              >
-                {closeLabel}
-              </button>
-            </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

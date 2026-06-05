@@ -47,23 +47,19 @@ const isMalay = locale.startsWith("ms");
 const localePrefix = isMalay ? "/ms-MY" : "";
 
 const i18n = await getTranslations(locale, ["common", "seats"]);
-const c = (key: string) => t(i18n.common ?? {}, key);
 const s = (key: string) => t(i18n.seats ?? {}, key);
 
 const mapboxToken = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
 const mapboxAccount = import.meta.env.PUBLIC_MAPBOX_ACCOUNT ?? "";
 const apiBase = import.meta.env.PUBLIC_API_URL_R2 ?? "";
 const r2Url = apiBase;
+const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
+const tbHost = import.meta.env.PUBLIC_API_URL_TB;
 
 // Parse seat display name and state from "P.096 Kuala Selangor, Selangor"
 const commaIdx = seatName.lastIndexOf(", ");
 const seatDisplay = commaIdx >= 0 ? seatName.slice(0, commaIdx) : seatName;
 const stateDisplay = commaIdx >= 0 ? seatName.slice(commaIdx + 2) : "";
-
-// Most recent election result (first non-redelineation row)
-const mostRecent = seatData.results.find(
-  (r): r is ElectionRow => !("change_en" in r),
-);
 
 const seatTypeParlimen = type === "parlimen";
 const seatTypeLabel = seatTypeParlimen
@@ -75,15 +71,32 @@ const pageDescription = s("hero.description");
 const ogImage = `${apiBase}/og-image/${slug}.png`;
 
 const lineageType = type as "parlimen" | "dun";
+
+const escapeHTML = (text: string) =>
+  text.replace(
+    /[&<>"']/g,
+    (char) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        char
+      ]!,
+  );
+
+const attributionHTML = (text: string) =>
+  escapeHTML(text).replace(
+    /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noreferrer">$1</a>',
+  );
+
+const boundaryAttribution =
+  s("attribution_boundary_data") !== "attribution_boundary_data"
+    ? `(CC0) ${attributionHTML(s("attribution_boundary_data"))}`
+    : "Boundary data: Tindak Malaysia";
 ---
 
 <Layout title={pageTitle} description={pageDescription} ogImage={ogImage}>
   <!-- Hero -->
   <section transition:name="page-hero" class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
     <div class="mx-auto flex max-w-[727px] flex-col items-center space-y-4 px-4 pb-8 pt-16 text-center md:px-6 lg:space-y-6">
-      <p class="text-center text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger lg:text-body-lg">
-        {s("hero.category") || "Electoral Constituencies"}
-      </p>
       <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
         {s("hero.header") || "Electoral Constituencies"}
       </h1>
@@ -92,12 +105,19 @@ const lineageType = type as "parlimen" | "dun";
           {s("hero.description")}
         </p>
       )}
+      <p class="flex items-center justify-center gap-0.5 text-body-sm text-txt-black-500">
+        <svg class="size-4.5 self-center" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+          <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd" />
+        </svg>
+        <span id="seat-view-count" data-token={tbToken} data-host={tbHost}>---</span>
+      </p>
     </div>
   </section>
 
   <!-- Sticky search bar -->
-  <div id="seat-search-bar" class="sticky top-16 z-20 w-full border border-transparent px-4.5 py-3 transition-all duration-300 md:px-0">
-    <div class="mx-auto w-full max-w-[727px]">
+  <div id="seat-search-bar" class="sticky top-16 z-30 w-full border border-transparent bg-bg-white px-4.5 py-2 transition-all duration-300 md:px-6">
+    <div class="mx-auto w-full max-w-[640px]">
       <div class="combobox relative" data-type="seat">
         <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
           <input
@@ -110,7 +130,7 @@ const lineageType = type as "parlimen" | "dun";
           />
           <button
             type="button"
-            class="combobox-clear mr-1 hidden h-7 w-7 shrink-0 items-center justify-center rounded-full text-txt-black-400 hover:text-txt-black-700"
+            class="combobox-clear mr-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-txt-black-500 hover:text-txt-black-700"
             aria-label="Clear"
           >
             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -132,50 +152,11 @@ const lineageType = type as "parlimen" | "dun";
     </div>
   </div>
 
-  <div class="mx-auto w-full max-w-screen-xl space-y-10 px-4.5 pb-16 pt-6 md:px-6 lg:space-y-16">
-
-    <!-- Seat header (static, crawlable) -->
-    <div transition:name="seat-header" class="mx-auto max-w-[727px] space-y-3 text-center">
-      <div class="flex flex-wrap items-center justify-center gap-2">
-        <span class="rounded-full border border-otl-danger-200 bg-bg-danger-50 px-2.5 py-0.5 text-body-xs font-medium text-txt-danger">
-          {seatTypeLabel}
-        </span>
-        {stateDisplay && (
-          <span class="rounded-full border border-otl-gray-200 bg-bg-washed px-2.5 py-0.5 text-body-xs font-medium text-txt-black-500">
-            {stateDisplay}
-          </span>
-        )}
-      </div>
-      <h2 class="font-heading text-heading-xs font-semibold text-txt-black-900 lg:text-heading-2xs">
-        {seatDisplay}
-      </h2>
-      {mostRecent && (
-        <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-body-sm text-txt-black-700">
-          <span class="font-medium">{mostRecent.name}</span>
-          <span class="text-txt-black-300" aria-hidden="true">·</span>
-          <div class="flex items-center gap-1.5">
-            <img
-              src={`/static/images/parties/${mostRecent.party_uid}.png`}
-              alt={mostRecent.party}
-              width={28}
-              height={16}
-              class="border border-otl-gray-200"
-              onerror="this.style.display='none'"
-            />
-            <span>{mostRecent.party}</span>
-          </div>
-          {mostRecent.coalition && mostRecent.coalition !== "ALONE" && (
-            <>
-              <span class="text-txt-black-300" aria-hidden="true">·</span>
-              <span class="text-txt-black-500">{mostRecent.coalition}</span>
-            </>
-          )}
-        </div>
-      )}
-    </div>
+  <div class="px-4.5 pb-14 pt-0 md:px-6 lg:pb-16">
+  <div class="mx-auto w-full max-w-screen-xl space-y-8 lg:space-y-16">
 
     <!-- Section 2: Mapbox map -->
-    <section class="space-y-3">
+    <section class="flex w-full flex-col items-center pt-6 lg:pt-8">
       <!-- Non-persisted data carrier: updated on every navigation, read by the persisted island -->
       <div
         id="seat-map-data"
@@ -184,7 +165,7 @@ const lineageType = type as "parlimen" | "dun";
         data-seat-type={type}
         data-lineage={JSON.stringify(seatData.map_lineage)}
       />
-      <div transition:persist="seat-map" class="relative h-[400px] w-full overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px]">
+      <div transition:persist="seat-map" class="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
         <SeatsMapbox
           client:only="react"
           mapPlot={seatData.map_plot}
@@ -199,31 +180,29 @@ const lineageType = type as "parlimen" | "dun";
           lineageNDunsLabel={s("lineage.n_duns") || "No. of DUNs"}
           lineageDunsLabel={s("lineage.duns") || "DUNs"}
           lineage={seatData.map_lineage}
-          closeLabel={c("close") || "Close"}
+          boundaryAttribution={boundaryAttribution}
         />
       </div>
-      <p class="text-center text-sm italic text-txt-black-500" set:html={
-        s("attribution_boundary_data") !== "attribution_boundary_data"
-          ? s("attribution_boundary_data").replace(/\[([^\]]+)\]\(([^)]+)\)/, '<a href="$2" class="underline hover:opacity-70" target="_blank" rel="noopener noreferrer">$1</a>')
-          : "Boundary data: Tindak Malaysia"
-      } />
     </section>
 
     <!-- Section 3: Election history table -->
-    <section class="space-y-4">
+    <section>
       <h2 class="text-center font-heading text-heading-2xs font-semibold">
         {s("title") || "Complete election history of "}
-        <span class="text-txt-danger">{seatDisplay}</span>
+        <span class="text-txt-danger">{seatDisplay}{stateDisplay ? `, ${stateDisplay}` : ""}</span>
       </h2>
-      <SeatElectionTable
-        client:load
-        results={seatData.results}
-        seatLabel={seatDisplay}
-        apiBase={apiBase}
-        isMalay={isMalay}
-        translations={{ common: i18n.common ?? {}, seats: i18n.seats ?? {} }}
-      />
+      <div class="mt-6 lg:mt-8">
+        <SeatElectionTable
+          client:load
+          results={seatData.results}
+          seatLabel={seatDisplay}
+          apiBase={apiBase}
+          isMalay={isMalay}
+          translations={{ common: i18n.common ?? {}, seats: i18n.seats ?? {} }}
+        />
+      </div>
     </section>
+  </div>
   </div>
 </Layout>
 
@@ -292,6 +271,17 @@ const lineageType = type as "parlimen" | "dun";
     var selected = "";
     var activeIdx = -1;
 
+    function updateClear() {
+      if (!clearBtn) return;
+      if (input.value.length > 0) {
+        clearBtn.classList.remove("hidden");
+        clearBtn.classList.add("flex");
+      } else {
+        clearBtn.classList.add("hidden");
+        clearBtn.classList.remove("flex");
+      }
+    }
+
     function showList(items) {
       if (!items.length) { list.classList.add("hidden"); return; }
       list.innerHTML = items.slice(0, 50).map(function(item, i) {
@@ -328,18 +318,26 @@ const lineageType = type as "parlimen" | "dun";
     });
 
     input.addEventListener("input", function() {
-      if (clearBtn) clearBtn.classList.toggle("hidden", !input.value);
+      selected = "";
+      updateClear();
       filterAndShow(input.value);
     });
 
     if (clearBtn) {
-      clearBtn.addEventListener("click", function() {
+      clearBtn.addEventListener("mousedown", function(e) {
+        e.preventDefault();
         input.value = "";
-        clearBtn.classList.add("hidden");
+        selected = "";
+        updateClear();
         if (_options) filterAndShow("");
-        input.focus();
+        input.focus({ preventScroll: true });
       });
     }
+
+    wrapper.addEventListener("seat-search-reset", function() {
+      selected = "";
+      updateClear();
+    });
 
     btn.addEventListener("click", function() {
       if (selected) {
@@ -389,4 +387,36 @@ const lineageType = type as "parlimen" | "dun";
   }
 
   document.querySelectorAll(".combobox[data-type='seat']").forEach(initCombobox);
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      var input = document.querySelector(".combobox[data-type='seat'] .combobox-input");
+      var clearBtn = document.querySelector(".combobox[data-type='seat'] .combobox-clear");
+      var wrapper = document.querySelector(".combobox[data-type='seat']");
+      if (input) {
+        input.value = "";
+        clearBtn?.classList.add("hidden");
+        clearBtn?.classList.remove("flex");
+        wrapper?.dispatchEvent(new Event("seat-search-reset"));
+        input.focus({ preventScroll: true });
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }
+  });
+
+  // Tinybird view count
+  const vcEl = document.getElementById("seat-view-count");
+  if (vcEl) {
+    const { token, host } = vcEl.dataset;
+    if (token && host) {
+      fetch(`${host}/v0/pipes/views_by_page.json?token=${token}&page_id=/seats`)
+        .then(r => r.json())
+        .then(data => {
+          const views = data?.data?.[0]?.hits;
+          if (views != null) vcEl.textContent = `${Number(views).toLocaleString()} views`;
+        })
+        .catch(() => {});
+    }
+  }
 </script>

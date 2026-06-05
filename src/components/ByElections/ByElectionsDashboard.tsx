@@ -191,9 +191,6 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
       >
         <SectionGrid>
           <div className="flex max-w-[727px] flex-col items-center justify-center space-y-4 pb-8 pt-16 lg:space-y-6">
-            <h3 className="text-center text-body-xs font-semibold uppercase leading-5 tracking-[0.1em] text-txt-danger lg:text-start lg:text-body-lg">
-              {b("hero.category")}
-            </h3>
             <h1 className="text-center font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-start lg:text-heading-md">
               {b("hero.header")}
             </h1>
