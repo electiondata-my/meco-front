@@ -907,24 +907,24 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 | **Current** | `pages/seats/[[...seat]].tsx` — optional catch-all `[type, seat_slug]`, `fallback: "blocking"` |
 | **Target** | `src/pages/seats/[...seat].astro` + `src/pages/ms-MY/seats/[...seat].astro` |
 
-- [ ] `getStaticPaths()` fetches `/seats/current/dropdown.json` → enumerates all `type/slug` pairs
-- [ ] Seat static data (stats, election history) fetched in frontmatter and passed as props
-- [ ] `src/pages/seats/index.astro` redirects to default seat
-- [ ] **Mapbox island:** `dashboards/my-area/mapbox.tsx` → `<MapboxDashboard client:only="react" {...props} />`. Pass vector tile source config as props from Astro frontmatter. Note: Mapbox GL calls browser APIs at module scope — `client:only` is correct here (unlike data tables, which should use `client:load`).
-- [ ] `NEXT_PUBLIC_MAPBOX_TOKEN` → `PUBLIC_MAPBOX_TOKEN` (already covered in env var section)
-- [ ] **`POST_TO_BUILD` support:** filter by `type/slug`
+- [x] `getStaticPaths()` fetches `/seats/current/dropdown.json` → enumerates all `type/slug` pairs
+- [x] Seat static data (stats, election history) fetched in frontmatter and passed as props
+- [x] `src/pages/seats/index.astro` redirects to default seat
+- [x] **Mapbox island:** `dashboards/my-area/mapbox.tsx` → `<MapboxDashboard client:only="react" {...props} />`. Pass vector tile source config as props from Astro frontmatter. Note: Mapbox GL calls browser APIs at module scope — `client:only` is correct here (unlike data tables, which should use `client:load`).
+- [x] `NEXT_PUBLIC_MAPBOX_TOKEN` → `PUBLIC_MAPBOX_TOKEN` (already covered in env var section)
+- [x] **`POST_TO_BUILD` support:** filter by `type/slug`
 
 **Parity criteria:**
-- [ ] Seat page loads with static stats rendered above the map
-- [ ] Mapbox map renders with vector tiles from `mapbox://` sources
-- [ ] Map popups work on feature click
-- [ ] Seat type toggle (parlimen/dun) works within the React island
-- [ ] Both locales
+- [x] Seat page loads with static stats rendered above the map
+- [x] Mapbox map renders with vector tiles from `mapbox://` sources
+- [x] Map popups work on feature click
+- [x] Seat type toggle (parlimen/dun) works within the React island
+- [x] Both locales
 
 **Verify Phase 10:**
-- [ ] Seats map renders with vector tiles
-- [ ] No `window is not defined` errors during build
-- [ ] `POST_TO_BUILD` surgical rebuild works end-to-end for at least one seat — test with Wrangler deploy
+- [x] Seats map renders with vector tiles
+- [x] No `window is not defined` errors during build
+- [x] `POST_TO_BUILD` surgical rebuild works end-to-end for at least one seat — test with Wrangler deploy
 
 ---
 
@@ -999,7 +999,7 @@ The catalogue index is a searchable grid of items where all data is already load
     }
   })
   ```
-- [ ] **Sitemap splitting:** With ~40k pages (candidates × 2 locales alone), `@astrojs/sitemap` will split the output into multiple files (`sitemap-0.xml`, `sitemap-1.xml`, etc.) with a `sitemap.xml` index. The exact number of files depends on final page count — verify after a full build.
+- [x] **Sitemap splitting:** With ~40k pages (candidates × 2 locales alone), `@astrojs/sitemap` will split the output into multiple files (`sitemap-0.xml`, `sitemap-1.xml`, etc.) with a `sitemap.xml` index. The exact number of files depends on final page count — verify after a full build.
 - [x] ~~Compression~~ — not needed on Cloudflare Pages. CF strips `Content-Encoding` from `_headers` files and handles gzip transparently at the edge (`vary: accept-encoding` confirmed in production). The plain `.xml` files are served compressed automatically. `compress-sitemaps.mjs` and `postbuild` script removed.
 
 ### 12.3 — Cloudflare Pages config
@@ -1033,22 +1033,22 @@ Pages have been verified incrementally throughout the migration. Phase 13 is not
 - [x] **Smoke test** — home, one candidate, one party, one election, sign in, console all load correctly on `astro.electiondata.my`
 - [x] **Dark mode** — toggle works, system preference respected, no flash on load
 - [x] **Both locales** — spot-check `/ms-MY/` home, about, candidates
-- [ ] **OG images** — test with [https://developers.facebook.com/tools/debug/](https://developers.facebook.com/tools/debug/) and [https://cards-dev.twitter.com/validator](https://cards-dev.twitter.com/validator). Verify correct image, title, and description render for: home, a candidate page, a party page, an election page
-- [ ] **Security headers** — add `public/_headers` with CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy
-- [ ] **Sitemap** — verify `/sitemap.xml` is accessible and contains all expected URLs
+- [x] **OG images** — test with [https://developers.facebook.com/tools/debug/](https://developers.facebook.com/tools/debug/) and [https://cards-dev.twitter.com/validator](https://cards-dev.twitter.com/validator). Verify correct image, title, and description render for: home, a candidate page, a party page, an election page
+- [x] **Security headers** — add `public/_headers` with CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy
+- [x] **Sitemap** — verify `/sitemap.xml` is accessible and contains all expected URLs
 - [ ] **Surgical rebuild** — test `POST_TO_BUILD` end-to-end: trigger a GitHub Actions rebuild for one candidate and one party, verify only those pages are rebuilt and deployed
-- [ ] **Lighthouse** — run on home, a candidate page, and a seat page. Document scores.
+- [x] **Lighthouse** — run on home, a candidate page, and a seat page. Document scores.
 
 ### 13.2 — DNS cutover
-- [ ] Point `electiondata.my` DNS A record to Cloudflare Pages (remove Vercel IP)
-- [ ] Verify `electiondata.my` loads from Cloudflare Pages (check `cf-ray` header)
-- [ ] Verify SSL certificate is active
+- [x] Point `electiondata.my` DNS A record to Cloudflare Pages (remove Vercel IP)
+- [x] Verify `electiondata.my` loads from Cloudflare Pages (check `cf-ray` header)
+- [x] Verify SSL certificate is active
 - [x] Verify all redirects work on the live domain
 
 ### 13.3 — Post-launch
-- [ ] Cancel Vercel subscription
+- [x] Cancel Vercel subscription
 - [x] Monitor Cloudflare analytics for 24 hours — confirm zero Functions usage (flat billing confirmed)
-- [ ] Submit sitemap to Google Search Console
+- [x] Submit sitemap to Google Search Console
 - [ ] Tag the launch commit: `git tag v2.0.0-astro && git push --tags`
 
 ---
