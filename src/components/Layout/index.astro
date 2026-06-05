@@ -74,6 +74,8 @@ const footerSections = [
   <!-- ─── HEADER ─── -->
   <header
     id="navbar"
+    transition:name="site-header"
+    transition:animate="none"
     class="sticky top-0 z-50 h-16 w-full border-b border-otl-gray-200 bg-bg-white px-4.5 shadow-button max-md:h-14 md:px-6 print:hidden"
     data-nosnippet
   >
@@ -264,7 +266,7 @@ const footerSections = [
   </main>
 
   <!-- ─── FOOTER ─── -->
-  <footer class="w-full border-t border-otl-gray-200 bg-bg-white px-4 pb-14 pt-10 md:px-6 md:pb-16 md:pt-12">
+  <footer transition:name="site-footer" transition:animate="none" class="w-full border-t border-otl-gray-200 bg-bg-white px-4 pb-14 pt-10 md:px-6 md:pb-16 md:pt-12">
     <div class="mx-auto grid max-w-screen-xl gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(520px,640px)] lg:gap-12">
       <div class="flex max-w-[420px] items-start gap-4">
         <a
@@ -320,42 +322,45 @@ const footerSections = [
 
 <!-- Mobile hamburger toggle (vanilla JS) -->
 <script>
-  const open = document.getElementById("nav-open");
-  const close = document.getElementById("nav-close");
-  const menu = document.getElementById("nav-mobile");
+  let _menuCleanup: (() => void) | null = null;
 
-  function openMenu() {
-    menu?.classList.remove("hidden");
-    menu?.classList.add("grid");
-    open?.classList.add("hidden");
-    close?.classList.remove("hidden");
+  function initMobileMenu() {
+    _menuCleanup?.();
+
+    const open = document.getElementById("nav-open");
+    const close = document.getElementById("nav-close");
+    const menu = document.getElementById("nav-mobile");
+
+    function openMenu() {
+      menu?.classList.remove("hidden");
+      menu?.classList.add("grid");
+      open?.classList.add("hidden");
+      close?.classList.remove("hidden");
+    }
+
+    function closeMenu() {
+      menu?.classList.add("hidden");
+      menu?.classList.remove("grid");
+      close?.classList.add("hidden");
+      open?.classList.remove("hidden");
+    }
+
+    const onDocClick = (event: MouseEvent) => {
+      if (!menu || menu.classList.contains("hidden")) return;
+      const target = event.target as Node;
+      if (menu.contains(target) || open?.contains(target) || close?.contains(target)) return;
+      closeMenu();
+    };
+
+    open?.addEventListener("click", (event) => { event.stopPropagation(); openMenu(); });
+    close?.addEventListener("click", (event) => { event.stopPropagation(); closeMenu(); });
+    document.addEventListener("click", onDocClick);
+    menu?.querySelectorAll("a").forEach(a => a.addEventListener("click", closeMenu));
+
+    _menuCleanup = () => document.removeEventListener("click", onDocClick);
   }
 
-  function closeMenu() {
-    menu?.classList.add("hidden");
-    menu?.classList.remove("grid");
-    close?.classList.add("hidden");
-    open?.classList.remove("hidden");
-  }
-
-  open?.addEventListener("click", (event) => {
-    event.stopPropagation();
-    openMenu();
-  });
-  close?.addEventListener("click", (event) => {
-    event.stopPropagation();
-    closeMenu();
-  });
-
-  document.addEventListener("click", (event) => {
-    if (!menu || menu.classList.contains("hidden")) return;
-    const target = event.target as Node;
-    if (menu.contains(target) || open?.contains(target) || close?.contains(target)) return;
-    closeMenu();
-  });
-
-  // Close on any nav link click within the mobile menu
-  menu?.querySelectorAll("a").forEach(a => a.addEventListener("click", closeMenu));
+  document.addEventListener("astro:page-load", initMobileMenu);
 </script>
 
 <!-- Close <details> dropdown on outside click -->

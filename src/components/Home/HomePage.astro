@@ -108,7 +108,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
 <Layout title="ElectionData.MY" description={h("hero.description")}>
 
   <!-- Hero: full-width red gradient -->
-  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white px-4 md:px-6">
+  <section transition:name="page-hero" class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white px-4 md:px-6">
     <div class="mx-auto flex max-w-[727px] flex-col items-center space-y-4 pb-8 pt-16 text-center lg:space-y-6">
       <h3 class="text-body-xs font-semibold uppercase leading-5 tracking-[0.1em] text-txt-danger lg:text-body-lg">
         {h("hero.category") || "Democracy begins with transparency"}
@@ -164,7 +164,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
           {seatOptions.sort((a, b) => {
             if (a.value.startsWith("parlimen") !== b.value.startsWith("parlimen"))
               return a.value.startsWith("parlimen") ? -1 : 1;
-            return a.label.localeCompare(b.label);
+            return (a.label ?? "").localeCompare(b.label ?? "");
           }).map(s => <option value={s.value}>{s.label}</option>)}
         </select>
         <!-- Custom combobox -->

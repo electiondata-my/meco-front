@@ -162,9 +162,10 @@ export default function SeatElectionTable({
       }));
       if (cache.current.has(key)) return;
 
+      const seatWithState = row.state ? `${row.seat}, ${row.state}` : row.seat;
       try {
         const res = await fetch(
-          `${apiBase}/results/${encodeURIComponent(row.seat)}/${row.date}.json`,
+          `${apiBase}/results/${encodeURIComponent(seatWithState)}/${row.date}.json`,
         );
         if (!res.ok) throw new Error("fetch failed");
         const { ballot, summary } = await res.json();

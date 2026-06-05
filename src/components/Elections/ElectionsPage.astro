@@ -273,7 +273,7 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
 
 <Layout title={pageTitle} description={e("hero.description")}>
   <!-- Hero -->
-  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
+  <section transition:name="page-hero" class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
     <div class="mx-auto flex max-w-[727px] flex-col items-center justify-center gap-4 px-4 pb-8 pt-16 md:px-6 lg:gap-6">
       <p class="text-center text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger lg:text-body-lg">
         {e("hero.category") || "Elections"}

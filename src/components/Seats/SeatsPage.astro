@@ -79,7 +79,7 @@ const lineageType = type as "parlimen" | "dun";
 
 <Layout title={pageTitle} description={pageDescription} ogImage={ogImage}>
   <!-- Hero -->
-  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
+  <section transition:name="page-hero" class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
     <div class="mx-auto flex max-w-[727px] flex-col items-center space-y-4 px-4 pb-8 pt-16 text-center md:px-6 lg:space-y-6">
       <p class="text-center text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger lg:text-body-lg">
         {s("hero.category") || "Electoral Constituencies"}
@@ -135,7 +135,7 @@ const lineageType = type as "parlimen" | "dun";
   <div class="mx-auto w-full max-w-screen-xl space-y-10 px-4.5 pb-16 pt-6 md:px-6 lg:space-y-16">
 
     <!-- Seat header (static, crawlable) -->
-    <div class="mx-auto max-w-[727px] space-y-3 text-center">
+    <div transition:name="seat-header" class="mx-auto max-w-[727px] space-y-3 text-center">
       <div class="flex flex-wrap items-center justify-center gap-2">
         <span class="rounded-full border border-otl-danger-200 bg-bg-danger-50 px-2.5 py-0.5 text-body-xs font-medium text-txt-danger">
           {seatTypeLabel}
@@ -176,7 +176,15 @@ const lineageType = type as "parlimen" | "dun";
 
     <!-- Section 2: Mapbox map -->
     <section class="space-y-3">
-      <div class="relative h-[400px] w-full overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px]">
+      <!-- Non-persisted data carrier: updated on every navigation, read by the persisted island -->
+      <div
+        id="seat-map-data"
+        style="display:none"
+        data-map-plot={JSON.stringify(seatData.map_plot)}
+        data-seat-type={type}
+        data-lineage={JSON.stringify(seatData.map_lineage)}
+      />
+      <div transition:persist="seat-map" class="relative h-[400px] w-full overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px]">
         <SeatsMapbox
           client:only="react"
           mapPlot={seatData.map_plot}

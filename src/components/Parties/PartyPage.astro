@@ -89,7 +89,7 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
 
 <Layout title={pageTitle} description={p("hero.description")}>
   <!-- Hero -->
-  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
+  <section transition:name="page-hero" class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
     <div class="mx-auto flex max-w-[800px] flex-col items-center space-y-4 px-4 pb-8 pt-16 text-center md:px-6 lg:space-y-6">
       <p class="text-center text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger lg:text-body-lg">
         {p("hero.category") || "Parties"}
