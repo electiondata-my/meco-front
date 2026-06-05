@@ -1,22 +1,62 @@
 ---
-// STUB — no seats/dropdown.json endpoint yet; returns [] until data is ready
-import Layout from "@src/components/Layout/index.astro";
+import SeatsPage from "@src/components/Seats/SeatsPage.astro";
+import { fetchJSON } from "@src/lib/api";
+
+type DropdownItem = { seat: string; slug: string; type: string };
+type DropdownJson = { data: DropdownItem[] };
+
+type MapPlot = {
+  zoom: number;
+  center: [number, number];
+  polygons: Record<string, [string, string[]]>;
+};
+
+type SeatData = {
+  map_plot: MapPlot;
+  map_lineage: Record<string, any>[];
+  results: Record<string, any>[];
+};
+
+type AllSeats = Record<string, SeatData>;
 
 export async function getStaticPaths() {
-  const scope    = import.meta.env.POST_TO_BUILD_SEATS;
-  const anyScope = !!(import.meta.env.POST_TO_BUILD_CANDIDATES || import.meta.env.POST_TO_BUILD_ELECTIONS || import.meta.env.POST_TO_BUILD_PARTIES || scope);
+  const scope = import.meta.env.POST_TO_BUILD_SEATS;
+  const anyScope = !!(
+    import.meta.env.POST_TO_BUILD_CANDIDATES ||
+    import.meta.env.POST_TO_BUILD_ELECTIONS ||
+    import.meta.env.POST_TO_BUILD_PARTIES ||
+    scope
+  );
   if (anyScope && !scope) return [];
-  return [];
+
+  const slugFilter = scope && scope !== "all" ? new Set(scope.split(",")) : null;
+
+  const [dropdown, allSeats] = await Promise.all([
+    fetchJSON<DropdownJson>("/seats/current/dropdown.json").catch(() => ({ data: [] as DropdownItem[] })),
+    fetchJSON<AllSeats>("/seats/current/all.json").catch(() => ({} as AllSeats)),
+  ]);
+
+  return dropdown.data
+    .filter((item) => !slugFilter || slugFilter.has(`${item.type}/${item.slug}`))
+    .map((item) => ({
+      params: { seat: `${item.type}/${item.slug}` },
+      props: {
+        type: item.type,
+        slug: item.slug,
+        seatName: item.seat,
+        seatData: allSeats[item.slug] ?? null,
+      },
+    }));
 }
 
-const { seat } = Astro.params as { seat: string };
+const { type, slug, seatName, seatData } = Astro.props as {
+  type: string;
+  slug: string;
+  seatName: string;
+  seatData: SeatData | null;
+};
+
+if (!seatData) return Astro.redirect("/ms-MY/seats");
 ---
 
-<Layout title="Kerusi — Akan Datang">
-  <div class="mx-auto flex max-w-screen-xl flex-col items-center justify-center gap-4 px-4 py-32">
-    <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900">
-      Akan datang
-    </h1>
-    <p class="text-center text-body-sm text-txt-black-500">{seat}</p>
-  </div>
-</Layout>
+<SeatsPage type={type} slug={slug} seatName={seatName} seatData={seatData} />
