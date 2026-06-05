@@ -73,7 +73,6 @@ const SeatsMapbox: FC<Props> = ({
   } | null>(null);
   const [lineageOpen, setLineageOpen] = useState(false);
 
-  // Mutable state for seat-specific data — updated via astro:page-load on VT navigation
   const [mapPlot, setMapPlot] = useState(initialMapPlot);
   const [seatType, setSeatType] = useState(initialSeatType);
   const [lineage, setLineage] = useState(initialLineage);
@@ -97,37 +96,6 @@ const SeatsMapbox: FC<Props> = ({
     };
     window.addEventListener("theme-change", handler);
     return () => window.removeEventListener("theme-change", handler);
-  }, []);
-
-  // Respond to View Transition navigations between seat pages
-  useEffect(() => {
-    const handlePageLoad = () => {
-      const el = document.getElementById("seat-map-data");
-      if (!el) return;
-      const newMapPlot: MapPlot = JSON.parse(el.dataset.mapPlot!);
-      const newSeatType = el.dataset.seatType as "parlimen" | "dun";
-      const newLineage: LineageRow[] = JSON.parse(el.dataset.lineage!);
-
-      const newBoundData = Object.entries(newMapPlot.polygons).sort(
-        (a, b) => Number(b[0]) - Number(a[0]),
-      );
-
-      setMapPlot(newMapPlot);
-      setSeatType(newSeatType);
-      setLineage(newLineage);
-      setSelectedBounds([newBoundData[0]?.[1][0] ?? ""]);
-      setPopupInfo(null);
-      setLineageOpen(false);
-
-      mapRef.current?.flyTo({
-        center: newMapPlot.center,
-        zoom: newMapPlot.zoom,
-        duration: 1500,
-      });
-    };
-
-    document.addEventListener("astro:page-load", handlePageLoad);
-    return () => document.removeEventListener("astro:page-load", handlePageLoad);
   }, []);
 
   const [longitude, latitude] = mapPlot.center;

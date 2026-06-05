@@ -1,3 +1,45 @@
 ---
-return Astro.redirect("/seats/parlimen/p096-kuala-selangor-selangor", 302);
+import SeatsPage from "@src/components/Seats/SeatsPage.astro";
+import { fetchJSON } from "@src/lib/api";
+
+const DEFAULT_SEAT_TYPE = "parlimen";
+const DEFAULT_SEAT_SLUG = "p096-kuala-selangor-selangor";
+
+type DropdownItem = { seat: string; slug: string; type: string };
+type DropdownJson = { data: DropdownItem[] };
+
+type MapPlot = {
+  zoom: number;
+  center: [number, number];
+  polygons: Record<string, [string, string[]]>;
+};
+
+type SeatData = {
+  map_plot: MapPlot;
+  map_lineage: Record<string, any>[];
+  results: Record<string, any>[];
+};
+
+type AllSeats = Record<string, SeatData>;
+
+const [dropdown, allSeats] = await Promise.all([
+  fetchJSON<DropdownJson>("/seats/current/dropdown.json").catch(() => ({ data: [] as DropdownItem[] })),
+  fetchJSON<AllSeats>("/seats/current/all.json").catch(() => ({} as AllSeats)),
+]);
+
+const defaultSeat = dropdown.data.find(
+  (item) => item.type === DEFAULT_SEAT_TYPE && item.slug === DEFAULT_SEAT_SLUG,
+);
+const seatData = allSeats[DEFAULT_SEAT_SLUG] ?? null;
+
+if (!defaultSeat || !seatData) {
+  return Astro.redirect(`/seats/${DEFAULT_SEAT_TYPE}/${DEFAULT_SEAT_SLUG}`, 302);
+}
 ---
+
+<SeatsPage
+  type={DEFAULT_SEAT_TYPE}
+  slug={DEFAULT_SEAT_SLUG}
+  seatName={defaultSeat.seat}
+  seatData={seatData}
+/>

@@ -32,10 +32,21 @@ const datesMap = datesFlat.reduce((acc, e) => {
   return acc;
 }, {} as Record<string, ElectionOpt[]>);
 
-const seatOptions = seats.map(s => ({
-  value: `${s.type}/${s.slug}`,
-  label: s.seat_name ?? s.seat ?? "",
-})).filter(s => s.label);
+const parlSeatLabel = isMalay ? "Parlimen" : "Parliament";
+const dunSeatLabel = "DUN";
+
+const seatOptions = seats.map(s => {
+  const rawSeat = s.seat_name ?? s.seat ?? "";
+  const commaIdx = rawSeat.lastIndexOf(", ");
+  const seatDisplay = commaIdx >= 0 ? rawSeat.slice(0, commaIdx) : rawSeat;
+  const stateDisplay = commaIdx >= 0 ? rawSeat.slice(commaIdx + 2) : "";
+  const typeLabel = s.type === "parlimen" ? parlSeatLabel : dunSeatLabel;
+
+  return {
+    value: `${s.type}/${s.slug}`,
+    label: `${seatDisplay}${stateDisplay ? `, ${stateDisplay}` : ""} (${typeLabel})`,
+  };
+}).filter(s => s.label);
 
 const candidateOptions = [...candidates].sort((a, b) => {
   const ca = Number(a.c), cb = Number(b.c);
@@ -108,7 +119,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
 <Layout title="ElectionData.MY" description={h("hero.description")}>
 
   <!-- Hero: full-width red gradient -->
-  <section transition:name="page-hero" class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white px-4 md:px-6">
+  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white px-4 md:px-6">
     <div class="mx-auto flex max-w-[727px] flex-col items-center space-y-4 pb-8 pt-16 text-center lg:space-y-6">
       <h1 class="font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
         {h("hero.header") || "Open election data for Malaysia"}

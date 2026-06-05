@@ -95,7 +95,7 @@ const boundaryAttribution =
 
 <Layout title={pageTitle} description={pageDescription} ogImage={ogImage}>
   <!-- Hero -->
-  <section transition:name="page-hero" class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
+  <section class="w-full bg-gradient-radial from-bg-danger-100 to-bg-white">
     <div class="mx-auto flex max-w-[727px] flex-col items-center space-y-4 px-4 pb-8 pt-16 text-center md:px-6 lg:space-y-6">
       <h1 class="text-center font-heading text-heading-sm font-semibold text-txt-black-900 lg:text-heading-md">
         {s("hero.header") || "Electoral Constituencies"}
@@ -116,7 +116,7 @@ const boundaryAttribution =
   </section>
 
   <!-- Sticky search bar -->
-  <div id="seat-search-bar" class="sticky top-16 z-30 w-full border border-transparent bg-bg-white px-4.5 py-2 transition-all duration-300 md:px-6">
+  <div id="seat-search-bar" data-scroll-anchor="search" class="sticky top-14 z-30 w-full border border-transparent bg-bg-white px-4.5 py-2 transition-all duration-300 md:top-16 md:px-6">
     <div class="mx-auto w-full max-w-[640px]">
       <div class="combobox relative" data-type="seat">
         <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
@@ -156,16 +156,8 @@ const boundaryAttribution =
   <div class="mx-auto w-full max-w-screen-xl space-y-8 lg:space-y-16">
 
     <!-- Section 2: Mapbox map -->
-    <section class="flex w-full flex-col items-center pt-6 lg:pt-8">
-      <!-- Non-persisted data carrier: updated on every navigation, read by the persisted island -->
-      <div
-        id="seat-map-data"
-        style="display:none"
-        data-map-plot={JSON.stringify(seatData.map_plot)}
-        data-seat-type={type}
-        data-lineage={JSON.stringify(seatData.map_lineage)}
-      />
-      <div transition:persist="seat-map" class="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
+    <section id="seat-map-section" data-scroll-anchor="map" class="flex w-full scroll-mt-28 flex-col items-center pt-6 lg:pt-8">
+      <div class="relative flex h-[500px] w-full items-center justify-center overflow-hidden rounded-lg border border-otl-gray-200 lg:h-[400px] lg:w-[842px]">
         <SeatsMapbox
           client:only="react"
           mapPlot={seatData.map_plot}
@@ -186,7 +178,7 @@ const boundaryAttribution =
     </section>
 
     <!-- Section 3: Election history table -->
-    <section>
+    <section id="seat-history-section" data-scroll-anchor="history" class="scroll-mt-28">
       <h2 class="text-center font-heading text-heading-2xs font-semibold">
         {s("title") || "Complete election history of "}
         <span class="text-txt-danger">{seatDisplay}{stateDisplay ? `, ${stateDisplay}` : ""}</span>
@@ -271,6 +263,29 @@ const boundaryAttribution =
     var selected = "";
     var activeIdx = -1;
 
+    function captureScrollAnchor() {
+      var anchors = [
+        document.querySelector("[data-scroll-anchor='search']"),
+        document.querySelector("[data-scroll-anchor='map']"),
+        document.querySelector("[data-scroll-anchor='history']"),
+      ].filter(Boolean);
+      var enteredThreshold = Math.min(window.innerHeight * 0.35, 240);
+      var best = anchors[0];
+
+      anchors.forEach(function(anchor) {
+        var rect = anchor.getBoundingClientRect();
+        if (rect.top <= enteredThreshold) {
+          best = anchor;
+        }
+      });
+
+      if (best) {
+        try {
+          sessionStorage.setItem("seatSearchScrollAnchor", best.dataset.scrollAnchor);
+        } catch {}
+      }
+    }
+
     function updateClear() {
       if (!clearBtn) return;
       if (input.value.length > 0) {
@@ -308,6 +323,7 @@ const boundaryAttribution =
     }
 
     function navigate(target) {
+      captureScrollAnchor();
       window.location.href = localePrefix + "/seats/" + target;
     }
 
@@ -387,6 +403,19 @@ const boundaryAttribution =
   }
 
   document.querySelectorAll(".combobox[data-type='seat']").forEach(initCombobox);
+
+  try {
+    var savedScrollAnchor = sessionStorage.getItem("seatSearchScrollAnchor");
+    if (savedScrollAnchor) {
+      sessionStorage.removeItem("seatSearchScrollAnchor");
+      var target = document.querySelector("[data-scroll-anchor='" + savedScrollAnchor + "']");
+      if (target) {
+        requestAnimationFrame(function() {
+          target.scrollIntoView({ block: "start" });
+        });
+      }
+    }
+  } catch {}
 
   document.addEventListener("keydown", function(e) {
     if (e.key === "k" && (e.metaKey || e.ctrlKey)) {

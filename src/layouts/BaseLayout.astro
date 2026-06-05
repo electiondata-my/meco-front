@@ -1,5 +1,4 @@
 ---
-import ClientRouter from "astro/components/ClientRouter.astro";
 import "../styles/globals.css";
 
 interface Props {
@@ -95,7 +94,6 @@ const ogDescription = description.replace(/\n+/g, " ").trim();
       })();
     </script>
 
-    <ClientRouter />
     <slot name="head" />
   </head>
 

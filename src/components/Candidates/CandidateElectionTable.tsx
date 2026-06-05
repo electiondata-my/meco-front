@@ -508,21 +508,28 @@ export default function CandidateElectionTable({
                             const highlightColor = b.result.startsWith("won")
                               ? "rgb(var(--bg-success-100))"
                               : "rgb(var(--bg-danger-100))";
+                            const rowBorderColor = "rgb(var(--otl-gray-200))";
                             return (
                               <tr
                                 key={i}
-                                  className="border-b border-otl-gray-200"
+                                className="border-b border-otl-gray-200"
                                 style={
                                   highlight
                                     ? {
                                         backgroundColor: highlightColor,
-                                        boxShadow: `0 0 0 100vmax ${highlightColor}`,
-                                        clipPath: "inset(0 -100vmax)",
+                                        boxShadow: `0 0 0 100vmax ${highlightColor}, 0 1px 0 100vmax ${rowBorderColor}`,
+                                        clipPath: "inset(0 -100vmax -1px)",
                                       }
                                     : undefined
                                 }
                               >
-                                <td className="min-w-0 break-words py-3 pr-3 text-left">
+                                <td
+                                  className="min-w-0 break-words py-3 pr-3 text-left"
+                                  style={{
+                                    overflowWrap: "anywhere",
+                                    whiteSpace: "normal",
+                                  }}
+                                >
                                   {b.name}
                                 </td>
                                 <td className="px-3 py-3">

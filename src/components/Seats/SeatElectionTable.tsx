@@ -34,7 +34,7 @@ type BallotEntry = {
   result: string;
 };
 
-type VoteStat = { x: string; abs: number; perc: number | null };
+type VoteStat = { x: string; abs: number | null; perc: number | null };
 
 type ModalState = {
   open: boolean;
@@ -104,24 +104,19 @@ function PartyFlag({ uid, party }: { uid?: string; party: string }) {
 }
 
 function BarCell({ value, total = 100 }: { value: number | null; total?: number }) {
-  if (value === null || value === undefined) {
-    return (
-      <span className="inline-block min-w-[3.75rem] text-right text-body-xs text-txt-black-400">
-        —
-      </span>
-    );
-  }
-  const pct = Math.min((value / total) * 100, 100);
+  const pct = value == null ? null : Math.min((value / total) * 100, 100);
   return (
     <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
       <div className="h-[5px] w-[100px] overflow-hidden rounded-full bg-bg-washed">
-        <div
-          className="h-full rounded-full bg-bg-black-900"
-          style={{ width: `${pct}%` }}
-        />
+        {pct != null && (
+          <div
+            className="h-full rounded-full bg-bg-black-900"
+            style={{ width: `${pct}%` }}
+          />
+        )}
       </div>
       <span className="inline-block min-w-[3.75rem] whitespace-nowrap text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
-        {value.toFixed(1)}%
+        {value == null ? "—" : `${value.toFixed(1)}%`}
       </span>
     </div>
   );
@@ -198,9 +193,9 @@ export default function SeatElectionTable({
         const result = {
           ballot: ballot ?? [],
           votes: [
-            { x: "majority", abs: s0.majority ?? 0, perc: s0.majority_perc ?? 0 },
-            { x: "voter_turnout", abs: s0.voter_turnout ?? 0, perc: s0.voter_turnout_perc ?? 0 },
-            { x: "rejected_votes", abs: s0.votes_rejected ?? 0, perc: s0.votes_rejected_perc ?? 0 },
+            { x: "majority", abs: s0.majority ?? null, perc: s0.majority_perc ?? null },
+            { x: "voter_turnout", abs: s0.voter_turnout ?? null, perc: s0.voter_turnout_perc ?? null },
+            { x: "rejected_votes", abs: s0.votes_rejected ?? null, perc: s0.votes_rejected_perc ?? null },
           ],
         };
         cache.current.set(key, result);
@@ -266,14 +261,18 @@ export default function SeatElectionTable({
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-txt-black-500">{c("majority") || "Majority"}:</span>
                   <div className="h-[5px] w-[40px] overflow-hidden rounded-full bg-bg-washed">
-                    <div className="h-full rounded-full bg-bg-black-900" style={{ width: pctWidth(row.majority_perc) }} />
+                    {row.majority_perc != null && (
+                      <div className="h-full rounded-full bg-bg-black-900" style={{ width: pctWidth(row.majority_perc) }} />
+                    )}
                   </div>
                   <span>{pctText(row.majority_perc)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-txt-black-500">{c("voter_turnout") || "Voter Turnout"}:</span>
                   <div className="h-[5px] w-[40px] overflow-hidden rounded-full bg-bg-washed">
-                    <div className="h-full rounded-full bg-bg-black-900" style={{ width: pctWidth(row.voter_turnout_perc) }} />
+                    {row.voter_turnout_perc != null && (
+                      <div className="h-full rounded-full bg-bg-black-900" style={{ width: pctWidth(row.voter_turnout_perc) }} />
+                    )}
                   </div>
                   <span>{pctText(row.voter_turnout_perc)}</span>
                 </div>
@@ -455,8 +454,11 @@ export default function SeatElectionTable({
                                     key={i}
                                     className="border-b border-otl-gray-200"
                                   >
-                                  <td className="min-w-0 py-3 pr-3 text-left">
-                                    <span className="block truncate" title={entry.name}>{entry.name}</span>
+                                  <td
+                                    className="min-w-0 break-words py-3 pr-3 text-left"
+                                    style={{ overflowWrap: "anywhere", whiteSpace: "normal" }}
+                                  >
+                                    {entry.name}
                                   </td>
                                   <td className="px-3 py-3">
                                     <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
