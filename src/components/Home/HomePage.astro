@@ -242,7 +242,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       <section class="flex flex-col items-center gap-6 py-8 lg:gap-12 lg:py-10">
         <h2 class="text-center font-poppins text-2xl font-semibold">{h("latest.title") || "Latest"}</h2>
         <div class="grid w-full max-w-[1000px] grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-8">
-          {latest.map(item => (
+          {latest.map((item, idx) => (
             <a
               href={item.url}
               target={item.url?.startsWith("/") ? undefined : "_blank"}
@@ -251,10 +251,10 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
             >
               <div class="relative aspect-[1200/630] w-full shrink-0 overflow-hidden">
                 <picture class="img-light absolute inset-0 h-full w-full">
-                  <img src={item.img_light} alt={isMalay ? item.title_bm : item.title_en} class="h-full w-full object-cover" loading="lazy" />
+                  <img src={item.img_light} alt={isMalay ? item.title_bm : item.title_en} class="h-full w-full object-cover" loading={idx === 0 ? "eager" : "lazy"} fetchpriority={idx === 0 ? "high" : "auto"} />
                 </picture>
                 <picture class="img-dark absolute inset-0 h-full w-full">
-                  <img src={item.img_dark || item.img_light} alt={isMalay ? item.title_bm : item.title_en} class="h-full w-full object-cover" loading="lazy" />
+                  <img src={item.img_dark || item.img_light} alt={isMalay ? item.title_bm : item.title_en} class="h-full w-full object-cover" loading={idx === 0 ? "eager" : "lazy"} fetchpriority={idx === 0 ? "high" : "auto"} />
                 </picture>
               </div>
               <div class="flex flex-1 flex-col gap-1 p-3 lg:p-4">

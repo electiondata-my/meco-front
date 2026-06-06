@@ -42,13 +42,21 @@ const ogDescription = description.replace(/\n+/g, " ").trim();
     <meta name="twitter:description" content={ogDescription} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- Fonts: preconnect then load Inter (body) + Poppins (headings) -->
+    <!-- Fonts: preconnect then async-load to avoid render-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap"
-      rel="stylesheet"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap"
+      />
+    </noscript>
 
     <!-- Leaflet CSS — only on pages that use the choropleth map -->
     {needsLeaflet && (

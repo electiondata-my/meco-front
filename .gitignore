@@ -9,7 +9,7 @@
 # local only
 CLAUDE.md
 agents.md
-plans/*
+notes/*
 
 # dependencies
 /node_modules
