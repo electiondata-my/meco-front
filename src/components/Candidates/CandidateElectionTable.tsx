@@ -246,6 +246,7 @@ export default function CandidateElectionTable({
   }, [modal.open]);
 
   const displayName = candidateStats ? `${candidateName} (${candidateStats})` : candidateName;
+  const firstModalBallotHighlighted = modal.ballot[0]?.name === candidateName;
 
   return (
     <div className="min-h-[250px] w-full space-y-6 pb-10 lg:pb-0">
@@ -488,18 +489,28 @@ export default function CandidateElectionTable({
                 ) : (
                   <>
                     {/* Ballot table */}
-                    <div>
+                    <div className="-mx-4 sm:-mx-6">
                       <table className="w-full table-fixed text-body-sm">
                         <colgroup>
+                          <col className="w-4 sm:w-6" />
                           <col className="w-[43%]" />
                           <col className="w-[26%]" />
                           <col className="w-[31%]" />
+                          <col className="w-4 sm:w-6" />
                         </colgroup>
                         <thead>
-                          <tr className="border-b-2 border-otl-gray-200 font-medium">
-                            <th className="py-3 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
-                            <th className="px-3 py-3 text-center sm:text-left">{c("party_name") || "Party"}</th>
-                            <th className="py-3 pl-3 pr-4 text-left">{c("votes_won") || "Votes"}</th>
+                          <tr className="font-medium">
+                            <th
+                              aria-hidden="true"
+                              className={firstModalBallotHighlighted ? "border-b-2 border-otl-gray-200" : undefined}
+                            />
+                            <th className="border-b-2 border-otl-gray-200 py-3 pr-3 text-left">{c("candidate_name") || "Candidate"}</th>
+                            <th className="border-b-2 border-otl-gray-200 px-3 py-3 text-center sm:text-left">{c("party_name") || "Party"}</th>
+                            <th className="border-b-2 border-otl-gray-200 py-3 pl-3 pr-4 text-left">{c("votes_won") || "Votes"}</th>
+                            <th
+                              aria-hidden="true"
+                              className={firstModalBallotHighlighted ? "border-b-2 border-otl-gray-200" : undefined}
+                            />
                           </tr>
                         </thead>
                         <tbody>
@@ -508,31 +519,31 @@ export default function CandidateElectionTable({
                             const highlightColor = b.result.startsWith("won")
                               ? "rgb(var(--bg-success-100))"
                               : "rgb(var(--bg-danger-100))";
-                            const rowBorderColor = "rgb(var(--otl-gray-200))";
+                            const highlightedBorderClass = highlight
+                              ? i === 0
+                                ? "border-b border-otl-gray-200"
+                                : "border-y border-otl-gray-200"
+                              : "";
+                            const regularBorderClass = highlight ? highlightedBorderClass : "border-b border-otl-gray-200";
+                            const highlightStyle = highlight ? { backgroundColor: highlightColor } : undefined;
                             return (
-                              <tr
-                                key={i}
-                                className="border-b border-otl-gray-200"
-                                style={
-                                  highlight
-                                    ? {
-                                        backgroundColor: highlightColor,
-                                        boxShadow: `0 0 0 100vmax ${highlightColor}, 0 1px 0 100vmax ${rowBorderColor}`,
-                                        clipPath: "inset(0 -100vmax -1px)",
-                                      }
-                                    : undefined
-                                }
-                              >
+                              <tr key={i}>
                                 <td
-                                  className="min-w-0 break-words py-3 pr-3 text-left"
+                                  aria-hidden="true"
+                                  className={highlightedBorderClass}
+                                  style={highlightStyle}
+                                />
+                                <td
+                                  className={`min-w-0 break-words py-3 pr-3 text-left ${regularBorderClass}`}
                                   style={{
+                                    ...highlightStyle,
                                     overflowWrap: "anywhere",
                                     whiteSpace: "normal",
                                   }}
                                 >
                                   {b.name}
                                 </td>
-                                <td className="px-3 py-3">
+                                <td className={`px-3 py-3 ${regularBorderClass}`} style={highlightStyle}>
                                   <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
                                     {b.party_uid && <PartyFlag uid={b.party_uid} party={b.party} />}
                                     <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
@@ -542,7 +553,7 @@ export default function CandidateElectionTable({
                                     </span>
                                   </div>
                                 </td>
-                                <td className={`py-3 pl-3 pr-4 ${desktopMonoNumberClass}`}>
+                                <td className={`py-3 pl-3 pr-4 ${desktopMonoNumberClass} ${regularBorderClass}`} style={highlightStyle}>
                                   <div className="flex flex-col gap-2 whitespace-nowrap sm:flex-row sm:items-center sm:gap-0.5">
                                     <div className="h-[5px] w-[80px] shrink-0 overflow-x-hidden rounded-full bg-bg-washed sm:w-[72px]">
                                       {b.votes_perc != null && (
@@ -560,6 +571,11 @@ export default function CandidateElectionTable({
                                     </span>
                                   </div>
                                 </td>
+                                <td
+                                  aria-hidden="true"
+                                  className={highlightedBorderClass}
+                                  style={highlightStyle}
+                                />
                               </tr>
                             );
                           })}

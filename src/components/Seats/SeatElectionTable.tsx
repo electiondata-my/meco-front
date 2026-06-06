@@ -107,7 +107,7 @@ function BarCell({ value, total = 100 }: { value: number | null; total?: number 
   const pct = value == null ? null : Math.min((value / total) * 100, 100);
   return (
     <div className="flex items-center gap-2 md:flex-col md:items-start lg:flex-row lg:items-center">
-      <div className="h-[5px] w-[100px] overflow-hidden rounded-full bg-bg-washed">
+      <div className="h-[5px] w-[72px] overflow-hidden rounded-full bg-bg-washed lg:w-[100px]">
         {pct != null && (
           <div
             className="h-full rounded-full bg-bg-black-900"
@@ -252,9 +252,11 @@ export default function SeatElectionTable({
               </div>
               <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
                 <PartyFlag uid={row.party_uid} party={row.party} />
-                <span className="min-w-0 flex-1 truncate font-medium text-txt-black-900" title={row.name}>{row.name}</span>
-                <span className="shrink-0 text-txt-black-500">
-                  ({row.coalition && row.coalition !== "ALONE" ? `${row.party} / ${row.coalition}` : row.party})
+                <span className="flex min-w-0 items-baseline gap-1.5">
+                  <span className="min-w-0 truncate font-medium text-txt-black-900" title={row.name}>{row.name}</span>
+                  <span className="shrink-0 text-txt-black-500">
+                    ({row.coalition && row.coalition !== "ALONE" ? `${row.party} / ${row.coalition}` : row.party})
+                  </span>
                 </span>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -283,17 +285,17 @@ export default function SeatElectionTable({
       </div>
 
       {/* Desktop: production table vocabulary */}
-      <div className="hidden overflow-x-auto md:block">
+      <div className="hidden md:block">
         <table className="w-full text-left text-body-sm">
           <thead>
             <tr className="border-b-2 border-otl-gray-200 font-medium text-txt-black-700">
-              <th className="whitespace-nowrap py-3 pl-4 pr-3">{c("election_name") || "Election"}</th>
-              <th className="whitespace-nowrap px-3 py-3">{c("constituency") || "Constituency"}</th>
-              <th className="whitespace-nowrap px-3 py-3">{c("winning_party") || "Winning Party"}</th>
-              <th className="whitespace-nowrap px-3 py-3">{c("candidate_name") || "Candidate"}</th>
-              <th className="whitespace-nowrap px-3 py-3">{c("majority") || "Majority"}</th>
-              <th className="whitespace-nowrap px-3 py-3">{c("voter_turnout") || "Voter Turnout"}</th>
-              <th className="whitespace-nowrap py-3 pl-3 pr-1 text-right" />
+              <th className="whitespace-nowrap py-3 pl-3 pr-2 lg:pl-4 lg:pr-3">{c("election_name") || "Election"}</th>
+              <th className="whitespace-nowrap px-2 py-3 lg:px-3">{c("constituency") || "Constituency"}</th>
+              <th className="whitespace-nowrap px-2 py-3 lg:px-3">{c("winning_party") || "Winning Party"}</th>
+              <th className="w-full max-w-0 whitespace-nowrap px-2 py-3 lg:px-3">{c("candidate_name") || "Candidate"}</th>
+              <th className="whitespace-nowrap px-2 py-3 lg:px-3">{c("majority") || "Majority"}</th>
+              <th className="whitespace-nowrap px-2 py-3 lg:px-3">{c("voter_turnout") || "Voter Turnout"}</th>
+              <th className="whitespace-nowrap px-4 py-3 text-right" />
             </tr>
           </thead>
           <tbody>
@@ -314,15 +316,15 @@ export default function SeatElectionTable({
               const electionIdx = allElections.indexOf(row);
               return (
                 <tr key={i} className="border-b border-otl-gray-200 hover:bg-bg-black-50">
-                  <td className={`whitespace-nowrap py-[11px] pl-4 pr-3 ${monoCellClass}`}>
+                  <td className={`whitespace-nowrap py-[11px] pl-3 pr-2 lg:pl-4 lg:pr-3 ${monoCellClass}`}>
                     {formatElectionName(row.election_name, isMalay)}
                     <span className="ml-1">({new Date(row.date).getFullYear()})</span>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-[11px] text-txt-black-700">
+                  <td className="whitespace-nowrap px-2 py-[11px] text-txt-black-700 lg:px-3">
                     {row.seat}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-[11px]">
-                    <div className="flex items-center gap-2">
+                  <td className="whitespace-nowrap px-2 py-[11px] lg:px-3">
+                    <div className="flex min-w-0 items-center gap-2">
                       <PartyFlag uid={row.party_uid} party={row.party} />
                       <span>
                         {row.coalition && row.coalition !== "ALONE"
@@ -331,13 +333,13 @@ export default function SeatElectionTable({
                       </span>
                     </div>
                   </td>
-                  <td className="max-w-[260px] px-3 py-[11px] text-txt-black-700">
+                  <td className="w-full max-w-0 px-2 py-[11px] text-txt-black-700 lg:px-3">
                     <span className="block truncate" title={row.name}>{row.name}</span>
                   </td>
-                  <td className={`px-3 py-[11px] ${monoNumberClass}`}>
+                  <td className={`px-2 py-[11px] lg:px-3 ${monoNumberClass}`}>
                     <BarCell value={row.majority_perc} />
                   </td>
-                  <td className={`px-3 py-[11px] ${monoNumberClass}`}>
+                  <td className={`px-2 py-[11px] lg:px-3 ${monoNumberClass}`}>
                     <BarCell value={row.voter_turnout_perc} />
                   </td>
                   <td className="whitespace-nowrap px-4 py-2.5">
