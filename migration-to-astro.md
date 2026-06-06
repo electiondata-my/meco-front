@@ -1019,7 +1019,7 @@ The catalogue index is a searchable grid of items where all data is already load
 - [x] `@govtechmy/myds-style` extracted and removed — all tokens now live in `src/styles/tokens/` and are inlined directly in `tailwind.config.ts`. No external design system dependency remains.
 
 **Verify Phase 12:**
-- [ ] Sitemap generated and accessible at `/sitemap.xml` (verify after full build — file count unknown until Seats + Data Catalogue are built)
+- [x] Sitemap generated and accessible at `/sitemap.xml` (verify after full build — file count unknown until Seats + Data Catalogue are built)
 - [x] Redirects work (`/openapi/introduction` → `/openapi`, auth proxy)
 - [x] Full rebuild + surgical rebuild both deploy successfully via Wrangler
 
