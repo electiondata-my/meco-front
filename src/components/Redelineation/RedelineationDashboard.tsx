@@ -106,7 +106,7 @@ function useDarkMode(): boolean {
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));
     const handler = (e: Event) => {
-      setDark((e as CustomEvent).detail === "dark");
+      setDark((e as CustomEvent<{ theme: string }>).detail.theme === "dark");
     };
     window.addEventListener("theme-change", handler);
     return () => window.removeEventListener("theme-change", handler);

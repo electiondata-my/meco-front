@@ -91,7 +91,7 @@ const SeatsMapbox: FC<Props> = ({
 
     const handler = (e: Event) => {
       setStyleUrl(
-        (e as CustomEvent).detail === "dark" ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE,
+        (e as CustomEvent<{ theme: string }>).detail.theme === "dark" ? MAPBOX_DARK_STYLE : MAPBOX_LIGHT_STYLE,
       );
     };
     window.addEventListener("theme-change", handler);
