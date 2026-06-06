@@ -8,17 +8,17 @@
 
 ## Approach to the Frontend
 
-This is a fully static Astro site (~40,000 pages) deployed to Cloudflare Pages.
+This is a fully static Astro site (~40,000 pages) deployed to Cloudflare Pages. Some keys things you should know about frontend choices made for this project:
 
-**Build-time data fetching.** All page-level data is fetched once during `getStaticPaths` and passed down as props. Where a page type has many permutations (e.g. 15,000 candidates across 10,000 electoral contests in 822 current seats), we fetch a single `json` that covers every slug — never per-slug requests. Some interactive components (e.g. mostly modal popups) fetch detail data on demand at runtime (client-side), but only where embedding it at build time would be impractical.
+- **Build-time data fetching.** All page-level data is fetched once during `getStaticPaths` and passed down as props. Where a page type has many permutations (e.g. 15,000 candidates across 10,000 electoral contests in 822 current seats), we fetch a single `json` that covers every slug — never per-slug requests. Some interactive components (e.g. mostly modal popups) fetch detail data on demand at runtime (client-side), but only where embedding it at build time would be impractical.
 
-**Surgical rebuilds.** Cloudflare Pages supports deploying individual pages without a full rebuild. The `rebuild-page` workflow (triggered via `repository_dispatch`) sets `POST_TO_BUILD` so only the target pages are built and deployed. This is used for time-sensitive updates (e.g. live election results).
+- **Surgical rebuilds.** Cloudflare Pages supports deploying individual pages without a full rebuild. The `rebuild-page` workflow (triggered via `repository_dispatch`) sets `POST_TO_BUILD` so only the target pages are built and deployed. This is used for time-sensitive updates (e.g. live election results).
 
-**Astro + React islands.** Pages are `.astro` files. Interactive components (charts, maps, dropdowns) are React islands, hydrated only where needed. Tailwind is used for all styling.
+- **Internationalisation.** The site is bilingual (English at `/`, Malay at `/ms-MY/`). Translation strings live in a separate repo (served as JSON files via R2) and are fetched at build time. A small middleware redirects Malay visitors away from English-only pages (e.g. `/openapi`, `/console`).
 
-**Internationalisation.** The site is bilingual (English at `/`, Malay at `/ms-MY/`). Translation strings live in a separate repo (served as JSON files via R2) and are fetched at build time. A small middleware redirects Malay visitors away from English-only pages (e.g. `/openapi`, `/console`).
+- **Astro + React islands.** Pages are `.astro` files. Interactive components (charts, maps, dropdowns) are React islands, hydrated only where needed. Tailwind is used for all styling.
 
-**Auth.** A Cloudflare Worker handles OTP login, sessions, and rate limiting. The frontend proxies `/api/auth/*` to it — in production via middleware, in development via the Vite dev server proxy.
+- **Auth.** A Cloudflare Worker handles OTP login, sessions, and rate limiting for the API console. The frontend proxies `/api/auth/*` to it — in production via middleware, in development via the Vite dev server proxy.
 
 ## License
 
@@ -35,13 +35,8 @@ Copy `.env.example` to `.env` and fill in the required values before running the
 
 | Variable                    | Required | Default                                | Description                                                   |
 | --------------------------- | -------- | -------------------------------------- | ------------------------------------------------------------- |
-| `APP_URL`                   | ⬜️      | https://electiondata.my                | Server-side base app domain                                   |
-| `APP_ENV`                   | ✅       | staging                                | Server-side environment (`staging` or `production`)           |
-| `AUTH_TOKEN`                | ✅       | (private, get your own)                | Token for authenticating server-side requests                 |
-| `PROTECT_DEPLOYMENT`        | ⬜️      | false                                  | Gate the site behind a password on staging                    |
 | `PUBLIC_APP_URL`            | ✅       | https://electiondata.my                | Client-side base app domain                                   |
-| `PUBLIC_APP_ENV`            | ✅       | staging                                | Client-side environment (`staging` or `production`)           |
-| `PUBLIC_API_URL_TB`         | ✅       | https://api.us-west-2.aws.tinybird.co  | Tinybird API base URL                                         |
+| `PUBLIC_API_URL_TB`         | ⬜️       | https://api.us-west-2.aws.tinybird.co  | Tinybird API base URL                                         |
 | `PUBLIC_TINYBIRD_TOKEN`     | ⬜️      | (private, get your own)                | Tinybird token for analytics                                  |
 | `PUBLIC_API_URL_R2`         | ✅       | https://internal.electiondata.my       | Static assets served via Cloudflare R2; no token needed       |
 | `PUBLIC_I18N_URL`           | ✅       | https://internal.electiondata.my/i18n  | i18n resources served via Cloudflare; no token needed         |

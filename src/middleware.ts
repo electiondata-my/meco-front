@@ -39,21 +39,5 @@ export const onRequest = defineMiddleware(async ({ request }, next) => {
     }
   }
 
-  // ── 3. Optional basic auth when PROTECT_DEPLOYMENT is set ────────────────
-  if (import.meta.env.PROTECT_DEPLOYMENT === "true") {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader?.startsWith("Basic ")) {
-      const decoded = atob(authHeader.slice(6));
-      const [user, password] = decoded.split(":");
-      if (user === "admin" && password === import.meta.env.AUTH_TOKEN) {
-        return next();
-      }
-    }
-    return new Response("Auth required", {
-      status: 401,
-      headers: { "WWW-Authenticate": `Basic realm="Secure Area"` },
-    });
-  }
-
   return next();
 });
