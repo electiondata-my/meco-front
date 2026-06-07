@@ -939,18 +939,18 @@ git show cd1529011c0440204a61dafadb88f3b435b3f08c:src/pages/ms-MY/parties/[...pa
 
 The catalogue index is a searchable grid of items where all data is already loaded at build time. `useFilter` is a client-side text filter on a static list — this is exactly what a small vanilla JS script handles without any framework.
 
-- [ ] Fetch `catalogue/index-en.json` / `catalogue/index-ms.json` in respective locale frontmatter
-- [ ] Render full catalogue grid as `.astro` markup — all items in the HTML at load time
-- [ ] Add a `<script>` for the search/filter: on input, show/hide grid items by matching against title/description. No framework, no virtual DOM.
-- [ ] Remove `WindowContext`, `useFilter`, and the React component entirely
-- [ ] Category filter (if present) implemented the same way — vanilla JS toggle on `data-category` attribute
+- [x] Fetch `catalogue/index-en.json` / `catalogue/index-ms.json` in respective locale frontmatter
+- [x] Render full catalogue grid as `.astro` markup — all items in the HTML at load time
+- [x] Add a `<script>` for the search/filter: on input, show/hide grid items by matching against title/description. No framework, no virtual DOM.
+- [x] Remove `WindowContext`, `useFilter`, and the React component entirely
+- [x] Category filter (if present) implemented the same way — vanilla JS toggle on `data-category` attribute
 
 **Parity criteria:**
-- [ ] All catalogue items visible in grid/list on load
-- [ ] Text search filters items correctly (vanilla JS)
-- [ ] Category filter works (vanilla JS)
-- [ ] Locale-specific labels render
-- [ ] Zero React JS shipped to the browser for this page (`/data-catalogue/[id]`)
+- [x] All catalogue items visible in grid/list on load
+- [x] Text search filters items correctly (vanilla JS)
+- [x] Category filter works (vanilla JS)
+- [x] Locale-specific labels render
+- [x] Zero React JS shipped to the browser for this page (`/data-catalogue/[id]`)
 
 ### 11.2 — Data Catalogue Variable Pages (`/data-catalogue/[id]`)
 
