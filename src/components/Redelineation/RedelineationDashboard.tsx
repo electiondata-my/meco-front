@@ -385,7 +385,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
   const r = (key: string, vars?: Record<string, string | number>) =>
     tFrom(translations.redelineation, key, vars);
   const c = (key: string) => tFrom(translations.common, key);
-  const boundaryAttribution = `(CC0) ${attributionHTML(c("attribution_boundary_data"))}`;
+  const boundaryAttribution = `${attributionHTML(c("attribution_boundary_data"))}`;
 
   const [level, setLevel] = useState<ElectionType>("parlimen");
   const [toggleState, setToggleState] = useState<ToggleState>("new");

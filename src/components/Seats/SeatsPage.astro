@@ -47,6 +47,7 @@ const isMalay = locale.startsWith("ms");
 const localePrefix = isMalay ? "/ms-MY" : "";
 
 const i18n = await getTranslations(locale, ["common", "seats"]);
+const c = (key: string) => t(i18n.common ?? {}, key);
 const s = (key: string) => t(i18n.seats ?? {}, key);
 
 const mapboxToken = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
@@ -88,9 +89,9 @@ const attributionHTML = (text: string) =>
   );
 
 const boundaryAttribution =
-  s("attribution_boundary_data") !== "attribution_boundary_data"
-    ? `(CC0) ${attributionHTML(s("attribution_boundary_data"))}`
-    : "Boundary data: Tindak Malaysia";
+  c("attribution_boundary_data") !== "attribution_boundary_data"
+    ? `${attributionHTML(c("attribution_boundary_data"))}`
+    : "Boundary data: MECo";
 ---
 
 <Layout title={pageTitle} description={pageDescription} image={ogImage}>
