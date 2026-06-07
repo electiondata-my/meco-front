@@ -1,0 +1,68 @@
+---
+import Layout from "@src/components/Layout/index.astro";
+import DataCatalogueShow from "@src/components/DataCatalogue/DataCatalogueShow";
+import { fetchJSON } from "@src/lib/api";
+
+type IndexItem = { id: string; title: string; description: string; data_as_of: string };
+type IndexResponse = { data: Record<string, Record<string, IndexItem[]>> };
+
+export async function getStaticPaths() {
+  const scope   = import.meta.env.POST_TO_BUILD_CATALOGUE;
+  const scopeSet = scope && scope !== "all" ? new Set(scope.split(",")) : null;
+  const r2       = import.meta.env.PUBLIC_API_URL_R2;
+
+  const index = await fetchJSON<IndexResponse>("/catalogue/index.json", r2).catch(
+    () => ({ data: {} } as IndexResponse),
+  );
+
+  const allIds: { id: string; category: string }[] = [];
+  for (const [category, subcats] of Object.entries(index.data ?? {})) {
+    for (const items of Object.values(subcats)) {
+      for (const item of items as IndexItem[]) {
+        allIds.push({ id: item.id, category });
+      }
+    }
+  }
+
+  const toFetch = scopeSet ? allIds.filter((e) => scopeSet.has(e.id)) : allIds;
+
+  const paths = await Promise.all(
+    toFetch.map(async ({ id, category }) => {
+      try {
+        const data = await fetchJSON<Record<string, unknown>>(`/catalogue/${id}.json`, r2);
+        return { params: { id }, props: { data, category } };
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return paths.filter(Boolean);
+}
+
+const { id } = Astro.params;
+const { data, category } = Astro.props as {
+  data: Record<string, unknown>;
+  category: string;
+};
+
+const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN ?? "";
+const tbHost  = import.meta.env.PUBLIC_API_URL_TB ?? "";
+
+const title       = (data.title as string) ?? "Dataset";
+const description = (data.description as string) ?? "";
+---
+
+<Layout
+  title={`${title} — Data Catalogue | ElectionData.MY`}
+  description={description}
+>
+  <DataCatalogueShow
+    client:load
+    data={data}
+    id={id}
+    category={category}
+    tbToken={tbToken}
+    tbHost={tbHost}
+  />
+</Layout>
