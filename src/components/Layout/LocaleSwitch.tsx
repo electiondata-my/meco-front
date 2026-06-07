@@ -1,6 +1,6 @@
 const LANGUAGE_SWITCH_FROZEN = false;
 
-const ENGLISH_ONLY_PATHS = ["/openapi", "/query-builder", "/signin", "/console"];
+const ENGLISH_ONLY_PATHS = ["/openapi", "/query-builder", "/signin", "/console", "/data-catalogue"];
 
 function isEnglishOnlyPath(path: string) {
   return ENGLISH_ONLY_PATHS.some(p => path === p || path.startsWith(p + "/"));
@@ -13,13 +13,14 @@ const languages: Record<"ms-MY" | "en-GB", { full: string; short: string }> = {
 
 interface LocaleSwitchProps {
   currentLocale: string;
+  currentPath?: string;
 }
 
 import { Listbox, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 
-export default function LocaleSwitch({ currentLocale }: LocaleSwitchProps) {
-  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+export default function LocaleSwitch({ currentLocale, currentPath }: LocaleSwitchProps) {
+  const path = currentPath ?? (typeof window !== "undefined" ? window.location.pathname : "/");
   const forceEnglish = LANGUAGE_SWITCH_FROZEN || isEnglishOnlyPath(path);
 
   const displayLocale =

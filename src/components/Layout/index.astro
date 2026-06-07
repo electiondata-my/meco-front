@@ -143,11 +143,11 @@ const footerSections = [
           <!-- Desktop: both visible; Mobile: both visible + hamburger -->
           <div class="hidden lg:flex gap-4">
             <ThemeToggle client:load />
-            <LocaleSwitch client:load currentLocale={locale} />
+            <LocaleSwitch client:load currentLocale={locale} currentPath={currentPath} />
           </div>
           <div class="flex items-center gap-3 lg:hidden">
             <ThemeToggle client:load />
-            <LocaleSwitch client:load currentLocale={locale} />
+            <LocaleSwitch client:load currentLocale={locale} currentPath={currentPath} />
             <button
               id="nav-open"
               aria-label="Open menu"

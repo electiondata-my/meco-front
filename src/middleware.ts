@@ -7,6 +7,7 @@ const ENGLISH_ONLY_PATHS = [
   "/signin",
   "/console",
   "/map",
+  "/data-catalogue",
 ];
 
 export const onRequest = defineMiddleware(async ({ request }, next) => {

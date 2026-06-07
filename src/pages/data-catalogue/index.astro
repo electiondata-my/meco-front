@@ -1,30 +1,403 @@
 ---
 import Layout from "@src/components/Layout/index.astro";
+import { getTranslations, t } from "@i18n/index";
 
-const title = "Data Catalogue | ElectionData.MY";
-const description = "The ElectionData.MY data catalogue is coming soon.";
+type CatalogueItem = { id: string; title: string; description: string; data_as_of: string };
+
+const apiBase  = import.meta.env.PUBLIC_API_URL_R2 ?? "";
+const tbToken  = import.meta.env.PUBLIC_TINYBIRD_TOKEN ?? "";
+const tbHost   = import.meta.env.PUBLIC_API_URL_TB ?? "";
+
+let rawData: Record<string, Record<string, CatalogueItem[]>> = {};
+try {
+  const res = await fetch(`${apiBase}/catalogue/index.json`);
+  if (res.ok) {
+    const json = await res.json();
+    rawData = json.data ?? {};
+  }
+} catch {}
+
+function slugify(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function formatDate(dateStr: string): string {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr + "T00:00:00Z");
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
+
+const sections: { id: string; title: string; items: CatalogueItem[] }[] = [];
+const sidebarGroups: { category: string; subcategories: { label: string; sectionId: string }[] }[] = [];
+
+for (const [category, subcategories] of Object.entries(rawData)) {
+  const subs: { label: string; sectionId: string }[] = [];
+  for (const [sub, items] of Object.entries(subcategories)) {
+    const title = `${category}: ${sub}`;
+    const id = slugify(title);
+    sections.push({ id, title, items: items as CatalogueItem[] });
+    subs.push({ label: sub, sectionId: id });
+  }
+  sidebarGroups.push({ category, subcategories: subs });
+}
+
+const i18n = await getTranslations("en-GB", ["common", "catalogue"]);
+const c = (key: string) => t(i18n.common ?? {}, key);
+const cat = (key: string) => t(i18n.catalogue ?? {}, key);
+
+const pageTitle = (cat("hero.header") || "Data Catalogue") + " | ElectionData.MY";
+const pageDescription = cat("hero.description") || "Browse and download Malaysian electoral datasets.";
 ---
 
-<Layout title={title} description={description}>
-  <main
-    class="mx-auto grid min-h-[calc(100vh-4rem)] w-full grid-cols-4 gap-4.5 bg-bg-white px-4.5 py-16 md:grid-cols-8 md:gap-6 md:px-6 lg:grid-cols-12 lg:py-20"
-  >
-    <section
-      class="col-span-full mx-auto flex w-full max-w-screen-xl items-center justify-center xl:w-full"
-    >
-      <div class="flex w-full max-w-2xl flex-col items-center gap-5 text-center">
-        <div
-          class="inline-flex items-center rounded-full border border-otl-gray-200 bg-bg-washed px-3 py-1 text-body-xs font-semibold uppercase tracking-[0.1em] text-txt-danger"
-        >
-          T minus 2 days
+<Layout title={pageTitle} description={pageDescription}>
+
+  <div class="px-3 sm:px-4.5 md:px-6">
+    <div class="mx-auto flex w-full max-w-screen-xl min-h-[calc(100vh-4rem)]">
+
+      <!-- Left sidebar (desktop) -->
+      <aside id="catalogue-sidebar-desktop" class="hidden shrink-0 lg:block">
+        <div class="sticky top-16 h-[calc(100vh-4rem)] w-60 overflow-y-auto border-r border-otl-gray-200 pb-10 pr-4 pt-6">
+          <div class="mb-5 flex flex-col gap-2">
+            <a
+              href="https://t.me/myelectiondata"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group flex items-center gap-2 rounded-lg border border-otl-gray-200 px-3 py-2 text-body-sm font-medium text-txt-black-700 transition-colors hover:border-otl-danger-200 hover:bg-bg-danger-50 hover:text-txt-danger"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 shrink-0 text-txt-black-400 transition-colors group-hover:text-txt-danger">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+              </svg>
+              Get help: User group
+            </a>
+          </div>
+
+          <div class="mb-5 border-t border-otl-gray-200"></div>
+
+          <nav class="flex flex-col gap-5">
+            {sidebarGroups.map(group => (
+              <div>
+                <p class="mb-2 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-txt-black-400">
+                  {group.category}
+                </p>
+                <ul class="space-y-1">
+                  {group.subcategories.map(sub => (
+                    <li>
+                      <button
+                        type="button"
+                        data-scroll-to={sub.sectionId}
+                        data-sidebar-item={sub.sectionId}
+                        class="sidebar-item group flex w-full items-center rounded-xl border border-transparent px-3 py-2 text-left text-[14px] leading-5 text-txt-black-700 transition-colors hover:border-otl-gray-200 hover:bg-bg-black-50 hover:text-txt-black-900"
+                      >
+                        {sub.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
         </div>
-        <h1 class="font-poppins text-heading-sm font-bold text-txt-black-900 lg:text-heading-md">
-          Coming Soon
-        </h1>
-        <p class="max-w-xl text-body-lg leading-8 text-txt-black-600">
-          The data catalogue is nearly ready. Structured and clean election datasets—backed by comprehensive metadata—will land here very soon. This will be your central resource for official results, boundaries, demographics, and much more.
-        </p>
+      </aside>
+
+      <!-- Main area -->
+      <div class="flex min-w-0 flex-1">
+        <main class="min-w-0 flex-1 px-2 pb-24 pt-6 sm:px-6 lg:px-10 xl:px-12">
+
+          <!-- Mobile top bar -->
+          <div class="mb-5 flex items-center gap-2 lg:hidden">
+            <button
+              id="catalogue-sidebar-open"
+              type="button"
+              class="flex items-center gap-1.5 text-body-sm text-txt-black-600 hover:text-txt-black-900"
+              aria-label="Open navigation"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+              Menu
+            </button>
+            <span class="text-txt-black-300">/</span>
+            <span class="text-body-xs text-txt-black-500">{cat("hero.header") || "Data Catalogue"}</span>
+          </div>
+
+          <!-- H1 -->
+          <h1 class="mb-3 font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]">
+            {cat("hero.header") || "Data Catalogue"}
+          </h1>
+
+          <!-- Description -->
+          <p class="mb-3 max-w-2xl text-body-md text-txt-black-500">
+            {cat("hero.description")}
+          </p>
+
+          <!-- View count -->
+          <p class="mb-8 flex items-center gap-1.5 text-body-sm text-txt-black-500">
+            <svg class="size-4.5 self-center" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+              <path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clip-rule="evenodd" />
+            </svg>
+            <span id="catalogue-view-count" data-token={tbToken} data-host={tbHost}>---</span>
+          </p>
+
+          <!-- Search -->
+          <div class="relative mb-10 max-w-lg">
+            <div class="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+              <svg class="size-4 text-txt-black-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            </div>
+            <input
+              id="catalogue-search"
+              type="text"
+              class="w-full rounded-xl border border-otl-gray-200 bg-bg-white py-2.5 pl-9 pr-9 text-body-sm text-txt-black-700 placeholder:text-txt-black-400 focus:border-otl-danger-300 focus:outline-none focus:ring-2 focus:ring-otl-danger-200"
+              placeholder={cat("placeholder.search") || "Search for a dataset"}
+              autocomplete="off"
+            />
+            <button
+              id="catalogue-search-clear"
+              type="button"
+              class="absolute inset-y-0 right-3 hidden items-center text-txt-black-400 hover:text-txt-black-700"
+              aria-label="Clear search"
+            >
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Sections -->
+          {sections.map(section => (
+            <section id={section.id} data-section class="mb-12">
+              <h2 class="mb-5 font-poppins text-body-lg font-semibold text-txt-black-900 lg:text-heading-2xs">
+                {section.title}
+              </h2>
+              <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {section.items.map(item => (
+                  <a
+                    href={`/data-catalogue/${item.id}`}
+                    data-title={item.title}
+                    data-desc={item.description}
+                    class="catalogue-card flex flex-col gap-3 rounded-xl border border-otl-gray-200 bg-bg-white p-4 no-underline transition-colors hover:border-otl-gray-300 hover:bg-bg-black-50"
+                  >
+                    <p class="text-body-md font-semibold text-txt-black-900">
+                      {item.title}
+                    </p>
+                    <p class="line-clamp-2 flex-1 text-body-sm text-txt-black-500">
+                      {item.description}
+                    </p>
+                    <p class="text-body-xs text-txt-black-400">
+                      {c("data_of")
+                        ? c("data_of").replace("{{ date }}", formatDate(item.data_as_of))
+                        : `Data as of ${formatDate(item.data_as_of)}`}
+                    </p>
+                  </a>
+                ))}
+              </div>
+            </section>
+          ))}
+
+          <!-- No-results -->
+          <p id="no-results" class="hidden text-body-md text-txt-black-500">
+            {c("no_entries") || "No entries found"}.
+          </p>
+        </main>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
+
+  <!-- Mobile sidebar drawer -->
+  <div id="catalogue-drawer-overlay" class="fixed inset-0 z-50 hidden lg:hidden">
+    <!-- Backdrop -->
+    <div id="catalogue-drawer-backdrop" class="absolute inset-0 bg-black/40 opacity-0 transition-opacity duration-200"></div>
+    <!-- Panel -->
+    <aside
+      id="catalogue-drawer-panel"
+      class="absolute inset-y-0 left-0 w-72 -translate-x-full overflow-y-auto border-r border-otl-gray-200 bg-bg-white px-3 pb-10 pt-6 shadow-lg transition-transform duration-300 ease-out sm:px-4"
+    >
+      <div class="mb-5 flex items-center justify-between">
+        <span class="font-poppins text-body-sm font-semibold text-txt-black-900">Data Catalogue</span>
+        <button id="catalogue-drawer-close" type="button" class="rounded-md p-1 text-txt-black-400 hover:text-txt-black-700" aria-label="Close navigation">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="mb-5 flex flex-col gap-2">
+        <a
+          href="https://t.me/myelectiondata"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group flex items-center gap-2 rounded-lg border border-otl-gray-200 px-3 py-2 text-body-sm font-medium text-txt-black-700 transition-colors hover:border-otl-danger-200 hover:bg-bg-danger-50 hover:text-txt-danger"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 shrink-0 text-txt-black-400 transition-colors group-hover:text-txt-danger">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+          </svg>
+          Get help: User group
+        </a>
+      </div>
+
+      <div class="mb-5 border-t border-otl-gray-200"></div>
+
+      <nav class="flex flex-col gap-5">
+        {sidebarGroups.map(group => (
+          <div>
+            <p class="mb-2 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-txt-black-400">
+              {group.category}
+            </p>
+            <ul class="space-y-1">
+              {group.subcategories.map(sub => (
+                <li>
+                  <button
+                    type="button"
+                    data-scroll-to={sub.sectionId}
+                    data-drawer-item
+                    class="sidebar-item group flex w-full items-center rounded-xl border border-transparent px-3 py-2 text-left text-[14px] leading-5 text-txt-black-700 transition-colors hover:border-otl-gray-200 hover:bg-bg-black-50 hover:text-txt-black-900"
+                  >
+                    {sub.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+    </aside>
+  </div>
+
 </Layout>
+
+<script>
+  // ── View count ───────────────────────────────────────────────────────────
+  const vcEl = document.getElementById("catalogue-view-count") as HTMLElement | null;
+  if (vcEl) {
+    const { token, host } = vcEl.dataset as { token?: string; host?: string };
+    if (token && host) {
+      fetch(`${host}/v0/pipes/views_by_page.json?token=${token}&page_id=/data-catalogue`)
+        .then(r => r.json())
+        .then(data => {
+          const views = data?.data?.[0]?.hits;
+          if (views != null) vcEl.textContent = `${Number(views).toLocaleString()} views`;
+        })
+        .catch(() => {});
+    }
+  }
+
+  // ── Search ───────────────────────────────────────────────────────────────
+  const searchEl  = document.getElementById("catalogue-search") as HTMLInputElement | null;
+  const clearBtn  = document.getElementById("catalogue-search-clear") as HTMLButtonElement | null;
+  const noResults = document.getElementById("no-results") as HTMLElement | null;
+
+  function runFilter() {
+    if (!searchEl) return;
+    const query  = searchEl.value.toLowerCase().trim();
+    const tokens = query ? query.split(/\s+/) : [];
+
+    clearBtn?.classList.toggle("hidden", query.length === 0);
+    clearBtn?.classList.toggle("flex",   query.length > 0);
+
+    let hasVisible = false;
+    document.querySelectorAll<HTMLElement>("[data-section]").forEach(section => {
+      const cards = section.querySelectorAll<HTMLElement>("[data-title]");
+      let sectionVisible = 0;
+      cards.forEach(card => {
+        const title = (card.dataset.title ?? "").toLowerCase();
+        const desc  = (card.dataset.desc  ?? "").toLowerCase();
+        const matches =
+          tokens.length === 0 ||
+          tokens.every(tok => title.includes(tok) || desc.includes(tok));
+        card.style.display = matches ? "" : "none";
+        if (matches) sectionVisible++;
+      });
+      const hide = sectionVisible === 0 && tokens.length > 0;
+      section.style.display = hide ? "none" : "";
+      if (!hide) hasVisible = true;
+    });
+
+    if (noResults) noResults.hidden = tokens.length === 0 || hasVisible;
+  }
+
+  searchEl?.addEventListener("input", runFilter);
+  clearBtn?.addEventListener("click", () => {
+    if (searchEl) { searchEl.value = ""; searchEl.focus(); }
+    runFilter();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "/" && document.activeElement !== searchEl) {
+      e.preventDefault();
+      searchEl?.focus();
+    }
+    if (e.key === "Escape" && document.activeElement === searchEl) searchEl.blur();
+  });
+
+  // ── Sidebar scroll-to ────────────────────────────────────────────────────
+  document.querySelectorAll<HTMLButtonElement>("[data-scroll-to]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = document.getElementById(btn.dataset.scrollTo ?? "");
+      if (target) {
+        closeMobileDrawer();
+        const top = target.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
+    });
+  });
+
+  // ── Active sidebar item via IntersectionObserver ─────────────────────────
+  const ACTIVE   = "border-otl-danger-200 bg-bg-danger-50 font-medium text-txt-black-900";
+  const INACTIVE = "border-transparent text-txt-black-700";
+
+  function setActive(sectionId: string) {
+    document.querySelectorAll<HTMLElement>("[data-sidebar-item]").forEach(el => {
+      const isActive = el.dataset.sidebarItem === sectionId;
+      el.className = el.className
+        .replace(/border-otl-danger-200|bg-bg-danger-50|font-medium|border-transparent|text-txt-black-700|text-txt-black-900/g, "")
+        .trim();
+      el.classList.add(...(isActive ? ACTIVE : INACTIVE).split(" "));
+    });
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries.filter(e => e.isIntersecting);
+      if (visible.length > 0) {
+        setActive((visible[0].target as HTMLElement).id);
+      }
+    },
+    { rootMargin: "-20% 0px -60% 0px", threshold: 0 },
+  );
+  document.querySelectorAll<HTMLElement>("[data-section]").forEach(s => observer.observe(s));
+
+  // ── Mobile drawer ────────────────────────────────────────────────────────
+  const overlay = document.getElementById("catalogue-drawer-overlay") as HTMLElement | null;
+  const backdrop = document.getElementById("catalogue-drawer-backdrop") as HTMLElement | null;
+  const panel = document.getElementById("catalogue-drawer-panel") as HTMLElement | null;
+
+  function openMobileDrawer() {
+    if (!overlay || !backdrop || !panel) return;
+    overlay.classList.remove("hidden");
+    requestAnimationFrame(() => {
+      backdrop.classList.remove("opacity-0");
+      backdrop.classList.add("opacity-100");
+      panel.classList.remove("-translate-x-full");
+      panel.classList.add("translate-x-0");
+    });
+  }
+
+  function closeMobileDrawer() {
+    if (!overlay || !backdrop || !panel) return;
+    backdrop.classList.remove("opacity-100");
+    backdrop.classList.add("opacity-0");
+    panel.classList.remove("translate-x-0");
+    panel.classList.add("-translate-x-full");
+    setTimeout(() => overlay.classList.add("hidden"), 300);
+  }
+
+  document.getElementById("catalogue-sidebar-open")?.addEventListener("click", openMobileDrawer);
+  document.getElementById("catalogue-drawer-close")?.addEventListener("click", closeMobileDrawer);
+  backdrop?.addEventListener("click", closeMobileDrawer);
+</script>
