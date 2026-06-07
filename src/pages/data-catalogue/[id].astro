@@ -15,11 +15,11 @@ export async function getStaticPaths() {
     () => ({ data: {} } as IndexResponse),
   );
 
-  const allIds: { id: string; category: string }[] = [];
+  const allIds: { id: string; category: string; subcategory: string }[] = [];
   for (const [category, subcats] of Object.entries(index.data ?? {})) {
-    for (const items of Object.values(subcats)) {
+    for (const [subcategory, items] of Object.entries(subcats)) {
       for (const item of items as IndexItem[]) {
-        allIds.push({ id: item.id, category });
+        allIds.push({ id: item.id, category, subcategory });
       }
     }
   }
@@ -27,10 +27,10 @@ export async function getStaticPaths() {
   const toFetch = scopeSet ? allIds.filter((e) => scopeSet.has(e.id)) : allIds;
 
   const paths = await Promise.all(
-    toFetch.map(async ({ id, category }) => {
+    toFetch.map(async ({ id, category, subcategory }) => {
       try {
         const data = await fetchJSON<Record<string, unknown>>(`/catalogue/${id}.json`, r2);
-        return { params: { id }, props: { data, category } };
+        return { params: { id }, props: { data, category, subcategory } };
       } catch {
         return null;
       }
@@ -41,9 +41,10 @@ export async function getStaticPaths() {
 }
 
 const { id } = Astro.params;
-const { data, category } = Astro.props as {
+const { data, category, subcategory } = Astro.props as {
   data: Record<string, unknown>;
   category: string;
+  subcategory: string;
 };
 
 const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN ?? "";
@@ -62,6 +63,7 @@ const description = (data.description as string) ?? "";
     data={data}
     id={id}
     category={category}
+    subcategory={subcategory}
     tbToken={tbToken}
     tbHost={tbHost}
   />

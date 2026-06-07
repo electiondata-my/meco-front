@@ -8,13 +8,29 @@ import {
 import ReactMarkdown from "react-markdown";
 import CodeMirror from "@uiw/react-codemirror";
 import { sql as sqlLang, StandardSQL } from "@codemirror/lang-sql";
+import hljs from "highlight.js/lib/core";
+import bash from "highlight.js/lib/languages/bash";
+import python from "highlight.js/lib/languages/python";
+import r from "highlight.js/lib/languages/r";
 import {
+  ArrowDownTrayIcon,
+  BookOpenIcon,
   CheckCircleIcon,
+  CodeBracketIcon,
   ClipboardDocumentCheckIcon,
   ClipboardDocumentIcon,
+  CommandLineIcon,
+  DocumentTextIcon,
+  EyeIcon,
+  ListBulletIcon,
+  TableCellsIcon,
 } from "@heroicons/react/20/solid";
 import { clx } from "@lib/helpers";
 import { useDuckDB } from "@dashboards/query-builder/useDuckDB";
+
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("r", r);
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +75,7 @@ interface Props {
   data: Record<string, unknown>;
   id: string;
   category: string;
+  subcategory: string;
   tbToken: string;
   tbHost: string;
 }
@@ -73,7 +90,7 @@ interface QueryResult {
 }
 
 type Tab = "preview" | "methodology" | "variables";
-type CodeLang = "python" | "r" | "curl";
+type CodeLang = "python" | "r" | "curl" | "duckdb";
 type CopyState = "idle" | "copied";
 
 const MAX_DISPLAY_ROWS = 500;
@@ -174,6 +191,26 @@ function isNumericType(fieldType: string, sample: unknown): boolean {
   return ft.includes("int") || ft.includes("float") || ft.includes("decimal") || ft.includes("double");
 }
 
+function isRightAlignedType(fieldType: string, sample?: unknown): boolean {
+  return isNumericType(fieldType, sample);
+}
+
+function normalizeMarkdown(markdown: string): string {
+  return markdown.replace(/\\n/g, "\n");
+}
+
+function slugify(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function highlightSnippet(code: string, language: string): string {
+  try {
+    return hljs.highlight(code, { language, ignoreIllegals: true }).value;
+  } catch {
+    return code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+}
+
 function prepareCatalogueQuery(sql: string, tableName: string, parquetUrl: string): string {
   const singleQuoted = new RegExp(`'${tableName}'`, "gi");
   const unquoted     = new RegExp(`\\b${tableName}\\b`, "gi");
@@ -181,30 +218,93 @@ function prepareCatalogueQuery(sql: string, tableName: string, parquetUrl: strin
   return sql.replace(singleQuoted, replacement).replace(unquoted, replacement);
 }
 
+function toIsoSeconds(date = new Date()): string {
+  return date.toISOString().replace(/\.\d{3}Z$/u, "");
+}
+
+function formatAuthorFull(author: string): string {
+  const trimmed = author.trim();
+  if (trimmed.includes(",")) return trimmed;
+  const parts = trimmed.split(/\s+/u);
+  if (parts.length < 2) return trimmed;
+  const family = parts.at(-1);
+  const given = parts.slice(0, -1).join(" ");
+  return `${family}, ${given}`;
+}
+
+function formatAuthorInitial(author: string): string {
+  const full = formatAuthorFull(author);
+  const [family, given = ""] = full.split(",").map((part) => part.trim());
+  if (!given) return full;
+  const initials = given
+    .split(/\s+/u)
+    .filter(Boolean)
+    .map((part) => `${part[0]}.`)
+    .join(" ");
+  return `${family}, ${initials}`;
+}
+
 // ── Citation formatters ───────────────────────────────────────────────────────
 
 function buildAPA(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `${c.author} (${year}). ${c.title}. ${c.journal}. ${c.publisher}.`;
+  return `${formatAuthorInitial(c.author)} (${year}). ${c.title}. ${c.journal}.`;
 }
 
 function buildMLA(c: CiteData): string {
-  return `${c.author}. "${c.title}." ${c.journal}, ${c.publisher}, ${c.date}.`;
+  const year = c.date.split("-")[0];
+  return `${formatAuthorFull(c.author)}. "${c.title}." ${c.journal} (${year}).`;
 }
 
 function buildChicago(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `${c.author}. "${c.title}." ${c.journal} (${year}). ${c.publisher}.`;
+  return `${formatAuthorFull(c.author)}. "${c.title}." ${c.journal} (${year}).`;
 }
 
 function buildHarvard(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `${c.author} ${year}, '${c.title}', ${c.journal}, ${c.publisher}.`;
+  return `${formatAuthorInitial(c.author)} ${year}, ${c.title}. ${c.journal}.`;
 }
 
 function buildBibTeX(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `@${c.type}{${c.id},\n  author    = {${c.author}},\n  title     = {${c.title}},\n  journal   = {${c.journal}},\n  year      = {${year}},\n  publisher = {${c.publisher}}\n}`;
+  return `@${c.type}{${c.id},\n  author  = {${formatAuthorFull(c.author)}},\n  title   = {${c.title}},\n  journal = {${c.journal}},\n  year    = {${year}}\n}`;
+}
+
+function CitationMarkup({
+  style,
+  cite,
+}: {
+  style: "apa" | "mla" | "chicago" | "harvard";
+  cite: CiteData;
+}) {
+  const year = cite.date.split("-")[0];
+  if (style === "apa") {
+    return (
+      <>
+        {formatAuthorInitial(cite.author)} ({year}). {cite.title}. <em>{cite.journal}</em>.
+      </>
+    );
+  }
+  if (style === "mla") {
+    return (
+      <>
+        {formatAuthorFull(cite.author)}. "{cite.title}." <em>{cite.journal}</em> ({year}).
+      </>
+    );
+  }
+  if (style === "chicago") {
+    return (
+      <>
+        {formatAuthorFull(cite.author)}. "{cite.title}." <em>{cite.journal}</em> ({year}).
+      </>
+    );
+  }
+  return (
+    <>
+      {formatAuthorInitial(cite.author)} {year}, {cite.title}. <em>{cite.journal}</em>.
+    </>
+  );
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -213,8 +313,8 @@ function TypeBadge({ type }: { type: string }) {
   const cls: Record<string, string> = {
     String:  "bg-bg-black-100 text-txt-black-600",
     Integer: "bg-bg-danger-100 text-txt-danger",
-    Float:   "bg-amber-100 text-amber-700",
-    Date:    "bg-blue-100 text-blue-700",
+    Float:   "bg-bg-warning-100 text-txt-warning",
+    Date:    "bg-bg-black-100 text-txt-black-600",
   };
   if (!type) return null;
   return (
@@ -231,12 +331,9 @@ function TypeBadge({ type }: { type: string }) {
 
 function SectionDivider({ label }: { label: string }) {
   return (
-    <div className="mb-6 flex items-center gap-3">
-      <span className="font-poppins text-[1.1rem] font-semibold text-txt-black-900">
-        {label}
-      </span>
-      <div className="flex-1 border-t border-otl-gray-200" />
-    </div>
+    <h2 className="mb-6 font-poppins text-[1.1rem] font-semibold text-txt-black-900">
+      {label}
+    </h2>
   );
 }
 
@@ -257,7 +354,7 @@ function CopyButton({
   return (
     <button
       onClick={handleCopy}
-      className="flex shrink-0 items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active"
+      className="flex shrink-0 items-center gap-1 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
     >
       {state === "copied" ? (
         <>
@@ -283,17 +380,17 @@ const SqlResults = memo(function SqlResults({
   onCopyCsv: () => void;
   csvCopyState: CopyState;
 }) {
-  const isNumeric = useMemo(
+  const isRightAligned = useMemo(
     () =>
       result.columns.map((_, ci) => {
         const sample = result.rows.find((row) => row[ci] != null)?.[ci];
-        return isNumericType(result.fieldTypes[ci] ?? "", sample);
+        return isRightAlignedType(result.fieldTypes[ci] ?? "", sample);
       }),
     [result],
   );
 
   return (
-    <div className="overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white">
+    <div className="bg-bg-white">
       <div className="flex items-center justify-between gap-3 border-b border-otl-gray-200 px-4 py-2">
         <p className="flex items-center gap-1.5 text-[12px] text-txt-black-500">
           <CheckCircleIcon className="h-3.5 w-3.5 shrink-0 text-green-600" />
@@ -340,8 +437,8 @@ const SqlResults = memo(function SqlResults({
                   <th
                     key={col}
                     className={clx(
-                      "sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider text-txt-black-400",
-                      isNumeric[ci] ? "text-right" : "text-left",
+                      "sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider text-txt-black-400 shadow-[inset_0_-1px_0_rgb(var(--otl-gray-200))]",
+                      isRightAligned[ci] ? "text-right" : "text-left",
                     )}
                   >
                     {col}
@@ -360,7 +457,7 @@ const SqlResults = memo(function SqlResults({
                       key={ci}
                       className={clx(
                         "whitespace-nowrap px-3 py-1.5 font-mono text-[13px] text-txt-black-800",
-                        isNumeric[ci] ? "text-right tabular-nums" : "text-left",
+                        isRightAligned[ci] ? "text-right tabular-nums" : "text-left",
                         cell == null && "italic text-txt-black-300",
                       )}
                     >
@@ -398,6 +495,7 @@ export default function DataCatalogueShow({
   data: rawData,
   id,
   category,
+  subcategory,
   tbToken,
   tbHost,
 }: Props) {
@@ -432,19 +530,64 @@ export default function DataCatalogueShow({
   const [queryError,   setQueryError]   = useState<string | null>(null);
   const [csvCopyState, setCsvCopyState] = useState<CopyState>("idle");
   const [codeLanguage, setCodeLanguage] = useState<CodeLang>("python");
-  const [bibtexOpen,   setBibtexOpen]   = useState(false);
   const [viewCount,    setViewCount]    = useState<number | null>(null);
+  const [downloadCount, setDownloadCount] = useState<number | null>(null);
 
   const isDbReady = !!db && !initializing && !dbError;
 
-  // Fetch view count
+  const appendTinybirdEvent = useCallback(
+    (name: "edmy_views" | "edmy_downloads", payload: Record<string, string>) => {
+      if (!tbToken || !tbHost) return;
+      fetch(`${tbHost}/v0/events?name=${name}&format=json`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${tbToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      }).catch(() => {});
+    },
+    [tbToken, tbHost],
+  );
+
+  const trackDownload = useCallback(
+    (fileFormat: string) => {
+      setDownloadCount((count) => (count == null ? count : count + 1));
+      appendTinybirdEvent("edmy_downloads", {
+        id,
+        file_format: fileFormat,
+        timestamp: toIsoSeconds(),
+      });
+    },
+    [appendTinybirdEvent, id],
+  );
+
+  // Fetch and log data catalogue analytics
   useEffect(() => {
     if (!tbToken || !tbHost) return;
-    fetch(`${tbHost}/v0/pipes/views_by_page.json?token=${tbToken}&page_id=/data-catalogue/${id}`)
+    setViewCount((count) => (count == null ? count : count + 1));
+    appendTinybirdEvent("edmy_views", {
+      id,
+      type: "data-catalogue",
+      timestamp: toIsoSeconds(),
+    });
+
+    fetch(`${tbHost}/v0/pipes/views_by_dc.json?token=${tbToken}&id=${id}`)
       .then((r) => r.json())
       .then((d) => setViewCount(d?.data?.[0]?.hits ?? null))
       .catch(() => {});
-  }, [tbToken, tbHost, id]);
+
+    fetch(`${tbHost}/v0/pipes/downloads_by_dc_format.json?token=${tbToken}&id=${id}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const total = Array.isArray(d?.data)
+          ? d.data.reduce((sum: number, row: { downloads?: number }) => sum + Number(row.downloads ?? 0), 0)
+          : null;
+        setDownloadCount(total);
+      })
+      .catch(() => {});
+  }, [tbToken, tbHost, id, appendTinybirdEvent]);
 
   useEffect(() => { setCsvCopyState("idle"); }, [result]);
 
@@ -531,12 +674,12 @@ export default function DataCatalogueShow({
       python: [
         "import pandas as pd",
         "",
-        `url = "${url}"`,
+        `URL = "${url}"`,
         "",
-        "df = pd.read_parquet(url)",
+        "df = pd.read_parquet(URL)",
         `print(df.shape)   # (${data.download.parquet.n_rows}, ${data.download.parquet.n_cols})`,
         "print(df.dtypes)",
-        "print(df.head())",
+        "df",
       ].join("\n"),
       r: [
         "library(arrow)",
@@ -551,8 +694,11 @@ export default function DataCatalogueShow({
       curl: [
         `# Download the Parquet file`,
         `curl -L -o ${filename} "${url}"`,
+      ].join("\n"),
+      duckdb: [
+        "# If not already installed, run:",
+        "curl https://install.duckdb.org | sh",
         "",
-        "# Inspect with DuckDB CLI (if installed)",
         `duckdb -c "DESCRIBE SELECT * FROM '${url}'"`,
         `duckdb -c "SELECT * FROM '${url}' LIMIT 10"`,
       ].join("\n"),
@@ -570,6 +716,30 @@ export default function DataCatalogueShow({
 
   const parquet = data.download.parquet;
   const csv     = data.download.csv;
+  const tabItems = [
+    { tab: "preview",     label: "Preview",     Icon: TableCellsIcon },
+    { tab: "variables",   label: "Variables",   Icon: ListBulletIcon },
+    { tab: "methodology", label: "Methodology", Icon: DocumentTextIcon },
+  ] as const;
+  const footerLinks = [
+    { label: "Download", href: "#dc-download", Icon: ArrowDownTrayIcon },
+    { label: "Code",     href: "#dc-code",     Icon: CodeBracketIcon },
+    { label: "Cite",     href: "#dc-cite",     Icon: BookOpenIcon },
+  ] as const;
+  const catalogueSectionTitle = subcategory ? `${category}: ${subcategory}` : category;
+  const catalogueSectionHref = catalogueSectionTitle
+    ? `/data-catalogue#${slugify(catalogueSectionTitle)}`
+    : "/data-catalogue";
+  const snippetLanguage: Record<CodeLang, string> = {
+    python: "python",
+    r:      "r",
+    duckdb: "bash",
+    curl:   "bash",
+  };
+  const highlightedSnippet = useMemo(
+    () => highlightSnippet(snippets[codeLanguage], snippetLanguage[codeLanguage]),
+    [snippets, codeLanguage],
+  );
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -582,45 +752,60 @@ export default function DataCatalogueShow({
           <a href="/data-catalogue" className="hover:text-txt-black-700">
             Data Catalogue
           </a>
-          {category && (
+          {catalogueSectionTitle && (
             <>
-              <span>/</span>
-              <span>{category}</span>
+              <span>&gt;</span>
+              <a href={catalogueSectionHref} className="hover:text-txt-black-700">
+                {catalogueSectionTitle}
+              </a>
             </>
           )}
-          <span>/</span>
+          <span>&gt;</span>
           <span className="text-txt-black-700">{data.title}</span>
         </nav>
 
-        <div className="mb-2 flex flex-wrap items-start justify-between gap-3">
+        <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <h1 className="font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]">
             {data.title}
           </h1>
-          <span className="mt-1 shrink-0 rounded-full border border-otl-gray-200 px-2.5 py-0.5 text-[12px] text-txt-black-500">
-            Updated {formatDate(data.last_updated)}
-          </span>
+          <p className="shrink-0 pt-1 text-[13px] text-txt-black-500">
+            Last updated: {formatDate(data.last_updated)}
+          </p>
         </div>
-        <p className="mb-8 max-w-3xl text-body-md text-txt-black-600">
+        <p className="mb-3 max-w-3xl text-body-md text-txt-black-600">
           {data.description}
         </p>
+        <div className="mb-8 flex flex-col gap-2 text-[13px] text-txt-black-500">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex items-center gap-1.5">
+              <EyeIcon className="h-4 w-4 shrink-0 text-txt-black-400" />
+              {viewCount === null ? "--" : viewCount.toLocaleString()} views
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ArrowDownTrayIcon className="h-4 w-4 shrink-0 text-txt-black-400" />
+              {downloadCount === null ? "--" : downloadCount.toLocaleString()} downloads
+            </span>
+          </div>
+        </div>
 
         {/* ── Preview block ───────────────────────────────────── */}
         <div className="mb-10 overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white">
 
           {/* Tab bar */}
-          <div className="flex border-b border-otl-gray-200 px-1">
-            {(["preview", "variables", "methodology"] as Tab[]).map((tab) => (
+          <div className="grid grid-cols-2 border-b border-otl-gray-200 px-1 sm:flex sm:items-center">
+            {tabItems.map(({ tab, label, Icon }) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); setSqlOpen(false); }}
                 className={clx(
-                  "border-b-2 px-4 py-3 text-[13px] font-medium transition-colors",
+                  "flex items-center justify-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors sm:justify-start",
                   !sqlOpen && activeTab === tab
                     ? "border-txt-black-900 text-txt-black-900"
                     : "border-transparent text-txt-black-500 hover:text-txt-black-700",
                 )}
               >
-                {tab === "methodology" ? "Methodology" : tab === "variables" ? "Variables" : "Preview"}
+                <Icon className="h-4 w-4 shrink-0" />
+                {label}
               </button>
             ))}
 
@@ -629,7 +814,7 @@ export default function DataCatalogueShow({
               disabled={!isDbReady && !sqlOpen}
               onClick={() => { if (isDbReady || sqlOpen) setSqlOpen((p) => !p); }}
               className={clx(
-                "flex items-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors",
+                "flex items-center justify-center gap-1.5 border-b-2 px-4 py-3 text-[13px] font-medium transition-colors sm:justify-start",
                 sqlOpen
                   ? "border-txt-black-900 text-txt-black-900"
                   : isDbReady
@@ -637,28 +822,25 @@ export default function DataCatalogueShow({
                   : "border-transparent text-txt-black-300 cursor-not-allowed",
               )}
             >
+              <CommandLineIcon className="h-4 w-4 shrink-0" />
+              Query with SQL
               {isDbReady && (
                 <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
               )}
-              Query with SQL
             </button>
+            <p className="col-span-2 border-t border-otl-gray-100 px-3 py-2 text-right text-[13px] text-txt-black-500 sm:col-span-1 sm:ml-auto sm:border-t-0 sm:py-0">
+              {parquet.n_rows.toLocaleString()} rows × {parquet.n_cols} cols
+            </p>
           </div>
 
           {/* SQL panel */}
           {sqlOpen && (
-            <div className="border-b border-otl-gray-200 p-4">
+            <div className="border-b border-otl-gray-200">
               <div
-                className="flex flex-col gap-4"
+                className="flex flex-col"
                 onKeyDown={handleEditorKeyDown}
               >
-                <div className="overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-washed">
-                  <div className="flex items-center justify-between border-b border-otl-gray-200 px-4 py-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-500">
-                      SQL Editor
-                    </span>
-                    <CopyButton text={queryText} label="Copy" />
-                  </div>
-
+                <div className="overflow-hidden bg-bg-washed">
                   <div className="relative overflow-hidden border-b border-otl-gray-200 [&_.cm-editor.cm-focused]:outline-none [&_.cm-editor]:font-mono [&_.cm-editor]:text-[13px]">
                     <CodeMirror
                       value={queryText}
@@ -685,7 +867,8 @@ export default function DataCatalogueShow({
                     />
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 px-3 py-2">
+                  <div className="flex items-center justify-between gap-2 px-3 py-2">
+                    <CopyButton text={queryText} label="Copy SQL" />
                     <button
                       onClick={() => void runQuery()}
                       disabled={!db || running || !queryText.trim()}
@@ -708,7 +891,7 @@ export default function DataCatalogueShow({
                 </div>
 
                 {queryError && (
-                  <div className="rounded-xl border border-danger-200 bg-bg-danger-100 px-4 py-3">
+                  <div className="m-4 rounded-xl border border-danger-200 bg-bg-danger-100 px-4 py-3">
                     <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-danger-700">
                       Query error
                     </p>
@@ -746,13 +929,13 @@ export default function DataCatalogueShow({
                         <tr>
                           {columns.map((col) => {
                             const type = fieldTypeMap[col] ?? "";
-                            const isNum = type === "Integer" || type === "Float";
+                            const isRightAligned = type === "Integer" || type === "Float";
                             return (
                               <th
                                 key={col}
                                 className={clx(
-                                  "sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider text-txt-black-400",
-                                  isNum ? "text-right" : "text-left",
+                                  "sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider text-txt-black-400 shadow-[inset_0_-1px_0_rgb(var(--otl-gray-200))]",
+                                  isRightAligned ? "text-right" : "text-left",
                                 )}
                               >
                                 {col}
@@ -769,7 +952,7 @@ export default function DataCatalogueShow({
                           >
                             {columns.map((col) => {
                               const type = fieldTypeMap[col] ?? "";
-                              const isNum = type === "Integer" || type === "Float";
+                              const isRightAligned = type === "Integer" || type === "Float";
                               const precision =
                                 data.display_options.precision.specific[col] ??
                                 data.display_options.precision.default;
@@ -779,7 +962,7 @@ export default function DataCatalogueShow({
                                   key={col}
                                   className={clx(
                                     "whitespace-nowrap px-3 py-1.5 font-mono text-[13px] text-txt-black-800",
-                                    isNum ? "text-right tabular-nums" : "text-left",
+                                    isRightAligned ? "text-right tabular-nums" : "text-left",
                                     cell == null && "italic text-txt-black-300",
                                   )}
                                 >
@@ -797,8 +980,8 @@ export default function DataCatalogueShow({
 
               {/* Methodology tab */}
               {activeTab === "methodology" && (
-                <div className="prose prose-sm max-w-none px-6 py-5 text-txt-black-700 [&_a]:text-txt-danger [&_a]:underline">
-                  <ReactMarkdown>{data.methodology}</ReactMarkdown>
+                <div className="markdown max-w-none px-6 py-5">
+                  <ReactMarkdown>{normalizeMarkdown(data.methodology)}</ReactMarkdown>
                 </div>
               )}
 
@@ -848,109 +1031,42 @@ export default function DataCatalogueShow({
           )}
 
           {/* Persistent footer */}
-          {!sqlOpen && (
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-otl-gray-200 px-4 py-3">
-              <div className="flex items-center gap-2 text-[12px] text-txt-black-500">
-                <span
-                  title="Creative Commons Zero — No Rights Reserved"
-                  className="flex h-5 w-8 items-center justify-center rounded border border-current text-[10px] font-bold leading-none"
-                >
-                  CC0
-                </span>
-                <span>Dedicated to the public domain</span>
-              </div>
-
-              <p className="text-[12px] text-txt-black-500">
-                {parquet.n_rows.toLocaleString()} rows × {parquet.n_cols} cols
-              </p>
-
-              <div className="flex items-center gap-1">
-                {(
-                  [
-                    { label: "Cite",     href: "#dc-cite" },
-                    { label: "Download", href: "#dc-download" },
-                    { label: "Code",     href: "#dc-code" },
-                  ] as const
-                ).map(({ label, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const el = document.querySelector(href);
-                      if (el) {
-                        const top = el.getBoundingClientRect().top + window.scrollY - 80;
-                        window.scrollTo({ top, behavior: "smooth" });
-                      }
-                    }}
-                    className="rounded-lg border border-otl-gray-200 px-3 py-1 text-[12px] font-medium text-txt-black-600 transition-colors hover:bg-bg-black-50"
-                  >
-                    {label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Views/downloads */}
-        {viewCount !== null && (
-          <p className="mb-8 text-right text-[12px] text-txt-black-400">
-            {viewCount.toLocaleString()} views
-          </p>
-        )}
-
-        {/* ── Narrowed sections (1/6 padding each side) ───────── */}
-        <div className="px-[16.667%]">
-
-        {/* ── Cite ───────────────────────────────────────────── */}
-        <section id="dc-cite" className="mb-12">
-          <SectionDivider label="Cite" />
-
-          <p className="mb-6 text-[13px] text-txt-black-500">{data.cite.instructions}</p>
-
-          <div className="divide-y divide-otl-gray-200 border-t border-otl-gray-200">
-            {(
-              [
-                { label: "APA",     text: citations.apa },
-                { label: "MLA",     text: citations.mla },
-                { label: "Chicago", text: citations.chicago },
-                { label: "Harvard", text: citations.harvard },
-              ] as const
-            ).map(({ label, text }) => (
-              <div key={label} className="py-5">
-                <div className="mb-2 flex items-start justify-between gap-4">
-                  <p className="text-[15px] font-semibold text-txt-black-900">{label}</p>
-                  <CopyButton text={text} />
-                </div>
-                <p className="text-[13px] leading-relaxed text-txt-black-600">{text}</p>
-              </div>
-            ))}
-
-            {/* BibTeX (collapsed) */}
-            <div className="py-5">
-              <button
-                onClick={() => setBibtexOpen((p) => !p)}
-                className="flex w-full items-start justify-between gap-4 text-left"
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-otl-gray-200 px-4 py-3">
+            <div className="flex items-center gap-2 text-[12px] text-txt-black-500">
+              <span
+                title="Creative Commons Zero — No Rights Reserved"
+                className="flex h-5 w-8 items-center justify-center rounded border border-current text-[10px] font-bold leading-none"
               >
-                <p className="text-[15px] font-semibold text-txt-black-900">BibTeX</p>
-                <span className="shrink-0 text-[12px] text-txt-black-400">
-                  {bibtexOpen ? "Collapse ▲" : "Expand ▼"}
-                </span>
-              </button>
-              {bibtexOpen && (
-                <div className="mt-3">
-                  <div className="flex justify-end pb-2">
-                    <CopyButton text={citations.bibtex} />
-                  </div>
-                  <pre className="overflow-auto rounded-lg bg-bg-washed px-4 py-3 font-mono text-[12px] leading-6 text-txt-black-700">
-                    {citations.bibtex}
-                  </pre>
-                </div>
-              )}
+                CC0
+              </span>
+              <span>Dedicated to the public domain</span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              {footerLinks.map(({ label, href, Icon }) => (
+                <a
+                  key={label}
+                  href={href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const el = document.querySelector(href);
+                    if (el) {
+                      const top = el.getBoundingClientRect().top + window.scrollY - 80;
+                      window.scrollTo({ top, behavior: "smooth" });
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-2 py-1 text-[12px] font-medium text-txt-black-500 transition-colors hover:text-txt-black-900"
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  {label}
+                </a>
+              ))}
             </div>
           </div>
-        </section>
+        </div>
+
+        {/* ── Narrowed sections (desktop only) ───────── */}
+        <div className="lg:px-[16.667%]">
 
         {/* ── Download ────────────────────────────────────────── */}
         <section id="dc-download" className="mb-12">
@@ -958,23 +1074,40 @@ export default function DataCatalogueShow({
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {/* Parquet */}
-            <div className="flex flex-col gap-3 rounded-xl border border-otl-gray-200 p-4">
-              <div className="flex items-center gap-2">
-                <span className="rounded border border-otl-gray-200 px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-txt-black-600">
-                  PQ
+            <div className="overflow-hidden rounded-xl border border-otl-danger-200 bg-bg-white">
+              <div className="flex items-center justify-between gap-3 bg-bg-danger-50 px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="rounded border border-otl-danger-200 bg-bg-white px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-txt-danger">
+                    PQ
+                  </span>
+                  <span className="text-[14px] font-semibold text-txt-black-900">Parquet</span>
+                </div>
+                <span className="rounded-full bg-bg-white px-2 py-0.5 text-[11px] font-semibold text-txt-danger">
+                  Recommended
                 </span>
-                <span className="text-[14px] font-semibold text-txt-black-900">Parquet</span>
               </div>
-              <p className="text-[12px] text-txt-black-500">
-                {parquet.n_rows.toLocaleString()} rows · {formatBytes(parquet.size_bytes)}
-                <span className="ml-1.5 text-txt-black-400">· recommended</span>
-              </p>
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-3 divide-x divide-otl-gray-200 border-b border-otl-gray-200">
+                <div className="px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Rows</p>
+                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{parquet.n_rows.toLocaleString()}</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Cols</p>
+                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{parquet.n_cols.toLocaleString()}</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Size</p>
+                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{formatBytes(parquet.size_bytes)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-3">
                 <a
                   href={parquet.link}
                   download
-                  className="flex items-center gap-1.5 rounded-lg border border-otl-gray-200 px-3 py-1.5 text-[13px] font-medium text-txt-black-700 transition-colors hover:bg-bg-black-50"
+                  onClick={() => trackDownload("parquet")}
+                  className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
                 >
+                  <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
                   Download
                 </a>
                 <CopyButton text={parquet.link} label="Copy link" />
@@ -982,22 +1115,35 @@ export default function DataCatalogueShow({
             </div>
 
             {/* CSV */}
-            <div className="flex flex-col gap-3 rounded-xl border border-otl-gray-200 p-4">
-              <div className="flex items-center gap-2">
-                <span className="rounded border border-otl-gray-200 px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-txt-black-600">
+            <div className="overflow-hidden rounded-xl border border-blue-200 bg-bg-white">
+              <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-3">
+                <span className="rounded border border-blue-200 bg-bg-white px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-blue-700">
                   CSV
                 </span>
                 <span className="text-[14px] font-semibold text-txt-black-900">CSV</span>
               </div>
-              <p className="text-[12px] text-txt-black-500">
-                {(csv.n_rows ?? parquet.n_rows).toLocaleString()} rows · {formatBytes(csv.size_bytes)}
-              </p>
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-3 divide-x divide-otl-gray-200 border-b border-otl-gray-200">
+                <div className="px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Rows</p>
+                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{(csv.n_rows ?? parquet.n_rows).toLocaleString()}</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Cols</p>
+                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{(csv.n_cols ?? parquet.n_cols).toLocaleString()}</p>
+                </div>
+                <div className="px-4 py-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Size</p>
+                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{formatBytes(csv.size_bytes)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-3">
                 <a
                   href={csv.link}
                   download
-                  className="flex items-center gap-1.5 rounded-lg border border-otl-gray-200 px-3 py-1.5 text-[13px] font-medium text-txt-black-700 transition-colors hover:bg-bg-black-50"
+                  onClick={() => trackDownload("csv")}
+                  className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
                 >
+                  <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
                   Download
                 </a>
                 <CopyButton text={csv.link} label="Copy link" />
@@ -1014,7 +1160,7 @@ export default function DataCatalogueShow({
             {/* Language switcher */}
             <div className="flex items-center justify-between border-b border-otl-gray-200 px-3 py-2">
               <div className="flex gap-1">
-                {(["python", "r", "curl"] as CodeLang[]).map((lang) => (
+                {(["python", "r", "duckdb", "curl"] as CodeLang[]).map((lang) => (
                   <button
                     key={lang}
                     onClick={() => setCodeLanguage(lang)}
@@ -1025,14 +1171,61 @@ export default function DataCatalogueShow({
                         : "text-txt-black-500 hover:bg-bg-washed-active",
                     )}
                   >
-                    {lang === "python" ? "Python" : lang === "r" ? "R" : "curl"}
+                    {lang === "python"
+                      ? "Python"
+                      : lang === "r"
+                      ? "R"
+                      : lang === "duckdb"
+                      ? "DuckDB"
+                      : "curl"}
                   </button>
                 ))}
               </div>
               <CopyButton text={snippets[codeLanguage]} />
             </div>
-            <pre className="overflow-auto bg-bg-washed px-5 py-5 font-mono text-[13px] leading-7 text-txt-black-800">
-              {snippets[codeLanguage]}
+            <pre className="overflow-auto bg-bg-washed px-5 py-4 font-mono text-[13px] leading-6 text-txt-black-800 [&_.hljs-built_in]:text-txt-warning [&_.hljs-comment]:text-txt-black-400 [&_.hljs-keyword]:text-txt-danger [&_.hljs-literal]:text-blue-700 [&_.hljs-meta]:text-txt-black-400 [&_.hljs-number]:text-blue-700 [&_.hljs-string]:text-blue-700 [&_.hljs-title]:text-txt-danger">
+              <code
+                className="hljs whitespace-pre font-mono"
+                dangerouslySetInnerHTML={{ __html: highlightedSnippet }}
+              />
+            </pre>
+          </div>
+        </section>
+
+        {/* ── Cite ───────────────────────────────────────────── */}
+        <section id="dc-cite" className="mb-12">
+          <SectionDivider label="Cite" />
+
+          <p className="mb-6 text-body-md text-txt-black-500">{data.cite.instructions}</p>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {(
+              [
+                { label: "APA",     style: "apa",     text: citations.apa },
+                { label: "MLA",     style: "mla",     text: citations.mla },
+                { label: "Chicago", style: "chicago", text: citations.chicago },
+                { label: "Harvard", style: "harvard", text: citations.harvard },
+              ] as const
+            ).map(({ label, style, text }) => (
+              <div key={label} className="rounded-xl border border-otl-gray-200 bg-bg-white p-4">
+                <div className="mb-2 flex items-start justify-between gap-4">
+                  <p className="text-[15px] font-semibold text-txt-black-900">{label}</p>
+                  <CopyButton text={text} />
+                </div>
+                <p className="text-[13px] leading-relaxed text-txt-black-600">
+                  <CitationMarkup style={style} cite={data.cite} />
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 rounded-xl border border-otl-gray-200 bg-bg-white p-4">
+            <div className="mb-3 flex items-start justify-between gap-4">
+              <p className="text-[15px] font-semibold text-txt-black-900">BibTeX</p>
+              <CopyButton text={citations.bibtex} />
+            </div>
+            <pre className="overflow-auto rounded-lg bg-bg-washed px-4 py-2.5 font-mono text-[12px] leading-5 text-txt-black-700">
+              {citations.bibtex}
             </pre>
           </div>
         </section>
