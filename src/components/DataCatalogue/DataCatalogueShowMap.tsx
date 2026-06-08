@@ -621,7 +621,7 @@ export default function DataCatalogueShowMap({
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="px-3 sm:px-4.5 md:px-6">
+    <div className="px-4.5 md:px-6">
       <div className="mx-auto w-full max-w-screen-xl pb-24 pt-8">
 
         {/* ── Header ─────────────────────────────────────────── */}
@@ -647,7 +647,7 @@ export default function DataCatalogueShowMap({
             Last updated: {formatDate(data.last_updated)}
           </p>
         </div>
-        <p className="mb-3 max-w-3xl text-body-md text-txt-black-600">
+        <p className="mb-3 max-w-5xl text-body-md text-txt-black-600">
           {data.description}
         </p>
         <div className="mb-8 flex flex-wrap items-center gap-3 text-[13px] text-txt-black-500">
@@ -665,7 +665,7 @@ export default function DataCatalogueShowMap({
         <div className="mb-10 overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white">
 
           {/* Tab bar */}
-          <div className="grid grid-cols-2 border-b border-otl-gray-200 px-1 sm:flex sm:items-center">
+          <div className="grid grid-cols-2 border-b border-otl-gray-200 sm:flex sm:items-center">
             {tabItems.map(({ tab, label, Icon }) => (
               <button
                 key={tab}
@@ -792,23 +792,23 @@ export default function DataCatalogueShowMap({
           </div>
 
           {/* Persistent footer */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-otl-gray-200 px-4 py-3">
-            <div className="flex items-center gap-2 text-[12px] text-txt-black-500">
+          <div className="flex flex-nowrap items-center justify-between gap-2 border-t border-otl-gray-200 px-4 py-3 sm:flex-wrap sm:gap-3">
+            <div className="flex items-center gap-0 text-[12px] text-txt-black-500 sm:gap-2">
               <span
                 title="Creative Commons Zero — No Rights Reserved"
                 className="flex h-5 w-8 items-center justify-center rounded border border-current text-[10px] font-bold leading-none"
               >
                 CC0
               </span>
-              <span>Dedicated to the public domain</span>
+              <span className="hidden sm:inline">Dedicated to the public domain</span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
               {footerLinks.map(({ label, href, Icon }) => (
                 <a
                   key={label}
                   href={href}
                   onClick={scrollTo(href)}
-                  className="flex items-center gap-1.5 px-2 py-1 text-[12px] font-medium text-txt-black-500 transition-colors hover:text-txt-black-900"
+                  className="flex items-center gap-1.5 whitespace-nowrap px-2 py-1 text-[12px] font-medium text-txt-black-500 transition-colors hover:text-txt-black-900"
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   {label}

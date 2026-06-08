@@ -94,6 +94,7 @@ type CodeLang = "python" | "r" | "curl" | "duckdb";
 type CopyState = "idle" | "copied";
 
 const MAX_DISPLAY_ROWS = 500;
+const DEFAULT_FLOAT_PRECISION = 2;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -149,25 +150,11 @@ function formatPreviewCell(
   return String(value);
 }
 
-function escapeCsvCell(val: string): string {
-  return /[",\n\r]/u.test(val) ? `"${val.replace(/"/gu, '""')}"` : val;
-}
-
-function buildCsv(result: QueryResult): string {
-  const header = result.columns.map(escapeCsvCell).join(",");
-  const rows = result.rows.map((row) =>
-    row
-      .map((cell, ci) =>
-        escapeCsvCell(
-          cell == null ? "" : formatResultCell(cell, result.fieldTypes[ci] ?? ""),
-        ),
-      )
-      .join(","),
-  );
-  return [header, ...rows].join("\n");
-}
-
-function formatResultCell(value: unknown, fieldType: string): string {
+function formatResultCell(
+  value: unknown,
+  fieldType: string,
+  precision?: number,
+): string {
   if (value === null || value === undefined) return "—";
   if (value instanceof Date) {
     return value.toLocaleDateString("en-GB", {
@@ -185,7 +172,16 @@ function formatResultCell(value: unknown, fieldType: string): string {
     });
   }
   if (typeof value === "bigint") return value.toLocaleString("en-GB");
-  if (typeof value === "number") return value.toLocaleString("en-GB");
+  if (typeof value === "number") {
+    if (ft.includes("float") || ft.includes("double") || ft.includes("decimal")) {
+      const digits = precision ?? DEFAULT_FLOAT_PRECISION;
+      return value.toLocaleString("en-GB", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits === 0 ? 20 : digits,
+      });
+    }
+    return value.toLocaleString("en-GB");
+  }
   return String(value);
 }
 
@@ -196,6 +192,8 @@ function isNumericType(fieldType: string, sample: unknown): boolean {
 }
 
 function isRightAlignedType(fieldType: string, sample?: unknown): boolean {
+  const ft = fieldType.toLowerCase();
+  if (ft.includes("date") || ft.includes("timestamp")) return false;
   return isNumericType(fieldType, sample);
 }
 
@@ -435,12 +433,10 @@ function CopyButton({
 
 const SqlResults = memo(function SqlResults({
   result,
-  onCopyCsv,
-  csvCopyState,
+  precisionByColumn,
 }: {
   result: QueryResult;
-  onCopyCsv: () => void;
-  csvCopyState: CopyState;
+  precisionByColumn: Record<string, number>;
 }) {
   const isRightAligned = useMemo(
     () =>
@@ -453,39 +449,6 @@ const SqlResults = memo(function SqlResults({
 
   return (
     <div className="bg-bg-white">
-      <div className="flex items-center justify-between gap-3 border-b border-otl-gray-200 px-4 py-2">
-        <p className="flex items-center gap-1.5 text-[12px] text-txt-black-500">
-          <CheckCircleIcon className="h-3.5 w-3.5 shrink-0 text-green-600" />
-          <span>
-            {result.truncated
-              ? `${MAX_DISPLAY_ROWS.toLocaleString()}+ rows (capped)`
-              : `${result.totalRows.toLocaleString()} row${result.totalRows !== 1 ? "s" : ""}`}
-            {" · "}
-            {result.columns.length} col{result.columns.length !== 1 ? "s" : ""}
-            {" · "}
-            {result.executionTime < 1000
-              ? `${Math.round(result.executionTime)} ms`
-              : `${(result.executionTime / 1000).toFixed(2)} s`}
-          </span>
-        </p>
-        <button
-          onClick={onCopyCsv}
-          className="flex shrink-0 items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active"
-        >
-          {csvCopyState === "copied" ? (
-            <>
-              <ClipboardDocumentCheckIcon className="h-3.5 w-3.5 text-green-600" />
-              <span className="text-green-600">Copied!</span>
-            </>
-          ) : (
-            <>
-              <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-              Copy as CSV
-            </>
-          )}
-        </button>
-      </div>
-
       {result.rows.length === 0 ? (
         <p className="px-4 py-10 text-center text-[13px] text-txt-black-400">
           Query returned no rows.
@@ -523,7 +486,11 @@ const SqlResults = memo(function SqlResults({
                         cell == null && "italic text-txt-black-300",
                       )}
                     >
-                      {formatResultCell(cell, result.fieldTypes[ci] ?? "")}
+                      {formatResultCell(
+                        cell,
+                        result.fieldTypes[ci] ?? "",
+                        precisionByColumn[result.columns[ci]],
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -582,7 +549,6 @@ export default function DataCatalogueShow({
   const [running,      setRunning]      = useState(false);
   const [result,       setResult]       = useState<QueryResult | null>(null);
   const [queryError,   setQueryError]   = useState<string | null>(null);
-  const [csvCopyState, setCsvCopyState] = useState<CopyState>("idle");
   const [codeLanguage, setCodeLanguage] = useState<CodeLang>("python");
   const [viewCount,    setViewCount]    = useState<number | null>(null);
   const [downloadCount, setDownloadCount] = useState<number | null>(null);
@@ -643,8 +609,6 @@ export default function DataCatalogueShow({
       .catch(() => {});
   }, [tbToken, tbHost, id, appendTinybirdEvent]);
 
-  useEffect(() => { setCsvCopyState("idle"); }, [result]);
-
   const fieldTypeMap = useMemo(() => {
     const map: Record<string, string> = {};
     for (const f of data.fields) {
@@ -652,6 +616,20 @@ export default function DataCatalogueShow({
     }
     return map;
   }, [data.fields]);
+
+  const precisionByColumn = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const field of data.fields) {
+      map[field.name] =
+        data.display_options.precision.specific[field.name] ??
+        data.display_options.precision.default;
+    }
+    return map;
+  }, [
+    data.fields,
+    data.display_options.precision.default,
+    data.display_options.precision.specific,
+  ]);
 
   const columns = useMemo(() => {
     if (!data.sample_data.length) return [];
@@ -712,13 +690,6 @@ export default function DataCatalogueShow({
     },
     [runQuery],
   );
-
-  const handleCopyCsv = useCallback(async () => {
-    if (!result) return;
-    await navigator.clipboard.writeText(buildCsv(result));
-    setCsvCopyState("copied");
-    setTimeout(() => setCsvCopyState("idle"), 2000);
-  }, [result]);
 
   // Programmatic access snippets
   const snippets: Record<CodeLang, string> = useMemo(() => {
@@ -798,7 +769,7 @@ export default function DataCatalogueShow({
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="px-3 sm:px-4.5 md:px-6">
+    <div className="px-4.5 md:px-6">
       <div className="mx-auto w-full max-w-screen-xl pb-24 pt-8">
 
         {/* ── Header ─────────────────────────────────────────── */}
@@ -824,7 +795,7 @@ export default function DataCatalogueShow({
             Last updated: {formatDate(data.last_updated)}
           </p>
         </div>
-        <p className="mb-3 max-w-3xl text-body-md text-txt-black-600">
+        <p className="mb-3 max-w-5xl text-body-md text-txt-black-600">
           {data.description}
         </p>
         <div className="mb-8 flex flex-col gap-2 text-[13px] text-txt-black-500">
@@ -844,7 +815,7 @@ export default function DataCatalogueShow({
         <div className="mb-10 overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white">
 
           {/* Tab bar */}
-          <div className="grid grid-cols-2 border-b border-otl-gray-200 px-1 sm:flex sm:items-center">
+          <div className="grid grid-cols-2 border-b border-otl-gray-200 sm:flex sm:items-center">
             {tabItems.map(({ tab, label, Icon }) => (
               <button
                 key={tab}
@@ -919,14 +890,35 @@ export default function DataCatalogueShow({
                     />
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 px-3 py-2">
-                    <CopyButton text={queryText} label="Copy SQL" />
+                  <div className="flex items-center justify-between gap-3 px-3 py-2">
+                    <p className="min-w-0 truncate text-[12px] text-txt-black-500">
+                      {result && !queryError ? (
+                        <span className="inline-flex min-w-0 items-center gap-1.5">
+                          <CheckCircleIcon className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                          <span className="truncate">
+                            {result.truncated
+                              ? `${MAX_DISPLAY_ROWS.toLocaleString()}+ rows (capped)`
+                              : `${result.totalRows.toLocaleString()} row${result.totalRows !== 1 ? "s" : ""}`}
+                            {" · "}
+                            {result.columns.length} col{result.columns.length !== 1 ? "s" : ""}
+                            {" · "}
+                            {result.executionTime < 1000
+                              ? `${Math.round(result.executionTime)} ms`
+                              : `${(result.executionTime / 1000).toFixed(2)} s`}
+                          </span>
+                        </span>
+                      ) : queryError ? (
+                        "Query error"
+                      ) : (
+                        "Run query to preview results"
+                      )}
+                    </p>
                     <button
                       onClick={() => void runQuery()}
                       disabled={!db || running || !queryText.trim()}
                       className={clx(
                         "flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-[12px] font-semibold transition-colors",
-                        "bg-green-600 text-white hover:bg-green-700",
+                        "bg-danger-600 text-white hover:bg-danger-700",
                         "disabled:cursor-not-allowed disabled:opacity-50",
                       )}
                     >
@@ -956,8 +948,7 @@ export default function DataCatalogueShow({
                 {result && !queryError && (
                   <SqlResults
                     result={result}
-                    onCopyCsv={() => void handleCopyCsv()}
-                    csvCopyState={csvCopyState}
+                    precisionByColumn={precisionByColumn}
                   />
                 )}
               </div>
@@ -1083,18 +1074,18 @@ export default function DataCatalogueShow({
           )}
 
           {/* Persistent footer */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-otl-gray-200 px-4 py-3">
-            <div className="flex items-center gap-2 text-[12px] text-txt-black-500">
+          <div className="flex flex-nowrap items-center justify-between gap-2 border-t border-otl-gray-200 px-4 py-3 sm:flex-wrap sm:gap-3">
+            <div className="flex items-center gap-0 text-[12px] text-txt-black-500 sm:gap-2">
               <span
                 title="Creative Commons Zero — No Rights Reserved"
                 className="flex h-5 w-8 items-center justify-center rounded border border-current text-[10px] font-bold leading-none"
               >
                 CC0
               </span>
-              <span>Dedicated to the public domain</span>
+              <span className="hidden sm:inline">Dedicated to the public domain</span>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
               {footerLinks.map(({ label, href, Icon }) => (
                 <a
                   key={label}
@@ -1107,7 +1098,7 @@ export default function DataCatalogueShow({
                       window.scrollTo({ top, behavior: "smooth" });
                     }
                   }}
-                  className="flex items-center gap-1.5 px-2 py-1 text-[12px] font-medium text-txt-black-500 transition-colors hover:text-txt-black-900"
+                  className="flex items-center gap-1.5 whitespace-nowrap px-2 py-1 text-[12px] font-medium text-txt-black-500 transition-colors hover:text-txt-black-900"
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   {label}

@@ -611,7 +611,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
       )}
 
       {/* ─── CONSTITUENCY REDISTRIBUTION ─── */}
-      <Container className="gap-8 pb-8 pt-36 lg:gap-16 lg:pb-16 lg:pt-20">
+      <Container className="gap-8 pb-8 pt-16 lg:gap-16 lg:pb-16 lg:pt-20">
         <SectionGrid>
           <div className="mx-auto w-full space-y-6">
             <h2
@@ -1124,10 +1124,30 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
     },
   ];
 
+  const newConstituencyTab =
+    r("new_constituency_mobile") === "new_constituency_mobile"
+      ? r("new_constituency")
+      : r("new_constituency_mobile");
+  const oldConstituencyTab =
+    r("old_constituency_mobile") === "old_constituency_mobile"
+      ? r("old_constituency")
+      : r("old_constituency_mobile");
+
   const TABS = [
-    { value: "compare", label: r("map_explorer.tabs.compare") || "Compare" },
-    { value: "new", label: `${r("new_constituency")} (${new_year})` },
-    { value: "old", label: `${r("old_constituency")} (${old_year})` },
+    {
+      value: "compare",
+      label: r("map_explorer.tabs.compare") || "Compare",
+    },
+    {
+      value: "new",
+      label: `${r("new_constituency")} (${new_year})`,
+      mobileLabel: `${newConstituencyTab} (${new_year})`,
+    },
+    {
+      value: "old",
+      label: `${r("old_constituency")} (${old_year})`,
+      mobileLabel: `${oldConstituencyTab} (${old_year})`,
+    },
   ] as const;
 
   return (
@@ -1139,7 +1159,7 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
 
         {/* Tab strip */}
         <div className="mx-auto flex h-8 w-fit items-center rounded-lg bg-bg-washed p-0">
-          {TABS.map(({ value, label }) => (
+          {TABS.map(({ value, label, ...tabOption }) => (
             <button
               key={value}
               onClick={() => setTab(value)}
@@ -1150,7 +1170,14 @@ const RedelineationBeforeAfterMap: FC<BeforeAfterProps> = ({
                   : "text-txt-black-500",
               )}
             >
-              {label}
+              {"mobileLabel" in tabOption ? (
+                <>
+                  <span className="sm:hidden">{tabOption.mobileLabel}</span>
+                  <span className="hidden sm:inline">{label}</span>
+                </>
+              ) : (
+                label
+              )}
             </button>
           ))}
         </div>
