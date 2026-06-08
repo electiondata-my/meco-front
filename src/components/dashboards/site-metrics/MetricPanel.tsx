@@ -22,6 +22,7 @@ type MetricPanelProps = {
   loading: boolean;
   mounted: boolean;
   chartOptions: ChartOptions<"line">;
+  chartPixelRatio: number;
 };
 
 export default function MetricPanel({
@@ -37,6 +38,7 @@ export default function MetricPanel({
   loading,
   mounted,
   chartOptions,
+  chartPixelRatio,
 }: MetricPanelProps) {
   const hasData = rows.length > 0;
 
@@ -69,6 +71,7 @@ export default function MetricPanel({
           </div>
         ) : mounted && hasData ? (
           <Line
+            key={chartPixelRatio}
             data={{
               datasets: [
                 {
@@ -79,7 +82,7 @@ export default function MetricPanel({
                   })),
                   borderColor: color,
                   backgroundColor: colorH,
-                  borderWidth: 1,
+                  borderWidth: 1.5,
                   pointRadius: 0,
                   pointHoverRadius: 3,
                   fill: true,
@@ -87,7 +90,7 @@ export default function MetricPanel({
                 },
               ],
             }}
-            options={chartOptions}
+            options={{ ...chartOptions, devicePixelRatio: chartPixelRatio }}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-body-sm text-txt-black-500">
@@ -144,6 +147,7 @@ export function buildChartOptions(): ChartOptions<"line"> {
     scales: {
       x: {
         type: "time",
+        alignToPixels: true,
         time: {
           unit: "day",
           round: "day",
@@ -169,10 +173,11 @@ export function buildChartOptions(): ChartOptions<"line"> {
       },
       y: {
         beginAtZero: true,
+        alignToPixels: true,
         border: { display: false },
         grid: {
           color: GRID_COLOR,
-          borderDash: [4, 4],
+          lineWidth: 1,
         },
         ticks: {
           maxTicksLimit: 6,

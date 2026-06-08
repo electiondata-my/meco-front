@@ -1236,7 +1236,7 @@ export default function DataCatalogueShow({
         </section>
 
         {/* ── Cite ───────────────────────────────────────────── */}
-        <section id="dc-cite" className="mb-12">
+        <section id="dc-cite" className="mb-6">
           <SectionDivider label="Cite" />
 
           <p className="mb-6 text-body-md text-txt-black-500">{data.cite.instructions}</p>
@@ -1245,9 +1245,9 @@ export default function DataCatalogueShow({
             {(
               [
                 { label: "APA",     style: "apa",     text: citations.apa },
+                { label: "Harvard", style: "harvard", text: citations.harvard },
                 { label: "MLA",     style: "mla",     text: citations.mla },
                 { label: "Chicago", style: "chicago", text: citations.chicago },
-                { label: "Harvard", style: "harvard", text: citations.harvard },
               ] as const
             ).map(({ label, style, text }) => (
               <div key={label} className="rounded-xl border border-otl-gray-200 bg-bg-white p-4">

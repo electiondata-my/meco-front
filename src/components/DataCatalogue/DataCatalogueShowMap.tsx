@@ -318,7 +318,17 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
+function CopyButton({
+  text,
+  label = "Copy",
+  className,
+  labelClassName,
+}: {
+  text: string;
+  label?: string;
+  className?: string;
+  labelClassName?: string;
+}) {
   const [state, setState] = useState<CopyState>("idle");
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(text);
@@ -329,17 +339,21 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
   return (
     <button
       onClick={handleCopy}
-      className="flex shrink-0 items-center gap-1 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
+      aria-label={label}
+      className={clx(
+        "flex shrink-0 items-center gap-1 whitespace-nowrap px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900",
+        className,
+      )}
     >
       {state === "copied" ? (
         <>
           <ClipboardDocumentCheckIcon className="h-3.5 w-3.5 text-green-600" />
-          <span className="text-green-600">Copied!</span>
+          <span className={clx("text-green-600", labelClassName)}>Copied!</span>
         </>
       ) : (
         <>
           <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-          {label}
+          <span className={labelClassName}>{label}</span>
         </>
       )}
     </button>
@@ -604,6 +618,14 @@ export default function DataCatalogueShowMap({
     { label: "Cite",     href: "#dc-cite",     Icon: BookOpenIcon      },
   ] as const;
 
+  const downloadRows = [
+    { label: "GeoJSON",    info: geojson,     format: "geojson",    bestFor: "Web dev, general use" },
+    { label: "GeoParquet", info: geoparquet,  format: "geoparquet", bestFor: "Data science & engineering" },
+    { label: "TopoJSON",   info: topojson,    format: "topojson",   bestFor: "D3.js, topology preservation" },
+    { label: "FlatGeoBuf", info: flatgeobuf,  format: "flatgeobuf", bestFor: "Streaming, cloud ops" },
+    { label: "KML",        info: kml,         format: "kml",        bestFor: "Google Earth" },
+  ] as const;
+
   const catalogueSectionTitle = subcategory ? `${category}: ${subcategory}` : category;
   const catalogueSectionHref  = catalogueSectionTitle
     ? `/data-catalogue#${slugify(catalogueSectionTitle)}`
@@ -823,172 +845,80 @@ export default function DataCatalogueShowMap({
 
           {/* ── Download ─────────────────────────────────────── */}
           <section id="dc-download" className="mb-12">
-            <SectionDivider label="Download" />
+            <h2 className="mb-3 font-poppins text-[1.1rem] font-semibold text-txt-black-900">
+              {`Download (${geoparquet.n_objects.toLocaleString()} features x ${geoparquet.n_attributes} attributes)`}
+            </h2>
 
-            {/* Row 1: GeoJSON + GeoParquet (both recommended) */}
-            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* GeoJSON */}
-              <div className="overflow-hidden rounded-xl border border-otl-danger-200 bg-bg-white">
-                <div className="flex items-center justify-between gap-3 bg-bg-danger-50 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded border border-otl-danger-200 bg-bg-white px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-txt-danger">
-                      GJ
-                    </span>
-                    <span className="text-[14px] font-semibold text-txt-black-900">GeoJSON</span>
-                  </div>
-                  <span className="rounded-full bg-bg-white px-2 py-0.5 text-[11px] font-semibold text-txt-danger">
-                    Recommended
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 divide-x divide-otl-gray-200 border-b border-otl-gray-200">
-                  <div className="px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Features</p>
-                    <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{geojson.n_objects.toLocaleString()}</p>
-                  </div>
-                  <div className="px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Attributes</p>
-                    <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{geojson.n_attributes}</p>
-                  </div>
-                  <div className="px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Size</p>
-                    <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{formatBytes(geojson.size_bytes)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-3">
-                  <a
-                    href={geojson.link}
-                    download
-                    onClick={() => trackDownload("geojson")}
-                    className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
-                  >
-                    <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
-                    Download
-                  </a>
-                  <CopyButton text={geojson.link} label="Copy link" />
-                </div>
+            <div className="overflow-hidden bg-bg-white">
+              <div className="overflow-x-auto">
+                <table className="w-full table-fixed border-collapse">
+                  <colgroup>
+                    <col className="w-[34%] sm:w-[20%]" />
+                    <col className="hidden sm:table-column sm:w-[28%]" />
+                    <col className="w-[22%] sm:w-[13%]" />
+                    <col className="w-[26%] sm:w-[20%]" />
+                    <col className="w-[18%] sm:w-[19%]" />
+                  </colgroup>
+                  <thead>
+                    <tr className="border-b border-otl-gray-200 text-left">
+                      <th className="py-3 pr-3 text-[11px] font-semibold uppercase tracking-wider text-txt-black-900 sm:pr-4 sm:text-[12px]">
+                        Format
+                      </th>
+                      <th className="hidden py-3 pr-4 text-[12px] font-semibold uppercase tracking-wider text-txt-black-900 sm:table-cell">
+                        Best for
+                      </th>
+                      <th className="whitespace-nowrap py-3 pr-3 text-[11px] font-semibold uppercase tracking-wider text-txt-black-900 sm:pr-4 sm:text-[12px]">
+                        Size
+                      </th>
+                      <th className="whitespace-nowrap py-3 pr-2 text-center text-[11px] font-semibold uppercase tracking-wider text-txt-black-900 sm:pr-3 sm:text-[12px]">
+                        Download
+                      </th>
+                      <th className="whitespace-nowrap py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-txt-black-900 sm:text-[12px]">
+                        Link
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-otl-gray-200">
+                    {downloadRows.map(({ label, info, format, bestFor }) => (
+                      <tr key={format}>
+                        <td className="py-3 pr-3 sm:pr-4">
+                          <div className="flex items-center gap-2">
+                            <span className="break-words text-[13px] font-semibold leading-tight text-txt-black-900 sm:text-[14px]">
+                              {label}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="hidden py-3 pr-4 text-[13px] text-txt-black-600 sm:table-cell">
+                          {bestFor}
+                        </td>
+                        <td className="whitespace-nowrap py-3 pr-3 font-mono text-[12px] tabular-nums text-txt-black-900 sm:pr-4 sm:text-[13px]">
+                          {formatBytes(info.size_bytes)}
+                        </td>
+                        <td className="py-3 pr-2 sm:pr-3">
+                          <a
+                            href={info.link}
+                            download
+                            onClick={() => trackDownload(format)}
+                            aria-label={`Download ${label}`}
+                            className="mx-auto flex h-8 w-8 items-center justify-center gap-1.5 rounded-md border border-otl-gray-200 bg-bg-white text-[13px] font-medium text-txt-black-600 transition-colors hover:border-otl-gray-300 hover:bg-bg-black-50 hover:text-txt-black-900 sm:h-auto sm:w-fit sm:px-2 sm:py-1"
+                          >
+                            <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
+                            <span className="hidden sm:inline">Download</span>
+                          </a>
+                        </td>
+                        <td className="py-3">
+                          <CopyButton
+                            text={info.link}
+                            label="Copy link"
+                            className="mx-auto h-8 w-8 justify-center rounded-md border border-otl-gray-200 bg-bg-white hover:border-otl-gray-300 hover:bg-bg-black-50 sm:h-auto sm:w-fit"
+                            labelClassName="hidden sm:inline"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-
-              {/* GeoParquet */}
-              <div className="overflow-hidden rounded-xl border border-otl-danger-200 bg-bg-white">
-                <div className="flex items-center justify-between gap-3 bg-bg-danger-50 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded border border-otl-danger-200 bg-bg-white px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-txt-danger">
-                      GPQ
-                    </span>
-                    <span className="text-[14px] font-semibold text-txt-black-900">GeoParquet</span>
-                  </div>
-                  <span className="rounded-full bg-bg-white px-2 py-0.5 text-[11px] font-semibold text-txt-danger">
-                    Recommended
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 divide-x divide-otl-gray-200 border-b border-otl-gray-200">
-                  <div className="px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Features</p>
-                    <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{geoparquet.n_objects.toLocaleString()}</p>
-                  </div>
-                  <div className="px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Attributes</p>
-                    <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{geoparquet.n_attributes}</p>
-                  </div>
-                  <div className="px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Size</p>
-                    <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{formatBytes(geoparquet.size_bytes)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-3">
-                  <a
-                    href={geoparquet.link}
-                    download
-                    onClick={() => trackDownload("geoparquet")}
-                    className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
-                  >
-                    <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
-                    Download
-                  </a>
-                  <CopyButton text={geoparquet.link} label="Copy link" />
-                </div>
-              </div>
-            </div>
-
-            {/* Row 2: TopoJSON + FlatGeoBuf */}
-            <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {([
-                { abbr: "TJ",  label: "TopoJSON",   info: topojson,   format: "topojson"   },
-                { abbr: "FGB", label: "FlatGeoBuf", info: flatgeobuf, format: "flatgeobuf" },
-              ] as const).map(({ abbr, label, info, format }) => (
-                <div key={format} className="overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white">
-                  <div className="flex items-center gap-2 border-b border-otl-gray-200 bg-bg-washed px-4 py-3">
-                    <span className="rounded border border-otl-gray-200 bg-bg-white px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-txt-black-500">
-                      {abbr}
-                    </span>
-                    <span className="text-[14px] font-semibold text-txt-black-900">{label}</span>
-                  </div>
-                  <div className="grid grid-cols-3 divide-x divide-otl-gray-200 border-b border-otl-gray-200">
-                    <div className="px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Features</p>
-                      <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{info.n_objects.toLocaleString()}</p>
-                    </div>
-                    <div className="px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Attributes</p>
-                      <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{info.n_attributes}</p>
-                    </div>
-                    <div className="px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Size</p>
-                      <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{formatBytes(info.size_bytes)}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-3">
-                    <a
-                      href={info.link}
-                      download
-                      onClick={() => trackDownload(format)}
-                      className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
-                    >
-                      <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
-                      Download
-                    </a>
-                    <CopyButton text={info.link} label="Copy link" />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Row 3: KML */}
-            <div className="sm:w-1/2">
-            <div className="overflow-hidden rounded-xl border border-otl-gray-200 bg-bg-white">
-              <div className="flex items-center gap-2 border-b border-otl-gray-200 bg-bg-washed px-4 py-3">
-                <span className="rounded border border-otl-gray-200 bg-bg-white px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-txt-black-500">
-                  KML
-                </span>
-                <span className="text-[14px] font-semibold text-txt-black-900">KML</span>
-              </div>
-              <div className="grid grid-cols-3 divide-x divide-otl-gray-200 border-b border-otl-gray-200">
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Features</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{kml.n_objects.toLocaleString()}</p>
-                </div>
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Attributes</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{kml.n_attributes}</p>
-                </div>
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Size</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{formatBytes(kml.size_bytes)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-3">
-                <a
-                  href={kml.link}
-                  download
-                  onClick={() => trackDownload("kml")}
-                  className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
-                >
-                  <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
-                  Download
-                </a>
-                <CopyButton text={kml.link} label="Copy link" />
-              </div>
-            </div>
             </div>
           </section>
 
@@ -1026,7 +956,7 @@ export default function DataCatalogueShowMap({
           </section>
 
           {/* ── Cite ─────────────────────────────────────────── */}
-          <section id="dc-cite" className="mb-12">
+          <section id="dc-cite" className="mb-6">
             <SectionDivider label="Cite" />
 
             <p className="mb-6 text-body-md text-txt-black-500">{data.cite.instructions}</p>
@@ -1035,9 +965,9 @@ export default function DataCatalogueShowMap({
               {(
                 [
                   { label: "APA",     style: "apa"     as const, text: citations.apa     },
+                  { label: "Harvard", style: "harvard" as const, text: citations.harvard },
                   { label: "MLA",     style: "mla"     as const, text: citations.mla     },
                   { label: "Chicago", style: "chicago" as const, text: citations.chicago },
-                  { label: "Harvard", style: "harvard" as const, text: citations.harvard },
                 ]
               ).map(({ label, style, text }) => (
                 <div key={label} className="rounded-xl border border-otl-gray-200 bg-bg-white p-4">

@@ -29,6 +29,11 @@ ChartJS.register(
 
 type Props = { tbBase: string; token: string; translations: Record<string, string> };
 
+function readDevicePixelRatio(): number {
+  if (typeof window === "undefined") return 1;
+  return Number((window.devicePixelRatio || 1).toFixed(2));
+}
+
 function RefreshIcon({ spinning }: { spinning: boolean }) {
   return (
     <svg
@@ -96,10 +101,32 @@ export default function SiteMetricsDashboard({ tbBase, token, translations }: Pr
   const [allRows, setAllRows] = useState<SiteMetricsRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [chartPixelRatio, setChartPixelRatio] = useState(1);
 
   useEffect(() => {
     import("chartjs-adapter-luxon");
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    let frame = 0;
+
+    const syncPixelRatio = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        setChartPixelRatio(readDevicePixelRatio());
+      });
+    };
+
+    syncPixelRatio();
+    window.addEventListener("resize", syncPixelRatio);
+    window.visualViewport?.addEventListener("resize", syncPixelRatio);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", syncPixelRatio);
+      window.visualViewport?.removeEventListener("resize", syncPixelRatio);
+    };
   }, []);
 
   const fetchData = useCallback(() => {
@@ -215,6 +242,7 @@ export default function SiteMetricsDashboard({ tbBase, token, translations }: Pr
                     loading={loading}
                     mounted={mounted}
                     chartOptions={chartOptions}
+                    chartPixelRatio={chartPixelRatio}
                   />
                 </div>
               );
