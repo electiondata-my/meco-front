@@ -226,53 +226,111 @@ function toIsoSeconds(date = new Date()): string {
   return date.toISOString().replace(/\.\d{3}Z$/u, "");
 }
 
-function formatAuthorFull(author: string): string {
-  const trimmed = author.trim();
-  if (trimmed.includes(",")) return trimmed;
-  const parts = trimmed.split(/\s+/u);
-  if (parts.length < 2) return trimmed;
-  const family = parts.at(-1);
-  const given = parts.slice(0, -1).join(" ");
-  return `${family}, ${given}`;
+interface CitationAuthor {
+  family: string;
+  given: string;
 }
 
-function formatAuthorInitial(author: string): string {
-  const full = formatAuthorFull(author);
-  const [family, given = ""] = full.split(",").map((part) => part.trim());
-  if (!given) return full;
-  const initials = given
+function parseCitationAuthor(author: string): CitationAuthor {
+  const trimmed = author.trim();
+  const commaIndex = trimmed.indexOf(",");
+  if (commaIndex >= 0) {
+    return {
+      family: trimmed.slice(0, commaIndex).trim(),
+      given:  trimmed.slice(commaIndex + 1).trim(),
+    };
+  }
+
+  const parts = trimmed.split(/\s+/u);
+  if (parts.length < 2) return { family: trimmed, given: "" };
+  return {
+    family: parts.at(-1) ?? trimmed,
+    given:  parts.slice(0, -1).join(" "),
+  };
+}
+
+function parseCitationAuthors(author: string): CitationAuthor[] {
+  return author
+    .split(/,?\s+(?:and|&)\s+/u)
+    .map(parseCitationAuthor)
+    .filter(({ family, given }) => family || given);
+}
+
+function formatAuthorFull(author: CitationAuthor): string {
+  if (!author.given) return author.family;
+  return `${author.family}, ${author.given}`;
+}
+
+function formatAuthorInitial(author: CitationAuthor, separator = " "): string {
+  if (!author.given) return author.family;
+  const initials = author.given
     .split(/\s+/u)
     .filter(Boolean)
     .map((part) => `${part[0]}.`)
-    .join(" ");
-  return `${family}, ${initials}`;
+    .join(separator);
+  return `${author.family}, ${initials}`;
+}
+
+function formatAuthorsMLA(author: string): string {
+  const authors = parseCitationAuthors(author);
+  if (authors.length === 0) return author.trim();
+  if (authors.length === 1) return formatAuthorFull(authors[0]);
+
+  const formatted = authors.map(formatAuthorFull);
+  const last = formatted.at(-1);
+  return `${formatted.slice(0, -1).join(", ")}, and ${last}`;
+}
+
+function formatAuthorsAPA(author: string): string {
+  const formatted = parseCitationAuthors(author).map((item) => formatAuthorInitial(item));
+  if (formatted.length === 0) return author.trim();
+  if (formatted.length === 1) return formatted[0];
+  if (formatted.length === 2) return `${formatted[0]}, & ${formatted[1]}`;
+
+  const last = formatted.at(-1);
+  return `${formatted.slice(0, -1).join(", ")}, & ${last}`;
+}
+
+function formatAuthorsHarvard(author: string): string {
+  const formatted = parseCitationAuthors(author).map((item) => formatAuthorInitial(item, ""));
+  if (formatted.length === 0) return author.trim();
+  if (formatted.length === 1) return formatted[0];
+  if (formatted.length === 2) return `${formatted[0]} and ${formatted[1]}`;
+
+  const last = formatted.at(-1);
+  return `${formatted.slice(0, -1).join(", ")} and ${last}`;
+}
+
+function formatAuthorsBibTeX(author: string): string {
+  const formatted = parseCitationAuthors(author).map(formatAuthorFull);
+  return formatted.length > 0 ? formatted.join(" and ") : author.trim();
 }
 
 // ── Citation formatters ───────────────────────────────────────────────────────
 
 function buildAPA(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `${formatAuthorInitial(c.author)} (${year}). ${c.title}. ${c.journal}.`;
+  return `${formatAuthorsAPA(c.author)} (${year}). ${c.title}. ${c.journal}.`;
 }
 
 function buildMLA(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `${formatAuthorFull(c.author)}. "${c.title}." ${c.journal} (${year}).`;
+  return `${formatAuthorsMLA(c.author)}. "${c.title}." ${c.journal} (${year}).`;
 }
 
 function buildChicago(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `${formatAuthorFull(c.author)}. "${c.title}." ${c.journal} (${year}).`;
+  return `${formatAuthorsMLA(c.author)}. "${c.title}." ${c.journal} (${year}).`;
 }
 
 function buildHarvard(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `${formatAuthorInitial(c.author)} ${year}, ${c.title}. ${c.journal}.`;
+  return `${formatAuthorsHarvard(c.author)} ${year}, ${c.title}. ${c.journal}.`;
 }
 
 function buildBibTeX(c: CiteData): string {
   const year = c.date.split("-")[0];
-  return `@${c.type}{${c.id},\n  author  = {${formatAuthorFull(c.author)}},\n  title   = {${c.title}},\n  journal = {${c.journal}},\n  year    = {${year}}\n}`;
+  return `@${c.type}{${c.id},\n  author  = {${formatAuthorsBibTeX(c.author)}},\n  title   = {${c.title}},\n  journal = {${c.journal}},\n  year    = {${year}}\n}`;
 }
 
 function CitationMarkup({
@@ -286,27 +344,27 @@ function CitationMarkup({
   if (style === "apa") {
     return (
       <>
-        {formatAuthorInitial(cite.author)} ({year}). {cite.title}. <em>{cite.journal}</em>.
+        {formatAuthorsAPA(cite.author)} ({year}). {cite.title}. <em>{cite.journal}</em>.
       </>
     );
   }
   if (style === "mla") {
     return (
       <>
-        {formatAuthorFull(cite.author)}. "{cite.title}." <em>{cite.journal}</em> ({year}).
+        {formatAuthorsMLA(cite.author)}. "{cite.title}." <em>{cite.journal}</em> ({year}).
       </>
     );
   }
   if (style === "chicago") {
     return (
       <>
-        {formatAuthorFull(cite.author)}. "{cite.title}." <em>{cite.journal}</em> ({year}).
+        {formatAuthorsMLA(cite.author)}. "{cite.title}." <em>{cite.journal}</em> ({year}).
       </>
     );
   }
   return (
     <>
-      {formatAuthorInitial(cite.author)} {year}, {cite.title}. <em>{cite.journal}</em>.
+      {formatAuthorsHarvard(cite.author)} {year}, {cite.title}. <em>{cite.journal}</em>.
     </>
   );
 }

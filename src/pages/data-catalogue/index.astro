@@ -23,6 +23,7 @@ function slugify(str: string): string {
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return "";
+  if (/^\d{4}$/u.test(dateStr)) return dateStr;
   try {
     const d = new Date(dateStr + "T00:00:00Z");
     return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
