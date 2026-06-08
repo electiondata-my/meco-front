@@ -1,6 +1,7 @@
 ---
 import Layout from "@src/components/Layout/index.astro";
 import DataCatalogueShow from "@src/components/DataCatalogue/DataCatalogueShow";
+import DataCatalogueShowMap from "@src/components/DataCatalogue/DataCatalogueShowMap";
 import { fetchJSON } from "@src/lib/api";
 
 type IndexItem = { id: string; title: string; description: string; data_as_of: string };
@@ -47,24 +48,41 @@ const { data, category, subcategory } = Astro.props as {
   subcategory: string;
 };
 
-const tbToken = import.meta.env.PUBLIC_TINYBIRD_TOKEN ?? "";
-const tbHost  = import.meta.env.PUBLIC_API_URL_TB ?? "";
+const tbToken       = import.meta.env.PUBLIC_TINYBIRD_TOKEN ?? "";
+const tbHost        = import.meta.env.PUBLIC_API_URL_TB ?? "";
+const mapboxToken   = import.meta.env.PUBLIC_MAPBOX_TOKEN ?? "";
+const mapboxAccount = import.meta.env.PUBLIC_MAPBOX_ACCOUNT ?? "";
 
-const title       = (data.title as string) ?? "Dataset";
-const description = (data.description as string) ?? "";
+const title          = (data.title as string) ?? "Dataset";
+const description    = (data.description as string) ?? "";
+const catalogueType  = (data.catalogue_type as string) ?? "";
 ---
 
 <Layout
   title={`${title} — Data Catalogue | ElectionData.MY`}
   description={description}
 >
-  <DataCatalogueShow
-    client:load
-    data={data}
-    id={id}
-    category={category}
-    subcategory={subcategory}
-    tbToken={tbToken}
-    tbHost={tbHost}
-  />
+  {catalogueType === "MAP" ? (
+    <DataCatalogueShowMap
+      client:load
+      data={data}
+      id={id}
+      category={category}
+      subcategory={subcategory}
+      tbToken={tbToken}
+      tbHost={tbHost}
+      mapboxToken={mapboxToken}
+      mapboxAccount={mapboxAccount}
+    />
+  ) : (
+    <DataCatalogueShow
+      client:load
+      data={data}
+      id={id}
+      category={category}
+      subcategory={subcategory}
+      tbToken={tbToken}
+      tbHost={tbHost}
+    />
+  )}
 </Layout>

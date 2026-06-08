@@ -103,6 +103,10 @@ function parseField(description: string): { type: string; desc: string } {
 }
 
 function formatBytes(bytes: number): string {
+  const MB = 1024 * 1024;
+  const GB = 1024 * MB;
+  if (bytes >= 0.5 * GB) return `${(bytes / GB).toFixed(1)} GB`;
+  if (bytes >= 0.5 * MB) return `${(bytes / MB).toFixed(1)} MB`;
   return `${Math.round(bytes / 1024)} KB`;
 }
 
@@ -501,14 +505,6 @@ export default function DataCatalogueShow({
 }: Props) {
   const data = rawData as unknown as CatalogueData;
 
-  if (data.catalogue_type !== "TABLE") {
-    return (
-      <div className="px-3 py-20 text-center text-body-md text-txt-black-500 sm:px-4.5 md:px-6">
-        This dataset type is not yet supported.
-      </div>
-    );
-  }
-
   const theme = useDarkMode();
   const { db, initializing, error: dbError } = useDuckDB();
 
@@ -760,8 +756,6 @@ export default function DataCatalogueShow({
               </a>
             </>
           )}
-          <span>&gt;</span>
-          <span className="text-txt-black-700">{data.title}</span>
         </nav>
 
         <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
