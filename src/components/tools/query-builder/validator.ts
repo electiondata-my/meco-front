@@ -1,4 +1,4 @@
-import { DATASETS } from "./datasets";
+import { DATASETS, LAZY_DATASETS, type DatasetKey } from "./datasets";
 
 const URL_PATTERN = /https?:\/\/|ftp:\/\//i;
 const LIMIT_PATTERN = /\bLIMIT\s+(\d+)/i;
@@ -13,7 +13,18 @@ const LEGACY_DATASETS = {
   results_stats: DATASETS.headline_stats,
 } as const;
 
-export function prepareQuery(rawSql: string): string {
+export interface FileRegistration {
+  name: string;
+  url: string;
+  lazy: boolean;
+}
+
+export interface PreparedQuery {
+  sql: string;
+  registrations: FileRegistration[];
+}
+
+export function prepareQuery(rawSql: string): PreparedQuery {
   if (URL_PATTERN.test(rawSql)) {
     throw new Error(
       "Raw URLs are not allowed. Use an approved dataset name instead (e.g. headline_ballots)."
@@ -40,6 +51,7 @@ export function prepareQuery(rawSql: string): string {
   }
 
   let sql = rawSql;
+  const registrations: FileRegistration[] = [];
 
   const datasets = {
     ...DATASETS,
@@ -47,13 +59,16 @@ export function prepareQuery(rawSql: string): string {
   };
 
   for (const [alias, url] of Object.entries(datasets) as [string, string][]) {
-    // Match unquoted table names or single-quoted table names.
+    const filename = url.split("/").pop()!;
     const unquoted = new RegExp(`\\b${alias}\\b`, "gi");
     const singleQuoted = new RegExp(`'${alias}'`, "gi");
-    const replacement = `'${url}'`;
-    sql = sql.replace(singleQuoted, replacement);
-    sql = sql.replace(unquoted, replacement);
+    const replacement = `'${filename}'`;
+    const newSql = sql.replace(singleQuoted, replacement).replace(unquoted, replacement);
+    if (newSql !== sql) {
+      registrations.push({ name: filename, url, lazy: LAZY_DATASETS.has(alias as DatasetKey) });
+      sql = newSql;
+    }
   }
 
-  return sql;
+  return { sql, registrations };
 }

@@ -34,3 +34,9 @@ export const DATASET_DESCRIPTIONS: Record<DatasetKey, string> = {
 };
 
 export const DEFAULT_DATASET: DatasetKey = "headline_ballots";
+
+// Datasets that are too large to cache — use HTTP range requests instead.
+// Everything else is fetched once and kept in memory for fast subsequent queries.
+export const LAZY_DATASETS = new Set<DatasetKey>([
+  "voter_roll_ge15",
+]);

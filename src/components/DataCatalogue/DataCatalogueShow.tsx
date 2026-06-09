@@ -210,10 +210,10 @@ function highlightSnippet(code: string, language: string): string {
   }
 }
 
-function prepareCatalogueQuery(sql: string, tableName: string, parquetUrl: string): string {
+function prepareCatalogueQuery(sql: string, tableName: string, parquetFilename: string): string {
   const singleQuoted = new RegExp(`'${tableName}'`, "gi");
   const unquoted     = new RegExp(`\\b${tableName}\\b`, "gi");
-  const replacement  = `'${parquetUrl}'`;
+  const replacement  = `'${parquetFilename}'`;
   return sql.replace(singleQuoted, replacement).replace(unquoted, replacement);
 }
 
@@ -622,7 +622,10 @@ export default function DataCatalogueShow({
     setQueryError(null);
     setResult(null);
     try {
-      const prepared = prepareCatalogueQuery(queryText, tableName, data.download.parquet.link);
+      const parquetUrl      = data.download.parquet.link;
+      const parquetFilename = parquetUrl.split("/").pop()!;
+      await db.registerFileURL(parquetFilename, parquetUrl, 4, false);
+      const prepared = prepareCatalogueQuery(queryText, tableName, parquetFilename);
       const start    = performance.now();
       const conn     = await db.connect();
       const arrow    = await conn.query(prepared);

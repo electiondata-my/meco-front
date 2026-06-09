@@ -49,6 +49,9 @@ import {
   type DuckDBQueryResult as QueryResult,
 } from "@tools/query-builder/VirtualDuckDBTable";
 
+// Persists for the page session — avoids re-downloading non-lazy datasets on every query.
+const fileBufferCache = new Map<string, Uint8Array>();
+
 const QUERY_SHORTENER_URL = "https://querybuilder.electiondata.my";
 const QUERY_SHORTENER_ALLOWED_ORIGINS = ["https://electiondata.my", "https://staging.electiondata.my"];
 
@@ -904,7 +907,18 @@ export default function QueryBuilderDashboard() {
       setQueryCount((prev) => (prev !== null ? prev + 1 : 1));
 
       try {
-        const prepared = prepareQuery(sqlToRun);
+        const { sql: prepared, registrations } = prepareQuery(sqlToRun);
+        for (const { name, url, lazy } of registrations) {
+          if (lazy) {
+            await db.registerFileURL(name, url, 4, false);
+          } else {
+            if (!fileBufferCache.has(name)) {
+              const buf = await fetch(url).then((r) => r.arrayBuffer());
+              fileBufferCache.set(name, new Uint8Array(buf));
+            }
+            await db.registerFileBuffer(name, fileBufferCache.get(name)!);
+          }
+        }
         const start = performance.now();
         const conn = await db.connect();
         const arrowResult = await conn.query(prepared);
