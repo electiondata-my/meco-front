@@ -1,13 +1,43 @@
 import { COLOR } from "@lib/constants";
 import { clx } from "@lib/helpers";
 import { Line } from "react-chartjs-2";
-import type { ChartOptions } from "chart.js";
+import type { ChartOptions, Plugin } from "chart.js";
 import { DateTime } from "luxon";
 import type { MetricKey, SiteMetricsRow } from "./types";
-import { formatAxis, formatDaily, formatTotal, rowValue, toUtcIso } from "./utils";
+import {
+  formatAxis,
+  formatDaily,
+  formatTooltipValue,
+  formatTotal,
+  rowValue,
+  toUtcIso,
+} from "./utils";
 
 const MAX_X_TICKS = 6;
 const GRID_COLOR = "rgba(128,128,128,0.15)";
+const HOVER_DAY_GUIDE_COLOR = "rgba(24,24,27,0.6)";
+
+const hoverDayGuidePlugin: Plugin<"line"> = {
+  id: "siteMetricsHoverDayGuide",
+  afterDatasetsDraw(chart) {
+    const active = chart.tooltip?.getActiveElements();
+    const x = active?.[0]?.element.x;
+
+    if (!Number.isFinite(x)) return;
+
+    const { ctx, chartArea } = chart;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1.25;
+    ctx.strokeStyle = HOVER_DAY_GUIDE_COLOR;
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    ctx.restore();
+  },
+};
 
 type MetricPanelProps = {
   title: string;
@@ -82,15 +112,16 @@ export default function MetricPanel({
                   })),
                   borderColor: color,
                   backgroundColor: colorH,
-                  borderWidth: 1.5,
+                  borderWidth: 1.25,
                   pointRadius: 0,
                   pointHoverRadius: 3,
                   fill: true,
-                  tension: 0.2,
+                  tension: 0,
                 },
               ],
             }}
             options={{ ...chartOptions, devicePixelRatio: chartPixelRatio }}
+            plugins={[hoverDayGuidePlugin]}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-body-sm text-txt-black-500">
@@ -140,7 +171,7 @@ export function buildChartOptions(): ChartOptions<"line"> {
       tooltip: {
         callbacks: {
           label: (ctx) =>
-            `${ctx.dataset.label}: ${formatAxis(ctx.parsed.y ?? 0)}`,
+            `${ctx.dataset.label}: ${formatTooltipValue(ctx.parsed.y ?? 0)}`,
         },
       },
     },

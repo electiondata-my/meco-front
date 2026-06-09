@@ -1375,12 +1375,10 @@ export default function QueryBuilderDashboard() {
             </div>
             {!hasShortShareLink ? (
               <p className="mb-4 max-w-2xl text-body-sm text-txt-black-700">
-                The link above might be a little long, depending on your query.
-                Unfortunately, it has to be in order to encode the entire SQL
-                query. If you want a beautiful short link to share, and don't
-                mind us storing your query (probably the case for 99% of users),
-                just click the 'Shorten Link' button below. All we store is the
-                SQL query; we do not know or store your identity.
+                The link above might be a little long - it has to be in order to encode your entire query. 
+                If you want a nice short link, and don't mind us storing your query 
+                (probably the case for 99% of users), just click the 'Shorten Link' button below. 
+                All we store is the SQL query; we do not know or store your identity.
               </p>
             ) : null}
             <div id="query-builder-turnstile" className="hidden" />

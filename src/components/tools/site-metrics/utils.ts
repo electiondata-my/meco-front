@@ -54,3 +54,7 @@ export function formatTotal(value: number): string {
 export function formatAxis(value: number | string): string {
   return numFormat(Number(value), "compact", 0, "short", "en-GB");
 }
+
+export function formatTooltipValue(value: number | string): string {
+  return numFormat(Number(value), "standard", 0, "short", "en-GB");
+}
