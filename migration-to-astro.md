@@ -959,26 +959,26 @@ The catalogue index is a searchable grid of items where all data is already load
 | **Current** | `pages/data-catalogue/[id].tsx` — `getStaticPaths: []` + `fallback: "blocking"` (all generated on-demand) |
 | **Target** | `src/pages/data-catalogue/[id].astro` + `src/pages/ms-MY/data-catalogue/[id].astro` |
 
-- [ ] **Path enumeration (critical):** `getStaticPaths()` fetches `catalogue/index-en.json` → extracts all `id` values → generates every path statically. This is the largest single path set on the site.
-- [ ] Fetch `catalogue/{id}-en.json` / `catalogue/{id}-ms.json` per path in frontmatter
-- [ ] `DataCatalogueShow` — deeply interactive (viz selector, filter hooks, analytics tracking, download, map switching). Keep as `client:load` island, passing full `DCVariable` data as prop.
-- [ ] `AnalyticsContext` — fetches `views_by_dc` and `downloads_by_dc_format` client-side on mount (Tinybird). Stays in the React island unchanged.
-- [ ] **`POST_TO_BUILD` support:** filter by catalogue ID — critical for this route since it will be the most frequently updated
+- [x] **Path enumeration (critical):** `getStaticPaths()` fetches `catalogue/index-en.json` → extracts all `id` values → generates every path statically. This is the largest single path set on the site.
+- [x] Fetch `catalogue/{id}-en.json` / `catalogue/{id}-ms.json` per path in frontmatter
+- [x] `DataCatalogueShow` — deeply interactive (viz selector, filter hooks, analytics tracking, download, map switching). Keep as `client:load` island, passing full `DCVariable` data as prop.
+- [x] `AnalyticsContext` — fetches `views_by_dc` and `downloads_by_dc_format` client-side on mount (Tinybird). Stays in the React island unchanged.
+- [x] **`POST_TO_BUILD` support:** filter by catalogue ID — critical for this route since it will be the most frequently updated
 
 **Parity criteria:**
-- [ ] Every valid catalogue ID resolves to a page (no 404)
-- [ ] Chart types (timeseries, bar, choropleth, mapbox, table) render based on `dataviz_set`
-- [ ] Viz selector switches chart type
-- [ ] Download panel works (CSV, Parquet, etc.)
-- [ ] View count and download count display (populated client-side from Tinybird)
-- [ ] `?visual=` query param selects correct viz on load
-- [ ] Methodology and metadata tabs render
-- [ ] Both locale paths work
+- [x] Every valid catalogue ID resolves to a page (no 404)
+- [x] Chart types (timeseries, bar, choropleth, mapbox, table) render based on `dataviz_set`
+- [x] Viz selector switches chart type
+- [x] Download panel works (CSV, Parquet, etc.)
+- [x] View count and download count display (populated client-side from Tinybird)
+- [x] `?visual=` query param selects correct viz on load
+- [x] Methodology and metadata tabs render
+- [x] Both locale paths work
 
 **Verify Phase 11:**
-- [ ] Full catalogue index renders
-- [ ] Spot-check 10+ individual catalogue variable pages across different chart types
-- [ ] Surgical rebuild test: `POST_TO_BUILD=some-catalogue-id` builds only that ID's pages
+- [x] Full catalogue index renders
+- [x] Spot-check 10+ individual catalogue variable pages across different chart types
+- [x] Surgical rebuild test: `POST_TO_BUILD=some-catalogue-id` builds only that ID's pages
 
 ---
 
