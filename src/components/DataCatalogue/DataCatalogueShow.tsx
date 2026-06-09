@@ -1101,7 +1101,9 @@ export default function DataCatalogueShow({
 
         {/* ── Download ────────────────────────────────────────── */}
         <section id="dc-download" className="mb-12">
-          <SectionDivider label="Download" />
+          <SectionDivider
+            label={`Download (${parquet.n_rows.toLocaleString()} rows x ${parquet.n_cols} columns)`}
+          />
 
           <div className="overflow-hidden bg-bg-white">
             <div className="overflow-x-auto">
