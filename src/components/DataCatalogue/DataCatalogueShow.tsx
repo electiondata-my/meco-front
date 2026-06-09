@@ -58,6 +58,8 @@ interface DownloadInfo {
   size_bytes: number;
 }
 
+type FlexDownloadInfo = { link: string; n_rows: number; n_cols?: number; size_bytes: number };
+
 interface CatalogueData {
   catalogue_type: string;
   title: string;
@@ -66,7 +68,7 @@ interface CatalogueData {
   methodology: string;
   fields: CatalogueField[];
   cite: CiteData;
-  download: { parquet: DownloadInfo; csv: Omit<DownloadInfo, "n_cols"> & { n_cols?: number } };
+  download: { parquet: DownloadInfo; csv: FlexDownloadInfo; excel?: FlexDownloadInfo };
   display_options: { precision: { default: number; specific: Record<string, number> } };
   sample_data: Record<string, unknown>[];
 }
@@ -90,7 +92,7 @@ interface QueryResult {
 }
 
 type Tab = "preview" | "methodology" | "variables";
-type CodeLang = "python" | "r" | "curl" | "duckdb";
+type CodeLang = "python" | "r" | "curl" | "duckdb" | "excel" | "sheets";
 type CopyState = "idle" | "copied";
 
 const MAX_DISPLAY_ROWS = 500;
@@ -206,6 +208,7 @@ function slugify(str: string): string {
 }
 
 function highlightSnippet(code: string, language: string): string {
+  if (!language) return code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   try {
     return hljs.highlight(code, { language, ignoreIllegals: true }).value;
   } catch {
@@ -400,9 +403,13 @@ function SectionDivider({ label }: { label: string }) {
 function CopyButton({
   text,
   label = "Copy",
+  className,
+  labelClassName,
 }: {
   text: string;
   label?: string;
+  className?: string;
+  labelClassName?: string;
 }) {
   const [state, setState] = useState<CopyState>("idle");
   const handleCopy = useCallback(async () => {
@@ -414,17 +421,20 @@ function CopyButton({
   return (
     <button
       onClick={handleCopy}
-      className="flex shrink-0 items-center gap-1 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
+      className={clx(
+        "flex shrink-0 items-center gap-1 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900",
+        className,
+      )}
     >
       {state === "copied" ? (
         <>
           <ClipboardDocumentCheckIcon className="h-3.5 w-3.5 text-green-600" />
-          <span className="text-green-600">Copied!</span>
+          <span className={clx("text-green-600", labelClassName)}>Copied!</span>
         </>
       ) : (
         <>
           <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-          {label}
+          <span className={labelClassName}>{label}</span>
         </>
       )}
     </button>
@@ -727,8 +737,25 @@ export default function DataCatalogueShow({
         `duckdb -c "DESCRIBE SELECT * FROM '${url}'"`,
         `duckdb -c "SELECT * FROM '${url}' LIMIT 10"`,
       ].join("\n"),
+      excel: [
+        "// Excel: Data tab → Get Data → From Other Sources → From Web",
+        `// Enter: ${url}`,
+        "//",
+        "// Or via Power Query Advanced Editor (Home → Advanced Editor):",
+        "",
+        "let",
+        `    Source = Parquet.Feed("${url}")`,
+        "in",
+        "    Source",
+      ].join("\n"),
+      sheets: [
+        "// Google Sheets does not natively support Parquet.",
+        "// Use IMPORTDATA with the CSV export for live auto-refresh:",
+        "",
+        `=IMPORTDATA("${data.download.csv.link}")`,
+      ].join("\n"),
     };
-  }, [data.download.parquet.link, data.download.parquet.n_rows, data.download.parquet.n_cols, tableName]);
+  }, [data.download.parquet.link, data.download.parquet.n_rows, data.download.parquet.n_cols, data.download.csv.link, tableName]);
 
   // Citation strings (memoised once)
   const citations = useMemo(() => ({
@@ -760,6 +787,8 @@ export default function DataCatalogueShow({
     r:      "r",
     duckdb: "bash",
     curl:   "bash",
+    excel:  "",
+    sheets: "",
   };
   const highlightedSnippet = useMemo(
     () => highlightSnippet(snippets[codeLanguage], snippetLanguage[codeLanguage]),
@@ -1115,82 +1144,77 @@ export default function DataCatalogueShow({
         <section id="dc-download" className="mb-12">
           <SectionDivider label="Download" />
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Parquet */}
-            <div className="overflow-hidden rounded-xl border border-otl-danger-200 bg-bg-white">
-              <div className="flex items-center justify-between gap-3 bg-bg-danger-50 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <span className="rounded border border-otl-danger-200 bg-bg-white px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-txt-danger">
-                    PQ
-                  </span>
-                  <span className="text-[14px] font-semibold text-txt-black-900">Parquet</span>
-                </div>
-                <span className="rounded-full bg-bg-white px-2 py-0.5 text-[11px] font-semibold text-txt-danger">
-                  Recommended
-                </span>
-              </div>
-              <div className="grid grid-cols-3 divide-x divide-otl-gray-200 border-b border-otl-gray-200">
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Rows</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{parquet.n_rows.toLocaleString()}</p>
-                </div>
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Cols</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{parquet.n_cols.toLocaleString()}</p>
-                </div>
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Size</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{formatBytes(parquet.size_bytes)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-3">
-                <a
-                  href={parquet.link}
-                  download
-                  onClick={() => trackDownload("parquet")}
-                  className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
-                >
-                  <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
-                  Download
-                </a>
-                <CopyButton text={parquet.link} label="Copy link" />
-              </div>
-            </div>
-
-            {/* CSV */}
-            <div className="overflow-hidden rounded-xl border border-blue-200 bg-bg-white">
-              <div className="flex items-center gap-2 border-b border-blue-200 bg-blue-50 px-4 py-3">
-                <span className="rounded border border-blue-200 bg-bg-white px-1.5 py-0.5 font-mono text-[11px] font-semibold uppercase text-blue-700">
-                  CSV
-                </span>
-                <span className="text-[14px] font-semibold text-txt-black-900">CSV</span>
-              </div>
-              <div className="grid grid-cols-3 divide-x divide-otl-gray-200 border-b border-otl-gray-200">
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Rows</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{(csv.n_rows ?? parquet.n_rows).toLocaleString()}</p>
-                </div>
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Cols</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{(csv.n_cols ?? parquet.n_cols).toLocaleString()}</p>
-                </div>
-                <div className="px-4 py-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-txt-black-400">Size</p>
-                  <p className="mt-1 text-[15px] font-semibold text-txt-black-900">{formatBytes(csv.size_bytes)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-3">
-                <a
-                  href={csv.link}
-                  download
-                  onClick={() => trackDownload("csv")}
-                  className="flex items-center gap-1.5 px-2 py-1 text-[13px] font-medium text-txt-black-600 transition-colors hover:text-txt-black-900"
-                >
-                  <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
-                  Download
-                </a>
-                <CopyButton text={csv.link} label="Copy link" />
-              </div>
+          <div className="overflow-hidden bg-bg-white">
+            <div className="overflow-x-auto">
+              <table className="w-full table-fixed border-collapse">
+                <colgroup>
+                  <col className="w-[34%] sm:w-[20%]" />
+                  <col className="hidden sm:table-column sm:w-[28%]" />
+                  <col className="w-[22%] sm:w-[13%]" />
+                  <col className="w-[26%] sm:w-[20%]" />
+                  <col className="w-[18%] sm:w-[19%]" />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-otl-gray-200 text-left">
+                    <th className="py-3 pr-3 text-[11px] font-semibold uppercase tracking-wider text-txt-black-900 sm:pr-4 sm:text-[12px]">
+                      Format
+                    </th>
+                    <th className="hidden py-3 pr-4 text-[12px] font-semibold uppercase tracking-wider text-txt-black-900 sm:table-cell">
+                      Best for
+                    </th>
+                    <th className="whitespace-nowrap py-3 pr-3 text-[11px] font-semibold uppercase tracking-wider text-txt-black-900 sm:pr-4 sm:text-[12px]">
+                      Size
+                    </th>
+                    <th className="whitespace-nowrap py-3 pr-2 text-center text-[11px] font-semibold uppercase tracking-wider text-txt-black-900 sm:pr-3 sm:text-[12px]">
+                      Download
+                    </th>
+                    <th className="whitespace-nowrap py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-txt-black-900 sm:text-[12px]">
+                      Link
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-otl-gray-200">
+                  {[
+                    { label: "Parquet", info: parquet,              format: "parquet", bestFor: "Data science & analytics" },
+                    { label: "CSV",     info: csv,                  format: "csv",     bestFor: "Universal compatibility"  },
+                    ...(data.download.excel ? [{ label: "Excel", info: data.download.excel, format: "excel", bestFor: "Non-technical users" }] : []),
+                  ].map(({ label, info, format, bestFor }) => (
+                    <tr key={format}>
+                      <td className="py-3 pr-3 sm:pr-4">
+                        <span className="break-words text-[13px] font-semibold leading-tight text-txt-black-900 sm:text-[14px]">
+                          {label}
+                        </span>
+                      </td>
+                      <td className="hidden py-3 pr-4 text-[13px] text-txt-black-600 sm:table-cell">
+                        {bestFor}
+                      </td>
+                      <td className="whitespace-nowrap py-3 pr-3 font-mono text-[12px] tabular-nums text-txt-black-900 sm:pr-4 sm:text-[13px]">
+                        {formatBytes(info.size_bytes)}
+                      </td>
+                      <td className="py-3 pr-2 sm:pr-3">
+                        <a
+                          href={info.link}
+                          download
+                          onClick={() => trackDownload(format)}
+                          aria-label={`Download ${label}`}
+                          className="mx-auto flex h-8 w-8 items-center justify-center gap-1.5 rounded-md border border-otl-gray-200 bg-bg-white text-[13px] font-medium text-txt-black-600 transition-colors hover:border-otl-gray-300 hover:bg-bg-black-50 hover:text-txt-black-900 sm:h-auto sm:w-fit sm:px-2 sm:py-1"
+                        >
+                          <ArrowDownTrayIcon className="h-3.5 w-3.5 shrink-0" />
+                          <span className="hidden sm:inline">Download</span>
+                        </a>
+                      </td>
+                      <td className="py-3">
+                        <CopyButton
+                          text={info.link}
+                          label="Copy link"
+                          className="mx-auto h-8 w-8 justify-center rounded-md border border-otl-gray-200 bg-bg-white hover:border-otl-gray-300 hover:bg-bg-black-50 sm:h-auto sm:w-fit"
+                          labelClassName="hidden sm:inline"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </section>
@@ -1202,8 +1226,8 @@ export default function DataCatalogueShow({
           <div className="overflow-hidden rounded-xl border border-otl-gray-200">
             {/* Language switcher */}
             <div className="flex items-center justify-between border-b border-otl-gray-200 px-3 py-2">
-              <div className="flex gap-1">
-                {(["python", "r", "duckdb", "curl"] as CodeLang[]).map((lang) => (
+              <div className="flex flex-wrap gap-1">
+                {(["python", "r", "duckdb", "curl", "excel", "sheets"] as CodeLang[]).map((lang) => (
                   <button
                     key={lang}
                     onClick={() => setCodeLanguage(lang)}
@@ -1220,13 +1244,17 @@ export default function DataCatalogueShow({
                       ? "R"
                       : lang === "duckdb"
                       ? "DuckDB"
-                      : "curl"}
+                      : lang === "curl"
+                      ? "curl"
+                      : lang === "excel"
+                      ? "Excel"
+                      : "Google Sheets"}
                   </button>
                 ))}
               </div>
               <CopyButton text={snippets[codeLanguage]} />
             </div>
-            <pre className="overflow-auto bg-bg-washed px-5 py-4 font-mono text-[13px] leading-6 text-txt-black-800 [&_.hljs-built_in]:text-txt-warning [&_.hljs-comment]:text-txt-black-400 [&_.hljs-keyword]:text-txt-danger [&_.hljs-literal]:text-blue-700 [&_.hljs-meta]:text-txt-black-400 [&_.hljs-number]:text-blue-700 [&_.hljs-string]:text-blue-700 [&_.hljs-title]:text-txt-danger">
+            <pre className="dc-code overflow-auto bg-bg-washed px-5 py-4 font-mono text-[13px] leading-6 text-txt-black-700">
               <code
                 className="hljs whitespace-pre font-mono"
                 dangerouslySetInnerHTML={{ __html: highlightedSnippet }}

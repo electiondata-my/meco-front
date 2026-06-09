@@ -946,7 +946,7 @@ export default function DataCatalogueShowMap({
                 </div>
                 <CopyButton text={snippets[codeLanguage]} />
               </div>
-              <pre className="overflow-auto bg-bg-washed px-5 py-4 font-mono text-[13px] leading-6 text-txt-black-800 [&_.hljs-built_in]:text-txt-warning [&_.hljs-comment]:text-txt-black-400 [&_.hljs-keyword]:text-txt-danger [&_.hljs-literal]:text-blue-700 [&_.hljs-meta]:text-txt-black-400 [&_.hljs-number]:text-blue-700 [&_.hljs-string]:text-blue-700 [&_.hljs-title]:text-txt-danger">
+              <pre className="dc-code overflow-auto bg-bg-washed px-5 py-4 font-mono text-[13px] leading-6 text-txt-black-700">
                 <code
                   className="hljs whitespace-pre font-mono"
                   dangerouslySetInnerHTML={{ __html: highlightedSnippet }}

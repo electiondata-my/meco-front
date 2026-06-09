@@ -97,6 +97,17 @@ input[type="search"]::-webkit-search-results-decoration {
   display: none !important;
 }
 
+/* Data Catalogue: code snippet highlighting */
+.dc-code .hljs-keyword  { color: rgb(var(--txt-danger)); }
+.dc-code .hljs-built_in { color: rgb(var(--txt-warning)); }
+.dc-code .hljs-string   { color: rgb(var(--txt-success)); }
+.dc-code .hljs-number,
+.dc-code .hljs-literal  { color: rgb(var(--txt-primary)); }
+.dc-code .hljs-comment,
+.dc-code .hljs-meta     { color: rgb(var(--txt-black-500)); }
+.dc-code .hljs-title    { color: rgb(var(--txt-primary)); }
+.dc-code .hljs-variable { color: rgb(var(--txt-warning)); }
+
 /* Hides outline for GeoChoropleth onclick */
 /* g:focus {
   outline: none;
