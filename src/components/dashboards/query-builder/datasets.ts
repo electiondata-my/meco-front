@@ -1,8 +1,8 @@
 export type DatasetKey = keyof typeof DATASETS;
 
 export const DATASETS = {
-  headline_ballots: "https://lake.electiondata.my/results_headline/consol_ballots.parquet",
-  headline_stats: "https://lake.electiondata.my/results_headline/consol_stats.parquet",
+  headline_ballots: "https://lake.electiondata.my/results_headline/headline_ballots.parquet",
+  headline_stats: "https://lake.electiondata.my/results_headline/headline_stats.parquet",
   saluran_ballots: "https://lake.electiondata.my/results_saluran/ge15_ballots.parquet",
   saluran_stats: "https://lake.electiondata.my/results_saluran/ge15_stats.parquet",
   voter_demographics: "https://lake.electiondata.my/seat_info/demographics.parquet",

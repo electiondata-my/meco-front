@@ -43,19 +43,14 @@ import copyPrompt from "@dashboards/query-builder/copy-prompt.md?raw";
 import { prepareQuery } from "@dashboards/query-builder/validator";
 import { trackQueryRun } from "@dashboards/query-builder/trackQueryRun";
 import { useDuckDB } from "@dashboards/query-builder/useDuckDB";
+import {
+  VirtualDuckDBTable,
+  MAX_DISPLAY_ROWS,
+  type DuckDBQueryResult as QueryResult,
+} from "@dashboards/query-builder/VirtualDuckDBTable";
 
-const MAX_DISPLAY_ROWS = 500;
 const QUERY_SHORTENER_URL = "https://querybuilder.electiondata.my";
 const QUERY_SHORTENER_ALLOWED_ORIGINS = ["https://electiondata.my", "https://staging.electiondata.my"];
-
-interface QueryResult {
-  columns: string[];
-  fieldTypes: string[];
-  rows: any[][];
-  executionTime: number;
-  totalRows: number;
-  truncated: boolean;
-}
 
 type ColType = "numeric" | "date" | "text";
 type QuerySource = "workspace" | DatasetKey;
@@ -151,12 +146,10 @@ function formatCell(
 
   if (typeof value === "bigint") return value.toLocaleString("en-GB");
   if (typeof value === "number") {
-    const { decimalPlaces } = options;
+    const dp = options.decimalPlaces != null && options.decimalPlaces > 0 ? 2 : 0;
     return value.toLocaleString("en-GB", {
-      minimumFractionDigits:
-        decimalPlaces && decimalPlaces > 0 ? decimalPlaces : 0,
-      maximumFractionDigits:
-        decimalPlaces && decimalPlaces > 0 ? decimalPlaces : 20,
+      minimumFractionDigits: dp,
+      maximumFractionDigits: dp,
     });
   }
   return String(value);
@@ -405,6 +398,8 @@ function compactFormattedSql(sql: string) {
   return compacted.join("\n").replace(/\n{3,}/gu, "\n\n");
 }
 
+
+
 const QueryResults = memo(function QueryResults({
   result,
   onCopyCsv,
@@ -431,7 +426,7 @@ const QueryResults = memo(function QueryResults({
           type,
           decimalPlaces:
             type === "numeric"
-              ? values.reduce((max, value) => {
+              ? values.reduce<number>((max, value) => {
                   if (typeof value !== "number") return max;
                   return Math.max(max, getDecimalPlaces(value));
                 }, 0)
@@ -450,7 +445,7 @@ const QueryResults = memo(function QueryResults({
           <CheckCircleIcon className="text-green-600 h-3.5 w-3.5 shrink-0" />
           <span>
             {result.truncated
-              ? `${MAX_DISPLAY_ROWS.toLocaleString()}+ rows (capped at ${MAX_DISPLAY_ROWS})`
+              ? `${MAX_DISPLAY_ROWS.toLocaleString()}+ rows (capped at 10k)`
               : `${result.totalRows.toLocaleString()} row${result.totalRows !== 1 ? "s" : ""}`}
             {" · "}
             {result.columns.length} col{result.columns.length !== 1 ? "s" : ""}
@@ -484,55 +479,19 @@ const QueryResults = memo(function QueryResults({
           Query returned no rows.
         </div>
       ) : (
-        <div className="max-h-[24rem] overflow-auto sm:max-h-[28rem] lg:max-h-[36rem]">
-          <table className="w-full border-collapse text-[13px]">
-            <thead>
-              <tr className="bg-bg-black-50">
-                {result.columns.map((col, ci) => (
-                  <th
-                    key={col}
-                    className={clx(
-                      "text-txt-black-400 sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider",
-                      columnMeta[ci]?.type === "numeric"
-                        ? "text-right"
-                        : "text-left",
-                    )}
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {result.rows.map((row, ri) => (
-                <tr
-                  key={ri}
-                  className="border-otl-gray-100 border-b transition-colors last:border-0 hover:bg-bg-black-50/60"
-                >
-                  {row.map((cell, ci) => (
-                    <td
-                      key={ci}
-                      className={clx(
-                        "text-txt-black-800 whitespace-nowrap px-3 py-1.5 font-mono text-[13px]",
-                        columnMeta[ci]?.type === "numeric"
-                          ? "text-right tabular-nums"
-                          : "text-left",
-                        columnMeta[ci]?.type === "date" && "text-txt-black-600",
-                        (cell === null || cell === undefined) &&
-                          "text-txt-black-300 italic",
-                      )}
-                    >
-                      {formatCell(cell, result.fieldTypes[ci], {
-                        columnName: result.columns[ci],
-                        decimalPlaces: columnMeta[ci]?.decimalPlaces,
-                      })}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <VirtualDuckDBTable
+          result={result}
+          isRightAligned={result.columns.map((_, ci) => columnMeta[ci]?.type === "numeric")}
+          renderCell={(cell, ci) =>
+            formatCell(cell, result.fieldTypes[ci], {
+              columnName: result.columns[ci],
+              decimalPlaces: columnMeta[ci]?.decimalPlaces,
+            })
+          }
+          cellClassName={(_, ci) =>
+            columnMeta[ci]?.type === "date" ? "text-txt-black-600" : undefined
+          }
+        />
       )}
     </div>
   );
@@ -1097,8 +1056,6 @@ export default function QueryBuilderDashboard() {
     if (initializing)
       return { text: "Initialising DuckDB WASM…", cls: "text-txt-black-500" };
     if (running) return { text: "Running query…", cls: "text-txt-black-500" };
-    if (queryError) return { text: queryError, cls: "text-danger-600" };
-    if (result) return null;
     return null;
   })();
 

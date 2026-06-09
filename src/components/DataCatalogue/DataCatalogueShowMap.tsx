@@ -620,7 +620,7 @@ export default function DataCatalogueShowMap({
 
   const downloadRows = [
     { label: "GeoJSON",    info: geojson,     format: "geojson",    bestFor: "Web dev, general use" },
-    { label: "GeoParquet", info: geoparquet,  format: "geoparquet", bestFor: "Data science & engineering" },
+    { label: "GeoParquet", info: geoparquet,  format: "geoparquet", bestFor: "Data science & analytics" },
     { label: "TopoJSON",   info: topojson,    format: "topojson",   bestFor: "D3.js, topology preservation" },
     { label: "FlatGeoBuf", info: flatgeobuf,  format: "flatgeobuf", bestFor: "Streaming, cloud ops" },
     { label: "KML",        info: kml,         format: "kml",        bestFor: "Google Earth" },

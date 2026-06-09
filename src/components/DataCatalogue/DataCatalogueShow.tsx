@@ -27,6 +27,11 @@ import {
 } from "@heroicons/react/20/solid";
 import { clx } from "@lib/helpers";
 import { useDuckDB } from "@dashboards/query-builder/useDuckDB";
+import {
+  VirtualDuckDBTable,
+  MAX_DISPLAY_ROWS,
+  type DuckDBQueryResult as QueryResult,
+} from "@dashboards/query-builder/VirtualDuckDBTable";
 
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("python", python);
@@ -82,20 +87,9 @@ interface Props {
   tbHost: string;
 }
 
-interface QueryResult {
-  columns: string[];
-  fieldTypes: string[];
-  rows: unknown[][];
-  executionTime: number;
-  totalRows: number;
-  truncated: boolean;
-}
-
 type Tab = "preview" | "methodology" | "variables";
 type CodeLang = "python" | "r" | "curl" | "duckdb" | "excel" | "sheets";
 type CopyState = "idle" | "copied";
-
-const MAX_DISPLAY_ROWS = 500;
 const DEFAULT_FLOAT_PRECISION = 2;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -464,50 +458,15 @@ const SqlResults = memo(function SqlResults({
           Query returned no rows.
         </p>
       ) : (
-        <div className="max-h-[24rem] overflow-auto sm:max-h-[28rem]">
-          <table className="w-full border-collapse text-[13px]">
-            <thead>
-              <tr>
-                {result.columns.map((col, ci) => (
-                  <th
-                    key={col}
-                    className={clx(
-                      "sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider text-txt-black-400 shadow-[inset_0_-1px_0_rgb(var(--otl-gray-200))]",
-                      isRightAligned[ci] ? "text-right" : "text-left",
-                    )}
-                  >
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {result.rows.map((row, ri) => (
-                <tr
-                  key={ri}
-                  className="border-b border-otl-gray-100 transition-colors last:border-0 hover:bg-bg-black-50/60"
-                >
-                  {row.map((cell, ci) => (
-                    <td
-                      key={ci}
-                      className={clx(
-                        "whitespace-nowrap px-3 py-1.5 font-mono text-[13px] text-txt-black-800",
-                        isRightAligned[ci] ? "text-right tabular-nums" : "text-left",
-                        cell == null && "italic text-txt-black-300",
-                      )}
-                    >
-                      {formatResultCell(
-                        cell,
-                        result.fieldTypes[ci] ?? "",
-                        precisionByColumn[result.columns[ci]],
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <VirtualDuckDBTable
+          result={result}
+          isRightAligned={isRightAligned}
+          renderCell={(cell, ci) =>
+            formatResultCell(cell, result.fieldTypes[ci] ?? "", precisionByColumn[result.columns[ci]])
+          }
+          scrollClassName="max-h-[24rem] overflow-auto sm:max-h-[28rem]"
+          thClassName="sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider text-txt-black-400 shadow-[inset_0_-1px_0_rgb(var(--otl-gray-200))]"
+        />
       )}
     </div>
   );
