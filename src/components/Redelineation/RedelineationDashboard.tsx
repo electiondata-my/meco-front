@@ -43,7 +43,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
   DrawerFooter,
-} from "@components/drawer";
+} from "@components/Drawer";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -26,12 +26,12 @@ import {
   TableCellsIcon,
 } from "@heroicons/react/20/solid";
 import { clx } from "@lib/helpers";
-import { useDuckDB } from "@dashboards/query-builder/useDuckDB";
+import { useDuckDB } from "@tools/query-builder/useDuckDB";
 import {
   VirtualDuckDBTable,
   MAX_DISPLAY_ROWS,
   type DuckDBQueryResult as QueryResult,
-} from "@dashboards/query-builder/VirtualDuckDBTable";
+} from "@tools/query-builder/VirtualDuckDBTable";
 
 hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("python", python);

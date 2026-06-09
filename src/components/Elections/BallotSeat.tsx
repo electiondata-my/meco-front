@@ -7,7 +7,7 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTrigger,
-} from "@components/drawer";
+} from "@components/Drawer";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { ArrowsPointingOutIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";

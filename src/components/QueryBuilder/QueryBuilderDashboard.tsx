@@ -30,24 +30,24 @@ import {
   DATASET_LABELS,
   DATASET_DESCRIPTIONS,
   type DatasetKey,
-} from "@dashboards/query-builder/datasets";
+} from "@tools/query-builder/datasets";
 import {
   INTERESTING_QUESTIONS,
   type InterestingQuestion,
-} from "@dashboards/query-builder/samples";
+} from "@tools/query-builder/samples";
 import {
   encodeQuery,
   decodeQuery,
-} from "@dashboards/query-builder/codec";
-import copyPrompt from "@dashboards/query-builder/copy-prompt.md?raw";
-import { prepareQuery } from "@dashboards/query-builder/validator";
-import { trackQueryRun } from "@dashboards/query-builder/trackQueryRun";
-import { useDuckDB } from "@dashboards/query-builder/useDuckDB";
+} from "@tools/query-builder/codec";
+import copyPrompt from "@tools/query-builder/copy-prompt.md?raw";
+import { prepareQuery } from "@tools/query-builder/validator";
+import { trackQueryRun } from "@tools/query-builder/trackQueryRun";
+import { useDuckDB } from "@tools/query-builder/useDuckDB";
 import {
   VirtualDuckDBTable,
   MAX_DISPLAY_ROWS,
   type DuckDBQueryResult as QueryResult,
-} from "@dashboards/query-builder/VirtualDuckDBTable";
+} from "@tools/query-builder/VirtualDuckDBTable";
 
 const QUERY_SHORTENER_URL = "https://querybuilder.electiondata.my";
 const QUERY_SHORTENER_ALLOWED_ORIGINS = ["https://electiondata.my", "https://staging.electiondata.my"];

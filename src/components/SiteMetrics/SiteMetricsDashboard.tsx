@@ -11,10 +11,10 @@ import {
   Tooltip,
 } from "chart.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import MetricPanel, { ROW_COLORS, buildChartOptions } from "@dashboards/site-metrics/MetricPanel";
-import MetricRow from "@dashboards/site-metrics/MetricRow";
-import { DATE_FROM, METRICS, PERIODS, type Period, type SiteMetricsRow } from "@dashboards/site-metrics/types";
-import { dailyCallout, metricTotal } from "@dashboards/site-metrics/utils";
+import MetricPanel, { ROW_COLORS, buildChartOptions } from "@tools/site-metrics/MetricPanel";
+import MetricRow from "@tools/site-metrics/MetricRow";
+import { DATE_FROM, METRICS, PERIODS, type Period, type SiteMetricsRow } from "@tools/site-metrics/types";
+import { dailyCallout, metricTotal } from "@tools/site-metrics/utils";
 
 ChartJS.register(
   CategoryScale,

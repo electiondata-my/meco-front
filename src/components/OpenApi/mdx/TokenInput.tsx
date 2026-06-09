@@ -1,5 +1,5 @@
 import { FunctionComponent } from "react";
-import { useApiKey } from "../useApiKey";
+import { useApiKey } from "@hooks/useApiKey";
 
 const TokenInput: FunctionComponent = () => {
   const { apiKey, setApiKey } = useApiKey();

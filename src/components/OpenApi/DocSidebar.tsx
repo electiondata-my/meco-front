@@ -1,6 +1,6 @@
 import { FunctionComponent, useState, useEffect } from "react";
 import { Transition } from "@headlessui/react";
-import { NAV_SECTIONS } from "@dashboards/openapi/config";
+import { NAV_SECTIONS } from "@tools/openapi/config";
 import {
   ChevronDownIcon,
   XMarkIcon,

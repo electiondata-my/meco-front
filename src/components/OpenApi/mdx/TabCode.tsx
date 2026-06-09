@@ -1,6 +1,6 @@
 import { FunctionComponent, useState } from "react";
 import DocCodeBlock, { type DocLang } from "./DocCodeBlock";
-import { useApiKey } from "../useApiKey";
+import { useApiKey } from "@hooks/useApiKey";
 
 type Tab = "curl" | "javascript" | "typescript" | "python" | "r" | "go";
 
