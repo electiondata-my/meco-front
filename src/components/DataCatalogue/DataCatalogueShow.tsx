@@ -37,6 +37,9 @@ hljs.registerLanguage("bash", bash);
 hljs.registerLanguage("python", python);
 hljs.registerLanguage("r", r);
 
+const CACHE_THRESHOLD_BYTES = 5 * 1024 * 1024; // 5MB
+const catalogueFileCache = new Map<string, Uint8Array>();
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface CatalogueField {
@@ -624,7 +627,18 @@ export default function DataCatalogueShow({
     try {
       const parquetUrl      = data.download.parquet.link;
       const parquetFilename = parquetUrl.split("/").pop()!;
-      await db.registerFileURL(parquetFilename, parquetUrl, 4, false);
+      const shouldCache =
+        data.catalogue_type === "TABLE" &&
+        data.download.parquet.size_bytes < CACHE_THRESHOLD_BYTES;
+      if (shouldCache) {
+        if (!catalogueFileCache.has(parquetFilename)) {
+          const buf = await fetch(parquetUrl).then((r) => r.arrayBuffer());
+          catalogueFileCache.set(parquetFilename, new Uint8Array(buf));
+        }
+        await db.registerFileBuffer(parquetFilename, new Uint8Array(catalogueFileCache.get(parquetFilename)!));
+      } else {
+        await db.registerFileURL(parquetFilename, parquetUrl, 4, false);
+      }
       const prepared = prepareCatalogueQuery(queryText, tableName, parquetFilename);
       const start    = performance.now();
       const conn     = await db.connect();

@@ -916,7 +916,8 @@ export default function QueryBuilderDashboard() {
               const buf = await fetch(url).then((r) => r.arrayBuffer());
               fileBufferCache.set(name, new Uint8Array(buf));
             }
-            await db.registerFileBuffer(name, fileBufferCache.get(name)!);
+            const cached = fileBufferCache.get(name)!;
+            await db.registerFileBuffer(name, new Uint8Array(cached));
           }
         }
         const start = performance.now();
