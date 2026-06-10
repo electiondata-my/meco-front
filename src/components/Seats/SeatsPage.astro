@@ -2,6 +2,7 @@
 import Layout from "@src/components/Layout/index.astro";
 import SeatsMapbox from "./SeatsMapbox";
 import SeatElectionTable from "./SeatElectionTable";
+import SeatVoterDemographics from "./SeatVoterDemographics";
 import { getTranslations, t } from "@i18n/index";
 
 type MapPlot = {
@@ -38,6 +39,8 @@ interface Props {
     map_plot: MapPlot;
     map_lineage: LineageRow[];
     results: ResultRow[];
+    pyramid: { ages: number[]; male: number[]; female: number[] };
+    heatmap: { ages: string[] } & Record<string, number[]>;
   };
 }
 
@@ -195,6 +198,24 @@ const boundaryAttribution =
         />
       </div>
     </section>
+
+    <!-- Section 4: Voter demographics -->
+    {seatData.pyramid && seatData.heatmap && (
+      <section id="seat-demographics-section" data-scroll-anchor="demographics" class="scroll-mt-28">
+        <h2 class="text-center font-heading text-heading-2xs font-semibold">
+          {s("breakdown_voters") || "Key demographic features of "}
+          <span class="text-txt-danger">{seatDisplay}{stateDisplay ? `, ${stateDisplay}` : ""}</span>
+        </h2>
+        <div class="mt-6 lg:mt-8">
+          <SeatVoterDemographics
+            client:load
+            pyramid={seatData.pyramid}
+            heatmap={seatData.heatmap}
+            translations={{ common: i18n.common ?? {}, seats: i18n.seats ?? {} }}
+          />
+        </div>
+      </section>
+    )}
   </div>
   </div>
 </Layout>
