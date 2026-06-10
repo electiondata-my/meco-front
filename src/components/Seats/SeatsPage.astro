@@ -120,7 +120,7 @@ const boundaryAttribution =
   </section>
 
   <!-- Sticky search bar -->
-  <div id="seat-search-bar" data-scroll-anchor="search" class="sticky top-14 z-30 w-full border border-transparent bg-bg-white px-4.5 py-2 transition-all duration-300 md:top-16 md:px-6">
+  <div id="seat-search-bar" data-scroll-anchor="search" class="sticky top-14 z-40 w-full border border-transparent bg-bg-white px-4.5 py-2 transition-all duration-300 md:top-16 md:px-6">
     <div class="mx-auto w-full max-w-[640px]">
       <div class="combobox relative" data-type="seat">
         <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
@@ -206,6 +206,9 @@ const boundaryAttribution =
           {s("breakdown_voters") || "Key demographic features of "}
           <span class="text-txt-danger">{seatDisplay}{stateDisplay ? `, ${stateDisplay}` : ""}</span>
         </h2>
+        <p class="mt-2 text-center text-body-md text-txt-black-500">
+          {s("data_as_of")}
+        </p>
         <div class="mt-6 lg:mt-8">
           <SeatVoterDemographics
             client:load
@@ -228,6 +231,7 @@ const boundaryAttribution =
   var _options = null;
   var _optionsPromise = null;
   var SESSION_KEY = "seatOptions";
+  var SCROLL_ANCHOR_KEY = "seatSearchScrollAnchor";
 
   var parlLabel = isMalay ? "Parlimen" : "Parliament";
   var dunLabel = "DUN";
@@ -265,11 +269,15 @@ const boundaryAttribution =
   }
 
   function tokenize(str) {
-    return str.toLowerCase().replace(/[.,]/g, "").split(/\s+/).filter(Boolean);
+    return normalizeSearch(str).split(/\s+/).filter(Boolean);
+  }
+
+  function normalizeSearch(str) {
+    return str.toLowerCase().replace(/[.,]/g, "");
   }
 
   function score(opt, tokens) {
-    var label = opt.searchLabel.toLowerCase();
+    var label = normalizeSearch(opt.searchLabel || opt.label || "");
     var matches = 0;
     for (var i = 0; i < tokens.length; i++) {
       if (label.includes(tokens[i])) matches++;
@@ -287,10 +295,11 @@ const boundaryAttribution =
 
     function captureScrollAnchor() {
       var anchors = [
-        document.querySelector("[data-scroll-anchor='search']"),
         document.querySelector("[data-scroll-anchor='map']"),
         document.querySelector("[data-scroll-anchor='history']"),
+        document.querySelector("[data-scroll-anchor='demographics']"),
       ].filter(Boolean);
+      if (!anchors.length) return;
       var enteredThreshold = Math.min(window.innerHeight * 0.35, 240);
       var best = anchors[0];
 
@@ -303,7 +312,14 @@ const boundaryAttribution =
 
       if (best) {
         try {
-          sessionStorage.setItem("seatSearchScrollAnchor", best.dataset.scrollAnchor);
+          sessionStorage.setItem(
+            SCROLL_ANCHOR_KEY,
+            JSON.stringify({
+              name: best.getAttribute("data-scroll-anchor"),
+              offset: best.getBoundingClientRect().top,
+              ts: Date.now(),
+            }),
+          );
         } catch {}
       }
     }
@@ -427,14 +443,42 @@ const boundaryAttribution =
   document.querySelectorAll(".combobox[data-type='seat']").forEach(initCombobox);
 
   try {
-    var savedScrollAnchor = sessionStorage.getItem("seatSearchScrollAnchor");
-    if (savedScrollAnchor) {
-      sessionStorage.removeItem("seatSearchScrollAnchor");
-      var target = document.querySelector("[data-scroll-anchor='" + savedScrollAnchor + "']");
-      if (target) {
-        requestAnimationFrame(function() {
-          target.scrollIntoView({ block: "start" });
-        });
+    var rawSavedScrollAnchor = sessionStorage.getItem(SCROLL_ANCHOR_KEY);
+    if (rawSavedScrollAnchor) {
+      sessionStorage.removeItem(SCROLL_ANCHOR_KEY);
+      var savedScrollAnchor = null;
+      try {
+        savedScrollAnchor = JSON.parse(rawSavedScrollAnchor);
+      } catch {
+        savedScrollAnchor = {
+          name: rawSavedScrollAnchor,
+          offset: 0,
+          ts: Date.now(),
+        };
+      }
+      if (savedScrollAnchor && Date.now() - (savedScrollAnchor.ts || 0) < 10000) {
+        var target = document.querySelector(
+          "[data-scroll-anchor='" + savedScrollAnchor.name + "']",
+        );
+        if (target) {
+          var attempts = 0;
+          var cancelled = false;
+          var cancelRestore = function() {
+            cancelled = true;
+          };
+          window.addEventListener("wheel", cancelRestore, { once: true, passive: true });
+          window.addEventListener("touchstart", cancelRestore, { once: true, passive: true });
+          window.addEventListener("keydown", cancelRestore, { once: true });
+          var restore = function() {
+            if (cancelled) return;
+            attempts += 1;
+            var offset = typeof savedScrollAnchor.offset === "number" ? savedScrollAnchor.offset : 0;
+            var top = window.scrollY + target.getBoundingClientRect().top - offset;
+            window.scrollTo({ top: top, left: window.scrollX, behavior: "instant" });
+            if (attempts < 90) requestAnimationFrame(restore);
+          };
+          requestAnimationFrame(restore);
+        }
       }
     }
   } catch {}
