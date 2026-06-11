@@ -98,9 +98,9 @@ Columns:
 - `votes_rejected`: Rejected votes in the saluran.
 - `votes_valid`: Valid votes in the saluran.
 
-The percentage columns in `headline_stats` (`voter_turnout`, `majority_perc`, `votes_rejected_perc`, and `ballots_not_returned_perc`) are not derived at saluran level because they do not make sense for saluran-level analysis in this dataset. However, if the user requests, you may compute it for them, using the following formulae:
+The percentage columns in `headline_stats` (`voter_turnout`, `majority_perc`, `votes_rejected_perc`, and `ballots_not_returned_perc`) are not derived at saluran level by default. However, if the user requests, you may compute it for them, using the following formulae:
 - Voter turnout (%): `ballots_issued` / `voters_total` * 100 (note that voter turnout should exclude rows where kod_dm contains '/UP')
-- Majority (%): Do not compute at saluran level, does not make sense
+- Majority (%): Difference between highest votes in that saluran and second highest votes in that saluran, as a % of `votes_valid`
 - Votes rejected (%): `votes_rejected` / `votes_valid` * 100
 - Ballots not returned (%): `ballots_not_returned` / `ballots_issued` * 100
 
@@ -146,13 +146,13 @@ Columns:
 
 - `uid`: Anonymised voter identifier.
 - `birth_year`: Voter birth year.
-- `sex`: Voter sex. Possible values include L and P.
+- `sex`: Voter sex. Possible values include Male and Female.
 - `ethnicity`: Voter ethnicity.
 - `state`: State name.
 - `parlimen`: Parliament seat identifier and name.
 - `dun`: DUN seat identifier and name.
 - `dm`: Polling district code and name.
-- `pm`: Polling centre name.
+- `tm`: Polling centre name.
 - `saluran`: Saluran number.
 
 ## Join Rules
@@ -183,6 +183,16 @@ When joining `voter_demographics` to GE-15 results or ballots, join on all of th
 - `election`
 - `state`
 - `seat`
+
+When joining `voter_roll_ge15` to `saluran_ballots` or `saluran_stats`:
+
+`voter_roll_ge15` and the saluran tables are perfectly aligned at the saluran level. This makes it possible to derive saluran-level demographic compositions and cross-tabulate them against voting patterns.
+
+- For Parliament seat analysis, join on `voter_roll_ge15.parlimen = saluran_*.seat`
+- For DUN seat analysis, join on `voter_roll_ge15.dun = saluran_*.seat`
+- Additionally join on `dm`, `tm`, and `saluran`
+
+Aggregate `voter_roll_ge15` rows first (e.g. count voters by ethnicity or age group per saluran), then join the result to `saluran_stats` or `saluran_ballots` on the columns above.
 
 ## Election Filtering Rules
 
@@ -258,6 +268,7 @@ When filtering or comparing coalitions, use the exact `coalition` code values fr
 - The `voter_demographics` columns do not provide demographic cross-tabs. For requests involving two or more demographic dimensions, such as men aged 18-20, use `voter_roll_ge15`.
 - `voter_demographics` columns are absolute counts. In general, convert them into percentages for analysis unless the user explicitly asks for absolute counts. For example, if the user asks to see results in the Parliament seats with the highest percentage of Chinese voters, compute `ethnic_chinese * 100.0 / voters_total` from `voter_demographics`, then compare it with GE-15 results.
 - `voter_roll_ge15` should be used for voter-level demographic work that cannot be answered from `voter_demographics`, especially cross-tabs involving two or more demographic dimensions.
+- `voter_roll_ge15` is perfectly aligned with `saluran_ballots` and `saluran_stats` at the saluran level. Join on `parlimen` (for Parliament seats) or `dun` (for DUN seats) aliased to `seat`, plus `dm`, `tm`, and `saluran`. This is the correct approach for saluran-level demographic analysis — for example, computing the ethnic or age composition of each saluran and correlating it with votes or turnout.
 - Be careful not to double-count seat-level values from `headline_stats` after joining to candidate-level rows in `headline_ballots`.
 - Be careful not to double-count saluran-level values from `saluran_stats` after joining to candidate-level rows in `saluran_ballots`.
 - If aggregating seat-level statistics after a join, deduplicate at the seat-election level first using `date`, `election`, `state`, and `seat`.
