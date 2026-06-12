@@ -18,12 +18,15 @@ const {
 const locale = Astro.currentLocale ?? "en-GB";
 const ogImage = image ?? `${import.meta.env.PUBLIC_APP_URL}/static/images/og_${locale === "ms-MY" ? "ms-MY" : "en-GB"}.png`;
 const ogDescription = description.replace(/\n+/g, " ").trim();
+const canonicalURL = new URL(Astro.url.pathname.replace(/\/$/, ""), Astro.site).href;
 ---
 
 <html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="canonical" href={canonicalURL} />
 
     <!-- Primary meta -->
     <title>{title}</title>
