@@ -11,7 +11,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   output: 'static',
   site: 'https://electiondata.my',
-  trailingSlash: 'never',
   build: {
     concurrency: 20,
   },

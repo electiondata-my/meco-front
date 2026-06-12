@@ -22,6 +22,3 @@
 # Auth proxy: rewrite /api/auth/* to the auth Worker (production equivalent of
 # the fetch proxy in src/middleware.ts, which doesn't run in static deployments).
 /api/auth/*  https://auth.electiondata.my/:splat  200
-
-# Trailing slash: redirect /path/ → /path to enforce a single canonical URL.
-/*/ /:splat 301
