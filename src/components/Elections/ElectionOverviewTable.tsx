@@ -54,13 +54,13 @@ export function OverviewLogo({ uid, name, folder }: { uid?: string; name: string
 
   if (!uid || err) {
     return (
-      <span className="flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
+      <span className="flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
         ?
       </span>
     );
   }
   return (
-    <span className="relative flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
+    <span className="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
       ?
       <img
         ref={imgRef}

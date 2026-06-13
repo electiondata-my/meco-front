@@ -138,7 +138,7 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
             aria-label="Search"
           >
             {currentParty ? (
-              <span class="relative flex h-4 w-8 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
+              <span class="relative flex h-4 w-8 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
                 <span>?</span>
                 <img
                   src={`/static/images/${partyFolder}/${partyUid}.png`}
@@ -248,7 +248,7 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
       }
       list.innerHTML = options.slice(0, 150).map(o => `
         <li class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
-          <span class="relative flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
+          <span class="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
             ?
             <img src="/static/images/${esc(o.folder)}/${esc(o.value)}.png"
                  class="absolute inset-0 h-full w-full object-contain opacity-0"

@@ -90,7 +90,7 @@ function CoalitionCell({ coalition, uid }: { coalition?: string; uid?: string })
   return (
     <div className="flex items-center gap-1.5">
       {uid && !err ? (
-        <div className="relative flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
+        <div className="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
           ?
           <img
             ref={imgRef}
@@ -104,7 +104,7 @@ function CoalitionCell({ coalition, uid }: { coalition?: string; uid?: string })
           />
         </div>
       ) : (
-        <span className="flex h-4 w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">?</span>
+        <span className="flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">?</span>
       )}
       <span>{coalition}</span>
     </div>
