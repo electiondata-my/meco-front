@@ -13,18 +13,13 @@ interface Props {
   toc: TocItem[];
   currentPath: string;
   isIntroduction?: boolean;
-  apiStats?: { total_hits: number; total_users: number } | null;
 }
 
-const { title, pageTitle = title, description, breadcrumb, toc, currentPath, isIntroduction = false, apiStats } = Astro.props;
+const { title, pageTitle = title, description, breadcrumb, toc, currentPath, isIntroduction = false } = Astro.props;
 
 const currentIndex = ALL_PAGES.findIndex(p => p.href === currentPath);
 const prev = currentIndex > 0 ? ALL_PAGES[currentIndex - 1] : null;
 const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] : null;
-
-function numFormat(n: number): string {
-  return n.toLocaleString("en-GB");
-}
 ---
 
 <Layout title={title} description={description}>
@@ -84,13 +79,13 @@ function numFormat(n: number): string {
             {pageTitle}
           </h1>
 
-          <!-- API stats (introduction page only) -->
-          {isIntroduction && apiStats && (
-            <p class="mb-8 flex items-center gap-1 text-body-sm text-txt-black-500">
+          <!-- API stats (introduction page only, fetched client-side) -->
+          {isIntroduction && (
+            <p id="api-stats" class="mb-8 flex items-center gap-1 text-body-sm text-txt-black-500" style="visibility:hidden">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0">
                 <path d="M11.983 1.907a.75.75 0 0 0-1.292-.657l-8.5 9.5A.75.75 0 0 0 2.75 12h6.572l-1.305 6.093a.75.75 0 0 0 1.292.657l8.5-9.5A.75.75 0 0 0 17.25 8h-6.572l1.305-6.093Z" />
               </svg>
-              {numFormat(apiStats.total_hits)} requests served · {numFormat(apiStats.total_users)} users and counting
+              <span id="api-stats-text"></span>
             </p>
           )}
 
@@ -139,6 +134,30 @@ function numFormat(n: number): string {
       document.querySelectorAll("h2[id=''], h3[id='']").forEach(function (el) {
         el.id = slugify(el.textContent || "");
       });
+    })();
+  </script>
+
+  <!-- Live API stats fetch -->
+  <script>
+    (async function () {
+      const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
+      if (!token) return;
+      try {
+        const res = await fetch(
+          `https://api.us-west-2.aws.tinybird.co/v0/pipes/api_stats_summary.json?token=${token}`,
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const stats = data?.data?.[0];
+        if (!stats) return;
+        const el = document.getElementById("api-stats");
+        const text = document.getElementById("api-stats-text");
+        if (!el || !text) return;
+        text.textContent = `${stats.total_hits.toLocaleString("en-GB")} requests served · ${stats.total_users.toLocaleString("en-GB")} users and counting`;
+        el.style.visibility = "visible";
+      } catch {
+        // non-fatal
+      }
     })();
   </script>
 

@@ -17,21 +17,6 @@ const { Content } = await render(entry);
 const toc = extractToc(entry.body ?? "");
 const { title, pageTitle, breadcrumb, description } = entry.data;
 
-let apiStats: { total_hits: number; total_users: number } | null = null;
-const token = import.meta.env.PUBLIC_TINYBIRD_TOKEN;
-if (token) {
-  try {
-    const res = await fetch(
-      `https://api.us-west-2.aws.tinybird.co/v0/pipes/api_stats_summary.json?token=${token}`,
-    );
-    if (res.ok) {
-      const data = await res.json();
-      apiStats = data?.data?.[0] ?? null;
-    }
-  } catch {
-    // non-fatal — stats omitted if fetch fails
-  }
-}
 ---
 
 <DocLayout
@@ -42,7 +27,6 @@ if (token) {
   toc={toc}
   currentPath="/openapi"
   isIntroduction
-  apiStats={apiStats}
 >
   <Content components={{ ...mdxComponents, pre: PreCodeBlock, ol: OrderedList, ul: UnorderedList, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland }} />
 </DocLayout>
