@@ -23,6 +23,9 @@ minimumReleaseAgeExclude:
   - '@cloudflare/workerd-windows-64@1.20260601.1'
   - miniflare@4.20260601.0
   - workerd@1.20260601.1
+  - astro@6.4.8
+  - axios@1.18.0
+  - form-data@4.0.6
 
 peerDependencyRules:
   allowedVersions:
@@ -44,7 +47,10 @@ overrides:
   i18next-fs-backend@<2.6.4: '2.6.4'
   follow-redirects@<=1.15.11: '1.16.0'
   protocol-buffers-schema@<3.6.1: '3.6.1'
-  js-yaml@>=4.0.0 <4.1.1: '4.1.1'
+  js-yaml@>=4.0.0 <=4.1.1: '4.2.0'
+  ws@>=8.0.0 <8.21.0: '8.21.0'
+  vite@>=7.0.0 <=7.3.4: '7.3.5'
+  form-data@>=4.0.0 <4.0.6: '4.0.6'
   ajv@<6.14.0: '6.14.0'
   ajv@>=8.0.0 <8.18.0: '8.18.0'
   brace-expansion@<1.1.13: '1.1.13'
