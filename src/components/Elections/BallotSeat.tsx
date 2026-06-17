@@ -102,8 +102,7 @@ export default function BallotSeat({
           `${apiBaseUrl}/results/${encodeURIComponent(seat)}/${date}.json`,
         );
         if (!res.ok) throw new Error("fetch failed");
-        const { ballot, summary } = await res.json();
-        const stats = summary[0];
+        const { ballot, stats: [stats] } = await res.json();
         const nextResult: SeatResult = {
           data: ballot,
           votes: [

@@ -217,8 +217,7 @@ export default function CandidateElectionTable({
         const res = await fetch(
           `${apiBase}/results/${encodeURIComponent(e.seat)}/${e.date}.json`
         );
-        const { ballot, summary } = await res.json();
-        const s = summary[0] ?? {};
+        const { ballot, stats: [s = {}] } = await res.json();
         setModal((prev) => ({
           ...prev,
           loading: false,

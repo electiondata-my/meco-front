@@ -188,8 +188,7 @@ export default function SeatElectionTable({
           `${apiBase}/results/${encodeURIComponent(seatWithState)}/${row.date}.json`,
         );
         if (!res.ok) throw new Error("fetch failed");
-        const { ballot, summary } = await res.json();
-        const s0 = summary?.[0] ?? {};
+        const { ballot, stats: [s0 = {}] } = await res.json();
         const result = {
           ballot: ballot ?? [],
           votes: [

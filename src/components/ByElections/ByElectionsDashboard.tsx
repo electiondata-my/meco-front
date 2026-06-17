@@ -137,8 +137,7 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
         cache: "no-store",
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const { ballot, summary } = await res.json();
-      const stats = summary[0];
+      const { ballot, stats: [stats] } = await res.json();
       const results: typeof data.results = {
         data: ballot,
         votes: [
