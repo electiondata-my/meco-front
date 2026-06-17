@@ -729,6 +729,11 @@ export default function QueryBuilderDashboard() {
     const id = params.get("id");
     const qp = params.get("query");
 
+    const setPageTitle = (title: string) => {
+      document.title = title;
+      document.querySelector('meta[property="og:title"]')?.setAttribute("content", title);
+    };
+
     if (id) {
       fetch(`${QUERY_SHORTENER_URL}/q/${encodeURIComponent(id)}`)
         .then(async (res) => {
@@ -742,6 +747,8 @@ export default function QueryBuilderDashboard() {
           setActiveSample(null);
           setShortQueryId(id);
           shouldAutoRunSharedQueryRef.current = true;
+          const label = Number(id).toString() !== "NaN" ? String(Number(id)) : id;
+          setPageTitle(`Shared Query (ID: ${label}) | ElectionData.MY`);
         })
         .catch(() => {
           setQueryError("Could not load the short query link.");
@@ -756,6 +763,7 @@ export default function QueryBuilderDashboard() {
         setActiveSource("workspace");
         setActiveSample(null);
         shouldAutoRunSharedQueryRef.current = true;
+        setPageTitle("Shared Query (Private) | ElectionData.MY");
       } catch {
         // malformed share link — ignore
       }
