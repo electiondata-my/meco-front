@@ -6,6 +6,7 @@ interface Props {
   description?: string;
   image?: string;
   needsLeaflet?: boolean;
+  noindex?: boolean;
 }
 
 const {
@@ -13,6 +14,7 @@ const {
   description = "Open data platform for Malaysian election results.",
   image,
   needsLeaflet = false,
+  noindex = false,
 } = Astro.props;
 
 const locale = Astro.currentLocale ?? "en-GB";
@@ -27,6 +29,8 @@ const canonicalURL = new URL(Astro.url.pathname.replace(/\/$/, ""), Astro.site).
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <link rel="canonical" href={canonicalURL} />
+
+    {noindex && <meta name="robots" content="noindex" />}
 
     <!-- Primary meta -->
     <title>{title}</title>
@@ -85,10 +89,10 @@ const canonicalURL = new URL(Astro.url.pathname.replace(/\/$/, ""), Astro.site).
     <link rel="icon" type="image/png" sizes="16x16" href="/static/logo/favicon-16x16.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
 
-    <!-- Tinybird Flock analytics -->
+    <!-- Tinybird Flock analytics (v1.7.1, self-hosted to avoid unpkg supply-chain dependency) -->
     <script
       is:inline
-      src="https://unpkg.com/@tinybirdco/flock.js"
+      src="/static/flock.js"
       data-token={import.meta.env.PUBLIC_TINYBIRD_TOKEN}
       data-host={import.meta.env.PUBLIC_API_URL_TB}
       async

@@ -7,7 +7,7 @@ export function useApiKey() {
   const [apiKey, setApiKeyState] = useState("");
 
   useEffect(() => {
-    setApiKeyState(localStorage.getItem(STORAGE_KEY) ?? "");
+    setApiKeyState(sessionStorage.getItem(STORAGE_KEY) ?? "");
     const handler = (e: Event) =>
       setApiKeyState((e as CustomEvent<string>).detail ?? "");
     document.addEventListener(EVENT_NAME, handler);
@@ -15,7 +15,7 @@ export function useApiKey() {
   }, []);
 
   const setApiKey = (key: string) => {
-    localStorage.setItem(STORAGE_KEY, key);
+    sessionStorage.setItem(STORAGE_KEY, key);
     setApiKeyState(key);
     document.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: key }));
   };

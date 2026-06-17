@@ -9,9 +9,10 @@ interface Props {
   description?: string;
   image?: string;
   needsLeaflet?: boolean;
+  noindex?: boolean;
 }
 
-const { title, description, image, needsLeaflet } = Astro.props;
+const { title, description, image, needsLeaflet, noindex } = Astro.props;
 
 const locale = Astro.currentLocale ?? "en-GB";
 const i18n = await getTranslations(locale, ["common"]);
@@ -70,7 +71,7 @@ const footerSections = [
 ];
 ---
 
-<BaseLayout title={title} description={description} image={image} needsLeaflet={needsLeaflet}>
+<BaseLayout title={title} description={description} image={image} needsLeaflet={needsLeaflet} noindex={noindex}>
   <!-- ─── HEADER ─── -->
   <header
     id="navbar"

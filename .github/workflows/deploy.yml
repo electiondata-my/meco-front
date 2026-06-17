@@ -25,11 +25,9 @@ jobs:
           PUBLIC_APP_URL: ${{ secrets.PUBLIC_APP_URL }}
           PUBLIC_APP_ENV: production
           PUBLIC_API_URL_TB: ${{ secrets.PUBLIC_API_URL_TB }}
-          PUBLIC_API_TOKEN_TB: ${{ secrets.PUBLIC_API_TOKEN_TB }}
           PUBLIC_API_URL_R2: ${{ secrets.PUBLIC_API_URL_R2 }}
           PUBLIC_I18N_URL: ${{ secrets.PUBLIC_I18N_URL }}
           PUBLIC_TINYBIRD_TOKEN: ${{ secrets.PUBLIC_TINYBIRD_TOKEN }}
-          PUBLIC_TINYBIRD_TOKEN_READ: ${{ secrets.PUBLIC_TINYBIRD_TOKEN_READ }}
           PUBLIC_MAPBOX_ACCOUNT: ${{ secrets.PUBLIC_MAPBOX_ACCOUNT }}
           PUBLIC_MAPBOX_TOKEN: ${{ secrets.PUBLIC_MAPBOX_TOKEN }}
           PUBLIC_AUTH_URL: ${{ secrets.PUBLIC_AUTH_URL }}
