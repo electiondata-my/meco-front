@@ -8,7 +8,7 @@ function isEnglishOnlyPath(path: string) {
 
 const languages: Record<"ms-MY" | "en-GB", { full: string; short: string }> = {
   "en-GB": { full: "English", short: "EN" },
-  "ms-MY": { full: "Malay", short: "BM" },
+  "ms-MY": { full: "Malay", short: "MY" },
 };
 
 interface LocaleSwitchProps {
@@ -63,7 +63,8 @@ export default function LocaleSwitch({ currentLocale, currentPath }: LocaleSwitc
                 strokeLinejoin="round"
               />
             </svg>
-            <span>{languages[selected as "en-GB" | "ms-MY"].full}</span>
+            <span className="lg:hidden">{languages[selected as "en-GB" | "ms-MY"].short}</span>
+            <span className="hidden lg:inline">{languages[selected as "en-GB" | "ms-MY"].full}</span>
             {/* Chevron */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
