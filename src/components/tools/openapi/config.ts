@@ -7,6 +7,7 @@ export interface TocItem {
 export interface NavItem {
   label: string;
   href: string;
+  disabled?: boolean;
 }
 
 export interface NavSection {
@@ -28,8 +29,12 @@ export const NAV_SECTIONS: NavSection[] = [
     group: "Endpoints",
     items: [
       { label: "Results", href: "/openapi/endpoints/results" },
-      { label: "Candidates", href: "/openapi/endpoints/candidates" },
+      { label: "Elections", href: "#", disabled: true },
       { label: "By-Elections", href: "/openapi/endpoints/byelections" },
+      { label: "Seats (Current)", href: "/openapi/endpoints/seats-current" },
+      { label: "Seats (Historical)", href: "#", disabled: true },
+      { label: "Candidates", href: "/openapi/endpoints/candidates" },
+      { label: "Parties", href: "#", disabled: true },
     ],
   },
 ];
