@@ -8,9 +8,12 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const isSurgical = Object.keys(process.env).some((k) => k.startsWith('POST_TO_BUILD'));
+
 export default defineConfig({
   output: 'static',
   site: 'https://electiondata.my',
+  outDir: isSurgical ? './dist-surgical' : './dist',
   build: {
     concurrency: 20,
   },
