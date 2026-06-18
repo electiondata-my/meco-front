@@ -29,7 +29,7 @@ type PartyElection = {
 
 export async function getStaticPaths() {
   const scope    = import.meta.env.POST_TO_BUILD_PARTIES;
-  const anyScope = !!(scope || import.meta.env.POST_TO_BUILD_CANDIDATES || import.meta.env.POST_TO_BUILD_ELECTIONS || import.meta.env.POST_TO_BUILD_OPENAPI);
+  const anyScope = !!(scope || import.meta.env.POST_TO_BUILD_CANDIDATES || import.meta.env.POST_TO_BUILD_ELECTIONS || import.meta.env.POST_TO_BUILD_SEATS || import.meta.env.POST_TO_BUILD_CATALOGUE || import.meta.env.POST_TO_BUILD_OPENAPI);
   if (anyScope && !scope) return [];
   const slugFilter = scope && scope !== "all" ? new Set(scope.split(",")) : null;
   const r2 = import.meta.env.PUBLIC_API_URL_R2;

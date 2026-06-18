@@ -23,6 +23,8 @@ export async function getStaticPaths() {
     import.meta.env.POST_TO_BUILD_CANDIDATES ||
     scope ||
     import.meta.env.POST_TO_BUILD_PARTIES ||
+    import.meta.env.POST_TO_BUILD_SEATS ||
+    import.meta.env.POST_TO_BUILD_CATALOGUE ||
     import.meta.env.POST_TO_BUILD_OPENAPI
   );
   if (anyScope && !scope) return [];
