@@ -7,8 +7,7 @@
     "build": "astro build",
     "start": "astro preview",
     "lint": "eslint .",
-    "merge-surgical": "rsync -a dist-surgical/ dist/",
-    "deploy": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=main",
+    "deploy":"wrangler pages deploy dist/ --project-name=electiondata-my --branch=main",
     "deploy-staging": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=staging"
   },
   "lint-staged": {

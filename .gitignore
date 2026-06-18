@@ -23,6 +23,7 @@ tb*
 # astro
 .astro/*
 dist/
+dist-surgical/
 
 # production
 /build

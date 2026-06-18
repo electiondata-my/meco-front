@@ -5,10 +5,21 @@ import tailwind from '@astrojs/tailwind';
 import sitemap from '@astrojs/sitemap';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const isSurgical = Object.keys(process.env).some((k) => k.startsWith('POST_TO_BUILD'));
+
+const surgicalMerge = {
+  name: 'surgical-merge',
+  hooks: {
+    'astro:build:done': () => {
+      execSync('rsync -a dist-surgical/ dist/');
+      console.log('[surgical-merge] Merged dist-surgical/ into dist/');
+    },
+  },
+};
 
 export default defineConfig({
   output: 'static',
@@ -18,6 +29,7 @@ export default defineConfig({
     concurrency: 20,
   },
   integrations: [
+    ...(isSurgical ? [surgicalMerge] : []),
     react(),
     mdx(),
     // applyBaseStyles: false — globals.css already imports Tailwind directives
