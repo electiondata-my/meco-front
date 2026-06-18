@@ -12,10 +12,23 @@ import { getCollection, render } from "astro:content";
 import { extractToc } from "@src/lib/docs";
 
 export async function getStaticPaths() {
+  const scope = import.meta.env.POST_TO_BUILD_OPENAPI;
+  const anyScope = !!(
+    scope ||
+    import.meta.env.POST_TO_BUILD ||
+    import.meta.env.POST_TO_BUILD_CANDIDATES ||
+    import.meta.env.POST_TO_BUILD_CATALOGUE ||
+    import.meta.env.POST_TO_BUILD_ELECTIONS ||
+    import.meta.env.POST_TO_BUILD_PARTIES ||
+    import.meta.env.POST_TO_BUILD_SEATS
+  );
+  if (anyScope && !scope) return [];
+  const slugFilter = scope && scope !== "all" ? new Set(scope.split(",")) : null;
+
   const entries = await getCollection("openapi");
-  // Exclude introduction — served by index.astro
   return entries
     .filter(e => e.id !== "introduction")
+    .filter(e => !slugFilter || slugFilter.has(e.id))
     .map(entry => ({
       params: { slug: entry.id },
       props: { entry },

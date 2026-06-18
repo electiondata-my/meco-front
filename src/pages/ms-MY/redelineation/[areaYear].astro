@@ -8,6 +8,7 @@ export async function getStaticPaths() {
   type FilterJSON = Record<string, string[]>;
   const filter = await fetchJSON<FilterJSON>("/redelineation/filter.json");
   const filter_var = import.meta.env.POST_TO_BUILD;
+  if (import.meta.env.POST_TO_BUILD_OPENAPI && !filter_var) return [];
 
   const slugSet = new Set<string>();
   for (const key of Object.keys(filter)) {
