@@ -29,6 +29,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: "Results", href: "/openapi/endpoints/results" },
       { label: "Candidates", href: "/openapi/endpoints/candidates" },
+      { label: "By-Elections", href: "/openapi/endpoints/byelections" },
     ],
   },
 ];

@@ -1,0 +1,60 @@
+---
+title: "By-Elections - API Docs | ElectionData.MY"
+pageTitle: "By-Elections"
+breadcrumb: "Endpoints"
+description: "Retrieve a complete list of every by-election ever held in Malaysia, with winner and voting statistics for each."
+keywords: "API, by-elections, PRK, election data, Malaysia"
+---
+
+## Use Case
+
+Use this endpoint to build a by-elections browser, similar to the one on our [By-Elections dashboard](https://www.electiondata.my/byelections). A user opens the page and sees a list of every Pilihan Raya Kecil (PRK) ever held in Malaysia—the seat, the date, who won, and by how much. If you pair it with the `/results` endpoint, they can also drill into the complete details for any individual contest.
+
+Just follow the 2 simple steps below, and you'll be up and running!
+
+## Step 0: Generate token
+
+All requests to this API require a Bearer token. Requests without a token (or with an invalid one) will return a `401 Unauthorized` error. Paste yours below—every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
+
+<TokenInput />
+
+## Step 1: Get list of PRKs
+
+<EndpointBadge method="GET" url="https://api.electiondata.my/v1/byelections" />
+
+This endpoint takes no parameters and returns every by-election from the first in 1957 till the present day. The list is only updated when a new by-election is called, so we recommend fetching it once and caching it for the duration of a session (or bundling it at build time for static pages).
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/v1/byelections" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/byelections",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/byelections",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface Byelection {\n  seat: string;\n  state: string;\n  date: string;\n  name: string;\n  party_uid: string;\n  party: string;\n  coalition_uid: number;\n  coalition: string;\n  voters_total: number;\n  voter_turnout: number;\n  voter_turnout_perc: number;\n  votes_rejected: number;\n  votes_rejected_perc: number;\n  majority: number;\n  majority_perc: number;\n}\n\ninterface ByelectionResponse {\n  data: Byelection[];\n}\n\nconst data: ByelectionResponse = await response.json();\nconsole.log(data);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/byelections",\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()\nprint(data)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/byelections") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)\nprint(data)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/byelections", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar data any\n\tjson.Unmarshal(body, &data)\n\tfmt.Println(data)\n}`}
+/>
+
+A successful `200 OK` response returns a JSON object with a single `data` key containing an array of every by-election, ordered from the most recent to oldest. Each object in the array contains:
+
+<FieldTable fields={[
+  { name: "seat", type: "string", description: "Constituency identifier (e.g. 'P.011 Sungei Perak Ulu')." },
+  { name: "state", type: "string", description: "State name (e.g. 'Perak')." },
+  { name: "date", type: "date", description: "Polling day in ISO 8601 format (YYYY-MM-DD)." },
+  { name: "name", type: "string", description: "Winner's full name." },
+  { name: "party_uid", type: "string", description: "Unique party identifier (e.g. '001-UMNO')." },
+  { name: "party", type: "string", description: "Acronym of the winning party (e.g. 'UMNO')." },
+  { name: "coalition_uid", type: "integer", description: "Numeric coalition identifier (0 if the party contested independently)." },
+  { name: "coalition", type: "string", description: "Coalition name (e.g. 'PERIKATAN'). 'ALONE' if the party contested independently." },
+  { name: "voters_total", type: "integer", description: "Total number of registered voters for this contest." },
+  { name: "voter_turnout", type: "integer", description: "Total votes cast, including rejected votes." },
+  { name: "voter_turnout_perc", type: "float", description: "Turnout as a percentage of registered voters." },
+  { name: "votes_rejected", type: "integer", description: "Number of votes rejected during counting." },
+  { name: "votes_rejected_perc", type: "float", description: "Rejected votes as a percentage of total ballots cast." },
+  { name: "majority", type: "integer", description: "Winning margin, i.e. winner's votes minus runner-up's votes." },
+  { name: "majority_perc", type: "float", description: "Majority as a percentage of total valid votes." },
+]} />
+
+## Try It Out
+
+Fire a live request to examine the response containing the full list of by-elections.
+
+<ByelectionApiTester />
