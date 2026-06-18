@@ -16,6 +16,7 @@ import {
 function getNavItemIcon(label: string) {
   switch (label) {
     case "Candidates": return UserIcon;
+    case "Results": return RectangleStackIcon;
     case "Authentication": return ShieldCheckIcon;
     case "Errors": return ExclamationCircleIcon;
     case "Versioning": return RectangleStackIcon;

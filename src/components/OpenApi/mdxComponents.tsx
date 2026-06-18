@@ -72,6 +72,10 @@ const Pre: FunctionComponent<{
   return <DocCodeBlock code={code} lang={lang} className="my-4" />;
 };
 
+const Hr: FunctionComponent = () => (
+  <hr className="my-6 mx-auto w-12 border-t border-otl-gray-200" />
+);
+
 const A: FunctionComponent<{ href?: string; children?: ReactNode }> = ({ href = "#", children }) => {
   const cls = "text-txt-danger underline underline-offset-2 hover:opacity-80 transition-opacity";
   const isExternal = href.startsWith("http");
@@ -132,6 +136,7 @@ export const mdxComponents = {
   a: A,
   ul: Ul,
   ol: Ol,
+  hr: Hr,
   Callout,
   EndpointBadge,
   EndpointCard,

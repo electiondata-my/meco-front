@@ -38,7 +38,7 @@ This endpoint takes no parameters. To improve your product's performance, we rec
 A successful `200 OK` response returns a JSON array of every candidate in the database, in descending order of the number of elections they have contested. Each object in the response contains:
 
 <FieldTable fields={[
-  { name: "id", type: "string", description: "Unique candidate identifier. Use this in Step 2." },
+  { name: "uid", type: "string", description: "Unique candidate identifier. Use this in Step 2." },
   { name: "name", type: "string", description: "Candidate's full name." },
   { name: "c", type: "integer", description: "Total contests stood in." },
   { name: "w", type: "integer", description: "Total contests won." },
@@ -51,22 +51,22 @@ Once the user has selected a candidate, pass their `id` to retrieve their electi
 
 <EndpointCard method="GET" url="https://api.electiondata.my/v1/candidates" params={[
   {
-    name: "id",
+    name: "uid",
     type: "string",
     required: true,
     description: "Unique identifier derived from the dropdown."
   }
 ]} />
 
-The id parameter is mandatory; requests without this parameter will return a `400 Bad Request` error, while requests with an invalid id will return a `404 Not Found` error.
+The uid parameter is mandatory; requests without this parameter will return a `400 Bad Request` error, while requests with an invalid uid will return a `404 Not Found` error.
 
 <TabCode
-  curl={`curl -X GET "https://api.electiondata.my/v1/candidates?id=CMVBA" \\\n  -H "Authorization: Bearer <your-api-key>"`}
-  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates?id=CMVBA",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
-  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates?id=CMVBA",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface CandidateResult {\n  name: string;\n  election_name: string;\n  type: "parlimen" | "dun";\n  date: string;\n  seat: string;\n  party: string;\n  party_uid: string;\n  coalition: string | null;\n  coalition_uid: number | null;\n  votes: number;\n  votes_perc: number;\n  result: "won" | "won_uncontested" | "lost" | "lost_deposit";\n}\n\nconst data: CandidateResult[] = await response.json();\nconsole.log(data);`}
-  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/candidates",\n    params={"id": "CMVBA"},\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()\nprint(data)`}
-  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/candidates") |>\n  req_url_query(id = "CMVBA") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)\nprint(data)`}
-  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/candidates?id=CMVBA", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar data any\n\tjson.Unmarshal(body, &data)\n\tfmt.Println(data)\n}`}
+  curl={`curl -X GET "https://api.electiondata.my/v1/candidates?uid=CMVBA" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates?uid=CMVBA",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates?uid=CMVBA",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface CandidateResult {\n  name: string;\n  election_name: string;\n  type: "parlimen" | "dun";\n  date: string;\n  seat: string;\n  party: string;\n  party_uid: string;\n  coalition: string | null;\n  coalition_uid: number | null;\n  votes: number;\n  votes_perc: number;\n  result: "won" | "won_uncontested" | "lost" | "lost_deposit";\n}\n\nconst data: CandidateResult[] = await response.json();\nconsole.log(data);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/candidates",\n    params={"uid": "CMVBA"},\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()\nprint(data)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/candidates") |>\n  req_url_query(uid = "CMVBA") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)\nprint(data)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/candidates?uid=CMVBA", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar data any\n\tjson.Unmarshal(body, &data)\n\tfmt.Println(data)\n}`}
 />
 
 A successful `200 OK` response returns a JSON array of election results, ordered from most recent to oldest. Each object in the response contains:
@@ -76,13 +76,14 @@ A successful `200 OK` response returns a JSON array of election results, ordered
   { name: "election_name", type: "string", description: "Human-readable election name (e.g. 'GE-15')." },
   { name: "type", type: "string", description: "'parlimen' for parliamentary seats or 'dun' for state seats." },
   { name: "date", type: "date", description: "Polling day in ISO 8601 format (YYYY-MM-DD)." },
-  { name: "seat", type: "string", description: "Constituency name and state (e.g. 'P.052 Bayan Baru, Pulau Pinang')." },
+  { name: "seat", type: "string", description: "Constituency name (e.g. 'P.052 Bayan Baru, Pulau Pinang')." },
+  { name: "seat", type: "string", description: "State of the constituency (e.g. 'Pulau Pinang')." },
   { name: "party", type: "string", description: "Acronym of the candidate's party (e.g. 'DAP')." },
   { name: "party_uid", type: "string", description: "Unique party identifier e.g. '021-DAP'." },
   { name: "coalition", type: "string", description: "Coalitional affiliation of the party, if any (e.g. 'PH')." },
   { name: "coalition_uid", type: "number", description: "Unique coalition identifier, if any." },
-  { name: "votes", type: "integer", description: "Total votes received by the candidate." },
-  { name: "votes_perc", type: "float", description: "Percentage of total valid votes gained by the candidate." },
+  { name: "votes", type: "integer", description: "Total votes received by the candidate (zero for uncontested wins)." },
+  { name: "votes_perc", type: "float", description: "Percentage of valid votes received by the candidate (null for uncontested wins)." },
   { name: "result", type: "string", description: "One of: 'won', 'won_uncontested', 'lost', or 'lost_deposit'." },
 ]} />
 

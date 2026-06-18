@@ -26,7 +26,10 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     group: "Endpoints",
-    items: [{ label: "Candidates", href: "/openapi/endpoints/candidates" }],
+    items: [
+      { label: "Results", href: "/openapi/endpoints/results" },
+      { label: "Candidates", href: "/openapi/endpoints/candidates" },
+    ],
   },
 ];
 

@@ -1,20 +1,23 @@
-import { FunctionComponent, useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { FunctionComponent, useCallback, useRef, useState } from "react";
 import { DocumentDuplicateIcon, CheckIcon } from "@heroicons/react/24/outline";
 import hljs from "highlight.js/lib/core";
 import json from "highlight.js/lib/languages/json";
 import { useApiKey } from "@hooks/useApiKey";
-import CompactCandidateCombobox, { type CandidateOption } from "./CompactCandidateCombobox";
 
 hljs.registerLanguage("json", json);
 
-interface Candidate {
-  uid?: string;
-  slug?: string;
-  name: string;
-  c: number;
-  w: number;
-  l: number;
+interface Sample {
+  label: string;
+  seat: string;
+  state: string;
+  date: string;
 }
+
+const SAMPLES: Sample[] = [
+  { label: "P.001 Padang Besar", seat: "P.001 Padang Besar", state: "Perlis", date: "2022-11-19" },
+  { label: "N.01 Banggi", seat: "N.01 Banggi", state: "Sabah", date: "2025-11-29" },
+  { label: "P.187 Kinabatangan", seat: "P.187 Kinabatangan", state: "Sabah", date: "2026-01-24" },
+];
 
 interface ApiResponse {
   status: number;
@@ -22,8 +25,6 @@ interface ApiResponse {
   body: string;
   highlighted: string;
 }
-
-type DropdownStatus = "idle" | "loading" | "error" | "success";
 
 function useCopyToClipboard(delay = 1500) {
   const [isCopied, setIsCopied] = useState(false);
@@ -43,79 +44,30 @@ function useCopyToClipboard(delay = 1500) {
   return { copy, isCopied };
 }
 
-const candidateOptionLabel = (c: Candidate) => `${c.name} (W${c.w}, L${c.l})`;
-const candidateIdentifier = (c: Candidate) => c.uid ?? c.slug ?? "";
-
-const CandidatesApiTester: FunctionComponent = () => {
+const ResultsApiTester: FunctionComponent = () => {
   const { apiKey, setApiKey } = useApiKey();
 
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [dropdownStatus, setDropdownStatus] = useState<DropdownStatus>("idle");
-  const [dropdownError, setDropdownError] = useState("");
-  const [selectedCandidateId, setSelectedCandidateId] = useState("");
+  const [seat, setSeat] = useState(SAMPLES[0].seat);
+  const [state, setState] = useState(SAMPLES[0].state);
+  const [date, setDate] = useState(SAMPLES[0].date);
+  const [activeSample, setActiveSample] = useState(0);
+
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const { copy, isCopied } = useCopyToClipboard();
   const sendGenerationRef = useRef(0);
   const inFlightRef = useRef<AbortController | null>(null);
-  const autoSelectedRef = useRef(false);
 
-  const candidateOptions: CandidateOption[] = useMemo(
-    () =>
-      candidates.map(c => ({
-        label: candidateOptionLabel(c),
-        value: candidateIdentifier(c),
-        contests: c.c,
-        wins: c.w,
-        losses: c.l,
-      })),
-    [candidates],
-  );
-
-  const selectedOption = useMemo(() => {
-    if (!selectedCandidateId) return null;
-    return candidateOptions.find(o => o.value === selectedCandidateId) ?? null;
-  }, [candidateOptions, selectedCandidateId]);
-
-  const handleLoadCandidates = async () => {
-    if (!apiKey || dropdownStatus === "loading") return;
-    setDropdownStatus("loading");
-    setDropdownError("");
-    try {
-      const res = await fetch(
-        "https://api.electiondata.my/v1/candidates/dropdown",
-        { headers: { Authorization: `Bearer ${apiKey}` }, cache: "no-store" },
-      );
-      if (!res.ok) {
-        const text = await res.text();
-        let msg = `${res.status}`;
-        try { msg = (JSON.parse(text) as { error?: string }).error ?? msg; } catch { /* use status */ }
-        setDropdownError(msg);
-        setDropdownStatus("error");
-        return;
-      }
-      const raw: unknown = await res.json();
-      const data: Candidate[] = Array.isArray(raw)
-        ? (raw as Candidate[])
-        : Array.isArray((raw as Record<string, unknown>)?.data)
-          ? ((raw as Record<string, unknown>).data as Candidate[])
-          : [];
-      setCandidates(data);
-      setDropdownStatus("success");
-    } catch {
-      setDropdownError("Network error — could not reach the API.");
-      setDropdownStatus("error");
-    }
+  const handleSelectSample = (i: number) => {
+    const s = SAMPLES[i];
+    setSeat(s.seat);
+    setState(s.state);
+    setDate(s.date);
+    setActiveSample(i);
+    setResponse(null);
   };
 
-  useEffect(() => {
-    if (candidates.length > 0 && !autoSelectedRef.current) {
-      autoSelectedRef.current = true;
-      setSelectedCandidateId(candidateIdentifier(candidates[0] ?? {}));
-    }
-  }, [candidates]);
-
-  const constructedUrl = `https://api.electiondata.my/v1/candidates${selectedCandidateId ? `?uid=${encodeURIComponent(selectedCandidateId)}` : ""}`;
+  const constructedUrl = `https://api.electiondata.my/v1/results?seat=${encodeURIComponent(seat)}&state=${encodeURIComponent(state)}&date=${encodeURIComponent(date)}`;
 
   const handleSend = async () => {
     inFlightRef.current?.abort();
@@ -168,72 +120,61 @@ const CandidatesApiTester: FunctionComponent = () => {
       </div>
 
       <div className="divide-y divide-otl-gray-200">
-        <div className="space-y-3 px-4 py-4">
-          {/* Candidate picker */}
-          <div className="flex items-start gap-3">
-            <label className="mt-2 w-24 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">
-              candidate
-            </label>
-            <div className="min-w-0 flex-1">
-              {dropdownStatus !== "success" ? (
-                <div className="space-y-1.5">
-                  <button
-                    onClick={() => void handleLoadCandidates()}
-                    disabled={!apiKey || dropdownStatus === "loading"}
-                    className={btnBase}
-                  >
-                    {dropdownStatus === "loading" ? "Loading candidates…" :
-                     dropdownStatus === "error" ? "Retry" : "Load Candidates"}
-                  </button>
-                  {dropdownStatus === "error" && (
-                    <p className="font-mono text-body-2xs text-txt-danger">Error: {dropdownError}</p>
-                  )}
-                  {!apiKey && dropdownStatus === "idle" && (
-                    <p className="pl-0.5 text-body-2xs text-txt-black-400">
-                      Paste your Bearer token to enable
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="max-w-[727px]">
-                  <CompactCandidateCombobox
-                    options={candidateOptions}
-                    config={{
-                      keys: ["label"],
-                      baseSort: (a, b) => {
-                        if ((a.item.contests ?? 0) === (b.item.contests ?? 0)) {
-                          return (b.item.wins ?? 0) - (a.item.wins ?? 0);
-                        }
-                        return (b.item.contests ?? 0) - (a.item.contests ?? 0);
-                      },
-                    }}
-                    selected={selectedOption}
-                    onChange={opt => setSelectedCandidateId(opt?.value ?? "")}
-                  />
-                </div>
-              )}
-            </div>
+        {/* Sample cards */}
+        <div className="space-y-2 px-4 py-4">
+          <p className="text-body-xs text-txt-black-400">Pick a sample to populate the fields:</p>
+          <div className="flex flex-wrap gap-2">
+            {SAMPLES.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => handleSelectSample(i)}
+                className={`rounded-lg border px-3 py-2 text-left transition ${
+                  activeSample === i
+                    ? "border-otl-danger-200 bg-bg-danger-50 text-txt-danger"
+                    : "border-otl-gray-200 bg-bg-white text-txt-black-700 hover:border-otl-danger-200 hover:bg-bg-danger-50 hover:text-txt-danger"
+                }`}
+              >
+                <p className="font-mono text-body-xs font-semibold">{s.label}</p>
+                <p className="text-body-2xs opacity-75">{s.state} · {s.date}</p>
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* uid — read-only */}
+        {/* Fields */}
+        <div className="space-y-3 px-4 py-4">
           <div className="flex items-center gap-3">
-            <label className="w-24 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">uid</label>
+            <label className="w-14 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">seat</label>
             <input
               type="text"
-              readOnly
-              value={selectedCandidateId}
-              placeholder={
-                dropdownStatus === "success"
-                  ? "Select a candidate above"
-                  : "Auto-filled once you load the candidates"
-              }
-              className="flex-1 cursor-default rounded-md border border-otl-gray-200 bg-bg-washed px-3 py-1.5 font-mono text-body-xs text-txt-black-500 outline-none"
+              value={seat}
+              onChange={e => { setSeat(e.target.value); setActiveSample(-1); }}
+              placeholder="e.g. P.001 Padang Besar"
+              className="flex-1 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 font-mono text-body-xs text-txt-black-900 outline-none transition focus:border-txt-danger focus:ring-1 focus:ring-txt-danger"
             />
           </div>
-
-          {/* Bearer */}
           <div className="flex items-center gap-3">
-            <label className="w-24 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">Bearer</label>
+            <label className="w-14 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">state</label>
+            <input
+              type="text"
+              value={state}
+              onChange={e => { setState(e.target.value); setActiveSample(-1); }}
+              placeholder="e.g. Perlis"
+              className="flex-1 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 font-mono text-body-xs text-txt-black-900 outline-none transition focus:border-txt-danger focus:ring-1 focus:ring-txt-danger"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="w-14 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">date</label>
+            <input
+              type="text"
+              value={date}
+              onChange={e => { setDate(e.target.value); setActiveSample(-1); }}
+              placeholder="YYYY-MM-DD"
+              className="flex-1 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 font-mono text-body-xs text-txt-black-900 outline-none transition focus:border-txt-danger focus:ring-1 focus:ring-txt-danger"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <label className="w-14 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">Bearer</label>
             <input
               type="text"
               value={apiKey}
@@ -298,4 +239,4 @@ const CandidatesApiTester: FunctionComponent = () => {
   );
 };
 
-export default CandidatesApiTester;
+export default ResultsApiTester;
