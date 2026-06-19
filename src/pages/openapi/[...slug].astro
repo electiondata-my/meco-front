@@ -9,6 +9,7 @@ import CandidatesApiTesterIsland from "@src/components/OpenApi/mdx/CandidatesApi
 import ResultsApiTesterIsland from "@src/components/OpenApi/mdx/ResultsApiTesterIsland.astro";
 import ByelectionApiTesterIsland from "@src/components/OpenApi/mdx/ByelectionApiTesterIsland.astro";
 import SeatsCurrentApiTesterIsland from "@src/components/OpenApi/mdx/SeatsCurrentApiTesterIsland.astro";
+import ElectionsMainApiTesterIsland from "@src/components/OpenApi/mdx/ElectionsMainApiTesterIsland.astro";
 import UnorderedList from "@src/components/OpenApi/mdx/UnorderedList.astro";
 import { getCollection, render } from "astro:content";
 import { extractToc } from "@src/lib/docs";
@@ -56,5 +57,5 @@ const currentPath = `/openapi/${entry.id}`;
   toc={toc}
   currentPath={currentPath}
 >
-  <Content components={{ ...mdxComponents, pre: PreCodeBlock, ol: OrderedList, ul: UnorderedList, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland, ResultsApiTester: ResultsApiTesterIsland, ByelectionApiTester: ByelectionApiTesterIsland, SeatsCurrentApiTester: SeatsCurrentApiTesterIsland }} />
+  <Content components={{ ...mdxComponents, pre: PreCodeBlock, ol: OrderedList, ul: UnorderedList, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland, ResultsApiTester: ResultsApiTesterIsland, ByelectionApiTester: ByelectionApiTesterIsland, SeatsCurrentApiTester: SeatsCurrentApiTesterIsland, ElectionsMainApiTester: ElectionsMainApiTesterIsland }} />
 </DocLayout>

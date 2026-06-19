@@ -29,7 +29,7 @@ export const NAV_SECTIONS: NavSection[] = [
     group: "Endpoints",
     items: [
       { label: "Results", href: "/openapi/endpoints/results" },
-      { label: "Elections", href: "#", disabled: true },
+      { label: "Elections", href: "/openapi/endpoints/elections" },
       { label: "By-Elections", href: "/openapi/endpoints/byelections" },
       { label: "Seats (Current)", href: "/openapi/endpoints/seats-current" },
       { label: "Seats (Historical)", href: "#", disabled: true },

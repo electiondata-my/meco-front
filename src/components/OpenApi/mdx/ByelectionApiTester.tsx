@@ -86,12 +86,6 @@ const ByelectionApiTester: FunctionComponent = () => {
 
   return (
     <div className="overflow-hidden rounded-xl border border-otl-gray-200">
-      <div className="border-b border-otl-gray-200 bg-bg-washed px-4 py-3">
-        <p className="text-body-xs font-semibold uppercase tracking-widest text-txt-black-400">
-          Try it
-        </p>
-      </div>
-
       <div className="divide-y divide-otl-gray-200">
         {/* Bearer */}
         <div className="space-y-3 px-4 py-4">

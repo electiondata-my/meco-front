@@ -15,9 +15,9 @@ The endpoint covers all **222 parliamentary seats** and **600 state seats** that
 - **Default (`lineage=false`)**: results only for elections where the seat held its current name and boundaries. Administratively clean; useful when you want like-for-like comparisons, especially against official classifications.
 - **Lineage (`lineage=true`)**: the full chain—results extend back through redelineations and renames, with boundary-change events interspersed to explain the transitions. Use this to recreate the full seat history shown on our site.
 
-Just follow the 3 steps below and you'll be up and running!
+Just follow the 2 steps below and you'll be up and running!
 
-## Step 0: Generate token
+## Prerequisite: API Key
 
 All requests to this API require a Bearer token. Requests without a token (or with an invalid one) will return a `401 Unauthorized` error. Paste yours below — every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
 
@@ -29,18 +29,18 @@ To let users pick a seat, first fetch the full list of current seats and their s
 
 <EndpointBadge method="GET" url="https://api.electiondata.my/v1/seats-current/dropdown" />
 
-This endpoint takes no parameters. Like the candidates dropdown, it changes only around election time, so cache it aggressively — once per session or at build time is sufficient.
+This endpoint takes no parameters. The list is only updated when electoral boundaries are changed, so we recommend fetching it once and caching it for the duration of a session (or potentially bundling it at build time for static pages).
 
 <TabCode
   curl={`curl -X GET "https://api.electiondata.my/v1/seats-current/dropdown" \\\n  -H "Authorization: Bearer <your-api-key>"`}
-  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats-current/dropdown",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst { data } = await response.json();\nconsole.log(data);`}
-  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats-current/dropdown",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface SeatOption {\n  seat: string;\n  slug: string;\n  type: "parlimen" | "dun";\n}\n\nconst { data }: { data: SeatOption[] } = await response.json();\nconsole.log(data);`}
-  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/seats-current/dropdown",\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()["data"]\nprint(data)`}
-  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/seats-current/dropdown") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)$data\nprint(data)`}
-  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/seats-current/dropdown", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar result map[string]any\n\tjson.Unmarshal(body, &result)\n\tfmt.Println(result["data"])\n}`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats-current/dropdown",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst { seats } = await response.json();\nconsole.log(seats);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats-current/dropdown",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface SeatOption {\n  seat: string;\n  slug: string;\n  type: "parlimen" | "dun";\n}\n\nconst { seats }: { seats: SeatOption[] } = await response.json();\nconsole.log(seats);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/seats-current/dropdown",\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\nseats = response.json()["seats"]\nprint(seats)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/seats-current/dropdown") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\nseats <- resp_body_json(resp)$seats\nprint(seats)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/seats-current/dropdown", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar result map[string]any\n\tjson.Unmarshal(body, &result)\n\tfmt.Println(result["seats"])\n}`}
 />
 
-A successful `200 OK` response returns an object with a `data` array. Each entry contains:
+A successful `200 OK` response returns an object with a `seats` array. Each entry contains:
 
 <FieldTable fields={[
   { name: "seat", type: "string", description: "Full seat name including number and state (e.g. 'P.001 Padang Besar, Perlis')." },
@@ -121,8 +121,8 @@ You can distinguish the two shapes by checking for the presence of `election_nam
 
 **When to use each mode:**
 
-- Use `lineage=false` when you want administratively clean, like-for-like data — e.g. comparing results across elections for a seat that has not changed.
-- Use `lineage=true` when you want to trace a seat's full history back to 1955, following its dominant ancestor through every redelineation. This is what our Seats page uses to show unbroken historical charts even when seat boundaries shifted.
+- Use `lineage=false` when you want administratively clean data—i.e. comparing results across elections for a seat that has not changed or been renamed.
+- Use `lineage=true` when you want to trace a seat's full history back to 1955, following its dominant ancestor through every redelineation. This is what our Seats page uses to show an unbroken history even when seats were renamed or had their boundaries changed.
 
 ## Try It Out
 

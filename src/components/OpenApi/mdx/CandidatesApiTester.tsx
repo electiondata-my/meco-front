@@ -24,6 +24,12 @@ interface ApiResponse {
 }
 
 type DropdownStatus = "idle" | "loading" | "error" | "success";
+type Tab = "dropdown" | "results";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "dropdown", label: "Dropdown" },
+  { id: "results", label: "Results" },
+];
 
 function useCopyToClipboard(delay = 1500) {
   const [isCopied, setIsCopied] = useState(false);
@@ -49,6 +55,7 @@ const candidateIdentifier = (c: Candidate) => c.uid ?? c.slug ?? "";
 const CandidatesApiTester: FunctionComponent = () => {
   const { apiKey, setApiKey } = useApiKey();
 
+  const [activeTab, setActiveTab] = useState<Tab>("dropdown");
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [dropdownStatus, setDropdownStatus] = useState<DropdownStatus>("idle");
   const [dropdownError, setDropdownError] = useState("");
@@ -118,7 +125,9 @@ const CandidatesApiTester: FunctionComponent = () => {
     }
   }, [candidates]);
 
-  const constructedUrl = `https://api.electiondata.my/v1/candidates${selectedCandidateId ? `?uid=${encodeURIComponent(selectedCandidateId)}` : ""}`;
+  const constructedUrl = activeTab === "dropdown"
+    ? "https://api.electiondata.my/v1/candidates/dropdown"
+    : `https://api.electiondata.my/v1/candidates${selectedCandidateId ? `?uid=${encodeURIComponent(selectedCandidateId)}` : ""}`;
 
   const handleSend = async () => {
     inFlightRef.current?.abort();
@@ -139,6 +148,20 @@ const CandidatesApiTester: FunctionComponent = () => {
       const latencyMs = Date.now() - start;
       const text = await res.text();
       if (generation !== sendGenerationRef.current) return;
+      if (activeTab === "dropdown" && res.status >= 200 && res.status < 300 && dropdownStatus !== "success") {
+        try {
+          const raw2 = JSON.parse(text) as unknown;
+          const r2 = raw2 as Record<string, unknown>;
+          const data: Candidate[] = Array.isArray(raw2)
+            ? (raw2 as Candidate[])
+            : Array.isArray(r2?.candidates)
+              ? (r2.candidates as Candidate[])
+              : Array.isArray(r2?.data)
+                ? (r2.data as Candidate[])
+                : [];
+          if (data.length > 0) { setCandidates(data); setDropdownStatus("success"); }
+        } catch { /* ignore */ }
+      }
       let pretty = text;
       try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch { /* not json */ }
       const highlighted = hljs.highlight(pretty, { language: "json" }).value;
@@ -164,75 +187,90 @@ const CandidatesApiTester: FunctionComponent = () => {
 
   return (
     <div className="overflow-hidden rounded-xl border border-otl-gray-200">
-      <div className="border-b border-otl-gray-200 bg-bg-washed px-4 py-3">
-        <p className="text-body-xs font-semibold uppercase tracking-widest text-txt-black-400">
-          Try it
-        </p>
+      {/* Tabs */}
+      <div className="flex border-b border-otl-gray-200">
+        {TABS.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => { setActiveTab(tab.id); setResponse(null); }}
+            className={`px-4 py-2.5 font-mono text-body-xs font-semibold transition border-b-2 -mb-px ${
+              activeTab === tab.id
+                ? "border-txt-danger text-txt-danger"
+                : "border-transparent text-txt-black-400 hover:text-txt-black-700"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="divide-y divide-otl-gray-200">
         <div className="space-y-3 px-4 py-4">
-          {/* Candidate picker */}
-          <div className="flex items-start gap-3">
-            <label className="mt-2 w-24 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">
-              candidate
-            </label>
-            <div className="min-w-0 flex-1">
-              {dropdownStatus !== "success" ? (
-                <div className="space-y-1.5">
-                  <button
-                    onClick={() => void handleLoadCandidates()}
-                    disabled={!apiKey || dropdownStatus === "loading"}
-                    className={btnBase}
-                  >
-                    {dropdownStatus === "loading" ? "Loading candidates…" :
-                     dropdownStatus === "error" ? "Retry" : "Load Candidates"}
-                  </button>
-                  {dropdownStatus === "error" && (
-                    <p className="font-mono text-body-2xs text-txt-danger">Error: {dropdownError}</p>
-                  )}
-                  {!apiKey && dropdownStatus === "idle" && (
-                    <p className="pl-0.5 text-body-2xs text-txt-black-400">
-                      Paste your Bearer token to enable
-                    </p>
+          {/* Candidate picker — hidden on Dropdown tab */}
+          {activeTab !== "dropdown" && (
+            <>
+              <div className="flex items-start gap-3">
+                <label className="mt-2 w-24 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">
+                  candidate
+                </label>
+                <div className="min-w-0 flex-1">
+                  {dropdownStatus !== "success" ? (
+                    <div className="space-y-1.5">
+                      <button
+                        onClick={() => void handleLoadCandidates()}
+                        disabled={!apiKey || dropdownStatus === "loading"}
+                        className={btnBase}
+                      >
+                        {dropdownStatus === "loading" ? "Loading candidates…" :
+                         dropdownStatus === "error" ? "Retry" : "Load Candidates"}
+                      </button>
+                      {dropdownStatus === "error" && (
+                        <p className="font-mono text-body-2xs text-txt-danger">Error: {dropdownError}</p>
+                      )}
+                      {!apiKey && dropdownStatus === "idle" && (
+                        <p className="pl-0.5 text-body-2xs text-txt-black-400">
+                          Paste your Bearer token to enable
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="max-w-[727px]">
+                      <CompactCandidateCombobox
+                        options={candidateOptions}
+                        config={{
+                          keys: ["label"],
+                          baseSort: (a, b) => {
+                            if ((a.item.contests ?? 0) === (b.item.contests ?? 0)) {
+                              return (b.item.wins ?? 0) - (a.item.wins ?? 0);
+                            }
+                            return (b.item.contests ?? 0) - (a.item.contests ?? 0);
+                          },
+                        }}
+                        selected={selectedOption}
+                        onChange={opt => setSelectedCandidateId(opt?.value ?? "")}
+                      />
+                    </div>
                   )}
                 </div>
-              ) : (
-                <div className="max-w-[727px]">
-                  <CompactCandidateCombobox
-                    options={candidateOptions}
-                    config={{
-                      keys: ["label"],
-                      baseSort: (a, b) => {
-                        if ((a.item.contests ?? 0) === (b.item.contests ?? 0)) {
-                          return (b.item.wins ?? 0) - (a.item.wins ?? 0);
-                        }
-                        return (b.item.contests ?? 0) - (a.item.contests ?? 0);
-                      },
-                    }}
-                    selected={selectedOption}
-                    onChange={opt => setSelectedCandidateId(opt?.value ?? "")}
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* uid — read-only */}
-          <div className="flex items-center gap-3">
-            <label className="w-24 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">uid</label>
-            <input
-              type="text"
-              readOnly
-              value={selectedCandidateId}
-              placeholder={
-                dropdownStatus === "success"
-                  ? "Select a candidate above"
-                  : "Auto-filled once you load the candidates"
-              }
-              className="flex-1 cursor-default rounded-md border border-otl-gray-200 bg-bg-washed px-3 py-1.5 font-mono text-body-xs text-txt-black-500 outline-none"
-            />
-          </div>
+              {/* uid — read-only */}
+              <div className="flex items-center gap-3">
+                <label className="w-24 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">uid</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={selectedCandidateId}
+                  placeholder={
+                    dropdownStatus === "success"
+                      ? "Select a candidate above"
+                      : "Auto-filled once you load the candidates"
+                  }
+                  className="flex-1 cursor-default rounded-md border border-otl-gray-200 bg-bg-washed px-3 py-1.5 font-mono text-body-xs text-txt-black-500 outline-none"
+                />
+              </div>
+            </>
+          )}
 
           {/* Bearer */}
           <div className="flex items-center gap-3">

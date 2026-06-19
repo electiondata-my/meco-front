@@ -7,10 +7,11 @@ import CompactCandidateCombobox, { type CandidateOption } from "./CompactCandida
 
 hljs.registerLanguage("json", json);
 
-interface SeatOption {
-  seat: string;
-  slug: string;
-  type: "parlimen" | "dun";
+interface ElectionOption {
+  state: string;
+  type: string;
+  election: string;
+  date: string;
 }
 
 interface ApiResponse {
@@ -21,12 +22,23 @@ interface ApiResponse {
 }
 
 type DropdownStatus = "idle" | "loading" | "error" | "success";
-type Tab = "dropdown" | "results";
+type Tab = "dropdown" | "by_party" | "by_seat" | "stats";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dropdown", label: "Dropdown" },
-  { id: "results", label: "Results" },
+  { id: "by_party", label: "By Party" },
+  { id: "by_seat", label: "By Seat" },
+  { id: "stats", label: "Stats" },
 ];
+
+const ENDPOINTS: Record<Tab, string> = {
+  dropdown: "https://api.electiondata.my/v1/elections/dropdown",
+  by_party: "https://api.electiondata.my/v1/elections/by_party",
+  by_seat: "https://api.electiondata.my/v1/elections/by_seat",
+  stats: "https://api.electiondata.my/v1/elections/stats",
+};
+
+const SEP = "|||";
 
 function useCopyToClipboard(delay = 1500) {
   const [isCopied, setIsCopied] = useState(false);
@@ -46,15 +58,14 @@ function useCopyToClipboard(delay = 1500) {
   return { copy, isCopied };
 }
 
-const SeatsCurrentApiTester: FunctionComponent = () => {
+const ElectionsMainApiTester: FunctionComponent = () => {
   const { apiKey, setApiKey } = useApiKey();
 
   const [activeTab, setActiveTab] = useState<Tab>("dropdown");
-  const [seats, setSeats] = useState<SeatOption[]>([]);
+  const [elections, setElections] = useState<ElectionOption[]>([]);
   const [dropdownStatus, setDropdownStatus] = useState<DropdownStatus>("idle");
   const [dropdownError, setDropdownError] = useState("");
-  const [selectedSlug, setSelectedSlug] = useState("");
-  const [lineage, setLineage] = useState(false);
+  const [selectedValue, setSelectedValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const { copy, isCopied } = useCopyToClipboard();
@@ -62,23 +73,30 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
   const inFlightRef = useRef<AbortController | null>(null);
   const autoSelectedRef = useRef(false);
 
-  const seatOptions: CandidateOption[] = useMemo(
-    () => seats.map(s => ({ label: s.seat, value: s.slug })),
-    [seats],
+  const electionOptions: CandidateOption[] = useMemo(
+    () => elections.map(e => ({
+      label: `${e.election} · ${e.state}`,
+      value: `${e.state}${SEP}${e.election}`,
+    })),
+    [elections],
   );
 
   const selectedOption = useMemo(
-    () => seatOptions.find(o => o.value === selectedSlug) ?? null,
-    [seatOptions, selectedSlug],
+    () => electionOptions.find(o => o.value === selectedValue) ?? null,
+    [electionOptions, selectedValue],
   );
 
-  const handleLoadSeats = async () => {
+  const [selectedState, selectedElection] = selectedValue
+    ? selectedValue.split(SEP)
+    : ["", ""];
+
+  const handleLoadElections = async () => {
     if (!apiKey || dropdownStatus === "loading") return;
     setDropdownStatus("loading");
     setDropdownError("");
     try {
       const res = await fetch(
-        "https://api.electiondata.my/v1/seats-current/dropdown",
+        ENDPOINTS.dropdown,
         { headers: { Authorization: `Bearer ${apiKey}` }, cache: "no-store" },
       );
       if (!res.ok) {
@@ -91,10 +109,10 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
       }
       const raw: unknown = await res.json();
       const r = raw as Record<string, unknown>;
-      const data: SeatOption[] = Array.isArray(r?.seats)
-        ? (r.seats as SeatOption[])
+      const data: ElectionOption[] = Array.isArray(r?.elections)
+        ? (r.elections as ElectionOption[])
         : [];
-      setSeats(data);
+      setElections(data);
       setDropdownStatus("success");
     } catch {
       setDropdownError("Network error — could not reach the API.");
@@ -103,15 +121,16 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
   };
 
   useEffect(() => {
-    if (seats.length > 0 && !autoSelectedRef.current) {
+    if (elections.length > 0 && !autoSelectedRef.current) {
       autoSelectedRef.current = true;
-      setSelectedSlug(seats[0]?.slug ?? "");
+      const first = elections[0];
+      if (first) setSelectedValue(`${first.state}${SEP}${first.election}`);
     }
-  }, [seats]);
+  }, [elections]);
 
   const constructedUrl = activeTab === "dropdown"
-    ? "https://api.electiondata.my/v1/seats-current/dropdown"
-    : `https://api.electiondata.my/v1/seats-current/results?slug=${encodeURIComponent(selectedSlug)}${lineage ? "&lineage=true" : ""}`;
+    ? ENDPOINTS.dropdown
+    : `${ENDPOINTS[activeTab]}?state=${encodeURIComponent(selectedState)}&election=${encodeURIComponent(selectedElection)}`;
 
   const handleSend = async () => {
     inFlightRef.current?.abort();
@@ -135,8 +154,8 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
       if (activeTab === "dropdown" && res.status >= 200 && res.status < 300 && dropdownStatus !== "success") {
         try {
           const r = JSON.parse(text) as Record<string, unknown>;
-          const data: SeatOption[] = Array.isArray(r?.seats) ? (r.seats as SeatOption[]) : [];
-          if (data.length > 0) { setSeats(data); setDropdownStatus("success"); }
+          const data: ElectionOption[] = Array.isArray(r?.elections) ? (r.elections as ElectionOption[]) : [];
+          if (data.length > 0) { setElections(data); setDropdownStatus("success"); }
         } catch { /* ignore */ }
       }
       let pretty = text;
@@ -183,21 +202,21 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
 
       <div className="divide-y divide-otl-gray-200">
         <div className="space-y-3 px-4 py-4">
-          {/* Seat picker — hidden on Dropdown tab */}
+          {/* Election picker — hidden on Dropdown tab */}
           {activeTab !== "dropdown" && (
             <>
               <div className="flex items-start gap-3">
-                <label className="mt-2 w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">seat</label>
+                <label className="mt-2 w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">election</label>
                 <div className="min-w-0 flex-1">
                   {dropdownStatus !== "success" ? (
                     <div className="space-y-1.5">
                       <button
-                        onClick={() => void handleLoadSeats()}
+                        onClick={() => void handleLoadElections()}
                         disabled={!apiKey || dropdownStatus === "loading"}
                         className={btnBase}
                       >
-                        {dropdownStatus === "loading" ? "Loading seats…" :
-                         dropdownStatus === "error" ? "Retry" : "Load Seats"}
+                        {dropdownStatus === "loading" ? "Loading elections…" :
+                         dropdownStatus === "error" ? "Retry" : "Load Elections"}
                       </button>
                       {dropdownStatus === "error" && (
                         <p className="font-mono text-body-2xs text-txt-danger">Error: {dropdownError}</p>
@@ -210,49 +229,37 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
                     </div>
                   ) : (
                     <CompactCandidateCombobox
-                      options={seatOptions}
+                      options={electionOptions}
                       selected={selectedOption}
-                      placeholder="Search seat"
-                      onChange={opt => setSelectedSlug(opt?.value ?? "")}
+                      placeholder="Search election"
+                      onChange={opt => setSelectedValue(opt?.value ?? "")}
                     />
                   )}
                 </div>
               </div>
 
-              {/* slug — read-only */}
+              {/* state — read-only */}
               <div className="flex items-center gap-3">
-                <label className="w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">slug</label>
+                <label className="w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">state</label>
                 <input
                   type="text"
                   readOnly
-                  value={selectedSlug}
-                  placeholder={
-                    dropdownStatus === "success"
-                      ? "Select a seat above"
-                      : "Auto-filled once you load the seats"
-                  }
+                  value={selectedState}
+                  placeholder="Auto-filled from selection"
                   className="flex-1 cursor-default rounded-md border border-otl-gray-200 bg-bg-washed px-3 py-1.5 font-mono text-body-xs text-txt-black-500 outline-none"
                 />
               </div>
 
-              {/* lineage */}
+              {/* election — read-only */}
               <div className="flex items-center gap-3">
-                <label className="w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">lineage</label>
-                <div className="flex gap-2">
-                  {([false, true] as const).map(val => (
-                    <button
-                      key={String(val)}
-                      onClick={() => { setLineage(val); setResponse(null); }}
-                      className={`rounded-md border px-3 py-1.5 font-mono text-body-xs font-semibold transition ${
-                        lineage === val
-                          ? "border-otl-danger-200 bg-bg-danger-50 text-txt-danger"
-                          : "border-otl-gray-200 bg-bg-white text-txt-black-500 hover:border-otl-danger-200 hover:bg-bg-danger-50 hover:text-txt-danger"
-                      }`}
-                    >
-                      {String(val)}
-                    </button>
-                  ))}
-                </div>
+                <label className="w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">election</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={selectedElection}
+                  placeholder="Auto-filled from selection"
+                  className="flex-1 cursor-default rounded-md border border-otl-gray-200 bg-bg-washed px-3 py-1.5 font-mono text-body-xs text-txt-black-500 outline-none"
+                />
               </div>
             </>
           )}
@@ -324,4 +331,4 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
   );
 };
 
-export default SeatsCurrentApiTester;
+export default ElectionsMainApiTester;
