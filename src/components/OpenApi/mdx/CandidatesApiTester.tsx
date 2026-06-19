@@ -95,11 +95,14 @@ const CandidatesApiTester: FunctionComponent = () => {
         return;
       }
       const raw: unknown = await res.json();
+      const r = raw as Record<string, unknown>;
       const data: Candidate[] = Array.isArray(raw)
         ? (raw as Candidate[])
-        : Array.isArray((raw as Record<string, unknown>)?.data)
-          ? ((raw as Record<string, unknown>).data as Candidate[])
-          : [];
+        : Array.isArray(r?.candidates)
+          ? (r.candidates as Candidate[])
+          : Array.isArray(r?.data)
+            ? (r.data as Candidate[])
+            : [];
       setCandidates(data);
       setDropdownStatus("success");
     } catch {
