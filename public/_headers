@@ -6,7 +6,7 @@
 #   unpkg.com                 → Leaflet CSS (style-src only; Flock is self-hosted)
 #   cdn.jsdelivr.net          → DuckDB-WASM bundles + blob worker (importScripts)
 #   *.tinybird.co             → analytics read/ingest + Flock
-#   {auth,internal,api}.electiondata.my → auth Worker, i18n/R2, public API
+#   {auth,internal,api,lake}.electiondata.my → auth Worker, i18n/R2, public API, parquet data lake
 #   api/events.mapbox.com     → Mapbox GL tiles + telemetry
 #   fonts.googleapis/gstatic  → Google Fonts
 # 'unsafe-inline' (script) is required by the inline theme script + Astro's
@@ -31,4 +31,4 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Strict-Transport-Security: max-age=63072000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://auth.electiondata.my https://internal.electiondata.my https://api.electiondata.my https://api.us-west-2.aws.tinybird.co https://api.mapbox.com https://events.mapbox.com https://cdn.jsdelivr.net; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://challenges.cloudflare.com; manifest-src 'self'
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://cdn.jsdelivr.net https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://auth.electiondata.my https://internal.electiondata.my https://api.electiondata.my https://lake.electiondata.my https://api.us-west-2.aws.tinybird.co https://api.mapbox.com https://events.mapbox.com https://cdn.jsdelivr.net https://cloudflareinsights.com; worker-src 'self' blob:; child-src 'self' blob:; frame-src https://challenges.cloudflare.com; manifest-src 'self'
