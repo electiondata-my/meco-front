@@ -17,14 +17,14 @@ const [seatsRes, candidatesRes, partiesRes, datesRes, latestRes] = await Promise
   fetchJSON<{ data: SeatOption[] }>("/seats/current/dropdown.json"),
   fetchJSON<{ data: CandidateOpt[] }>("/candidates/dropdown.json"),
   fetchJSON<{ data: PartyOpt[] }>("/parties/dropdown.json"),
-  fetchJSON<{ data: ElectionOpt[] }>("/dates.json"),
+  fetchJSON<{ elections: ElectionOpt[] }>("/elections/dropdown.json"),
   fetchJSON<{ data: LatestItem[] }>("/latest.json"),
 ]);
 
 const seats      = seatsRes.status      === "fulfilled" ? (seatsRes.value.data ?? [])      : [];
 const candidates = candidatesRes.status === "fulfilled" ? (candidatesRes.value.data ?? []) : [];
 const parties    = partiesRes.status    === "fulfilled" ? (partiesRes.value.data ?? [])    : [];
-const datesFlat  = datesRes.status      === "fulfilled" ? (datesRes.value.data ?? [])      : [];
+const datesFlat  = datesRes.status      === "fulfilled" ? (datesRes.value.elections ?? [])  : [];
 const latest     = latestRes.status     === "fulfilled" ? (latestRes.value.data ?? [])     : [];
 
 const datesMap = datesFlat.reduce((acc, e) => {

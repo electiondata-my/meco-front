@@ -4,7 +4,7 @@ import { fetchJSON } from "@src/lib/api";
 import type { ElectionParty } from "@src/components/Elections/ElectionOverviewTable";
 
 type ElectionEntry = { state: string; election: string; date: string };
-type DatesJson = ElectionEntry[] | { data: ElectionEntry[] };
+type DatesJson = ElectionEntry[] | { elections: ElectionEntry[] };
 type OverallSeat = {
   seat: string; date: string; party: string; party_uid?: string; name: string;
   majority: number | null; majority_perc: number | null;
@@ -20,11 +20,11 @@ const DEFAULT_STATE = "mys";
 const DEFAULT_ELECTION = "GE-15";
 
 const [datesJson, allElections] = await Promise.all([
-  fetchJSON<DatesJson>("/dates.json").catch(() => ({ data: [] as ElectionEntry[] })),
+  fetchJSON<DatesJson>("/elections/dropdown.json").catch(() => ({ elections: [] as ElectionEntry[] })),
   fetchJSON<AllElections>("/elections/all.json").catch(() => ({} as AllElections)),
 ]);
 
-const datesRaw = Array.isArray(datesJson) ? datesJson : (datesJson.data ?? []);
+const datesRaw = Array.isArray(datesJson) ? datesJson : (datesJson.elections ?? []);
 const electionData = allElections["Malaysia"]?.parlimen?.[DEFAULT_ELECTION] ?? null;
 ---
 
