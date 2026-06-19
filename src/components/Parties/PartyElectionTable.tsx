@@ -249,7 +249,7 @@ export default function PartyElectionTable({
       });
 
       try {
-        const url = `${apiBase}/elections/${encodeURIComponent(e.state)}/${elType}-${e.election_name}-aggregate.json`;
+        const url = `${apiBase}/elections/${encodeURIComponent(e.state)}/${e.election_name}.json`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`Failed to fetch election result: ${res.status}`);
         const json = await res.json();
@@ -310,14 +310,16 @@ export default function PartyElectionTable({
                   i === tabIndex
                     ? "rounded-md border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button"
                     : disabled
-                      ? "cursor-not-allowed text-txt-black-300"
+                      ? "cursor-not-allowed text-txt-black-500 opacity-40"
                       : "text-txt-black-500 hover:text-txt-black-900",
                 ].join(" ")}
               >
                 {label}
-                <span className={`text-body-xs ${i === tabIndex ? "text-txt-black-500" : "text-txt-black-400"}`}>
-                  ({i === 0 ? parlimen.length : dun.length})
-                </span>
+                {!(i === 1 && noDunState) && (
+                  <span className={`text-body-xs ${i === tabIndex ? "text-txt-black-500" : "text-txt-black-400"}`}>
+                    ({i === 0 ? parlimen.length : dun.length})
+                  </span>
+                )}
               </button>
             );
           })}
