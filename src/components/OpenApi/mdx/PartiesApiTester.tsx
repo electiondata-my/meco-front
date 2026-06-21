@@ -7,10 +7,13 @@ import CompactCandidateCombobox, { type CandidateOption } from "./CompactCandida
 
 hljs.registerLanguage("json", json);
 
-interface SeatOption {
-  seat: string;
-  slug: string;
-  type: "parlimen" | "dun";
+interface PartyOption {
+  type: "party" | "coalition";
+  uid: string;
+  maps_to: string;
+  acronym: string;
+  name_en: string;
+  name_bm: string;
 }
 
 interface ApiResponse {
@@ -22,11 +25,22 @@ interface ApiResponse {
 
 type DropdownStatus = "idle" | "loading" | "error" | "success";
 type Tab = "dropdown" | "results";
+type ElectionType = "parlimen" | "dun";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "dropdown", label: "Dropdown" },
   { id: "results", label: "Results" },
 ];
+
+const AGGREGATE_STATES = ["Malaysia", "Semenanjung"];
+const REGULAR_STATES = [
+  "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang",
+  "Perak", "Perlis", "Pulau Pinang", "Sabah", "Sarawak", "Selangor",
+  "Terengganu", "W.P. Kuala Lumpur", "W.P. Labuan", "W.P. Putrajaya",
+];
+const STATES = [...AGGREGATE_STATES, ...REGULAR_STATES];
+
+const DUN_INVALID = new Set(["Malaysia", "Semenanjung", "W.P. Kuala Lumpur", "W.P. Labuan", "W.P. Putrajaya"]);
 
 function useCopyToClipboard(delay = 1500) {
   const [isCopied, setIsCopied] = useState(false);
@@ -46,15 +60,19 @@ function useCopyToClipboard(delay = 1500) {
   return { copy, isCopied };
 }
 
-const SeatsCurrentApiTester: FunctionComponent = () => {
+const PartiesApiTester: FunctionComponent = () => {
   const { apiKey, setApiKey } = useApiKey();
 
   const [activeTab, setActiveTab] = useState<Tab>("dropdown");
-  const [seats, setSeats] = useState<SeatOption[]>([]);
+  const [parties, setParties] = useState<PartyOption[]>([]);
   const [dropdownStatus, setDropdownStatus] = useState<DropdownStatus>("idle");
   const [dropdownError, setDropdownError] = useState("");
-  const [selectedSlug, setSelectedSlug] = useState("");
-  const [lineage, setLineage] = useState(false);
+  const [selectedUid, setSelectedUid] = useState("");
+  const [selectedType, setSelectedType] = useState<"party" | "coalition">("party");
+  const [state, setState] = useState("Selangor");
+  const [electionType, setElectionType] = useState<ElectionType>("parlimen");
+  const [stateOpen, setStateOpen] = useState(false);
+  const stateMenuRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const { copy, isCopied } = useCopyToClipboard();
@@ -62,23 +80,37 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
   const inFlightRef = useRef<AbortController | null>(null);
   const autoSelectedRef = useRef(false);
 
-  const seatOptions: CandidateOption[] = useMemo(
-    () => seats.map(s => ({ label: s.seat, value: s.slug })),
-    [seats],
+  useEffect(() => {
+    if (!stateOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (stateMenuRef.current && !stateMenuRef.current.contains(e.target as Node)) {
+        setStateOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [stateOpen]);
+
+  const partyOptions: CandidateOption[] = useMemo(
+    () => parties.map(p => ({
+      label: `${p.acronym} — ${p.name_en} (${p.type})`,
+      value: p.uid,
+    })),
+    [parties],
   );
 
   const selectedOption = useMemo(
-    () => seatOptions.find(o => o.value === selectedSlug) ?? null,
-    [seatOptions, selectedSlug],
+    () => partyOptions.find(o => o.value === selectedUid) ?? null,
+    [partyOptions, selectedUid],
   );
 
-  const handleLoadSeats = async () => {
+  const handleLoadParties = async () => {
     if (!apiKey || dropdownStatus === "loading") return;
     setDropdownStatus("loading");
     setDropdownError("");
     try {
       const res = await fetch(
-        "https://api.electiondata.my/v1/seats-current/dropdown",
+        "https://api.electiondata.my/v1/parties/dropdown",
         { headers: { Authorization: `Bearer ${apiKey}` }, cache: "no-store" },
       );
       if (!res.ok) {
@@ -91,10 +123,8 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
       }
       const raw: unknown = await res.json();
       const r = raw as Record<string, unknown>;
-      const data: SeatOption[] = Array.isArray(r?.seats)
-        ? (r.seats as SeatOption[])
-        : [];
-      setSeats(data);
+      const data: PartyOption[] = Array.isArray(r?.data) ? (r.data as PartyOption[]) : [];
+      setParties(data);
       setDropdownStatus("success");
     } catch {
       setDropdownError("Network error — could not reach the API.");
@@ -102,16 +132,35 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
     }
   };
 
+  const selectedParty = useMemo(
+    () => parties.find(p => p.uid === selectedUid) ?? null,
+    [parties, selectedUid],
+  );
+
+  const queryUid = selectedParty?.maps_to ?? selectedUid;
+
   useEffect(() => {
-    if (seats.length > 0 && !autoSelectedRef.current) {
+    if (parties.length > 0 && !autoSelectedRef.current) {
       autoSelectedRef.current = true;
-      setSelectedSlug(seats[0]?.slug ?? "");
+      const first = parties.find(p => p.acronym === "AMANAH") ?? parties[0];
+      if (first) {
+        setSelectedUid(first.uid);
+        setSelectedType(first.type);
+      }
     }
-  }, [seats]);
+  }, [parties]);
+
+  const handleSelectParty = (opt: CandidateOption | null) => {
+    const uid = opt?.value ?? "";
+    setSelectedUid(uid);
+    const found = parties.find(p => p.uid === uid);
+    if (found) setSelectedType(found.type);
+    setResponse(null);
+  };
 
   const constructedUrl = activeTab === "dropdown"
-    ? "https://api.electiondata.my/v1/seats-current/dropdown"
-    : `https://api.electiondata.my/v1/seats-current/results?slug=${encodeURIComponent(selectedSlug)}${lineage ? "&lineage=true" : ""}`;
+    ? "https://api.electiondata.my/v1/parties/dropdown"
+    : `https://api.electiondata.my/v1/parties/results?type=${encodeURIComponent(selectedType)}&uid=${encodeURIComponent(queryUid)}&state=${encodeURIComponent(state)}&election_type=${encodeURIComponent(electionType)}`;
 
   const handleSend = async () => {
     inFlightRef.current?.abort();
@@ -135,8 +184,8 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
       if (activeTab === "dropdown" && res.status >= 200 && res.status < 300 && dropdownStatus !== "success") {
         try {
           const r = JSON.parse(text) as Record<string, unknown>;
-          const data: SeatOption[] = Array.isArray(r?.seats) ? (r.seats as SeatOption[]) : [];
-          if (data.length > 0) { setSeats(data); setDropdownStatus("success"); }
+          const data: PartyOption[] = Array.isArray(r?.data) ? (r.data as PartyOption[]) : [];
+          if (data.length > 0) { setParties(data); setDropdownStatus("success"); }
         } catch { /* ignore */ }
       }
       let pretty = text;
@@ -161,6 +210,12 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
     response.status >= 200 && response.status < 300 ? "text-green-600" : "text-txt-danger";
 
   const btnBase = "rounded-md px-3 py-1.5 text-body-xs font-semibold text-white transition bg-txt-danger hover:bg-red-700 active:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60";
+  const toggleBtn = (active: boolean) =>
+    `rounded-md border px-3 py-1.5 font-mono text-body-xs transition ${
+      active
+        ? "border-otl-danger-200 bg-bg-danger-50 text-txt-danger"
+        : "border-otl-gray-200 bg-bg-white text-txt-black-500 hover:border-otl-danger-200 hover:bg-bg-danger-50 hover:text-txt-danger"
+    }`;
 
   return (
     <div className="overflow-hidden rounded-xl border border-otl-gray-200">
@@ -183,21 +238,21 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
 
       <div className="divide-y divide-otl-gray-200">
         <div className="space-y-3 px-4 py-4">
-          {/* Seat picker — hidden on Dropdown tab */}
           {activeTab !== "dropdown" && (
             <>
+              {/* Party picker */}
               <div className="flex items-start gap-3">
-                <label className="mt-2 w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">seat</label>
+                <label className="mt-2 w-28 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">party</label>
                 <div className="min-w-0 flex-1">
                   {dropdownStatus !== "success" ? (
                     <div className="space-y-1.5">
                       <button
-                        onClick={() => void handleLoadSeats()}
+                        onClick={() => void handleLoadParties()}
                         disabled={!apiKey || dropdownStatus === "loading"}
                         className={btnBase}
                       >
-                        {dropdownStatus === "loading" ? "Loading seats…" :
-                         dropdownStatus === "error" ? "Retry" : "Load Seats"}
+                        {dropdownStatus === "loading" ? "Loading parties…" :
+                         dropdownStatus === "error" ? "Retry" : "Load Parties"}
                       </button>
                       {dropdownStatus === "error" && (
                         <p className="font-mono text-body-2xs text-txt-danger">Error: {dropdownError}</p>
@@ -210,48 +265,133 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
                     </div>
                   ) : (
                     <CompactCandidateCombobox
-                      options={seatOptions}
+                      options={partyOptions}
                       selected={selectedOption}
-                      placeholder="Search seat"
-                      onChange={opt => setSelectedSlug(opt?.value ?? "")}
+                      placeholder="Search party or coalition"
+                      onChange={handleSelectParty}
                     />
                   )}
                 </div>
               </div>
 
-              {/* slug — read-only */}
+              {/* uid — read-only, shows maps_to */}
               <div className="flex items-center gap-3">
-                <label className="w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">slug</label>
+                <label className="w-28 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">uid</label>
                 <input
                   type="text"
                   readOnly
-                  value={selectedSlug}
+                  value={queryUid}
                   placeholder={
                     dropdownStatus === "success"
-                      ? "Select a seat above"
-                      : "Auto-filled once you load the seats"
+                      ? "Select a party above"
+                      : "Auto-filled once you load the parties"
                   }
                   className="flex-1 cursor-default rounded-md border border-otl-gray-200 bg-bg-washed px-3 py-1.5 font-mono text-body-xs text-txt-black-500 outline-none"
                 />
               </div>
 
-              {/* lineage */}
+              {/* type — read-only */}
               <div className="flex items-center gap-3">
-                <label className="w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">lineage</label>
-                <div className="flex gap-2">
-                  {([false, true] as const).map(val => (
+                <label className="w-28 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">type</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={selectedUid ? selectedType : ""}
+                  placeholder="Auto-filled from selection"
+                  className="flex-1 cursor-default rounded-md border border-otl-gray-200 bg-bg-washed px-3 py-1.5 font-mono text-body-xs text-txt-black-500 outline-none"
+                />
+              </div>
+
+              {/* state */}
+              <div className="flex items-start gap-3">
+                <label className="mt-1.5 w-28 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">state</label>
+
+                {/* Mobile: custom dropdown */}
+                <div ref={stateMenuRef} className="relative flex-1 sm:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setStateOpen(o => !o)}
+                    className="flex w-full select-none items-center gap-1.5 rounded-md border border-otl-gray-200 bg-bg-white px-3 py-1.5 text-start font-mono text-body-xs text-txt-black-900 outline-none hover:border-bg-black-400 active:bg-bg-black-100"
+                  >
+                    <span className="grow truncate">{state}</span>
+                    <svg className="-mx-[5px] h-5 w-5 shrink-0 text-txt-black-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fillRule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  {stateOpen && (
+                    <ul className="absolute left-0 top-full z-50 mt-1 max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white shadow-floating ring-1 ring-otl-gray-200">
+                      {STATES.map(s => (
+                        <li key={s}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setState(s);
+                              if (DUN_INVALID.has(s)) setElectionType("parlimen");
+                              setResponse(null);
+                              setStateOpen(false);
+                            }}
+                            className={`flex w-full select-none items-center whitespace-nowrap px-4 py-2 text-left font-mono text-body-xs hover:bg-bg-black-100 ${state === s ? "font-medium text-txt-danger" : "text-txt-black-900"}`}
+                          >
+                            {s}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Desktop: button grid */}
+                <div className="hidden sm:flex flex-wrap gap-1.5">
+                  {AGGREGATE_STATES.map(s => (
                     <button
-                      key={String(val)}
-                      onClick={() => { setLineage(val); setResponse(null); }}
-                      className={`rounded-md border px-3 py-1.5 font-mono text-body-xs font-semibold transition ${
-                        lineage === val
-                          ? "border-otl-danger-200 bg-bg-danger-50 text-txt-danger"
-                          : "border-otl-gray-200 bg-bg-white text-txt-black-500 hover:border-otl-danger-200 hover:bg-bg-danger-50 hover:text-txt-danger"
-                      }`}
+                      key={s}
+                      onClick={() => {
+                        setState(s);
+                        if (DUN_INVALID.has(s)) setElectionType("parlimen");
+                        setResponse(null);
+                      }}
+                      className={toggleBtn(state === s)}
                     >
-                      {String(val)}
+                      {s}
                     </button>
                   ))}
+                  <div className="w-full" />
+                  {REGULAR_STATES.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => {
+                        setState(s);
+                        if (DUN_INVALID.has(s)) setElectionType("parlimen");
+                        setResponse(null);
+                      }}
+                      className={toggleBtn(state === s)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* election_type */}
+              <div className="flex items-center gap-3">
+                <label className="w-28 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">election_type</label>
+                <div className="flex gap-2">
+                  {(["parlimen", "dun"] as const).map(val => {
+                    const disabled = val === "dun" && DUN_INVALID.has(state);
+                    return (
+                      <button
+                        key={val}
+                        disabled={disabled}
+                        onClick={() => { setElectionType(val); setResponse(null); }}
+                        className={disabled
+                          ? "rounded-md border border-otl-gray-200 px-3 py-1.5 font-mono text-body-xs text-txt-black-300 cursor-not-allowed opacity-40"
+                          : toggleBtn(electionType === val)
+                        }
+                      >
+                        {val}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </>
@@ -259,7 +399,7 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
 
           {/* Bearer */}
           <div className="flex items-center gap-3">
-            <label className="w-16 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">Bearer</label>
+            <label className="w-28 shrink-0 font-mono text-body-xs font-semibold text-txt-black-700">Bearer</label>
             <input
               type="text"
               value={apiKey}
@@ -324,4 +464,4 @@ const SeatsCurrentApiTester: FunctionComponent = () => {
   );
 };
 
-export default SeatsCurrentApiTester;
+export default PartiesApiTester;

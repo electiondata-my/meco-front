@@ -29,10 +29,9 @@ export const NAV_SECTIONS: NavSection[] = [
     group: "Endpoints",
     items: [
       { label: "Results", href: "/openapi/endpoints/results" },
-      { label: "Seats (Current)", href: "/openapi/endpoints/seats-current" },
-      { label: "Seats (Historical)", href: "#", disabled: true },
+      { label: "Seats", href: "/openapi/endpoints/seats" },
       { label: "Candidates", href: "/openapi/endpoints/candidates" },
-      { label: "Parties", href: "#", disabled: true },
+      { label: "Parties", href: "/openapi/endpoints/parties" },
       { label: "Elections", href: "/openapi/endpoints/elections" },
       { label: "By-Elections", href: "/openapi/endpoints/byelections" },
     ],

@@ -1,0 +1,131 @@
+---
+title: "Seats - API Docs | ElectionData.MY"
+pageTitle: "Seats"
+breadcrumb: "Endpoints"
+description: "Query the full electoral history of any current parliamentary or state seat, with optional lineage tracing across boundary changes and redelineations."
+keywords: "API, seats, constituencies, election history, Malaysia, redelineation, lineage"
+---
+
+## Use Case
+
+Use these endpoints to build a seat history feature, similar to the one on our [Seats dashboard](https://www.electiondata.my/seats). A user selects a seat by name, and gets back every election result for that seat. 
+
+The endpoint covers all **222 parliamentary seats** and **600 state seats** that exist today. To maintain downstream discipline, we deliberately do not provide a query-based API for defunct seats. However, beyond the programmatic access available via the data catalogue which enables users to implement their own notions of a seat's evolution (both their name and boundaries), this endpoint allows users to trace the complete geospatial lineage of any current seat:
+
+- **Default (`lineage=false`)**: results only for elections where the seat held its current name and boundaries. Administratively clean; useful when you want like-for-like comparisons, especially against official classifications.
+- **With lineage (`lineage=true`)**: results extend back through redelineations and renames, with boundary-change events interspersed to explain the transitions. Use this to recreate the full seat history shown on our site.
+
+Just follow the 2 steps below and you'll be up and running!
+
+## Prerequisite: API Key
+
+All requests to this API require a Bearer token. Requests without a token (or with an invalid one) will return a `401 Unauthorized` error. Paste yours below—every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
+
+<TokenInput />
+
+## Step 1: Get list of seats
+
+To let users pick a seat, first fetch the full list of current seats and their slugs.
+
+<EndpointBadge method="GET" url="https://api.electiondata.my/v1/seats/dropdown" />
+
+This endpoint takes no parameters. The list is only updated when electoral boundaries are changed, so we recommend fetching it once and caching it for the duration of a session (or potentially bundling it at build time for static pages).
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/v1/seats/dropdown" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats/dropdown",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst { seats } = await response.json();\nconsole.log(seats);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats/dropdown",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface SeatOption {\n  seat: string;\n  slug: string;\n  type: "parlimen" | "dun";\n}\n\nconst { seats }: { seats: SeatOption[] } = await response.json();\nconsole.log(seats);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/seats/dropdown",\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\nseats = response.json()["seats"]\nprint(seats)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/seats/dropdown") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\nseats <- resp_body_json(resp)$seats\nprint(seats)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/seats/dropdown", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar result map[string]any\n\tjson.Unmarshal(body, &result)\n\tfmt.Println(result["seats"])\n}`}
+/>
+
+A successful `200 OK` response returns an object with a `seats` array. Each entry contains:
+
+<FieldTable fields={[
+  { name: "seat", type: "string", description: "Full seat name including number and state (e.g. 'P.001 Padang Besar, Perlis')." },
+  { name: "slug", type: "string", description: "URL-safe unique identifier for the seat. Use this in Step 2." },
+  { name: "type", type: "string", description: "'parlimen' for parliamentary seats or 'dun' for state seats." },
+]} />
+
+## Step 2: Get single Seat
+
+Pass the `slug` from the dropdown to retrieve the electoral history for that seat.
+
+<EndpointCard method="GET" url="https://api.electiondata.my/v1/seats/results" params={[
+  {
+    name: "slug",
+    type: "string",
+    required: true,
+    description: "Unique seat identifier from the dropdown (e.g. 'p001-padang-besar-perlis')."
+  },
+  {
+    name: "lineage",
+    type: "boolean",
+    required: false,
+    description: "Set to 'true' to include ancestral results and boundary-change events. Defaults to false."
+  }
+]} />
+
+The `slug` parameter is required. Omitting it returns `400 Bad Request`; an unrecognised slug returns `404 Not Found`.
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/v1/seats/results?slug=p001-padang-besar-perlis" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats/results?slug=p001-padang-besar-perlis",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst { results } = await response.json();\nconsole.log(results);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats/results?slug=p001-padang-besar-perlis",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface SeatResult {\n  election_name: string;\n  seat: string;\n  state: string;\n  date: string;\n  party: string;\n  party_uid: string;\n  coalition: string | null;\n  coalition_uid: number | null;\n  name: string;\n  majority: number;\n  majority_perc: number;\n  voter_turnout: number;\n  voter_turnout_perc: number;\n}\n\nconst { results }: { results: SeatResult[] } = await response.json();\nconsole.log(results);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/seats/results",\n    params={"slug": "p001-padang-besar-perlis"},\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\nresults = response.json()["results"]\nprint(results)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/seats/results") |>\n  req_url_query(slug = "p001-padang-besar-perlis") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\nresults <- resp_body_json(resp)$results\nprint(results)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/seats/results?slug=p001-padang-besar-perlis", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar result map[string]any\n\tjson.Unmarshal(body, &result)\n\tfmt.Println(result["results"])\n}`}
+/>
+
+A successful `200 OK` response returns an object with a `results` array ordered from most recent to oldest. Without lineage, every object in the array has the same shape:
+
+<FieldTable fields={[
+  { name: "election_name", type: "string", description: "Human-readable election name (e.g. 'GE-15' for parliament, 'SE-15' for state)." },
+  { name: "seat", type: "string", description: "Seat name as it appeared on the ballot for that election." },
+  { name: "state", type: "string", description: "State the seat belongs to." },
+  { name: "date", type: "date", description: "Polling day in ISO 8601 format (YYYY-MM-DD)." },
+  { name: "party", type: "string", description: "Acronym of the winning party (e.g. 'PAS')." },
+  { name: "party_uid", type: "string", description: "Unique party identifier (e.g. '004-PAS')." },
+  { name: "coalition", type: "string", description: "Winning party's coalition, if any (e.g. 'PN')." },
+  { name: "coalition_uid", type: "number", description: "Unique coalition identifier, if any." },
+  { name: "name", type: "string", description: "Name of the winning candidate." },
+  { name: "majority", type: "integer", description: "Winning majority in votes." },
+  { name: "majority_perc", type: "float", description: "Majority as a percentage of valid votes." },
+  { name: "voter_turnout", type: "integer", description: "Total votes cast." },
+  { name: "voter_turnout_perc", type: "float", description: "Turnout as a percentage of registered voters." },
+]} />
+
+**Using lineage**
+
+Pass `lineage=true` to extend the history back through boundary changes and renames:
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/v1/seats/results?slug=p001-padang-besar-perlis&lineage=true" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/seats/results?slug=p001-padang-besar-perlis&lineage=true",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst { results } = await response.json();\nconsole.log(results);`}
+  typescript={`interface SeatResult {\n  election_name: string;\n  seat: string;\n  state: string;\n  date: string;\n  party: string;\n  party_uid: string;\n  coalition: string | null;\n  coalition_uid: number | null;\n  name: string;\n  majority: number;\n  majority_perc: number;\n  voter_turnout: number;\n  voter_turnout_perc: number;\n}\n\ninterface LineageEvent {\n  date: string;\n  change_en: string;\n  change_ms: string;\n}\n\ntype ResultEntry = SeatResult | LineageEvent;\n\nconst response = await fetch(\n  "https://api.electiondata.my/v1/seats/results?slug=p001-padang-besar-perlis&lineage=true",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\nconst { results }: { results: ResultEntry[] } = await response.json();\n\nfor (const entry of results) {\n  if ("election_name" in entry) {\n    console.log(entry.election_name, entry.party);\n  } else {\n    console.log("Boundary change:", entry.change_en);\n  }\n}`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/seats/results",\n    params={"slug": "p001-padang-besar-perlis", "lineage": "true"},\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\nresults = response.json()["results"]\nfor entry in results:\n    if "election_name" in entry:\n        print(entry["election_name"], entry["party"])\n    else:\n        print("Boundary change:", entry["change_en"])`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/seats/results") |>\n  req_url_query(slug = "p001-padang-besar-perlis", lineage = "true") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\nresults <- resp_body_json(resp)$results\nprint(results)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/seats/results?slug=p001-padang-besar-perlis&lineage=true", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar result map[string]any\n\tjson.Unmarshal(body, &result)\n\tfmt.Println(result["results"])\n}`}
+/>
+
+With `lineage=true`, the `results` array mixes two object shapes. Election results have the same fields as above. Interspersed between them are **boundary-change events** that mark where the seat transitioned to its dominant ancestor:
+
+<FieldTable fields={[
+  { name: "date", type: "date", description: "Rough date of the redelineation event (YYYY-MM-DD); the dates are not exact (i.e. they do not represent the exact date of approval in the Dewan Rakyat), but are sufficiently precise to capture whether a redelineation came into effect before or after an election held in the same year." },
+  { name: "change_en", type: "string", description: "English description of the boundary change (e.g. 'Padang Besar was created from Kangar in the 1994 redelineation')." },
+  { name: "change_ms", type: "string", description: "Bahasa Malaysia description of the same event (e.g. 'Padang Bsar diwujudkan daripada Kangar dalam persempadanan semula 1994')." },
+]} />
+
+You can distinguish the two shapes by checking for the presence of `election_name`: if it exists, the entry is a result; if it is absent, it is a boundary-change event.
+
+**When to use each mode:**
+
+- Use `lineage=false` when you want administratively clean data—i.e. comparing results across elections for a seat that has not changed or been renamed.
+- Use `lineage=true` when you want to trace a seat's full history back to 1955, following its dominant ancestor through every redelineation. This is what our Seats page uses to show an unbroken history even when seats were renamed or had their boundaries changed.
+
+## Try It Out
+
+Pick a seat, choose your lineage preference, and fire a live request.
+
+<SeatsApiTester />
