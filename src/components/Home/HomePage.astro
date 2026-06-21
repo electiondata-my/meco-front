@@ -9,7 +9,7 @@ const isMalay = locale.startsWith("ms");
 
 type SeatOption   = { seat?: string; seat_name?: string; slug: string; type: "parlimen" | "dun" };
 type CandidateOpt = { name: string; slug: string; c: string; w: string; l: string };
-type PartyOpt     = { party_uid: string; party: string; party_name_en: string; party_name_bm: string; type: string };
+type PartyOpt     = { uid: string; maps_to: string; acronym: string; name_en: string; name_bm: string; type: string };
 type ElectionOpt  = { state: string; election: string; date: string };
 type LatestItem   = { title_en: string; title_bm: string; date: string; url: string; img_light: string; img_dark: string };
 
@@ -56,11 +56,12 @@ const candidateOptions = [...candidates].sort((a, b) => {
 
 const partyOptions = [...parties].sort((a, b) => {
   if (a.type !== b.type) return a.type === "party" ? -1 : 1;
-  return a.party.localeCompare(b.party);
+  return a.acronym.localeCompare(b.acronym);
 }).map(p => ({
-  label: `${p.party} (${isMalay ? p.party_name_bm : p.party_name_en})`,
-  value: p.party_uid,
-  type: p.type,
+  label:  `${p.acronym} (${isMalay ? p.name_bm : p.name_en})`,
+  value:  p.maps_to,
+  imgKey: p.uid,
+  type:   p.type,
 }));
 
 const allElections: (ElectionOpt & { isGE: boolean; stateKey: string })[] = [];
@@ -206,7 +207,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       <!-- Parties -->
       <div class="tab-panel hidden w-full max-w-[680px]" data-panel="2">
         <select id="party-select" class="hidden" aria-hidden="true" tabindex="-1">
-          {partyOptions.map(o => <option value={o.value} data-party-type={o.type}>{o.label}</option>)}
+          {partyOptions.map(o => <option value={o.value} data-party-type={o.type} data-img-key={o.imgKey}>{o.label}</option>)}
         </select>
         <div class="combobox relative" data-type="party" data-select="party-select">
           <div class="flex items-center overflow-hidden rounded-full border border-otl-gray-200 bg-bg-white shadow-button focus-within:border-otl-danger-300 focus-within:ring focus-within:ring-otl-danger-200">
@@ -383,7 +384,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
 
     const allOptions = Array.from(selectEl.options)
       .filter(o => o.value)
-      .map(o => ({ value: o.value, label: o.text.trim(), partyType: o.dataset.partyType }));
+      .map(o => ({ value: o.value, label: o.text.trim(), partyType: o.dataset.partyType, imgKey: o.dataset.imgKey }));
 
     const input = wrapper.querySelector<HTMLInputElement>(".combobox-input")!;
     const btn   = wrapper.querySelector<HTMLButtonElement>(".combobox-btn")!;
@@ -392,7 +393,11 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
     let activeIdx = -1;
 
     function href(val: string) {
-      if (type === "party")     return `/parties/${val}/mys`;
+      if (type === "party") {
+        const opt = allOptions.find(o => o.value === val);
+        const section = opt?.partyType === "coalition" ? "coalitions" : "parties";
+        return `/${section}/${val}/mys`;
+      }
       if (type === "candidate") return `/candidates/${val}`;
       if (type === "election")  return `/elections/${val}`;
       return `/seats/${val}`;
@@ -426,7 +431,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
           const fallback = `this.replaceWith(Object.assign(document.createElement('div'),{className:'flex h-[18px] w-[28px] items-center justify-center rounded-sm border border-otl-gray-200 bg-bg-black-50 text-xs text-txt-black-400',textContent:'?'}))`;
           return `<li class="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
             <div class="flex h-[18px] w-7 shrink-0 items-center justify-center">
-              <img src="/static/images/${folder}/${esc(o.value)}.png" alt="" class="max-h-[18px] max-w-[28px] border border-otl-gray-200 object-contain" onerror="${fallback}" />
+              <img src="/static/images/${folder}/${esc(o.imgKey)}.png" alt="" class="max-h-[18px] max-w-[28px] border border-otl-gray-200 object-contain" onerror="${fallback}" />
             </div>
             <span class="grow truncate">${esc(o.label)}</span>
             <span class="ml-auto shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${pillCls}">${pillText}</span>

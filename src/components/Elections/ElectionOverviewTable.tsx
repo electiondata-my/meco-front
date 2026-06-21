@@ -139,7 +139,7 @@ export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (
   const coalitionVotes = Object.values(
     data.reduce(
       (totals, party) => {
-        if (party.coalition_uid && party.coalition_uid !== "00-ALONE") {
+        if (party.coalition_uid && party.coalition_uid !== "000-ALONE") {
           totals[party.coalition_uid] = (totals[party.coalition_uid] ?? 0) + party.votes;
         }
         return totals;
@@ -156,7 +156,7 @@ export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (
       data.find((p) => p.votes_total)?.votes_total ?? data.reduce((sum, p) => sum + p.votes, 0);
 
     for (const party of data) {
-      if (!party.coalition_uid || party.coalition_uid === "00-ALONE") {
+      if (!party.coalition_uid || party.coalition_uid === "000-ALONE") {
         alone.push(party);
       } else {
         grouped.set(party.coalition_uid, [...(grouped.get(party.coalition_uid) ?? []), party]);

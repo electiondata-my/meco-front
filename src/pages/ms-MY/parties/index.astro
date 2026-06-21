@@ -4,10 +4,11 @@ import { fetchJSON } from "@src/lib/api";
 import { MALAYSIA } from "@src/lib/constants";
 
 type DropdownEntry = {
-  party_uid: string;
-  party: string;
-  party_name_en: string;
-  party_name_bm: string;
+  uid: string;
+  maps_to: string;
+  acronym: string;
+  name_en: string;
+  name_bm: string;
   type: string;
 };
 type PartyElection = {
@@ -27,7 +28,7 @@ type PartyElection = {
   votes_perc: number;
 };
 
-const DEFAULT_PARTY = "001-UMNO";
+const DEFAULT_MAPS_TO = "001-UMNO";
 const DEFAULT_STATE = MALAYSIA.key;
 const r2 = import.meta.env.PUBLIC_API_URL_R2;
 
@@ -37,11 +38,11 @@ const [dropdownJson, allData] = await Promise.all([
 ]);
 
 const dropdown       = dropdownJson.data ?? [];
-const partyElections = allData[DEFAULT_PARTY] ?? [];
+const partyElections = allData[`party-${DEFAULT_MAPS_TO}`] ?? [];
 ---
 
 <PartyPage
-  partyUid={DEFAULT_PARTY}
+  partyUid={DEFAULT_MAPS_TO}
   stateCode={DEFAULT_STATE}
   partyElections={partyElections}
   dropdown={dropdown}

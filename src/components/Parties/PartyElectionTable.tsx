@@ -10,6 +10,8 @@ type PartyElection = {
   coalition_uid?: string;
   known_as?: string;
   known_as_uid?: string;
+  known_as_coalition?: string;
+  known_as_coalition_uid?: string;
   election_name: string;
   date: string;
   seats_total: number;
@@ -116,12 +118,14 @@ function InlineStateDropdown({
   currentStateName,
   stateOptions,
   partyUid,
+  partyType,
   localePrefix,
 }: {
   currentState: string;
   currentStateName: string;
   stateOptions: { value: string; label: string }[];
   partyUid: string;
+  partyType: string;
   localePrefix: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -158,11 +162,11 @@ function InlineStateDropdown({
         </svg>
       </button>
       {open && (
-        <ul className="absolute left-0 top-full z-50 mt-1 max-h-60 min-w-full overflow-y-auto rounded-md bg-bg-white text-txt-black-900 shadow-lg ring-1 ring-otl-gray-200 ring-opacity-5">
+        <ul className="absolute left-0 top-full z-50 mt-1 max-h-60 min-w-full w-max overflow-y-auto rounded-md bg-bg-white text-txt-black-900 shadow-lg ring-1 ring-otl-gray-200 ring-opacity-5">
           {stateOptions.map((o) => (
             <li key={o.value}>
               <a
-                href={`${localePrefix}/parties/${partyUid}/${o.value}`}
+                href={`${localePrefix}/${partyType === 'coalition' ? 'coalitions' : 'parties'}/${partyUid}/${o.value}`}
                 onClick={() => {
                   try {
                     sessionStorage.setItem("partySearchScrollY", String(window.scrollY));
@@ -232,7 +236,8 @@ export default function PartyElectionTable({
   const voteWidth = `${Math.max(1, ...elections.map((e) => num(e.votes).length))}ch`;
   const isCoalition = partyType === "coalition";
   const partyFolder = isCoalition ? "coalitions" : "parties";
-  const showKnownAs = !isCoalition && new Set(elections.map((e) => e.known_as ?? "")).size > 1;
+  // TODO: remove after Johor election when real known_as data exists for 106-BERSAMA
+  const showKnownAs = new Set(elections.map((e) => e.known_as ?? "")).size > 1 || partyUid === "106-BERSAMA";
 
   const fetchFullResult = useCallback(
     async (e: PartyElection, index: number, list: PartyElection[]) => {
@@ -292,6 +297,7 @@ export default function PartyElectionTable({
             currentStateName={stateName}
             stateOptions={stateOptions}
             partyUid={partyUid}
+            partyType={partyType}
             localePrefix={localePrefix}
           />
         </div>
@@ -360,7 +366,7 @@ export default function PartyElectionTable({
                         <>
                           <span className="shrink-0 text-txt-black-500" aria-hidden="true">&bull;</span>
                           <div className="flex items-center gap-1.5">
-                            <OverviewLogo uid={e.known_as_uid} name={e.known_as} folder="parties" />
+                            <OverviewLogo uid={e.known_as_uid} name={e.known_as} folder={partyFolder} />
                             <span>{e.known_as}</span>
                           </div>
                         </>
@@ -430,7 +436,7 @@ export default function PartyElectionTable({
                         <td className="whitespace-nowrap px-4 py-[11px]">
                           {e.known_as ? (
                             <div className="flex items-center gap-1.5">
-                              <OverviewLogo uid={e.known_as_uid} name={e.known_as} folder="parties" />
+                              <OverviewLogo uid={e.known_as_uid} name={e.known_as} folder={partyFolder} />
                               <span>{e.known_as}</span>
                             </div>
                           ) : (
@@ -528,7 +534,7 @@ export default function PartyElectionTable({
               className="absolute inset-0 bg-[#000]/80"
               onClick={() => setModal((prev) => ({ ...prev, open: false }))}
             />
-            <div className="party-modal-panel relative z-10 flex max-h-[calc(100%-40px)] w-full flex-col overflow-hidden rounded-t-2xl bg-bg-white shadow-xl sm:max-w-5xl sm:rounded-xl">
+            <div className="party-modal-panel relative z-10 flex max-h-[calc(100%-40px)] w-full flex-col overflow-hidden rounded-t-2xl bg-bg-white shadow-xl sm:max-h-[85vh] sm:w-[60vw] sm:max-w-[60vw] sm:rounded-xl">
               {/* Header */}
               <div className="flex flex-col gap-1 px-4 pb-0 pt-4 uppercase sm:px-6 sm:pt-5">
                 <div className="flex w-full items-start justify-between gap-2">

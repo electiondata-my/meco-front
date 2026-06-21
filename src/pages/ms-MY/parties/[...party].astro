@@ -4,10 +4,11 @@ import { fetchJSON } from "@src/lib/api";
 import { MALAYSIA, SEMENANJUNG, STATES } from "@src/lib/constants";
 
 type DropdownEntry = {
-  party_uid: string;
-  party: string;
-  party_name_en: string;
-  party_name_bm: string;
+  uid: string;
+  maps_to: string;
+  acronym: string;
+  name_en: string;
+  name_bm: string;
   type: string;
 };
 type PartyElection = {
@@ -39,19 +40,28 @@ export async function getStaticPaths() {
     fetchJSON<Record<string, PartyElection[]>>("/parties/all.json", r2).catch(() => ({} as Record<string, PartyElection[]>)),
   ]);
 
-  const entries    = dropdownJson.data ?? [];
+  const allEntries = dropdownJson.data ?? [];
   const stateCodes = [MALAYSIA.key, SEMENANJUNG.key, ...STATES.map(s => s.key)];
 
+  // Parties only; deduplicate by maps_to (multiple uid aliases can share one canonical page)
+  const seen = new Set<string>();
+  const entries = allEntries.filter(e => {
+    if (e.type !== "party") return false;
+    if (seen.has(e.maps_to)) return false;
+    seen.add(e.maps_to);
+    return true;
+  });
+
   return entries
-    .filter(e => !slugFilter || slugFilter.has(e.party_uid))
+    .filter(e => !slugFilter || slugFilter.has(e.maps_to))
     .flatMap(e =>
       stateCodes.map(stateCode => ({
-        params: { party: `${e.party_uid}/${stateCode}` },
+        params: { party: `${e.maps_to}/${stateCode}` },
         props: {
-          partyUid:       e.party_uid,
+          partyUid:       e.maps_to,
           stateCode,
-          partyElections: allData[e.party_uid] ?? [],
-          dropdown:       entries,
+          partyElections: allData[`party-${e.maps_to}`] ?? [],
+          dropdown:       allEntries,
         },
       }))
     );

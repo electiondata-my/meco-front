@@ -5,10 +5,11 @@ import { CountryAndStates, STATES, MALAYSIA, SEMENANJUNG } from "@src/lib/consta
 import PartyElectionTable from "./PartyElectionTable";
 
 type DropdownEntry = {
-  party_uid: string;
-  party: string;
-  party_name_en: string;
-  party_name_bm: string;
+  uid: string;
+  maps_to: string;
+  acronym: string;
+  name_en: string;
+  name_bm: string;
   type: string;
 };
 type PartyElection = {
@@ -44,16 +45,17 @@ const stateName = stateCode === SEMENANJUNG.key ? SEMENANJUNG.name : CountryAndS
 const parlimen  = partyElections.filter(e => e.type === "parlimen" && e.state === stateName);
 const dun       = partyElections.filter(e => e.type === "dun"      && e.state === stateName);
 
-const currentParty = dropdown.find(d => d.party_uid === partyUid);
+const currentParty = dropdown.find(d => d.maps_to === partyUid);
 const partyFolder  = currentParty?.type === "coalition" ? "coalitions" : "parties";
 
 // Combobox options — serialised into the page for instant client-side search
 const partyOptions = [...dropdown].sort((a, b) => {
   if (a.type !== b.type) return a.type === "party" ? -1 : 1;
-  return a.party.localeCompare(b.party);
+  return a.acronym.localeCompare(b.acronym);
 }).map(p => ({
-  value:     p.party_uid,
-  label:     `${p.party} (${isMalay ? p.party_name_bm : p.party_name_en})`,
+  value:     p.maps_to,
+  imgKey:    p.uid,
+  label:     `${p.acronym} (${isMalay ? p.name_bm : p.name_en})`,
   folder:    p.type === "coalition" ? "coalitions" : "parties",
   typeBadge: p.type,
 }));
@@ -77,7 +79,7 @@ const c  = (key: string) => t(i18n.common  ?? {}, key);
 const p  = (key: string) => t(i18n.parties ?? {}, key);
 
 const localePrefix = isMalay ? "/ms-MY" : "";
-const pageTitle    = `${isRoot ? "Parties" : currentParty?.party ?? "Parties"} | ElectionData.MY`;
+const pageTitle    = `${isRoot ? "Parties" : currentParty?.acronym ?? "Parties"} | ElectionData.MY`;
 
 const NO_DUN_STATES = ["mys", "smj", "kul", "lbn", "pjy"];
 const noDunState    = NO_DUN_STATES.includes(stateCode);
@@ -121,7 +123,7 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
             placeholder={p("search_party") || "Search for a party or coalition…"}
             autocomplete="off"
             spellcheck="false"
-            value={currentParty ? `${currentParty.party} (${isMalay ? currentParty.party_name_bm : currentParty.party_name_en})` : ""}
+            value={currentParty ? `${currentParty.acronym} (${isMalay ? currentParty.name_bm : currentParty.name_en})` : ""}
           />
           <button
             type="button"
@@ -141,8 +143,8 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
               <span class="relative flex h-4 w-8 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
                 <span>?</span>
                 <img
-                  src={`/static/images/${partyFolder}/${partyUid}.png`}
-                  alt={currentParty.party}
+                  src={`/static/images/${partyFolder}/${currentParty?.uid ?? partyUid}.png`}
+                  alt={currentParty.acronym}
                   class="absolute inset-0 h-full w-full object-contain opacity-0"
                   onload="this.style.opacity='1'"
                   onerror="this.remove()"
@@ -165,7 +167,7 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
         client:load
         parlimen={parlimen}
         dun={dun}
-        partyName={currentParty?.party ?? partyUid}
+        partyName={currentParty?.acronym ?? partyUid}
         partyUid={partyUid}
         partyType={currentParty?.type ?? "party"}
         stateCode={stateCode}
@@ -207,7 +209,9 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
       try {
         sessionStorage.setItem("partySearchScrollY", String(window.scrollY));
       } catch {}
-      window.location.href = `${localePrefix}/parties/${value}/${stateCode}`;
+      const opt = _options.find(o => o.value === value);
+      const section = opt?.typeBadge === 'coalition' ? 'coalitions' : 'parties';
+      window.location.href = `${localePrefix}/${section}/${value}/${stateCode}`;
     }
 
     function updateClear() {
@@ -250,7 +254,7 @@ const r2Base   = import.meta.env.PUBLIC_API_URL_R2;
         <li class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
           <span class="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
             ?
-            <img src="/static/images/${esc(o.folder)}/${esc(o.value)}.png"
+            <img src="/static/images/${esc(o.folder)}/${esc(o.imgKey)}.png"
                  class="absolute inset-0 h-full w-full object-contain opacity-0"
                  onload="this.style.opacity='1'"
                  onerror="this.remove()" alt="" />

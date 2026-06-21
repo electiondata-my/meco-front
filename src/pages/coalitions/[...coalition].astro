@@ -43,10 +43,10 @@ export async function getStaticPaths() {
   const allEntries = dropdownJson.data ?? [];
   const stateCodes = [MALAYSIA.key, SEMENANJUNG.key, ...STATES.map(s => s.key)];
 
-  // Parties only; deduplicate by maps_to (multiple uid aliases can share one canonical page)
+  // Coalitions only; deduplicate by maps_to (multiple uid aliases can share one canonical page)
   const seen = new Set<string>();
   const entries = allEntries.filter(e => {
-    if (e.type !== "party") return false;
+    if (e.type !== "coalition") return false;
     if (seen.has(e.maps_to)) return false;
     seen.add(e.maps_to);
     return true;
@@ -56,11 +56,11 @@ export async function getStaticPaths() {
     .filter(e => !slugFilter || slugFilter.has(e.maps_to))
     .flatMap(e =>
       stateCodes.map(stateCode => ({
-        params: { party: `${e.maps_to}/${stateCode}` },
+        params: { coalition: `${e.maps_to}/${stateCode}` },
         props: {
           partyUid:       e.maps_to,
           stateCode,
-          partyElections: allData[`party-${e.maps_to}`] ?? [],
+          partyElections: allData[`coalition-${e.maps_to}`] ?? [],
           dropdown:       allEntries,
         },
       }))
