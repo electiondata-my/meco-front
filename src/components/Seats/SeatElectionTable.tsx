@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 type ElectionRow = {
@@ -84,22 +84,31 @@ function formatDate(date: string): string {
 
 function PartyFlag({ uid, party }: { uid?: string; party: string }) {
   const [failed, setFailed] = useState(false);
-  if (!uid || failed) {
-    return (
-      <span className="flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
-        ?
-      </span>
-    );
-  }
+  const [loaded, setLoaded] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    if (imgRef.current?.complete) {
+      imgRef.current.naturalWidth === 0 ? setFailed(true) : setLoaded(true);
+    }
+  }, []);
+
   return (
-    <img
-      src={`/static/images/parties/${uid}.png`}
-      alt={party}
-      width={32}
-      height={18}
-      className="shrink-0 border border-otl-gray-200"
-      onError={() => setFailed(true)}
-    />
+    <div className="relative flex h-[18px] w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
+      ?
+      {uid && !failed && (
+        <img
+          ref={imgRef}
+          src={`/static/images/parties/${uid}.png`}
+          alt={party}
+          width={32}
+          height={18}
+          className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+        />
+      )}
+    </div>
   );
 }
 
