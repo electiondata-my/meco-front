@@ -81,14 +81,14 @@ export const SAMPLE_QUERIES: SampleQuery[] = [
   {
     name: "Preview saluran ballots",
     description: "First 20 rows of the saluran ballots dataset",
-    dataset: "saluran_ballots",
-    sql: "SELECT *\nFROM saluran_ballots\nLIMIT 20",
+    dataset: "saluran_ballots_ge15",
+    sql: "SELECT *\nFROM saluran_ballots_ge15\nLIMIT 20",
   },
   {
     name: "Preview saluran stats",
     description: "First 20 rows of the saluran stats dataset",
-    dataset: "saluran_stats",
-    sql: "SELECT *\nFROM saluran_stats\nLIMIT 20",
+    dataset: "saluran_stats_ge15",
+    sql: "SELECT *\nFROM saluran_stats_ge15\nLIMIT 20",
   },
   {
     name: "Preview voter demographics",

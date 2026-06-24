@@ -11,6 +11,8 @@ const VOTER_ROLL_DATASETS = Object.keys(DATASETS).filter((k) =>
 const LEGACY_DATASETS = {
   results_ballots: DATASETS.headline_ballots,
   results_stats: DATASETS.headline_stats,
+  saluran_ballots: DATASETS.saluran_ballots_ge15,
+  saluran_stats: DATASETS.saluran_stats_ge15,
 } as const;
 
 export interface FileRegistration {

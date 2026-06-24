@@ -21,6 +21,7 @@ import {
   WrenchScrewdriverIcon,
   SparklesIcon,
   PencilSquareIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/20/solid";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import CodeMirror from "@uiw/react-codemirror";
@@ -29,6 +30,13 @@ import {
   DATASETS,
   DATASET_LABELS,
   DATASET_DESCRIPTIONS,
+  DATASET_GRID_KEYS,
+  SALURAN_BALLOTS_OPTIONS,
+  SALURAN_BALLOTS_KEY_SET,
+  SALURAN_STATS_OPTIONS,
+  SALURAN_STATS_KEY_SET,
+  VOTER_ROLL_OPTIONS,
+  VOTER_ROLL_KEY_SET,
   type DatasetKey,
 } from "@tools/query-builder/datasets";
 import {
@@ -499,6 +507,118 @@ const QueryResults = memo(function QueryResults({
     </div>
   );
 });
+
+// ── Dataset card with election selector ─────────────────────────────────────
+
+function ElectionDropdownCard({
+  options,
+  defaultKey,
+  label,
+  description,
+  isActive,
+  onSelect,
+}: {
+  options: ReadonlyArray<{ label: string; key: DatasetKey }>;
+  defaultKey: DatasetKey;
+  label: string;
+  description: string;
+  isActive: boolean;
+  onSelect: (key: DatasetKey) => void;
+}) {
+  const [selected, setSelected] = useState<DatasetKey>(defaultKey);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
+
+  const selectedOption = options.find((o) => o.key === selected) ?? options[0];
+
+  return (
+    <div
+      className={clx(
+        "relative min-h-[4.25rem] cursor-pointer rounded-xl border px-3 py-2.5 text-left transition-all",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
+        isActive
+          ? "border-otl-danger-200 bg-bg-danger-50"
+          : "border-otl-gray-200 bg-bg-white hover:border-otl-danger-200 hover:bg-bg-black-50",
+      )}
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(selected)}
+      onKeyDown={(e) =>
+        (e.key === "Enter" || e.key === " ") && onSelect(selected)
+      }
+    >
+      <div className="mb-0.5 pr-20">
+        <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
+          {label}
+        </p>
+        <div
+          ref={menuRef}
+          className="absolute right-2.5 top-2.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+            className={clx(
+              "flex items-center gap-1 rounded-md border px-2 py-0.5 font-body text-body-2xs font-medium transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
+              menuOpen
+                ? "border-otl-danger-200 bg-bg-white text-txt-black-900"
+                : "border-otl-gray-200 bg-bg-white text-txt-black-600 hover:border-otl-danger-200 hover:bg-bg-black-50 hover:text-txt-black-900",
+            )}
+          >
+            {selectedOption.label}
+            <ChevronDownIcon className="h-3 w-3" />
+          </button>
+          {menuOpen && (
+            <div
+              className="absolute right-0 top-full z-20 mt-1 w-fit overflow-hidden rounded-md border border-otl-gray-200 bg-bg-white py-0.5 shadow-floating"
+              role="listbox"
+            >
+              {options.map((option) => (
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={option.key === selected}
+                  key={option.key}
+                  onClick={() => {
+                    setSelected(option.key);
+                    setMenuOpen(false);
+                    onSelect(option.key);
+                  }}
+                  className={clx(
+                    "block w-full whitespace-nowrap px-2 py-1 text-left font-body text-body-2xs transition-colors hover:bg-bg-black-50 focus-visible:bg-bg-black-50 focus-visible:outline-none",
+                    option.key === selected
+                      ? "bg-bg-danger-50 font-semibold text-txt-black-900"
+                      : "text-txt-black-700",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <p className="line-clamp-2 text-[11px] leading-4 text-txt-black-500">
+        {description}
+      </p>
+    </div>
+  );
+}
 
 // ── Main dashboard ──────────────────────────────────────────────────────────
 
@@ -1177,27 +1297,71 @@ export default function QueryBuilderDashboard() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {(Object.keys(DATASETS) as DatasetKey[]).map((key) => (
-                    <button
-                      key={key}
-                      onClick={() => void handleDatasetClick(key)}
-                      className={clx(
-                        "min-h-[4.25rem] rounded-xl border px-3 py-2.5 text-left transition-all",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
-                        activeSource === key
-                          ? "border-otl-danger-200 bg-bg-danger-50"
-                          : "border-otl-gray-200 bg-bg-white hover:border-otl-danger-200 hover:bg-bg-black-50",
-                      )}
-                    >
-                      <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
-                        {DATASET_LABELS[key]}
-                      </p>
-                      <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-txt-black-500">
-                        {DATASET_DESCRIPTIONS[key]}
-                      </p>
-                    </button>
-                  ))}
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                  {DATASET_GRID_KEYS.flatMap((key, i) => {
+                    let card: React.ReactNode;
+                    if (key === "saluran_ballots_ge15") {
+                      card = (
+                        <ElectionDropdownCard
+                          key="saluran_ballots"
+                          options={SALURAN_BALLOTS_OPTIONS}
+                          defaultKey="saluran_ballots_ge15"
+                          label="saluran_ballots"
+                          description={DATASET_DESCRIPTIONS["saluran_ballots_ge15"]}
+                          isActive={SALURAN_BALLOTS_KEY_SET.has(activeSource as DatasetKey)}
+                          onSelect={(k) => void handleDatasetClick(k)}
+                        />
+                      );
+                    } else if (key === "saluran_stats_ge15") {
+                      card = (
+                        <ElectionDropdownCard
+                          key="saluran_stats"
+                          options={SALURAN_STATS_OPTIONS}
+                          defaultKey="saluran_stats_ge15"
+                          label="saluran_stats"
+                          description={DATASET_DESCRIPTIONS["saluran_stats_ge15"]}
+                          isActive={SALURAN_STATS_KEY_SET.has(activeSource as DatasetKey)}
+                          onSelect={(k) => void handleDatasetClick(k)}
+                        />
+                      );
+                    } else if (key === "voter_roll_ge15") {
+                      card = (
+                        <ElectionDropdownCard
+                          key="voter_roll"
+                          options={VOTER_ROLL_OPTIONS}
+                          defaultKey="voter_roll_ge15"
+                          label="voter_roll"
+                          description={DATASET_DESCRIPTIONS["voter_roll_ge15"]}
+                          isActive={VOTER_ROLL_KEY_SET.has(activeSource as DatasetKey)}
+                          onSelect={(k) => void handleDatasetClick(k)}
+                        />
+                      );
+                    } else {
+                      card = (
+                        <button
+                          key={key}
+                          onClick={() => void handleDatasetClick(key)}
+                          className={clx(
+                            "min-h-[4.25rem] rounded-xl border px-3 py-2.5 text-left transition-all",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-600/30",
+                            activeSource === key
+                              ? "border-otl-danger-200 bg-bg-danger-50"
+                              : "border-otl-gray-200 bg-bg-white hover:border-otl-danger-200 hover:bg-bg-black-50",
+                          )}
+                        >
+                          <p className="truncate text-[13px] font-semibold leading-5 text-txt-black-900">
+                            {DATASET_LABELS[key]}
+                          </p>
+                          <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-txt-black-500">
+                            {DATASET_DESCRIPTIONS[key]}
+                          </p>
+                        </button>
+                      );
+                    }
+                    return (i + 1) % 3 === 0
+                      ? [card, <div key={`spacer-${i}`} className="hidden lg:block" />]
+                      : [card];
+                  })}
                 </div>
               </div>
 
