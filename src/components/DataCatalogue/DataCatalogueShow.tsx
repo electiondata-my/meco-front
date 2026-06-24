@@ -126,6 +126,7 @@ function formatPreviewCell(
   value: unknown,
   type: string,
   precision: number,
+  columnName?: string,
 ): string {
   if (value === null || value === undefined) return "—";
   if (type === "Date") {
@@ -141,6 +142,7 @@ function formatPreviewCell(
     }
   }
   if ((type === "Integer" || type === "Float") && typeof value === "number") {
+    if (columnName?.toLowerCase().includes("year")) return String(value);
     return value.toLocaleString("en-GB", {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision === 0 ? 20 : precision,
@@ -153,6 +155,7 @@ function formatResultCell(
   value: unknown,
   fieldType: string,
   precision?: number,
+  columnName?: string,
 ): string {
   if (value === null || value === undefined) return "—";
   if (value instanceof Date) {
@@ -172,6 +175,7 @@ function formatResultCell(
   }
   if (typeof value === "bigint") return value.toLocaleString("en-GB");
   if (typeof value === "number") {
+    if (columnName?.toLowerCase().includes("year")) return String(value);
     if (ft.includes("float") || ft.includes("double") || ft.includes("decimal")) {
       const digits = precision ?? DEFAULT_FLOAT_PRECISION;
       return value.toLocaleString("en-GB", {
@@ -465,7 +469,7 @@ const SqlResults = memo(function SqlResults({
           result={result}
           isRightAligned={isRightAligned}
           renderCell={(cell, ci) =>
-            formatResultCell(cell, result.fieldTypes[ci] ?? "", precisionByColumn[result.columns[ci]])
+            formatResultCell(cell, result.fieldTypes[ci] ?? "", precisionByColumn[result.columns[ci]], result.columns[ci])
           }
           scrollClassName="max-h-[24rem] overflow-auto sm:max-h-[28rem]"
           thClassName="sticky top-0 z-10 whitespace-nowrap border-b border-otl-gray-200 bg-bg-white px-3 py-2 font-mono text-[12px] font-semibold uppercase tracking-wider text-txt-black-400 shadow-[inset_0_-1px_0_rgb(var(--otl-gray-200))]"
@@ -1014,7 +1018,7 @@ export default function DataCatalogueShow({
                                     cell == null && "italic text-txt-black-300",
                                   )}
                                 >
-                                  {formatPreviewCell(cell, type, precision)}
+                                  {formatPreviewCell(cell, type, precision, col)}
                                 </td>
                               );
                             })}
