@@ -24,6 +24,7 @@ Your first job is to understand the schema and query rules below. Do not write a
 - Prefer clear column aliases for derived values.
 - When useful, use common table expressions to keep the query readable.
 - Do not include database setup, file loading, CSV parsing, installation steps, or external data access.
+- Any query that reads from a `voter_roll_*` table — whether directly or via a subquery or CTE — must include `LIMIT 10000` at the outermost query level. The site will reject voter roll queries without this limit.
 
 ## Dataset: `headline_ballots`
 
