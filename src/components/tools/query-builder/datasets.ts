@@ -19,6 +19,8 @@ export const DATASETS = {
   voter_roll_ge13: "https://lake.electiondata.my/voter_rolls/ge13_2013.parquet",
   voter_roll_nsn_se15: "https://lake.electiondata.my/voter_rolls/nsn_se15_2023.parquet",
   voter_roll_jhr_se15: "https://lake.electiondata.my/voter_rolls/jhr_se15_2022.parquet",
+  voter_demographics_sarawak: "https://lake.electiondata.my/seat_info/demographics_sarawak.parquet",
+  voter_demographics_sabah: "https://lake.electiondata.my/seat_info/demographics_sabah.parquet",
 } as const;
 
 const ELECTION_OPTIONS = [
@@ -77,6 +79,8 @@ export const DATASET_LABELS: Record<DatasetKey, string> = {
   voter_roll_ge13: "voter_roll_ge13",
   voter_roll_nsn_se15: "voter_roll_nsn_se15",
   voter_roll_jhr_se15: "voter_roll_jhr_se15",
+  voter_demographics_sarawak: "voter_demographics_sarawak",
+  voter_demographics_sabah: "voter_demographics_sabah",
 };
 
 const SALURAN_BALLOTS_DESC = "Saluran-level results by candidate, inc. party + demographic info";
@@ -105,6 +109,8 @@ export const DATASET_DESCRIPTIONS: Record<DatasetKey, string> = {
   voter_roll_ge13:          VOTER_ROLL_DESC,
   voter_roll_nsn_se15:      VOTER_ROLL_DESC,
   voter_roll_jhr_se15:      VOTER_ROLL_DESC,
+  voter_demographics_sarawak: "Sarawak-specific seat-level voter demographics with granular ethnic breakdowns",
+  voter_demographics_sabah:   "Sabah-specific seat-level voter demographics with granular ethnic breakdowns",
 };
 
 export const DEFAULT_DATASET: DatasetKey = "headline_ballots";
