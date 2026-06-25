@@ -543,12 +543,12 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
     history.pushState(null, "", `${window.location.pathname}?${p.toString()}`);
   };
 
-  const navigateToAreaYear = (newArea: string, newYear: string) => {
+  const navigateToAreaYear = (newArea: string, newYear: string, newLevel?: ElectionType) => {
     const locale = window.location.pathname.startsWith("/ms-MY")
       ? "/ms-MY"
       : "";
     const p = new URLSearchParams();
-    p.set("level", level);
+    p.set("level", newLevel ?? level);
     p.set("type", toggleState);
     window.location.href = `${locale}/redelineation/${newArea}-${newYear}?${p.toString()}`;
   };
@@ -740,7 +740,7 @@ interface FiltersProps {
   yearOptions: YearOptions;
   translations: Record<string, Record<string, any>>;
   onLevelChange: (level: ElectionType) => void;
-  onAreaYearChange: (area: string, year: string) => void;
+  onAreaYearChange: (area: string, year: string, level?: ElectionType) => void;
   c: (key: string) => string;
   r: (key: string, vars?: Record<string, string | number>) => string;
 }
@@ -763,6 +763,10 @@ const RedelineationFilters: FC<FiltersProps> = ({
     mobileYear: year,
     mobileLevel: level,
   });
+
+  useEffect(() => {
+    setData("mobileLevel", level);
+  }, [level]);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -986,9 +990,7 @@ const RedelineationFilters: FC<FiltersProps> = ({
               }
               className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-danger-600 px-4 py-2.5 text-body-sm font-medium text-white disabled:opacity-40"
               onClick={() => {
-                if (state.mobileLevel !== level)
-                  onLevelChange(state.mobileLevel);
-                onAreaYearChange(state.mobileType, state.mobileYear);
+                onAreaYearChange(state.mobileType, state.mobileYear, state.mobileLevel);
                 setData("openFilter", false);
               }}
             >
