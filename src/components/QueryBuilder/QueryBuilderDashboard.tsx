@@ -22,6 +22,7 @@ import {
   SparklesIcon,
   PencilSquareIcon,
   ChevronDownIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/react/20/solid";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import CodeMirror from "@uiw/react-codemirror";
@@ -56,6 +57,7 @@ import {
   MAX_DISPLAY_ROWS,
   type DuckDBQueryResult as QueryResult,
 } from "@tools/query-builder/VirtualDuckDBTable";
+import type ExcelJS from "exceljs";
 
 // Persists for the page session — avoids re-downloading non-lazy datasets on every query.
 const fileBufferCache = new Map<string, Uint8Array>();
@@ -190,6 +192,111 @@ function buildCsv(result: QueryResult): string {
   );
 
   return [header, ...rows].join("\n");
+}
+
+function excelCellValue(
+  value: any,
+  fieldType: string,
+  columnName: string,
+): { value: string | number | Date; numFmt?: string } {
+  if (value === null || value === undefined) return { value: "" };
+
+  if (value instanceof Date) return { value, numFmt: "yyyy-mm-dd" };
+
+  const ft = fieldType.toLowerCase();
+  if ((ft.includes("date") || ft.includes("timestamp")) && typeof value === "number") {
+    return { value: new Date(value), numFmt: "yyyy-mm-dd" };
+  }
+
+  if (isYearColumn(columnName)) return { value: String(value) };
+
+  if (typeof value === "bigint") {
+    return { value: Number(value), numFmt: "#,##0" };
+  }
+  if (typeof value === "number") {
+    const isInt = Number.isInteger(value) || getDecimalPlaces(value) === 0;
+    return { value, numFmt: isInt ? "#,##0" : "#,##0.00" };
+  }
+
+  return { value: String(value) };
+}
+
+async function downloadExcel(result: QueryResult): Promise<void> {
+  const ExcelJS = await import("exceljs");
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("ElectionData.MY");
+
+  const HEADER_FILL: ExcelJS.Fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF1F2937" },
+  };
+  const HEADER_FONT: Partial<ExcelJS.Font> = {
+    name: "Courier New",
+    bold: true,
+    color: { argb: "FFFFFFFF" },
+    size: 12,
+  };
+  const CELL_FONT: Partial<ExcelJS.Font> = { name: "Courier New", size: 12 };
+
+  ws.addRow(result.columns);
+  const headerRow = ws.getRow(1);
+  headerRow.eachCell((cell) => {
+    cell.fill = HEADER_FILL;
+    cell.font = HEADER_FONT;
+    cell.alignment = { horizontal: "left", indent: 1 };
+  });
+  ws.views = [{ state: "frozen", ySplit: 1 }];
+
+  for (const row of result.rows) {
+    const excelRow = ws.addRow(
+      row.map((cell, ci) => {
+        if (cell === null || cell === undefined) return "";
+        return excelCellValue(cell, result.fieldTypes[ci] ?? "", result.columns[ci] ?? "").value;
+      }),
+    );
+    excelRow.eachCell((cell, colNumber) => {
+      const ci = colNumber - 1;
+      const raw = row[ci];
+      if (raw === null || raw === undefined) return;
+      const { numFmt } = excelCellValue(raw, result.fieldTypes[ci] ?? "", result.columns[ci] ?? "");
+      if (numFmt) cell.numFmt = numFmt;
+      const isNum = typeof cell.value === "number";
+      cell.alignment = { horizontal: isNum ? "right" : "left", indent: 1 };
+    });
+  }
+
+  // col.width = content length + 6 (3 chars each side). indent: 1 (= 3 chars) pushes
+  // content away from the alignment edge, so the remaining 3 chars appear on the far side.
+  ws.columns.forEach((col, ci) => {
+    const headerLen = result.columns[ci]?.length ?? 0;
+    const maxDataLen = result.rows.reduce((max, row) => {
+      const cell = row[ci];
+      if (cell === null || cell === undefined) return max;
+      const len = formatCell(cell, result.fieldTypes[ci], {
+        columnName: result.columns[ci],
+      }).length;
+      return Math.max(max, len);
+    }, 0);
+    col.width = Math.max(headerLen, maxDataLen) + 6;
+  });
+
+  ws.eachRow((row) => {
+    row.eachCell((cell) => {
+      if (!cell.font?.bold) cell.font = CELL_FONT;
+    });
+  });
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "edmy_query_result.xlsx";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function StepLabel({ n, label }: { n: number; label: string }) {
@@ -415,10 +522,12 @@ const QueryResults = memo(function QueryResults({
   result,
   onCopyCsv,
   csvCopyState,
+  onDownloadExcel,
 }: {
   result: QueryResult;
   onCopyCsv: () => void;
   csvCopyState: "idle" | "copied";
+  onDownloadExcel: () => void;
 }) {
   const columnMeta = useMemo<
     Record<number, { type: ColType; decimalPlaces?: number }>
@@ -466,23 +575,33 @@ const QueryResults = memo(function QueryResults({
               : `${(result.executionTime / 1000).toFixed(2)} s`}
           </span>
         </p>
-        <button
-          onClick={onCopyCsv}
-          className="flex shrink-0 items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active"
-          title={csvCopyState === "copied" ? "Copied!" : "Copy results as CSV"}
-        >
-          {csvCopyState === "copied" ? (
-            <>
-              <ClipboardDocumentCheckIcon className="text-green-600 h-3.5 w-3.5" />
-              <span className="text-green-600">Copied!</span>
-            </>
-          ) : (
-            <>
-              <ClipboardDocumentIcon className="h-3.5 w-3.5" />
-              Copy as CSV
-            </>
-          )}
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            onClick={onCopyCsv}
+            className="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active"
+            title={csvCopyState === "copied" ? "Copied!" : "Copy results as CSV"}
+          >
+            {csvCopyState === "copied" ? (
+              <>
+                <ClipboardDocumentCheckIcon className="text-green-600 h-3.5 w-3.5" />
+                <span className="text-green-600">Copied!</span>
+              </>
+            ) : (
+              <>
+                <ClipboardDocumentIcon className="h-3.5 w-3.5" />
+                Copy as CSV
+              </>
+            )}
+          </button>
+          <button
+            onClick={onDownloadExcel}
+            className="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-txt-black-500 transition-colors hover:bg-bg-washed-active"
+            title="Download results as Excel"
+          >
+            <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+            Download Excel
+          </button>
+        </div>
       </div>
 
       {result.rows.length === 0 ? (
@@ -1023,6 +1142,11 @@ export default function QueryBuilderDashboard() {
     setTimeout(() => setCsvCopyState("idle"), 2000);
   }, [result]);
 
+  const handleDownloadExcel = useCallback(() => {
+    if (!result) return;
+    void downloadExcel(result);
+  }, [result]);
+
   const runQuery = useCallback(
     async (queryOverride?: string) => {
       const sqlToRun = (queryOverride ?? activeQueryText).trim();
@@ -1501,6 +1625,7 @@ export default function QueryBuilderDashboard() {
                   result={result}
                   onCopyCsv={() => void handleCopyCsv()}
                   csvCopyState={csvCopyState}
+                  onDownloadExcel={handleDownloadExcel}
                 />
               )}
             </div>
