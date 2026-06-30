@@ -2,6 +2,7 @@
 import Layout from "@src/components/Layout/index.astro";
 import DocSidebar from "./DocSidebar";
 import DocTOC from "./DocTOC";
+import DocsChatWidget from "./DocsChatWidget";
 import { ALL_PAGES } from "@tools/openapi/config";
 import type { TocItem } from "@src/lib/docs";
 
@@ -22,6 +23,7 @@ const prev = currentIndex > 0 ? ALL_PAGES[currentIndex - 1] : null;
 const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] : null;
 const markdownPath = `${currentPath}.md`;
 const textPath = `${currentPath}.txt`;
+const chatbotApiUrl = import.meta.env.PUBLIC_CHATBOT_API_URL || "http://localhost:8002/chat";
 ---
 
 <Layout title={title} description={description}>
@@ -201,6 +203,8 @@ const textPath = `${currentPath}.txt`;
       </div>
     </div>
   </div>
+
+  <DocsChatWidget client:load apiUrl={chatbotApiUrl} />
 
   <!-- Patch empty heading IDs — Astro text nodes don't expose content to React
        so IDs are computed client-side from textContent before React hydration -->
