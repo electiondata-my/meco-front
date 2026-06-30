@@ -18,7 +18,7 @@
       "@src/*": ["*"],
       "@layouts/*": ["layouts/*"],
       "@i18n/*": ["i18n/*"],
-      "@charts/*": ["components/Charts/*"],
+      "@charts/*": ["components/charts/*"],
       "@components/*": ["components/ui/*"],
       "@tools/*": ["components/tools/*"],
       "@hooks/*": ["hooks/*"],

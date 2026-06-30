@@ -20,6 +20,8 @@ const { title, pageTitle = title, description, breadcrumb, toc, currentPath, isI
 const currentIndex = ALL_PAGES.findIndex(p => p.href === currentPath);
 const prev = currentIndex > 0 ? ALL_PAGES[currentIndex - 1] : null;
 const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] : null;
+const markdownPath = `${currentPath}.md`;
+const textPath = `${currentPath}.txt`;
 ---
 
 <Layout title={title} description={description}>
@@ -36,6 +38,7 @@ const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] :
     html.dark .hljs-built_in,html.dark .hljs-symbol{color:#ffa657}
     html.dark .hljs-code,html.dark .hljs-comment,html.dark .hljs-formula{color:#8b949e}
     html.dark .hljs-name,html.dark .hljs-quote,html.dark .hljs-selector-pseudo,html.dark .hljs-selector-tag{color:#7ee787}
+    .doc-content > :first-child{margin-top:0}
   </style>
 
   <div class="px-3 sm:px-4.5 md:px-6">
@@ -74,14 +77,87 @@ const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] :
           <!-- H1 -->
           <h1 class:list={[
             "font-poppins text-[1.875rem] font-semibold leading-tight text-txt-black-900 sm:text-[2rem]",
-            isIntroduction ? "mb-3" : "mb-8",
+            isIntroduction ? "mb-3" : "mb-4",
           ]}>
             {pageTitle}
           </h1>
 
+          <!-- Agent-friendly page actions -->
+          <div
+            class:list={[
+              "relative flex w-fit",
+              isIntroduction ? "mb-5" : "mb-8",
+            ]}
+            data-agent-actions
+            data-page-title={pageTitle}
+            data-page-path={currentPath}
+            data-markdown-path={markdownPath}
+            data-text-path={textPath}
+          >
+            <div class="inline-flex overflow-hidden rounded-md border border-otl-gray-200 bg-bg-white shadow-sm">
+              <button
+                type="button"
+                data-copy-doc="markdown"
+                data-primary-copy
+                class="inline-flex h-8 items-center border-r border-otl-gray-200 px-2.5 text-body-xs font-medium text-txt-black-700 transition-colors hover:bg-bg-danger-50 hover:text-txt-danger"
+              >
+                Copy as Markdown
+              </button>
+              <button
+                type="button"
+                data-agent-menu-toggle
+                aria-label="Open page actions"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                class="inline-flex h-8 w-8 items-center justify-center text-txt-black-500 transition-colors hover:bg-bg-danger-50 hover:text-txt-danger"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            <div
+              data-agent-menu
+              role="menu"
+              hidden
+              class="absolute left-0 top-9 z-30 w-56 overflow-hidden rounded-md border border-otl-gray-200 bg-bg-white py-1 shadow-lg"
+            >
+              <button type="button" role="menuitem" data-copy-doc="markdown" class="block w-full px-3 py-2 text-left text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                Copy as Markdown
+              </button>
+              <button type="button" role="menuitem" data-copy-doc="text" class="block w-full px-3 py-2 text-left text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                Copy as Text
+              </button>
+              <button type="button" role="menuitem" data-copy-doc="prompt" class="block w-full px-3 py-2 text-left text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                Copy Agent Prompt
+              </button>
+              <div class="my-1 border-t border-otl-gray-200"></div>
+              <a role="menuitem" href={markdownPath} class="block px-3 py-2 text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                View Markdown
+              </a>
+              <a role="menuitem" href={textPath} class="block px-3 py-2 text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                View Text
+              </a>
+              <a role="menuitem" href="/llms.txt" class="block px-3 py-2 text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                llms.txt
+              </a>
+              <a role="menuitem" href="/llms-full.txt" class="block px-3 py-2 text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                llms-full.txt
+              </a>
+              <div class="my-1 border-t border-otl-gray-200"></div>
+              <button type="button" role="menuitem" data-open-ai="chatgpt" class="block w-full px-3 py-2 text-left text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                Open in ChatGPT
+              </button>
+              <button type="button" role="menuitem" data-open-ai="claude" class="block w-full px-3 py-2 text-left text-body-xs text-txt-black-700 hover:bg-bg-danger-50 hover:text-txt-danger">
+                Open in Claude
+              </button>
+            </div>
+          </div>
+
           <!-- API stats (introduction page only, fetched client-side) -->
           {isIntroduction && (
-            <p id="api-stats" class="mb-8 flex items-center gap-1 text-body-sm text-txt-black-500" style="visibility:hidden">
+            <p id="api-stats" class="mb-8 items-center gap-1 text-body-sm text-txt-black-500" style="display:none">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 shrink-0">
                 <path d="M11.983 1.907a.75.75 0 0 0-1.292-.657l-8.5 9.5A.75.75 0 0 0 2.75 12h6.572l-1.305 6.093a.75.75 0 0 0 1.292.657l8.5-9.5A.75.75 0 0 0 17.25 8h-6.572l1.305-6.093Z" />
               </svg>
@@ -90,7 +166,9 @@ const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] :
           )}
 
           <!-- Page body -->
-          <slot />
+          <div class="doc-content">
+            <slot />
+          </div>
 
           <!-- Prev / Next navigation -->
           <div
@@ -154,7 +232,7 @@ const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] :
         const text = document.getElementById("api-stats-text");
         if (!el || !text) return;
         text.textContent = `${stats.total_hits.toLocaleString("en-GB")} requests served · ${stats.total_users.toLocaleString("en-GB")} users and counting`;
-        el.style.visibility = "visible";
+        el.style.display = "flex";
       } catch {
         // non-fatal
       }
@@ -186,6 +264,116 @@ const next = currentIndex < ALL_PAGES.length - 1 ? ALL_PAGES[currentIndex + 1] :
       } else {
         addCopyButtons();
       }
+    })();
+  </script>
+
+  <!-- Agent-friendly page actions -->
+  <script is:inline>
+    (function () {
+      function absoluteUrl(path) {
+        return new URL(path, window.location.origin).toString();
+      }
+
+      function agentPrompt(title, pagePath, markdownPath) {
+        return [
+          "Use this ElectionData.MY API documentation page as the source of truth.",
+          "Title: " + title,
+          "Page: " + absoluteUrl(pagePath),
+          "Markdown: " + absoluteUrl(markdownPath),
+          "",
+          "Read the markdown version first. Then help me integrate or query the API using only the documented behavior.",
+        ].join("\n");
+      }
+
+      function setCopied(button, original, primaryButton, primaryOriginal) {
+        button.textContent = "Copied";
+        button.classList.add("bg-bg-danger-50", "text-txt-danger");
+        if (primaryButton && primaryButton !== button) {
+          primaryButton.textContent = "Copied";
+          primaryButton.classList.add("bg-bg-danger-50", "text-txt-danger");
+        }
+        setTimeout(function () {
+          button.textContent = original;
+          button.classList.remove("bg-bg-danger-50", "text-txt-danger");
+          if (primaryButton && primaryButton !== button) {
+            primaryButton.textContent = primaryOriginal;
+            primaryButton.classList.remove("bg-bg-danger-50", "text-txt-danger");
+          }
+        }, 1500);
+      }
+
+      function aiUrl(target, prompt) {
+        var q = encodeURIComponent(prompt);
+        if (target === "claude") return "https://claude.ai/new?q=" + q;
+        return "https://chatgpt.com/?q=" + q;
+      }
+
+      document.querySelectorAll("[data-agent-actions]").forEach(function (root) {
+        var title = root.getAttribute("data-page-title") || "ElectionData.MY API docs";
+        var pagePath = root.getAttribute("data-page-path") || window.location.pathname;
+        var markdownPath = root.getAttribute("data-markdown-path") || (pagePath + ".md");
+        var textPath = root.getAttribute("data-text-path") || (pagePath + ".txt");
+        var toggle = root.querySelector("[data-agent-menu-toggle]");
+        var menu = root.querySelector("[data-agent-menu]");
+        var primaryButton = root.querySelector("[data-primary-copy]");
+        var primaryOriginal = primaryButton ? primaryButton.textContent || "Copy as Markdown" : "Copy as Markdown";
+
+        function closeMenu() {
+          if (!menu || !toggle) return;
+          menu.hidden = true;
+          toggle.setAttribute("aria-expanded", "false");
+        }
+
+        function openMenu() {
+          if (!menu || !toggle) return;
+          menu.hidden = false;
+          toggle.setAttribute("aria-expanded", "true");
+        }
+
+        if (toggle) {
+          toggle.addEventListener("click", function () {
+            if (!menu) return;
+            if (menu.hidden) openMenu();
+            else closeMenu();
+          });
+        }
+
+        document.addEventListener("click", function (event) {
+          if (!root.contains(event.target)) closeMenu();
+        });
+
+        root.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") closeMenu();
+        });
+
+        root.querySelectorAll("[data-copy-doc]").forEach(function (button) {
+          var original = button.textContent || "Copy";
+          button.addEventListener("click", async function () {
+            var type = button.getAttribute("data-copy-doc");
+            var value = "";
+            if (type === "prompt") {
+              value = agentPrompt(title, pagePath, markdownPath);
+            } else {
+              var path = type === "text" ? textPath : markdownPath;
+              var res = await fetch(path);
+              if (!res.ok) return;
+              value = await res.text();
+            }
+            await navigator.clipboard.writeText(value);
+            setCopied(button, original, primaryButton, primaryOriginal);
+            if (button.closest("[data-agent-menu]")) closeMenu();
+          });
+        });
+
+        root.querySelectorAll("[data-open-ai]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            var target = button.getAttribute("data-open-ai") || "chatgpt";
+            var prompt = agentPrompt(title, pagePath, markdownPath);
+            window.open(aiUrl(target, prompt), "_blank", "noopener,noreferrer");
+            closeMenu();
+          });
+        });
+      });
     })();
   </script>
 </Layout>
