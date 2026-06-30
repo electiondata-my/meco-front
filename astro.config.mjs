@@ -52,7 +52,7 @@ export default defineConfig({
         '@src': path.resolve(__dirname, 'src'),
         '@layouts': path.resolve(__dirname, 'src/layouts'),
         '@i18n': path.resolve(__dirname, 'src/i18n'),
-        '@charts': path.resolve(__dirname, 'src/components/Charts'),
+        '@charts': path.resolve(__dirname, 'src/components/charts'),
         '@components': path.resolve(__dirname, 'components'),
         '@tools': path.resolve(__dirname, 'src/components/tools'),
         '@data-catalogue': path.resolve(__dirname, 'data-catalogue'),
