@@ -687,7 +687,7 @@ export default function ConsoleDashboard() {
                           tooltip: {
                             callbacks: {
                               label: (ctx) =>
-                                `${ctx.dataset.label}: ${Math.round(ctx.parsed.y)}ms`,
+                                `${ctx.dataset.label}: ${Math.round(ctx.parsed.y ?? 0)}ms`,
                             },
                           },
                         },

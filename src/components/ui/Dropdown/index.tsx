@@ -180,8 +180,8 @@ const Dropdown: FunctionComponent<DropdownProps> = ({
       {label && <Label label={label}></Label>}
       <Listbox
         value={selected}
-        onChange={(option: OptionType & OptionType[]) =>
-          !multiple && handleChange(option)
+        onChange={(option) =>
+          !multiple && handleChange(option as OptionType)
         }
         multiple={multiple}
         disabled={disabled}

@@ -150,7 +150,7 @@ const PartiesApiTester: FunctionComponent = () => {
     }
   }, [parties]);
 
-  const handleSelectParty = (opt: CandidateOption | null) => {
+  const handleSelectParty = (opt?: CandidateOption) => {
     const uid = opt?.value ?? "";
     setSelectedUid(uid);
     const found = parties.find(p => p.uid === uid);

@@ -23,7 +23,7 @@ const hoverDayGuidePlugin: Plugin<"line"> = {
     const active = chart.tooltip?.getActiveElements();
     const x = active?.[0]?.element.x;
 
-    if (!Number.isFinite(x)) return;
+    if (x === undefined || !Number.isFinite(x)) return;
 
     const { ctx, chartArea } = chart;
 
