@@ -94,7 +94,7 @@ function PartyFlag({ uid, party }: { uid?: string; party: string }) {
   }, []);
 
   return (
-    <div className="relative flex h-[18px] w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
+    <div className="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
       ?
       {uid && !failed && (
         <img
@@ -102,7 +102,7 @@ function PartyFlag({ uid, party }: { uid?: string; party: string }) {
           src={`/static/images/parties/${uid}.png`}
           alt={party}
           width={32}
-          height={18}
+          height={16}
           className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
@@ -125,7 +125,7 @@ function BarCell({ value, total = 100 }: { value: number | null; total?: number 
         )}
       </div>
       <span className="inline-block min-w-[3.75rem] whitespace-nowrap text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
-        {value == null ? "—" : `${value.toFixed(1)}%`}
+        {value == null ? "" : `${value.toFixed(1)}%`}
       </span>
     </div>
   );
@@ -135,8 +135,8 @@ function pctWidth(value: number | null | undefined): string {
   return `${Math.min(value ?? 0, 100)}%`;
 }
 
-function pctText(value: number | null | undefined): string {
-  return value == null ? "—" : `${value.toFixed(1)}%`;
+function pctText(value: number | null | undefined, nullDisplay: string = "—"): string {
+  return value == null ? nullDisplay : `${value.toFixed(1)}%`;
 }
 
 const electionRows = (results: ResultRow[]): ElectionRow[] =>
@@ -262,9 +262,11 @@ export default function SeatElectionTable({
                 <PartyFlag uid={row.party_uid} party={row.party} />
                 <span className="flex min-w-0 items-baseline gap-1.5">
                   <span className="min-w-0 truncate font-medium text-txt-black-900" title={row.name}>{row.name}</span>
-                  <span className="shrink-0 text-txt-black-500">
-                    ({row.coalition && row.coalition !== "ALONE" ? `${row.party} / ${row.coalition}` : row.party})
-                  </span>
+                  {row.party && (
+                    <span className="shrink-0 text-txt-black-500">
+                      ({row.coalition && row.coalition !== "ALONE" ? `${row.party} / ${row.coalition}` : row.party})
+                    </span>
+                  )}
                 </span>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-2">
@@ -275,7 +277,7 @@ export default function SeatElectionTable({
                       <div className="h-full rounded-full bg-bg-black-900" style={{ width: pctWidth(row.majority_perc) }} />
                     )}
                   </div>
-                  <span>{pctText(row.majority_perc)}</span>
+                  <span>{pctText(row.majority_perc, "")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-txt-black-500">{c("voter_turnout") || "Voter Turnout"}:</span>
@@ -284,7 +286,7 @@ export default function SeatElectionTable({
                       <div className="h-full rounded-full bg-bg-black-900" style={{ width: pctWidth(row.voter_turnout_perc) }} />
                     )}
                   </div>
-                  <span>{pctText(row.voter_turnout_perc)}</span>
+                  <span>{pctText(row.voter_turnout_perc, "")}</span>
                 </div>
               </div>
             </div>
@@ -410,6 +412,17 @@ export default function SeatElectionTable({
                         </span>
                         <span className="text-txt-black-500" aria-hidden="true">&middot;</span>
                         <span className="text-txt-black-500">{modal.date}</span>
+                        {modal.ballot.length > 1 && modal.ballot.every((b) => b.votes === 0) && (
+                          <>
+                            <span className="text-txt-black-500" aria-hidden="true">&middot;</span>
+                            <span className="flex items-center gap-1 font-normal text-txt-black-disabled">
+                              {(c("pending") || "Pending").toUpperCase()}
+                              <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h3.25a.75.75 0 000-1.5H10.75V5z" clipRule="evenodd" />
+                              </svg>
+                            </span>
+                          </>
+                        )}
                       </div>
                       <div className="flex flex-wrap items-baseline gap-x-2 text-body-md">
                         <span className="font-semibold">

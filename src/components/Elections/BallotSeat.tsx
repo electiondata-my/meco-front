@@ -9,7 +9,7 @@ import {
   DrawerTrigger,
 } from "@components/Drawer";
 import { clx, numFormat, toDate } from "@lib/helpers";
-import { ArrowsPointingOutIcon } from "@heroicons/react/20/solid";
+import { ArrowsPointingOutIcon, ClockIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { matchSorter } from "match-sorter";
 
@@ -195,16 +195,18 @@ export default function BallotSeat({
 
   const filteredSeats = useMemo(
     () =>
-      seats.filter((seat) => {
-        if (!filterParty) return true;
-        if (filterResult === WON_BY) return seat.party === filterParty;
-        if (filterResult === LOST_BY)
-          return (seat.party_lost ?? []).includes(filterParty);
-        return (
-          seat.party === filterParty ||
-          (seat.party_lost ?? []).includes(filterParty)
-        );
-      }),
+      seats
+        .filter((seat) => {
+          if (!filterParty) return true;
+          if (filterResult === WON_BY) return seat.party === filterParty;
+          if (filterResult === LOST_BY)
+            return (seat.party_lost ?? []).includes(filterParty);
+          return (
+            seat.party === filterParty ||
+            (seat.party_lost ?? []).includes(filterParty)
+          );
+        })
+        .sort((a, b) => a.seat.localeCompare(b.seat)),
     [LOST_BY, WON_BY, filterParty, filterResult, seats],
   );
 
@@ -357,12 +359,21 @@ export default function BallotSeat({
                           </div>
 
                           <div className="flex h-8 w-full items-center gap-1.5">
-                            <PartyLogo
-                              uid={seat.party_uid ?? ""}
-                              name={party}
-                            />
-                            <span className="max-w-full truncate font-medium">{`${seat.name} `}</span>
-                            <span>{`(${party})`}</span>
+                            {seat.name ? (
+                              <>
+                                <PartyLogo
+                                  uid={seat.party_uid ?? ""}
+                                  name={party}
+                                />
+                                <span className="max-w-full truncate font-medium">{`${seat.name} `}</span>
+                                <span>{`(${party})`}</span>
+                              </>
+                            ) : (
+                              <>
+                                <ClockIcon className="h-4 w-4 shrink-0 text-txt-black-400" />
+                                <span className="text-txt-black-400">{c("pending") || "Pending"}</span>
+                              </>
+                            )}
                           </div>
 
                           <div className="flex flex-col gap-1.5">

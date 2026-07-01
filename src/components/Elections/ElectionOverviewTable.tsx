@@ -89,7 +89,7 @@ function OverviewNumbers({
   total?: number;
   seatWidth?: string;
   voteWidth?: string;
-  percentage: number;
+  percentage: number | null;
 }) {
   return (
     <td className={`px-4 py-[11px] ${monoClass}`}>
@@ -128,7 +128,7 @@ type CoalitionGroup = {
   seats_won: number;
   seats_won_perc: number;
   votes: number;
-  votes_perc: number;
+  votes_perc: number | null;
 };
 
 type OverviewRow =
@@ -168,22 +168,23 @@ export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (
       const seats_won = parties.reduce((sum, p) => sum + p.seats_won, 0);
       const seats_contested = parties.reduce((sum, p) => sum + p.seats_contested, 0);
       const votes = parties.reduce((sum, p) => sum + p.votes, 0);
+      const allVotesNull = parties.every((p) => p.votes_perc == null);
       return {
         coalition_uid,
         coalition: parties[0]?.coalition ?? coalition_uid,
-        parties: [...parties].sort((a, b) => b.seats_won - a.seats_won),
+        parties: [...parties].sort((a, b) => b.seats_won - a.seats_won || b.seats_contested - a.seats_contested),
         seats_total,
         seats_won,
         seats_won_perc: seats_total ? (seats_won / seats_total) * 100 : 0,
         seats_contested,
         seats_contested_perc: seats_total ? (seats_contested / seats_total) * 100 : 0,
         votes,
-        votes_perc: votesTotal ? (votes / votesTotal) * 100 : 0,
+        votes_perc: allVotesNull ? null : votesTotal ? (votes / votesTotal) * 100 : 0,
       };
     });
 
-    groups.sort((a, b) => b.seats_won - a.seats_won);
-    alone.sort((a, b) => b.seats_won - a.seats_won);
+    groups.sort((a, b) => b.seats_won - a.seats_won || b.seats_contested - a.seats_contested);
+    alone.sort((a, b) => b.seats_won - a.seats_won || b.seats_contested - a.seats_contested);
     return { groups, alone };
   }, [data]);
 
@@ -194,9 +195,9 @@ export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (
   const rows = useMemo(() => {
     const rows: OverviewRow[] = [];
     const sorted = [
-      ...groups.map((group) => ({ kind: "coalition" as const, group, seats_won: group.seats_won })),
-      ...alone.map((party) => ({ kind: "party" as const, party, seats_won: party.seats_won })),
-    ].sort((a, b) => b.seats_won - a.seats_won);
+      ...groups.map((group) => ({ kind: "coalition" as const, group, seats_won: group.seats_won, seats_contested: group.seats_contested })),
+      ...alone.map((party) => ({ kind: "party" as const, party, seats_won: party.seats_won, seats_contested: party.seats_contested })),
+    ].sort((a, b) => b.seats_won - a.seats_won || b.seats_contested - a.seats_contested);
     for (const row of sorted) {
       if (row.kind === "coalition") {
         rows.push({ kind: "coalition", group: row.group });
