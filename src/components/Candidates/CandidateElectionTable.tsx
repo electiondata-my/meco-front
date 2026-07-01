@@ -61,6 +61,7 @@ function resultLabel(result: string, cd: (k: string) => string): string {
   if (result === "won_uncontested") return cd("won_uncontested") || "Won (Uncontested)";
   if (result === "lost") return cd("lost") || "Lost";
   if (result === "lost_deposit") return cd("lost_deposit") || "Lost Deposit";
+  if (result === "pending") return cd("pending") || "Pending";
   return result;
 }
 
@@ -123,28 +124,43 @@ function LostCircle({ className }: { className: string }) {
   );
 }
 
-function ResultBadge({ result, cd }: { result: string; cd: (k: string) => string }) {
-  const won = result.startsWith("won");
-  const Icon = won ? WonCircle : LostCircle;
+function PendingCircle({ className }: { className: string }) {
   return (
-    <span className={`flex items-center gap-1.5 text-body-sm ${won ? "text-txt-success" : "text-txt-danger"}`}>
-      <Icon className="h-5 w-5 shrink-0" />
+    <svg className={className} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h3.25a.75.75 0 000-1.5H10.75V5z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
+function resultColor(result: string): string {
+  if (result.startsWith("won")) return "text-txt-success";
+  if (result === "pending") return "text-txt-black-disabled dark:text-txt-black-500";
+  return "text-txt-danger";
+}
+
+function ResultIcon2({ result }: { result: string }) {
+  if (result.startsWith("won")) return <WonCircle className="h-5 w-5 shrink-0 text-txt-success" />;
+  if (result === "pending") return <PendingCircle className="h-5 w-5 shrink-0 text-txt-black-disabled dark:text-txt-black-500" />;
+  return <LostCircle className="h-5 w-5 shrink-0 text-txt-danger" />;
+}
+
+function ResultBadge({ result, cd }: { result: string; cd: (k: string) => string }) {
+  return (
+    <span className={`flex items-center gap-1.5 text-body-sm ${resultColor(result)}`}>
+      <ResultIcon2 result={result} />
       {resultLabel(result, cd).toUpperCase()}
     </span>
   );
 }
 
 function ResultIcon({ result }: { result: string }) {
-  const won = result.startsWith("won");
-  const Icon = won ? WonCircle : LostCircle;
-  return <Icon className={`h-5 w-5 shrink-0 ${won ? "text-txt-success" : "text-txt-danger"}`} />;
+  return <ResultIcon2 result={result} />;
 }
 
 function ResultLine({ result, cd }: { result: string; cd: (k: string) => string }) {
-  const won = result.startsWith("won");
-  const Icon = won ? WonCircle : LostCircle;
+  const Icon = result.startsWith("won") ? WonCircle : result === "pending" ? PendingCircle : LostCircle;
   return (
-    <span className={`flex items-center gap-1 font-normal ${won ? "text-txt-success" : "text-txt-danger"}`}>
+    <span className={`flex items-center gap-1 font-normal ${resultColor(result)}`}>
       {resultLabel(result, cd).toUpperCase()}
       <Icon className="h-4 w-4 shrink-0" />
     </span>
@@ -517,6 +533,8 @@ export default function CandidateElectionTable({
                             const highlight = b.name === candidateName;
                             const highlightColor = b.result.startsWith("won")
                               ? "rgb(var(--bg-success-100))"
+                              : b.result === "pending"
+                              ? "rgb(var(--bg-black-50))"
                               : "rgb(var(--bg-danger-100))";
                             const highlightedBorderClass = highlight
                               ? i === 0
