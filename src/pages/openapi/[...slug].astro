@@ -13,7 +13,7 @@ import PartiesApiTesterIsland from "@src/components/OpenApi/mdx/PartiesApiTester
 import ElectionsMainApiTesterIsland from "@src/components/OpenApi/mdx/ElectionsMainApiTesterIsland.astro";
 import UnorderedList from "@src/components/OpenApi/mdx/UnorderedList.astro";
 import { getCollection, render } from "astro:content";
-import { extractToc } from "@src/lib/docs";
+import { extractToc, mdxToAiMarkdown } from "@src/lib/docs";
 
 export async function getStaticPaths() {
   const scope = import.meta.env.POST_TO_BUILD_OPENAPI;
@@ -48,6 +48,8 @@ const { title, pageTitle, breadcrumb, description } = entry.data;
 // e.g. entry.id "authentication" → "/openapi/authentication"
 //      entry.id "endpoints/candidates" → "/openapi/endpoints/candidates"
 const currentPath = `/openapi/${entry.id}`;
+const isEndpointPage = entry.id.startsWith("endpoints/");
+const markdownBody = isEndpointPage ? mdxToAiMarkdown(entry.body ?? "") : undefined;
 ---
 
 <DocLayout
@@ -57,6 +59,7 @@ const currentPath = `/openapi/${entry.id}`;
   breadcrumb={breadcrumb}
   toc={toc}
   currentPath={currentPath}
+  markdownBody={markdownBody}
 >
   <Content components={{ ...mdxComponents, pre: PreCodeBlock, ol: OrderedList, ul: UnorderedList, TabCode: TabCodeIsland, TokenInput: TokenInputIsland, CandidatesApiTester: CandidatesApiTesterIsland, ApiTester: CandidatesApiTesterIsland, ResultsApiTester: ResultsApiTesterIsland, ByelectionApiTester: ByelectionApiTesterIsland, SeatsApiTester: SeatsApiTesterIsland, PartiesApiTester: PartiesApiTesterIsland, ElectionsMainApiTester: ElectionsMainApiTesterIsland }} />
 </DocLayout>

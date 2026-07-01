@@ -66,6 +66,7 @@ const seatDisplay = commaIdx >= 0 ? seatName.slice(0, commaIdx) : seatName;
 const stateDisplay = commaIdx >= 0 ? seatName.slice(commaIdx + 2) : "";
 
 const seatTypeParlimen = type === "parlimen";
+const dataAsOfKey = !seatTypeParlimen && slug.endsWith("-johor") ? "data_as_of_se16" : "data_as_of";
 const seatTypeLabel = seatTypeParlimen
   ? isMalay ? "Parlimen" : "Parliament"
   : "DUN";
@@ -207,7 +208,7 @@ const boundaryAttribution =
           <span class="text-txt-danger">{seatDisplay}{stateDisplay ? `, ${stateDisplay}` : ""}</span>
         </h2>
         <p class="mt-2 text-center text-body-md text-txt-black-500">
-          {s("data_as_of")}
+          {s(dataAsOfKey)}
         </p>
         <div class="mt-6 lg:mt-8">
           <SeatVoterDemographics
