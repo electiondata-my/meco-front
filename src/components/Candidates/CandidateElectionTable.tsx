@@ -24,7 +24,12 @@ type BallotEntry = {
   result: string;
 };
 
-type VoteStat = { x: string; abs: number; perc: number };
+type VoteStat = {
+  x: string;
+  abs: number | null;
+  perc: number | null;
+  ratio?: number | null;
+};
 
 type ModalState = {
   open: boolean;
@@ -76,31 +81,31 @@ function formatElectionName(name: string, isMalay?: boolean): string {
 
 function PartyFlag({ uid, party }: { uid?: string; party: string }) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current.naturalWidth === 0) {
-      setFailed(true);
+    if (imgRef.current?.complete) {
+      imgRef.current.naturalWidth === 0 ? setFailed(true) : setLoaded(true);
     }
   }, []);
 
-  if (!uid || failed) {
-    return (
-      <span className="flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
-        ?
-      </span>
-    );
-  }
   return (
-    <img
-      ref={imgRef}
-      src={`/static/images/parties/${uid}.png`}
-      alt={party}
-      width={32}
-      height={18}
-      className="shrink-0 border border-otl-gray-200"
-      onError={() => setFailed(true)}
-    />
+    <div className="relative flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
+      ?
+      {uid && !failed && (
+        <img
+          ref={imgRef}
+          src={`/static/images/parties/${uid}.png`}
+          alt={party}
+          width={32}
+          height={18}
+          className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
+          onLoad={() => setLoaded(true)}
+          onError={() => setFailed(true)}
+        />
+      )}
+    </div>
   );
 }
 
@@ -240,6 +245,7 @@ export default function CandidateElectionTable({
           ballot: ballot ?? [],
           votes: [
             { x: "majority", abs: s.majority, perc: s.majority_perc },
+            { x: "voters_total", abs: s.voters_total ?? null, perc: null, ratio: s.voters_total_v_avg ?? null },
             { x: "voter_turnout", abs: s.voter_turnout, perc: s.voter_turnout_perc },
             { x: "rejected_votes", abs: s.votes_rejected, perc: s.votes_rejected_perc },
           ],
@@ -605,22 +611,28 @@ export default function CandidateElectionTable({
                       <div className="space-y-3">
                         <p className="font-bold">{c("summary_statistics")}</p>
                         <div className="flex flex-col gap-3 text-sm">
-                          {modal.votes.map(({ x, abs, perc }) => (
+                          {modal.votes.map(({ x, abs, perc, ratio }) => (
                             <div key={x} className="flex w-[245px] flex-col gap-3 whitespace-nowrap">
                               <div className="flex items-center justify-between gap-3 text-body-sm text-txt-black-500">
                                 <span className="w-28 md:w-fit">
                                   {c(x) || x.replace(/_/g, " ")}:
                                 </span>
                                 <span className="text-txt-black-700">
-                                  {abs?.toLocaleString() ?? "—"}{" "}
-                                  {perc != null ? `(${perc.toFixed(1)}%)` : "(—)"}
+                                  {ratio != null
+                                    ? `${abs?.toLocaleString() ?? "—"} (${ratio.toFixed(2)}${c("voters_total_v_avg")})`
+                                    : `${abs?.toLocaleString() ?? "—"} ${perc != null ? `(${perc.toFixed(1)}%)` : "(—)"}`}
                                 </span>
                               </div>
-                              {perc != null && (
+                              {(ratio != null || perc != null) && (
                                 <div className="h-[5px] w-[245px] overflow-x-hidden rounded-full bg-bg-washed">
                                   <div
                                     className="h-full overflow-hidden rounded-full bg-bg-black-900"
-                                    style={{ width: `${Math.min(perc, 100)}%` }}
+                                    style={{
+                                      width:
+                                        ratio != null
+                                          ? `${Math.min((ratio / 2) * 100, 100)}%`
+                                          : `${Math.min(perc as number, 100)}%`,
+                                    }}
                                   />
                                 </div>
                               )}

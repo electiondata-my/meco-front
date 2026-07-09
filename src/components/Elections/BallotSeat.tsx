@@ -38,7 +38,12 @@ type BallotResult = {
   result: string;
 };
 
-type VoteStat = { x: string; abs: number | null; perc: number | null };
+type VoteStat = {
+  x: string;
+  abs: number | null;
+  perc: number | null;
+  ratio?: number | null;
+};
 
 type SeatResult = {
   data?: BallotResult[];
@@ -107,6 +112,12 @@ export default function BallotSeat({
           data: ballot,
           votes: [
             { x: "majority", abs: stats.majority, perc: stats.majority_perc },
+            {
+              x: "voters_total",
+              abs: stats.voters_total ?? null,
+              perc: null,
+              ratio: stats.voters_total_v_avg ?? null,
+            },
             {
               x: "voter_turnout",
               abs: stats.voter_turnout,
@@ -706,7 +717,7 @@ const ResultContent = ({
       </p>
       {votes && votes.length > 0 && !loading ? (
         <div className="flex flex-col gap-3 text-sm">
-          {votes.map(({ x, abs, perc }) => (
+          {votes.map(({ x, abs, perc, ratio }) => (
             <div
               key={x}
               className="flex w-[245px] flex-col gap-3 whitespace-nowrap"
@@ -714,13 +725,24 @@ const ResultContent = ({
               <div className="flex items-center justify-between gap-3 text-body-sm text-txt-black-500">
                 <p className="w-28 md:w-fit">{c(x) || x}:</p>
                 <p className="text-txt-black-700">
-                  {abs !== null ? numFormat(abs, "standard") : "—"}{" "}
-                  {perc !== null
-                    ? `(${numFormat(perc, "compact", [1, 1])}%)`
-                    : "(—)"}
+                  {ratio != null ? (
+                    `${abs !== null ? numFormat(abs, "standard") : "—"} (${numFormat(ratio, "standard", [2, 2])}${c("voters_total_v_avg")})`
+                  ) : (
+                    <>
+                      {abs !== null ? numFormat(abs, "standard") : "—"}{" "}
+                      {perc !== null
+                        ? `(${numFormat(perc, "compact", [1, 1])}%)`
+                        : "(—)"}
+                    </>
+                  )}
                 </p>
               </div>
-              <BarPerc hidden value={perc ?? 0} size="h-[5px] w-[245px]" />
+              <BarPerc
+                hidden
+                value={ratio != null ? ratio : (perc ?? 0)}
+                total={ratio != null ? 2 : 100}
+                size="h-[5px] w-[245px]"
+              />
             </div>
           ))}
         </div>

@@ -34,7 +34,12 @@ type BallotEntry = {
   result: string;
 };
 
-type VoteStat = { x: string; abs: number | null; perc: number | null };
+type VoteStat = {
+  x: string;
+  abs: number | null;
+  perc: number | null;
+  ratio?: number | null;
+};
 
 type ModalState = {
   open: boolean;
@@ -202,6 +207,7 @@ export default function SeatElectionTable({
           ballot: ballot ?? [],
           votes: [
             { x: "majority", abs: s0.majority ?? null, perc: s0.majority_perc ?? null },
+            { x: "voters_total", abs: s0.voters_total ?? null, perc: null, ratio: s0.voters_total_v_avg ?? null },
             { x: "voter_turnout", abs: s0.voter_turnout ?? null, perc: s0.voter_turnout_perc ?? null },
             { x: "rejected_votes", abs: s0.votes_rejected ?? null, perc: s0.votes_rejected_perc ?? null },
           ],
@@ -521,22 +527,28 @@ export default function SeatElectionTable({
                         <div className="space-y-3">
                           <p className="font-bold">{c("summary_statistics") || "Summary Statistics"}</p>
                           <div className="flex flex-col gap-3 text-sm">
-                            {modal.votes.map(({ x, abs, perc }) => (
+                            {modal.votes.map(({ x, abs, perc, ratio }) => (
                               <div key={x} className="flex w-[245px] flex-col gap-3 whitespace-nowrap">
                                 <div className="flex items-center justify-between gap-3 text-body-sm text-txt-black-500">
                                   <span className="w-28 md:w-fit">
                                     {c(x) || x.replace(/_/g, " ")}:
                                   </span>
                                   <span className="text-txt-black-700">
-                                    {abs?.toLocaleString() ?? "—"}{" "}
-                                    {`(${pctText(perc)})`}
+                                    {ratio != null
+                                      ? `${abs?.toLocaleString() ?? "—"} (${ratio.toFixed(2)}${c("voters_total_v_avg")})`
+                                      : `${abs?.toLocaleString() ?? "—"} (${pctText(perc)})`}
                                   </span>
                                 </div>
-                                {perc != null && (
+                                {(ratio != null || perc != null) && (
                                   <div className="h-[5px] w-[245px] overflow-x-hidden rounded-full bg-bg-washed">
                                     <div
                                       className="h-full overflow-hidden rounded-full bg-bg-black-900"
-                                      style={{ width: `${Math.min(perc, 100)}%` }}
+                                      style={{
+                                        width:
+                                          ratio != null
+                                            ? `${Math.min((ratio / 2) * 100, 100)}%`
+                                            : `${Math.min(perc as number, 100)}%`,
+                                      }}
                                     />
                                   </div>
                                 )}
