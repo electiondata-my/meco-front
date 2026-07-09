@@ -10,8 +10,10 @@ You are helping me analyse Malaysian election results by writing SQL queries tha
 - `saluran_ballots_ge13` / `saluran_stats_ge13` / `voter_roll_ge13` — GE-13 (5 May 2013)
 - `saluran_ballots_nsn_se15` / `saluran_stats_nsn_se15` / `voter_roll_nsn_se15` — Negeri Sembilan state election SE-15 (2023)
 - `saluran_ballots_jhr_se15` / `saluran_stats_jhr_se15` / `voter_roll_jhr_se15` — Johor state election SE-15 (2022)
+- `voter_roll_ge12` — GE-12 (8 March 2008). Voter roll only — there is no `saluran_ballots_ge12` or `saluran_stats_ge12`.
+- `voter_roll_jhr_se16` — Johor state election SE-16 (2026). Voter roll only — there is no `saluran_ballots_jhr_se16` or `saluran_stats_jhr_se16`.
 
-These are the only 5 elections for which saluran-level data and voter rolls are available. All `saluran_ballots_*` variants share the same schema; same for `saluran_stats_*` and `voter_roll_*`.
+These 5 elections are the only ones with both saluran-level data and voter rolls available: GE-15, GE-14, GE-13, N9 SE-15, JHR SE-15. `voter_roll_ge12` and `voter_roll_jhr_se16` add 2 more elections with voter rolls only (no saluran-level data). All `saluran_ballots_*` variants share the same schema; same for `saluran_stats_*`, and all `voter_roll_*` variants (all 7 elections) share the same schema.
 
 Your first job is to understand the schema and query rules below. Do not write any queries yet.
 
@@ -181,7 +183,7 @@ Columns: `date`, `election`, `state`, `seat`, `voters_total`, `sex_male`, `sex_f
 
 ## Dataset: `voter_roll_*`
 
-Each row represents an anonymised voter in the voter roll with demographic fields and voting location. Available for the same 5 elections as `saluran_ballots_*`. All variants share this schema.
+Each row represents an anonymised voter in the voter roll with demographic fields and voting location. Available for 7 elections: GE-15, GE-14, GE-13, GE-12, N9 SE-15, JHR SE-15, and JHR SE-16. All variants share this schema. Note: `voter_roll_ge12` and `voter_roll_jhr_se16` have no corresponding `saluran_ballots_*` or `saluran_stats_*` tables, so they cannot be joined to saluran-level data — use them standalone.
 
 Columns:
 
@@ -227,7 +229,7 @@ When joining `voter_demographics` to results or ballots, join on all of these co
 
 When joining `voter_roll_*` to `saluran_ballots_*` or `saluran_stats_*`:
 
-`voter_roll_*` and the saluran tables are perfectly aligned at the saluran level. The join key is always `dm`, `pm`, and `saluran` — these three columns together uniquely identify a saluran and match exactly between the voter roll and saluran tables. No additional seat column is needed for the join itself.
+`voter_roll_*` and the saluran tables are perfectly aligned at the saluran level. The join key is always `dm`, `pm`, and `saluran` — these three columns together uniquely identify a saluran and match exactly between the voter roll and saluran tables. No additional seat column is needed for the join itself. This join is not available for `voter_roll_ge12` or `voter_roll_jhr_se16`, since there are no corresponding `saluran_ballots_*` or `saluran_stats_*` tables for GE-12 or JHR SE-16.
 
 - To scope the join to a Parliament seat: also filter on `voter_roll_*.parlimen = saluran_*.seat`
 - To scope the join to a DUN seat: also filter on `voter_roll_*.dun = saluran_*.seat`
@@ -448,7 +450,7 @@ When filtering or comparing parties, use the exact `party` code from the data (e
 - `headline_stats` is seat-level.
 - `saluran_ballots_*` is candidate-level at saluran granularity. Available for 5 elections only: GE-15, GE-14, GE-13, N9 SE-15, JHR SE-15.
 - `saluran_stats_*` is saluran-level. Same 5 elections.
-- `voter_roll_*` covers the same 5 elections.
+- `voter_roll_*` covers 7 elections: the same 5 as `saluran_ballots_*`, plus GE-12 and JHR SE-16 (voter roll only — no saluran-level data for these two, so they cannot be joined to saluran tables).
 - `voter_demographics` is seat-level. Available for GE-13, GE-14, and GE-15 only — all seats, nationwide.
 - Use `voter_demographics` instead of the raw voter roll for requests involving only one demographic dimension, such as sex only, ethnicity only, or age only.
 - The `voter_demographics` columns do not provide demographic cross-tabs. For requests involving two or more demographic dimensions, such as men aged 18-20, use `voter_roll_*`.
