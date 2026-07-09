@@ -18,6 +18,8 @@ type OverallSeat = {
   date: string;
   party: string;
   party_uid?: string;
+  coalition?: string;
+  coalition_uid?: string;
   name: string;
   majority: number | null;
   majority_perc: number | null;
@@ -26,6 +28,7 @@ type OverallSeat = {
   votes_rejected?: number;
   votes_rejected_perc?: number;
   party_lost?: string[];
+  coalition_lost?: string[];
 };
 
 type BallotResult = {
@@ -33,6 +36,7 @@ type BallotResult = {
   party: string;
   party_uid?: string;
   coalition?: string;
+  coalition_uid?: string;
   votes: number | null;
   votes_perc: number | null;
   result: string;
@@ -198,24 +202,74 @@ export default function BallotSeat({
     return contestedParties;
   }, [LOST_BY, WON_BY, contestedParties, filterResult, losingParties, winningParties]);
 
+  const contestedCoalitions = useMemo(() => {
+    const set = new Set<string>();
+    for (const seat of seats) {
+      if (seat.coalition && seat.coalition !== "ALONE") set.add(seat.coalition);
+      for (const coalition of seat.coalition_lost ?? [])
+        if (coalition !== "ALONE") set.add(coalition);
+    }
+    return [...set].sort();
+  }, [seats]);
+
+  const winningCoalitions = useMemo(() => {
+    const set = new Set<string>();
+    for (const seat of seats)
+      if (seat.coalition && seat.coalition !== "ALONE") set.add(seat.coalition);
+    return [...set].sort();
+  }, [seats]);
+
+  const losingCoalitions = useMemo(() => {
+    const set = new Set<string>();
+    for (const seat of seats) {
+      for (const coalition of seat.coalition_lost ?? [])
+        if (coalition !== "ALONE") set.add(coalition);
+    }
+    return [...set].sort();
+  }, [seats]);
+
+  const coalitionOptions = useMemo(() => {
+    if (filterResult === WON_BY) return winningCoalitions;
+    if (filterResult === LOST_BY) return losingCoalitions;
+    return contestedCoalitions;
+  }, [LOST_BY, WON_BY, contestedCoalitions, filterResult, losingCoalitions, winningCoalitions]);
+
+  // Coalitions first, then parties. Values are prefixed so the filter can tell
+  // which field to match against ("co:" = coalition, "pa:" = party).
+  const filterOptions = useMemo(
+    () => [
+      { label: e("all_parties") || "All Parties", value: "" },
+      ...coalitionOptions.map((coalition) => ({
+        label: coalition,
+        value: `co:${coalition}`,
+      })),
+      ...partyOptions.map((party) => ({ label: party, value: `pa:${party}` })),
+    ],
+    [coalitionOptions, partyOptions],
+  );
+
   useEffect(() => {
     if (!filterParty) return;
-    if (partyOptions.includes(filterParty)) return;
+    if (filterOptions.some((option) => option.value === filterParty)) return;
     setFilterParty("");
-  }, [filterParty, partyOptions]);
+  }, [filterParty, filterOptions]);
 
   const filteredSeats = useMemo(
     () =>
       seats
         .filter((seat) => {
           if (!filterParty) return true;
-          if (filterResult === WON_BY) return seat.party === filterParty;
-          if (filterResult === LOST_BY)
-            return (seat.party_lost ?? []).includes(filterParty);
-          return (
-            seat.party === filterParty ||
-            (seat.party_lost ?? []).includes(filterParty)
-          );
+          const isCoalition = filterParty.startsWith("co:");
+          const name = filterParty.slice(3);
+          const won = isCoalition
+            ? seat.coalition === name
+            : seat.party === name;
+          const lost = isCoalition
+            ? (seat.coalition_lost ?? []).includes(name)
+            : (seat.party_lost ?? []).includes(name);
+          if (filterResult === WON_BY) return won;
+          if (filterResult === LOST_BY) return lost;
+          return won || lost;
         })
         .sort((a, b) => a.seat.localeCompare(b.seat)),
     [LOST_BY, WON_BY, filterParty, filterResult, seats],
@@ -266,10 +320,7 @@ export default function BallotSeat({
             }}
           />
           <InlineDropdown
-            options={[
-              { label: e("all_parties") || "All Parties", value: "" },
-              ...partyOptions.map((party) => ({ label: party, value: party })),
-            ]}
+            options={filterOptions}
             value={filterParty}
             onChange={(value) => {
               setFilterParty(value);
@@ -372,12 +423,22 @@ export default function BallotSeat({
                           <div className="flex h-8 w-full items-center gap-1.5">
                             {seat.name ? (
                               <>
-                                <PartyLogo
-                                  uid={seat.party_uid ?? ""}
-                                  name={party}
-                                />
+                                {seat.coalition && seat.coalition !== "ALONE" ? (
+                                  <PartyLogo
+                                    uid={seat.coalition_uid ?? ""}
+                                    name={seat.coalition}
+                                    dir="coalitions"
+                                  />
+                                ) : (
+                                  <PartyLogo
+                                    uid={seat.party_uid ?? ""}
+                                    name={party}
+                                  />
+                                )}
                                 <span className="max-w-full truncate font-medium">{`${seat.name} `}</span>
-                                <span>{`(${party})`}</span>
+                                <span>
+                                  {`(${seat.coalition && seat.coalition !== "ALONE" ? seat.coalition : party})`}
+                                </span>
                               </>
                             ) : (
                               <>
@@ -539,7 +600,15 @@ const InlineDropdown = ({
   );
 };
 
-const PartyLogo = ({ uid, name }: { uid: string; name: string }) => {
+const PartyLogo = ({
+  uid,
+  name,
+  dir = "parties",
+}: {
+  uid: string;
+  name: string;
+  dir?: "parties" | "coalitions";
+}) => {
   const [error, setError] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -562,7 +631,7 @@ const PartyLogo = ({ uid, name }: { uid: string; name: string }) => {
       ?
       <img
         ref={imgRef}
-        src={`/static/images/parties/${uid}.png`}
+        src={`/static/images/${dir}/${uid}.png`}
         alt={name}
         width={32}
         height={16}
@@ -661,10 +730,11 @@ const ResultContent = ({
             </thead>
             <tbody>
               {data.map((row, index) => {
-                const partyLabel =
-                  row.coalition && row.coalition !== "ALONE"
-                    ? `${row.party} (${row.coalition})`
-                    : row.party;
+                const inCoalition =
+                  !!row.coalition && row.coalition !== "ALONE";
+                const partyLabel = inCoalition
+                  ? `${row.coalition} (${row.party})`
+                  : row.party;
                 return (
                   <tr key={index} className="border-b border-otl-gray-200">
                     <td
@@ -677,7 +747,18 @@ const ResultContent = ({
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:gap-2">
-                        <PartyLogo uid={row.party_uid ?? ""} name={row.party} />
+                        {inCoalition ? (
+                          <PartyLogo
+                            uid={row.coalition_uid ?? ""}
+                            name={row.coalition ?? ""}
+                            dir="coalitions"
+                          />
+                        ) : (
+                          <PartyLogo
+                            uid={row.party_uid ?? ""}
+                            name={row.party}
+                          />
+                        )}
                         <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
                           {partyLabel}
                         </span>
