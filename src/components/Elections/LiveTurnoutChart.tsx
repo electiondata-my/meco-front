@@ -1,5 +1,5 @@
 import "chart.js/auto";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
 type TurnoutData = {
@@ -60,6 +60,8 @@ export default function LiveTurnoutChart({
 }: Props) {
   const [isMobile, setIsMobile] = useState(false);
   const dark = useDarkMode();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -68,6 +70,24 @@ export default function LiveTurnoutChart({
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
+
+  // On mobile a tap opens the tooltip; dismiss it when tapping anywhere off the chart.
+  useEffect(() => {
+    if (!isMobile) return;
+    const dismiss = (e: Event) => {
+      const chart = chartRef.current;
+      if (!chart || chart.canvas.contains(e.target as Node)) return;
+      chart.setActiveElements([]);
+      chart.tooltip?.setActiveElements([], { x: 0, y: 0 });
+      chart.update();
+    };
+    document.addEventListener("touchstart", dismiss);
+    document.addEventListener("click", dismiss);
+    return () => {
+      document.removeEventListener("touchstart", dismiss);
+      document.removeEventListener("click", dismiss);
+    };
+  }, [isMobile]);
 
   const chartHeight = isMobile ? MOBILE_CHART_HEIGHT : DESKTOP_CHART_HEIGHT;
 
@@ -141,6 +161,30 @@ export default function LiveTurnoutChart({
     },
   };
 
+  // Dashed vertical guide at the hovered point so it's clear which hour is being read.
+  const crosshairPlugin = {
+    id: "crosshair",
+    beforeDatasetsDraw(chart: {
+      ctx: CanvasRenderingContext2D;
+      chartArea: { top: number; bottom: number };
+      tooltip?: { getActiveElements: () => { element: { x: number } }[] };
+    }) {
+      const active = chart.tooltip?.getActiveElements() ?? [];
+      if (active.length === 0) return;
+      const x = active[0].element.x;
+      const { ctx, chartArea } = chart;
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = dark ? "rgba(228, 228, 231, 0.5)" : "rgba(82, 82, 91, 0.45)";
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.stroke();
+      ctx.restore();
+    },
+  };
+
   // Tooltip: single "Jul 2026" line (dedupe se16 actual vs forecast at the join),
   // ordered Jul 2026 → ge15 → se15.
   const tooltipRank: Record<string, number> = { ge15: 0, se16: 1, se16_forecast: 1, se15: 2 };
@@ -162,6 +206,8 @@ export default function LiveTurnoutChart({
       tooltip: {
         bodySpacing: 6,
         padding: 10,
+        boxPadding: 6,
+        bodyAlign: "right" as const,
         itemSort: (a: { dataset: { label?: string } }, b: { dataset: { label?: string } }) =>
           (tooltipRank[a.dataset.label ?? ""] ?? 9) - (tooltipRank[b.dataset.label ?? ""] ?? 9),
         filter: (ctx: { dataset: { label?: string }; dataIndex: number; parsed: { y: number | null } }) => {
@@ -209,24 +255,25 @@ export default function LiveTurnoutChart({
 
   // On mobile the end-of-line labels can't fit, so use a compact legend instead.
   const legendItems = [
-    { color: GE15_COLOR, dashed: false, text: ge15Text },
-    { color: se16Color, dashed: true, text: forecastText },
-    { color: se15Color, dashed: false, text: se15Text },
+    { color: GE15_COLOR, dashed: false, name: ge15Annotation, value: `${ge15Val.toFixed(1)}%` },
+    { color: se16Color, dashed: true, name: forecastPrefix, value: `${forecastVal.toFixed(1)}%` },
+    { color: se15Color, dashed: false, name: se15Annotation, value: `${se15Val.toFixed(1)}%` },
   ];
 
   return (
     <div>
       {isMobile && (
         <div className="mt-6 flex justify-center">
-          <div className="flex flex-col items-start gap-1.5">
+          <div className="grid grid-cols-[auto_auto_auto] items-center gap-x-2 gap-y-1.5 text-body-sm text-txt-black-700">
             {legendItems.map((item) => (
-              <div key={item.text} className="flex items-center gap-2 text-body-sm text-txt-black-700">
+              <Fragment key={item.name}>
                 <span
                   className="inline-block w-5 shrink-0"
                   style={{ borderTop: `2.5px ${item.dashed ? "dashed" : "solid"} ${item.color}` }}
                 />
-                <span>{item.text}</span>
-              </div>
+                <span className="text-right">{item.name}:</span>
+                <span>{item.value}</span>
+              </Fragment>
             ))}
           </div>
         </div>
@@ -234,12 +281,12 @@ export default function LiveTurnoutChart({
       <div style={{ height: chartHeight }}>
         <Line
           key={`${dark ? "dark" : "light"}-${isMobile ? "m" : "d"}`}
+          ref={chartRef}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           data={chartData as any}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           options={chartOptions as any}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          plugins={isMobile ? [] : ([endLabelPlugin] as any)}
+          plugins={(isMobile ? [crosshairPlugin] : [endLabelPlugin, crosshairPlugin]) as any}
         />
       </div>
     </div>
