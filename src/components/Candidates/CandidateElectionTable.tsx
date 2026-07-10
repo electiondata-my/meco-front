@@ -91,7 +91,7 @@ function PartyFlag({ uid, party }: { uid?: string; party: string }) {
   }, []);
 
   return (
-    <div className="relative flex h-[18px] w-8 shrink-0 items-center justify-center border border-otl-gray-200 text-xs text-txt-black-400">
+    <div className="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
       ?
       {uid && !failed && (
         <img
@@ -99,7 +99,7 @@ function PartyFlag({ uid, party }: { uid?: string; party: string }) {
           src={`/static/images/parties/${uid}.png`}
           alt={party}
           width={32}
-          height={18}
+          height={16}
           className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
