@@ -5,6 +5,7 @@ import ElectionOverviewIsland from "./ElectionOverviewTable";
 import ElectionsAnalysisChart from "./ElectionsAnalysisChart";
 import ElectionsAnalysisMap from "./ElectionsAnalysisMap";
 import ElectionsMap from "./ElectionsMap";
+import LiveTurnoutChart from "./LiveTurnoutChart";
 import { getTranslations, t } from "@i18n/index";
 import { CountryAndStates, MALAYSIA, SEMENANJUNG, STATES } from "@src/lib/constants";
 import type { ElectionParty } from "./ElectionOverviewTable";
@@ -204,6 +205,55 @@ const titleCaseSectionTitle = sectionTitle.replace(/\p{L}[\p{L}'-]*/gu, (word) =
 
 // Title format: "GE-15 (Malaysia) | ElectionData.MY"
 const pageTitle = `${electionDisplay} (${stateName}) | ElectionData.MY`;
+
+// Live voter turnout section (Johor SE-16 only)
+const showLiveTurnout = stateCode === "jhr" && electionName === "SE-16";
+const liveTurnoutUrl = `${apiBase}/elections/live_turnout_jhr_se16.json`;
+const se15Annotation = isMalay ? "PRN-15 (BN mng)" : "SE-15 (BN win)";
+const ge15Annotation = isMalay ? "PRU-15 (PH mng)" : "GE-15 (PH win)";
+const forecastPrefix = isMalay ? "PRN-16 (unjuran)" : "SE-16 (forecast)";
+const asOfPrefix = isMalay ? "setakat" : "as of";
+// Before election-day data flows in (only the 08:00 point exists), the chart is a
+// pre-election forecast — date it by when the page was built, not the polling date.
+const asOfDateLabel = new Date().toLocaleDateString(locale, { day: "numeric", month: "short" });
+
+// Fetch live turnout at build time so the figures are baked into the static HTML
+// (scrapeable, and refreshed on each surgical rebuild).
+type LiveTurnout = {
+  time: string[];
+  se15: (number | null)[];
+  ge15: (number | null)[];
+  se16: (number | null)[];
+  se16_forecast: (number | null)[];
+};
+let liveTurnout: LiveTurnout | null = null;
+if (showLiveTurnout) {
+  try {
+    liveTurnout = await fetch(liveTurnoutUrl).then((r) => r.json());
+  } catch {
+    liveTurnout = null;
+  }
+}
+const lastIdx = (arr: (number | null)[]) => {
+  for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return i;
+  return -1;
+};
+let asOfLabel = "";
+if (liveTurnout) {
+  const idx = lastIdx(liveTurnout.se16);
+  if (idx >= 0) {
+    const time = liveTurnout.time[idx];
+    asOfLabel = `(${asOfPrefix} ${time === "08:00" ? asOfDateLabel : time})`;
+  }
+}
+const liveTurnoutSeries = liveTurnout
+  ? [
+      { label: ge15Annotation, values: liveTurnout.ge15 },
+      { label: se15Annotation, values: liveTurnout.se15 },
+      { label: "SE-16", values: liveTurnout.se16 },
+      { label: forecastPrefix, values: liveTurnout.se16_forecast },
+    ]
+  : [];
 
 function numFmt(n: number | null | undefined, dp = 0): string {
   if (n == null) return "—";
@@ -560,6 +610,51 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
   <!-- Main content -->
   <div class="mx-auto flex w-full flex-col px-4.5 pb-16 md:px-6">
     <div class="mx-auto flex w-full max-w-screen-xl flex-col">
+
+    <!-- Section 0: Live voter turnout (Johor SE-16 only) -->
+    {showLiveTurnout && liveTurnout && (
+      <section data-scroll-anchor="live-turnout" class="space-y-2 pb-8 pt-4 lg:pb-10 lg:pt-5">
+        <h4 class="text-center font-heading text-heading-2xs font-bold">
+          {(() => {
+            const title = e("live_voter_turnout") || "Live Voter Turnout";
+            if (isMalay && title.includes("Live")) {
+              const [before, after] = title.split("Live");
+              return <Fragment>{before}<em>Live</em>{after}</Fragment>;
+            }
+            return title;
+          })()}
+          {asOfLabel && <span class="font-normal"> {asOfLabel}</span>}
+        </h4>
+        <div class="mx-auto w-full md:w-3/4">
+          <LiveTurnoutChart
+            client:load
+            data={liveTurnout}
+            se15Annotation={se15Annotation}
+            ge15Annotation={ge15Annotation}
+            forecastPrefix={forecastPrefix}
+          />
+        </div>
+
+        <!-- Machine-readable copy of the chart data (canvas isn't scrapeable) -->
+        <table class="sr-only">
+          <caption>{e("live_voter_turnout") || "Live Voter Turnout"} {asOfLabel}</caption>
+          <thead>
+            <tr>
+              <th>{c("time") || "Time"}</th>
+              {liveTurnoutSeries.map((s) => <th>{s.label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {liveTurnout.time.map((time, i) => (
+              <tr>
+                <th>{time}</th>
+                {liveTurnoutSeries.map((s) => <td>{s.values[i] == null ? "" : `${s.values[i]}%`}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    )}
 
     <!-- Section 1: Coalition & party summary -->
     <section data-scroll-anchor="overview" class="space-y-6 pb-8 pt-4 lg:pb-10 lg:pt-5">
