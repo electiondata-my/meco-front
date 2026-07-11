@@ -213,9 +213,6 @@ const se15Annotation = isMalay ? "PRN-15 (BN mng)" : "SE-15 (BN win)";
 const ge15Annotation = isMalay ? "PRU-15 (PH mng)" : "GE-15 (PH win)";
 const forecastPrefix = isMalay ? "PRN-16 (unjuran)" : "SE-16 (forecast)";
 const asOfPrefix = isMalay ? "setakat" : "as of";
-// Before election-day data flows in (only the 08:00 point exists), the chart is a
-// pre-election forecast — date it by when the page was built, not the polling date.
-const asOfDateLabel = new Date().toLocaleDateString(locale, { day: "numeric", month: "short" });
 
 // Fetch live turnout at build time so the figures are baked into the static HTML
 // (scrapeable, and refreshed on each surgical rebuild).
@@ -243,7 +240,7 @@ if (liveTurnout) {
   const idx = lastIdx(liveTurnout.se16);
   if (idx >= 0) {
     const time = liveTurnout.time[idx];
-    asOfLabel = `(${asOfPrefix} ${time === "08:00" ? asOfDateLabel : time})`;
+    asOfLabel = `(${asOfPrefix} ${time})`;
   }
 }
 const liveTurnoutSeries = liveTurnout
