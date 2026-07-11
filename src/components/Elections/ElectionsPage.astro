@@ -695,6 +695,7 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
             data={table}
             translations={{ common: i18n.common ?? {} }}
             pendingLabel={pendingLabel}
+            seatsTotalOverride={seats.length}
           />
         </div>
       )}

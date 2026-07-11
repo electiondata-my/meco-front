@@ -134,7 +134,11 @@ export default function BallotSeat({
             },
           ],
         };
-        cache.current.set(key, nextResult);
+        // Only cache declared results. A seat still being counted returns a "pending"
+        // ballot of zeroes; caching that would pin the zeroes for the life of the tab,
+        // so the panel would never show the real numbers once the seat is declared.
+        const pending = ballot.some((row: BallotResult) => row.result === "pending");
+        if (!pending) cache.current.set(key, nextResult);
         setResult(nextResult);
       } catch {
         // non-fatal: the result panel will stay in its loading/empty state

@@ -139,14 +139,21 @@ export function ElectionOverviewTable({
   data,
   c,
   pendingLabel,
+  seatsTotalOverride,
 }: {
   data: ElectionParty[];
   c: (key: string) => string;
   pendingLabel?: string;
+  seatsTotalOverride?: number;
 }) {
-  // Seats still awaiting an announced winner. Only rendered when the caller opts in
-  // (i.e. results are still coming in), otherwise this is 0 and the row is skipped.
-  const seatsTotal = data[0]?.seats_total ?? 0;
+  // NOTE: party.seats_total is NOT the chamber size mid-count — upstream sets it to the
+  // number of seats DECLARED so far (it read 56 before results, then 6/8/10 as seats were
+  // called). Using it as a denominator yields absurdities like "56 / 6 (933.3%)" contested.
+  // The caller passes the true seat count, which we use for every ratio in this table.
+  const seatsTotal = seatsTotalOverride ?? data[0]?.seats_total ?? 0;
+  const pct = (n: number) => (seatsTotal ? (n / seatsTotal) * 100 : 0);
+
+  // Seats still awaiting an announced winner.
   const seatsPending = seatsTotal - data.reduce((sum, p) => sum + p.seats_won, 0);
   const showPending = !!pendingLabel && seatsPending > 0;
 
@@ -178,7 +185,6 @@ export function ElectionOverviewTable({
     }
 
     const groups = [...grouped.entries()].map(([coalition_uid, parties]) => {
-      const seats_total = parties[0]?.seats_total ?? 0;
       const seats_won = parties.reduce((sum, p) => sum + p.seats_won, 0);
       const seats_contested = parties.reduce((sum, p) => sum + p.seats_contested, 0);
       const votes = parties.reduce((sum, p) => sum + p.votes, 0);
@@ -187,11 +193,11 @@ export function ElectionOverviewTable({
         coalition_uid,
         coalition: parties[0]?.coalition ?? coalition_uid,
         parties: [...parties].sort((a, b) => b.seats_won - a.seats_won || b.seats_contested - a.seats_contested),
-        seats_total,
+        seats_total: seatsTotal,
         seats_won,
-        seats_won_perc: seats_total ? (seats_won / seats_total) * 100 : 0,
+        seats_won_perc: seatsTotal ? (seats_won / seatsTotal) * 100 : 0,
         seats_contested,
-        seats_contested_perc: seats_total ? (seats_contested / seats_total) * 100 : 0,
+        seats_contested_perc: seatsTotal ? (seats_contested / seatsTotal) * 100 : 0,
         votes,
         votes_perc: allVotesNull ? null : votesTotal ? (votes / votesTotal) * 100 : 0,
       };
@@ -200,7 +206,7 @@ export function ElectionOverviewTable({
     groups.sort((a, b) => b.seats_won - a.seats_won || b.seats_contested - a.seats_contested);
     alone.sort((a, b) => b.seats_won - a.seats_won || b.seats_contested - a.seats_contested);
     return { groups, alone };
-  }, [data]);
+  }, [data, seatsTotal]);
 
   const coalitionIds = useMemo(() => groups.map((g) => g.coalition_uid), [groups]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -228,7 +234,7 @@ export function ElectionOverviewTable({
   const seatWidth = `${Math.max(
     1,
     ...data
-      .flatMap((p) => [p.seats_won, p.seats_contested, p.seats_total])
+      .flatMap((p) => [p.seats_won, p.seats_contested, seatsTotal])
       .map((v) => String(v).length),
     ...groups
       .flatMap((g) => [g.seats_won, g.seats_contested, g.seats_total])
@@ -335,16 +341,16 @@ export function ElectionOverviewTable({
                 </td>
                 <OverviewNumbers
                   seats={party.seats_won}
-                  total={party.seats_total}
+                  total={seatsTotal}
                   seatWidth={seatWidth}
-                  percentage={party.seats_won_perc}
+                  percentage={pct(party.seats_won)}
                 />
                 <OverviewNumbers votes={party.votes} voteWidth={voteWidth} percentage={party.votes_perc} />
                 <OverviewNumbers
                   seats={party.seats_contested}
-                  total={party.seats_total}
+                  total={seatsTotal}
                   seatWidth={seatWidth}
-                  percentage={party.seats_contested_perc}
+                  percentage={pct(party.seats_contested)}
                 />
               </tr>
             );
@@ -360,9 +366,12 @@ interface IslandProps {
   data: ElectionParty[];
   translations: { common: Record<string, any> };
   pendingLabel?: string;
+  seatsTotalOverride?: number;
 }
 
-export default function ElectionOverviewIsland({ data, translations, pendingLabel }: IslandProps) {
+export default function ElectionOverviewIsland({ data, translations, pendingLabel, seatsTotalOverride }: IslandProps) {
   const c = (key: string) => tr(translations.common, key);
-  return <ElectionOverviewTable data={data} c={c} pendingLabel={pendingLabel} />;
+  return (
+    <ElectionOverviewTable data={data} c={c} pendingLabel={pendingLabel} seatsTotalOverride={seatsTotalOverride} />
+  );
 }
