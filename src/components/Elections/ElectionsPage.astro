@@ -206,6 +206,10 @@ const titleCaseSectionTitle = sectionTitle.replace(/\p{L}[\p{L}'-]*/gu, (word) =
 // Title format: "GE-15 (Malaysia) | ElectionData.MY"
 const pageTitle = `${electionDisplay} (${stateName}) | ElectionData.MY`;
 
+// Johor SE-16 results are still being announced — surface the undeclared seats as a
+// row in the overview table. The row self-hides once every seat is called.
+const pendingLabel = stateCode === "jhr" && electionName === "SE-16" ? "TBC" : undefined;
+
 // Live voter turnout section (Johor SE-16 only).
 // Disabled: SE-16 polling has closed, awaiting results. To re-enable next election:
 //   const showLiveTurnout = stateCode === "<state>" && electionName === "<election>";
@@ -690,6 +694,7 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
             client:load
             data={table}
             translations={{ common: i18n.common ?? {} }}
+            pendingLabel={pendingLabel}
           />
         </div>
       )}

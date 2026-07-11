@@ -135,7 +135,21 @@ type OverviewRow =
   | { kind: "coalition"; group: CoalitionGroup }
   | { kind: "party"; party: ElectionParty; isChild: boolean };
 
-export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (key: string) => string }) {
+export function ElectionOverviewTable({
+  data,
+  c,
+  pendingLabel,
+}: {
+  data: ElectionParty[];
+  c: (key: string) => string;
+  pendingLabel?: string;
+}) {
+  // Seats still awaiting an announced winner. Only rendered when the caller opts in
+  // (i.e. results are still coming in), otherwise this is 0 and the row is skipped.
+  const seatsTotal = data[0]?.seats_total ?? 0;
+  const seatsPending = seatsTotal - data.reduce((sum, p) => sum + p.seats_won, 0);
+  const showPending = !!pendingLabel && seatsPending > 0;
+
   const coalitionVotes = Object.values(
     data.reduce(
       (totals, party) => {
@@ -242,6 +256,24 @@ export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (
           </tr>
         </thead>
         <tbody>
+          {showPending && (
+            <tr className="group border-b border-otl-gray-200 hover:bg-bg-black-50">
+              <td className="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-[11px] pl-2 pr-3 text-left group-hover:bg-bg-black-50">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-4 w-8 shrink-0" aria-hidden="true" />
+                  <span className="italic text-txt-black-500">{pendingLabel}</span>
+                </div>
+              </td>
+              <OverviewNumbers
+                seats={seatsPending}
+                total={seatsTotal}
+                seatWidth={seatWidth}
+                percentage={seatsTotal ? (seatsPending / seatsTotal) * 100 : 0}
+              />
+              <td />
+              <td />
+            </tr>
+          )}
           {rows.map((row, index) => {
             if (row.kind === "coalition") {
               const { group } = row;
@@ -327,9 +359,10 @@ export function ElectionOverviewTable({ data, c }: { data: ElectionParty[]; c: (
 interface IslandProps {
   data: ElectionParty[];
   translations: { common: Record<string, any> };
+  pendingLabel?: string;
 }
 
-export default function ElectionOverviewIsland({ data, translations }: IslandProps) {
+export default function ElectionOverviewIsland({ data, translations, pendingLabel }: IslandProps) {
   const c = (key: string) => tr(translations.common, key);
-  return <ElectionOverviewTable data={data} c={c} />;
+  return <ElectionOverviewTable data={data} c={c} pendingLabel={pendingLabel} />;
 }
