@@ -206,8 +206,10 @@ const titleCaseSectionTitle = sectionTitle.replace(/\p{L}[\p{L}'-]*/gu, (word) =
 // Title format: "GE-15 (Malaysia) | ElectionData.MY"
 const pageTitle = `${electionDisplay} (${stateName}) | ElectionData.MY`;
 
-// Live voter turnout section (Johor SE-16 only)
-const showLiveTurnout = stateCode === "jhr" && electionName === "SE-16";
+// Live voter turnout section (Johor SE-16 only).
+// Disabled: SE-16 polling has closed, awaiting results. To re-enable next election:
+//   const showLiveTurnout = stateCode === "<state>" && electionName === "<election>";
+const showLiveTurnout = false;
 const liveTurnoutUrl = `${apiBase}/elections/live_turnout_jhr_se16.json`;
 const se15Annotation = isMalay ? "PRN-15 (BN mng)" : "SE-15 (BN win)";
 const ge15Annotation = isMalay ? "PRU-15 (PH mng)" : "GE-15 (PH win)";
