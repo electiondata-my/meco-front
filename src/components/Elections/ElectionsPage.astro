@@ -265,8 +265,8 @@ function numFmt(n: number | null | undefined, dp = 0): string {
 }
 
 // Pinned totals row. Every column is a plain sum of the seat rows, except the two
-// percentages, which are re-derived from the summed numerators/denominators (averaging
-// seat-level percentages would weight a 20k-voter seat the same as a 150k-voter one).
+// percentages, which are re-derived from the summed numerators/denominators. Matches the
+// upstream `stats` block exactly; derived here to avoid plumbing a second prop through.
 // Majority has no meaning in aggregate, so both majority columns stay blank.
 const sumOf = (pick: (seat: OverallSeat) => number | null | undefined) =>
   seats.reduce((total, seat) => total + (pick(seat) ?? 0), 0);
@@ -278,7 +278,8 @@ const totals = {
   votes_rejected: sumOf((s) => s.votes_rejected),
 };
 const totalsTurnoutPerc = totals.voters_total ? (totals.voter_turnout / totals.voters_total) * 100 : null;
-const totalsRejectedPerc = totalsVotesValid ? (totals.votes_rejected / totalsVotesValid) * 100 : null;
+const totalsVotesCast = totalsVotesValid + totals.votes_rejected;
+const totalsRejectedPerc = totalsVotesCast ? (totals.votes_rejected / totalsVotesCast) * 100 : null;
 
 const analysisColumnSpecs = [
   {
