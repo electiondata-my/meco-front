@@ -42,10 +42,12 @@ const hoverDayGuidePlugin: Plugin<"line"> = {
 type MetricPanelProps = {
   title: string;
   dailyLabel: string;
+  yesterdayLabel: string;
   totalLabel: string;
   metricKey: MetricKey;
   rows: SiteMetricsRow[];
   daily: number;
+  yesterday: number;
   total: number;
   color: string;
   colorH: string;
@@ -58,10 +60,12 @@ type MetricPanelProps = {
 export default function MetricPanel({
   title,
   dailyLabel,
+  yesterdayLabel,
   totalLabel,
   metricKey,
   rows,
   daily,
+  yesterday,
   total,
   color,
   colorH,
@@ -83,6 +87,12 @@ export default function MetricPanel({
             <p className="text-body-xs text-txt-black-500">{dailyLabel}</p>
             <p className="font-heading text-body-lg font-semibold text-txt-black-900">
               {loading ? "—" : formatDaily(daily)}
+            </p>
+          </div>
+          <div>
+            <p className="text-body-xs text-txt-black-500">{yesterdayLabel}</p>
+            <p className="font-heading text-body-lg font-semibold text-txt-black-900">
+              {loading ? "—" : formatDaily(yesterday)}
             </p>
           </div>
           <div>

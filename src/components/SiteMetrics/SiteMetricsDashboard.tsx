@@ -12,9 +12,9 @@ import {
 } from "chart.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import MetricPanel, { ROW_COLORS, buildChartOptions } from "@tools/site-metrics/MetricPanel";
-import MetricRow from "@tools/site-metrics/MetricRow";
+import MetricRow, { MOBILE_METRIC_GRID } from "@tools/site-metrics/MetricRow";
 import { DATE_FROM, METRICS, PERIODS, type Period, type SiteMetricsRow } from "@tools/site-metrics/types";
-import { dailyCallout, metricTotal } from "@tools/site-metrics/utils";
+import { dailyCallout, metricTotal, yesterdayCallout } from "@tools/site-metrics/utils";
 
 ChartJS.register(
   CategoryScale,
@@ -182,7 +182,12 @@ export default function SiteMetricsDashboard({ tbBase, token, translations }: Pr
           </div>
 
           <div>
-            <div className="grid grid-cols-[1fr_4.5rem_3rem_3.5rem] items-center gap-3 border-b border-otl-gray-100 px-4 py-2">
+            <div
+              className={clx(
+                "grid items-center border-b border-otl-gray-100 py-2",
+                MOBILE_METRIC_GRID,
+              )}
+            >
               <span />
               <span className="text-center text-xs font-semibold uppercase tracking-wider text-txt-black-400">
                 {t("trend")}
@@ -232,10 +237,12 @@ export default function SiteMetricsDashboard({ tbBase, token, translations }: Pr
                   <MetricPanel
                     title={t(metric.labelKey)}
                     dailyLabel={t("daily")}
+                    yesterdayLabel={t("yesterday")}
                     totalLabel={t("total")}
                     metricKey={metric.key}
                     rows={rows}
                     daily={dailyCallout(rows, metric.key)}
+                    yesterday={yesterdayCallout(rows, metric.key)}
                     total={metricTotal(rows, metric.key)}
                     color={color}
                     colorH={colorH}

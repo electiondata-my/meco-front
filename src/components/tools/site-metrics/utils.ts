@@ -28,6 +28,19 @@ export function dailyCallout(rows: SiteMetricsRow[], key: MetricKey): number {
   return latestDaily(rows, key);
 }
 
+/** Previous day callout value, with cumulative api_users converted to a daily delta. */
+export function yesterdayCallout(rows: SiteMetricsRow[], key: MetricKey): number {
+  if (key === "api_users") {
+    if (rows.length < 3) return 0;
+    return (
+      rowValue(rows[rows.length - 2], key) -
+      rowValue(rows[rows.length - 3], key)
+    );
+  }
+  if (rows.length < 2) return 0;
+  return rowValue(rows[rows.length - 2], key);
+}
+
 export function metricTotal(rows: SiteMetricsRow[], key: MetricKey): number {
   if (key === "api_users") {
     return latestDaily(rows, key);
