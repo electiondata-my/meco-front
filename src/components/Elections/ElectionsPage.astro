@@ -26,6 +26,7 @@ type OverallSeat = {
   voter_turnout_perc?: number;
   votes_rejected?: number;
   votes_rejected_perc?: number;
+  votes_valid?: number;
   party_lost?: string[];
 };
 
@@ -263,6 +264,22 @@ function numFmt(n: number | null | undefined, dp = 0): string {
   return n.toLocaleString("en-MY", { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
 
+// Pinned totals row. Every column is a plain sum of the seat rows, except the two
+// percentages, which are re-derived from the summed numerators/denominators (averaging
+// seat-level percentages would weight a 20k-voter seat the same as a 150k-voter one).
+// Majority has no meaning in aggregate, so both majority columns stay blank.
+const sumOf = (pick: (seat: OverallSeat) => number | null | undefined) =>
+  seats.reduce((total, seat) => total + (pick(seat) ?? 0), 0);
+const totalsVotesValid = sumOf((s) => s.votes_valid);
+const totals = {
+  n_candidates: sumOf((s) => s.n_candidates),
+  voters_total: sumOf((s) => s.voters_total),
+  voter_turnout: sumOf((s) => s.voter_turnout),
+  votes_rejected: sumOf((s) => s.votes_rejected),
+};
+const totalsTurnoutPerc = totals.voters_total ? (totals.voter_turnout / totals.voters_total) * 100 : null;
+const totalsRejectedPerc = totalsVotesValid ? (totals.votes_rejected / totalsVotesValid) * 100 : null;
+
 const analysisColumnSpecs = [
   {
     key: "seat",
@@ -281,17 +298,17 @@ const analysisColumnSpecs = [
   {
     key: "n_candidates",
     label: c("n_candidates") || "Candidates",
-    widthCh: Math.max((c("n_candidates") || "Candidates").length + 3, ...analysisRows.map((row) => numFmt(row.n_candidates).length)) + 5,
+    widthCh: Math.max((c("n_candidates") || "Candidates").length + 3, numFmt(totals.n_candidates).length, ...analysisRows.map((row) => numFmt(row.n_candidates).length)) + 5,
   },
   {
     key: "voters_total",
     label: c("voters_total") || "Voters",
-    widthCh: Math.max((c("voters_total") || "Voters").length + 3, ...analysisRows.map((row) => numFmt(row.voters_total).length)) + 5,
+    widthCh: Math.max((c("voters_total") || "Voters").length + 3, numFmt(totals.voters_total).length, ...analysisRows.map((row) => numFmt(row.voters_total).length)) + 5,
   },
   {
     key: "voter_turnout",
     label: c("voter_turnout") || "Turnout",
-    widthCh: Math.max((c("voter_turnout") || "Turnout").length + 3, ...analysisRows.map((row) => numFmt(row.voter_turnout).length)) + 5,
+    widthCh: Math.max((c("voter_turnout") || "Turnout").length + 3, numFmt(totals.voter_turnout).length, ...analysisRows.map((row) => numFmt(row.voter_turnout).length)) + 5,
   },
   {
     key: "voter_turnout_perc",
@@ -311,7 +328,7 @@ const analysisColumnSpecs = [
   {
     key: "votes_rejected",
     label: c("rejected_votes") || "Rejected",
-    widthCh: Math.max((c("rejected_votes") || "Rejected").length + 3, ...analysisRows.map((row) => numFmt(row.votes_rejected).length)) + 5,
+    widthCh: Math.max((c("rejected_votes") || "Rejected").length + 3, numFmt(totals.votes_rejected).length, ...analysisRows.map((row) => numFmt(row.votes_rejected).length)) + 5,
   },
   {
     key: "votes_rejected_perc",
@@ -923,6 +940,32 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
                     </span>
                   </button>
                 </th>
+              </tr>
+              <tr class="border-b-2 border-otl-gray-200 font-semibold text-txt-black-900">
+                <td class="analysis-seat-cell sticky left-0 z-10 bg-bg-white py-3 pl-0 pr-3 md:pr-4">
+                  <span class="block truncate">{stateName}</span>
+                </td>
+                {stateCode === "mys" && <td class="hidden px-4 py-3 md:table-cell" />}
+                <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  {numFmt(totals.n_candidates)}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  {numFmt(totals.voters_total)}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  {numFmt(totals.voter_turnout)}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  {numFmt(totalsTurnoutPerc, 1)}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums text-txt-black-500">—</td>
+                <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums text-txt-black-500">—</td>
+                <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  {numFmt(totals.votes_rejected)}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                  {numFmt(totalsRejectedPerc, 1)}
+                </td>
               </tr>
             </thead>
             <tbody>

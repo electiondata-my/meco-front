@@ -12,6 +12,7 @@ type OverallSeat = {
   n_candidates?: number; voters_total?: number;
   voter_turnout?: number; voter_turnout_perc?: number;
   votes_rejected?: number; votes_rejected_perc?: number;
+  votes_valid?: number;
   party_lost?: string[];
 };
 type ElectionData = { by_party: ElectionParty[]; by_seat: OverallSeat[]; stats?: Record<string, unknown> };
