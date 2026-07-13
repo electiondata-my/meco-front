@@ -1,6 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { ElectionTimeseriesTable, electionName, type TimeseriesVariable } from "./ElectionTimeseriesTable";
 import type { Timeseries } from "@src/lib/elections";
+
+// Loaded on first Map tab activation so mapbox-gl stays out of the initial bundle.
+const ElectionsMap = lazy(() => import("./ElectionsMap"));
 
 export type ElectionParty = {
   party: string;
@@ -381,6 +384,12 @@ interface IslandProps {
   seatsTotalOverride?: number;
   timeseries?: Timeseries;
   isMalay?: boolean;
+  map?: {
+    mapUrl: string;
+    stateFilter?: string;
+    excludeStates?: string[];
+    mapboxToken: string;
+  };
 }
 
 const VARIABLES: { key: TimeseriesVariable; label: string; fallback: string }[] = [
@@ -393,7 +402,8 @@ const VARIABLES: { key: TimeseriesVariable; label: string; fallback: string }[] 
 // otherwise reset every time. Coalition UIDs are stable across elections, so the open
 // rows carry over too; the picked columns don't, since they are per-election.
 const STORE_KEY = "elections-overview-view";
-type StoredView = { tab: "snapshot" | "timeseries"; variable: TimeseriesVariable; expanded: string[] };
+type OverviewTab = "snapshot" | "timeseries" | "map";
+type StoredView = { tab: OverviewTab; variable: TimeseriesVariable; expanded: string[] };
 
 export default function ElectionOverviewIsland({
   data,
@@ -402,16 +412,21 @@ export default function ElectionOverviewIsland({
   seatsTotalOverride,
   timeseries,
   isMalay = false,
+  map,
 }: IslandProps) {
   const c = (key: string) => tr(translations.common, key);
   const e = (key: string) => tr(translations.elections ?? {}, key);
-  const [tab, setTab] = useState<"snapshot" | "timeseries">("snapshot");
+  const [tab, setTab] = useState<OverviewTab>("snapshot");
   const [variable, setVariable] = useState<TimeseriesVariable>("seats_won");
   const [menuOpen, setMenuOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>(timeseries?.selected ?? []);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [restored, setRestored] = useState(false);
+  // Once the map has mounted, keep it alive behind `hidden` so tab switches
+  // don't re-initialise Mapbox.
+  const [mapActivated, setMapActivated] = useState(false);
   const hasTimeseries = (timeseries?.selected.length ?? 0) > 1;
+  const hasMap = !!map;
 
   const pinnedEdition = timeseries?.editions.find((edition) => edition.election === timeseries.current);
   const groupingNote = (
@@ -428,7 +443,8 @@ export default function ElectionOverviewIsland({
       const stored = sessionStorage.getItem(STORE_KEY);
       if (stored) {
         const view = JSON.parse(stored) as StoredView;
-        if (view.tab) setTab(view.tab);
+        // A stored "map" tab is invalid on pages without a map (e.g. non-GE-15).
+        if (view.tab && (view.tab !== "map" || hasMap)) setTab(view.tab);
         if (view.variable) setVariable(view.variable);
         if (view.expanded) setExpanded(new Set(view.expanded));
       }
@@ -455,14 +471,29 @@ export default function ElectionOverviewIsland({
       return next;
     });
   const showTimeseries = hasTimeseries && tab === "timeseries";
+  const showMap = hasMap && tab === "map";
   const selectedVariable = VARIABLES.find((v) => v.key === variable)!;
+
+  useEffect(() => {
+    if (showMap) setMapActivated(true);
+  }, [showMap]);
+
+  const tabs: OverviewTab[] = [
+    "snapshot",
+    ...(hasTimeseries ? (["timeseries"] as const) : []),
+    ...(hasMap ? (["map"] as const) : []),
+  ];
+  const tabLabel = (name: OverviewTab) =>
+    name === "map"
+      ? c("map") || "Map"
+      : e(`tabs.${name}`) || (name === "snapshot" ? "Snapshot" : "Over Time");
 
   return (
     <div className="space-y-4">
-      {hasTimeseries && (
+      {tabs.length > 1 && (
         <div className="flex flex-wrap items-center justify-center gap-3">
           <div className="flex h-8 items-center rounded-lg bg-bg-washed p-0.5">
-            {(["snapshot", "timeseries"] as const).map((name) => (
+            {tabs.map((name) => (
               <button
                 key={name}
                 type="button"
@@ -473,7 +504,7 @@ export default function ElectionOverviewIsland({
                     : "text-txt-black-500"
                 }`}
               >
-                {e(`tabs.${name}`) || (name === "snapshot" ? "Snapshot" : "Over Time")}
+                {tabLabel(name)}
               </button>
             ))}
           </div>
@@ -536,30 +567,44 @@ export default function ElectionOverviewIsland({
         </p>
       )}
 
-      {showTimeseries ? (
-        <ElectionTimeseriesTable
-          editions={timeseries!.editions}
-          selected={selected}
-          onSelect={(index, election) =>
-            setSelected((current) => current.map((name, i) => (i === index ? election : name)))
-          }
-          current={timeseries!.current}
-          variable={variable}
-          expanded={expanded}
-          onToggle={toggleExpanded}
-          isMalay={isMalay}
-          c={c}
-        />
-      ) : (
-        <ElectionOverviewTable
-          data={data}
-          c={c}
-          pendingLabel={pendingLabel}
-          seatsTotalOverride={seatsTotalOverride}
-          expanded={expanded}
-          onToggle={toggleExpanded}
-        />
+      {map && mapActivated && (
+        <div className={showMap ? "" : "hidden"}>
+          <Suspense fallback={null}>
+            <ElectionsMap
+              mapUrl={map.mapUrl}
+              stateFilter={map.stateFilter}
+              excludeStates={map.excludeStates}
+              mapboxToken={map.mapboxToken}
+            />
+          </Suspense>
+        </div>
       )}
+
+      {!showMap &&
+        (showTimeseries ? (
+          <ElectionTimeseriesTable
+            editions={timeseries!.editions}
+            selected={selected}
+            onSelect={(index, election) =>
+              setSelected((current) => current.map((name, i) => (i === index ? election : name)))
+            }
+            current={timeseries!.current}
+            variable={variable}
+            expanded={expanded}
+            onToggle={toggleExpanded}
+            isMalay={isMalay}
+            c={c}
+          />
+        ) : (
+          <ElectionOverviewTable
+            data={data}
+            c={c}
+            pendingLabel={pendingLabel}
+            seatsTotalOverride={seatsTotalOverride}
+            expanded={expanded}
+            onToggle={toggleExpanded}
+          />
+        ))}
     </div>
   );
 }

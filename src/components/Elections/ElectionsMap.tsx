@@ -1,65 +1,64 @@
-import Map, { AttributionControl } from "react-map-gl/mapbox";
-import { useEffect, useRef, useState } from "react";
+import Map, { AttributionControl, NavigationControl } from "react-map-gl/mapbox";
+import { useMemo, useRef, useState } from "react";
 import type { MapRef } from "react-map-gl/mapbox";
-import type { FilterSpecification } from "mapbox-gl";
+import {
+  MY_BOUNDS,
+  HIDE_LAYER_EXACT,
+  LINE_PAINT,
+  filterFeatures,
+  bboxOfFeatures,
+  isCoarsePointer,
+  useGeojson,
+  type MapFeature,
+} from "./mapShared";
 
 interface Props {
   mapUrl: string;
   stateFilter?: string;
   excludeStates?: string[];
-  viewEventName: string;
   mapboxToken: string;
 }
 
 interface TooltipState {
   x: number;
   y: number;
+  flipX: boolean;
   seat: string;
+  state: string;
   coalition: string;
   party: string;
+  colour: string;
 }
-
-const MY_BOUNDS: [[number, number], [number, number]] = [[99.6, 0.85], [119.3, 7.35]];
 
 const FILL_PAINT = {
   "fill-color": ["coalesce", ["get", "colour"], "#94a3b8"] as unknown as string,
   "fill-opacity": 0.85,
 };
 
-const LINE_PAINT = {
-  "line-color": "#64748b",
-  "line-width": 0.5,
-};
+function buildLegend(features: MapFeature[]): { label: string; colour: string; count: number }[] {
+  // NB: `Map` is the react-map-gl component here, so use a plain record.
+  const entries: Record<string, { label: string; colour: string; count: number }> = {};
+  features.forEach((f) => {
+    const props = f.properties ?? {};
+    const label = props.coalition || props.party || "—";
+    if (entries[label]) entries[label].count += 1;
+    else entries[label] = { label, colour: props.colour ?? "#94a3b8", count: 1 };
+  });
+  return Object.values(entries).sort((a, b) => b.count - a.count);
+}
 
-const HIDE_LAYER_EXACT = [
-  "country-label",
-  "state-label",
-  "settlement-label",
-  "settlement-subdivision-label",
-  "settlement-major-label",
-  "settlement-minor-label",
-];
-
-export default function ElectionsMap({ mapUrl, stateFilter, excludeStates, viewEventName, mapboxToken }: Props) {
+export default function ElectionsMap({ mapUrl, stateFilter, excludeStates, mapboxToken }: Props) {
   const mapRef = useRef<MapRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [ready, setReady] = useState(false);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  useEffect(() => {
-    // Restore map tab from session if the user was on it before navigating.
-    try {
-      const parsed = JSON.parse(sessionStorage.getItem("meco-elections-state") ?? "null");
-      if (parsed?.overviewTab === "map" && Date.now() - (parsed.ts ?? 0) < 10000) {
-        setReady(true);
-        return;
-      }
-    } catch {}
-
-    const handler = () => setReady(true);
-    document.addEventListener(viewEventName, handler);
-    return () => document.removeEventListener(viewEventName, handler);
-  }, [viewEventName]);
+  const geojson = useGeojson(mapUrl);
+  const features = useMemo(
+    () => filterFeatures((geojson?.features ?? []) as MapFeature[], stateFilter, excludeStates),
+    [geojson, stateFilter, excludeStates],
+  );
+  const bounds = useMemo(() => bboxOfFeatures(features) ?? MY_BOUNDS, [features]);
+  const legend = useMemo(() => buildLegend(features), [features]);
 
   function handleLoad() {
     const map = mapRef.current?.getMap();
@@ -70,59 +69,42 @@ export default function ElectionsMap({ mapUrl, stateFilter, excludeStates, viewE
         map.setLayoutProperty(layer.id, "visibility", "none");
     });
 
-    const filter: FilterSpecification | undefined = stateFilter
-      ? ["==", ["get", "state"], stateFilter]
-      : excludeStates?.length
-        ? ["!", ["in", ["get", "state"], ["literal", excludeStates]]] as unknown as FilterSpecification
-        : undefined;
+    map.addSource("map-src", {
+      type: "geojson",
+      data: { type: "FeatureCollection", features } as GeoJSON.FeatureCollection,
+    });
+    map.addLayer({ id: "map-fill", type: "fill", source: "map-src", paint: FILL_PAINT });
+    map.addLayer({ id: "map-line", type: "line", source: "map-src", paint: LINE_PAINT });
 
-    map.addSource("map-src", { type: "geojson", data: mapUrl });
-    map.addLayer({ id: "map-fill", type: "fill", source: "map-src", ...(filter ? { filter } : {}), paint: FILL_PAINT });
-    map.addLayer({ id: "map-line", type: "line", source: "map-src", ...(filter ? { filter } : {}), paint: LINE_PAINT });
-
-    // Fit to the visible features once data has loaded.
-    if (stateFilter || excludeStates?.length) {
-      map.once("idle", () => {
-        const features = map.querySourceFeatures("map-src").filter((f) => {
-          const state = f.properties?.state;
-          if (stateFilter) return state === stateFilter;
-          if (excludeStates?.length) return !excludeStates.includes(state);
-          return true;
-        });
-        if (features.length === 0) return;
-        let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
-        const expand = (coord: number[]) => {
-          if (coord[0] < minLng) minLng = coord[0];
-          if (coord[0] > maxLng) maxLng = coord[0];
-          if (coord[1] < minLat) minLat = coord[1];
-          if (coord[1] > maxLat) maxLat = coord[1];
-        };
-        features.forEach((f) => {
-          const geom = f.geometry;
-          if (geom.type === "Polygon") geom.coordinates.forEach((r) => r.forEach(expand));
-          else if (geom.type === "MultiPolygon") geom.coordinates.forEach((p) => p.forEach((r) => r.forEach(expand)));
-        });
-        if (minLng < Infinity) map.fitBounds([[minLng, minLat], [maxLng, maxLat]], { padding: 40, duration: 0 });
-      });
-    }
-
-    const showTooltip = (e: mapboxgl.MapMouseEvent & { features?: mapboxgl.GeoJSONFeature[] }) => {
-      if (!e.features?.length || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const props = e.features[0].properties ?? {};
+    const showTooltip = (point: mapboxgl.Point, props: Record<string, any>) => {
+      const width = containerRef.current?.clientWidth ?? 0;
       setTooltip({
-        x: e.originalEvent.clientX - rect.left,
-        y: e.originalEvent.clientY - rect.top,
+        x: point.x,
+        y: point.y,
+        flipX: point.x > width * 0.6,
         seat: props.seat ?? "",
+        state: props.state ?? "",
         coalition: props.coalition ?? "",
         party: props.party ?? "",
+        colour: props.colour ?? "#94a3b8",
       });
       map.getCanvas().style.cursor = "pointer";
     };
-    const hideTooltip = () => { setTooltip(null); map.getCanvas().style.cursor = ""; };
+    const hideTooltip = () => {
+      setTooltip(null);
+      map.getCanvas().style.cursor = "";
+    };
 
-    map.on("mousemove", "map-fill", showTooltip);
+    map.on("mousemove", "map-fill", (e) => {
+      if (e.features?.length) showTooltip(e.point, e.features[0].properties ?? {});
+    });
     map.on("mouseleave", "map-fill", hideTooltip);
+    // Tap support: clicking a seat shows the tooltip, clicking empty map hides it.
+    map.on("click", (e) => {
+      const hits = map.queryRenderedFeatures(e.point, { layers: ["map-fill"] });
+      if (hits.length) showTooltip(e.point, hits[0].properties ?? {});
+      else hideTooltip();
+    });
   }
 
   return (
@@ -131,29 +113,61 @@ export default function ElectionsMap({ mapUrl, stateFilter, excludeStates, viewE
       className="relative overflow-hidden rounded-lg border border-otl-gray-200"
       style={{ height: 480 }}
     >
-      {ready && (
+      {geojson && (
         <Map
           ref={mapRef}
           mapboxAccessToken={mapboxToken}
-          initialViewState={{ bounds: MY_BOUNDS, fitBoundsOptions: { padding: 30 } }}
+          initialViewState={{ bounds, fitBoundsOptions: { padding: 30 } }}
           style={{ width: "100%", height: "100%" }}
           mapStyle="mapbox://styles/mapbox/light-v11"
+          projection="mercator"
           attributionControl={false}
+          // Desktop: let the page scroll over the map (zoom via buttons / double-click).
+          // Touch: cooperative mode so one finger scrolls the page, two fingers move the map.
+          scrollZoom={false}
+          cooperativeGestures={isCoarsePointer()}
           onLoad={handleLoad}
         >
+          <NavigationControl position="top-right" showCompass={false} />
           <AttributionControl compact={true} />
         </Map>
       )}
+      {legend.length > 0 && (
+        <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[60%] rounded-md bg-bg-dialog-active px-3 py-2 shadow-floating ring-1 ring-otl-gray-200">
+          <ul className="space-y-1">
+            {legend.map((item) => (
+              <li key={item.label} className="flex items-center gap-2 text-body-xs text-txt-black-700">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                  style={{ backgroundColor: item.colour }}
+                />
+                <span className="truncate">{item.label}</span>
+                <span className="ml-auto font-medium tabular-nums">{item.count}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {tooltip && (
         <div
-          className="pointer-events-none absolute z-50 rounded-md bg-bg-dialog-active px-3 py-2 text-body-sm shadow-floating ring-1 ring-otl-gray-200"
-          style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
+          className="pointer-events-none absolute z-50 min-w-40 rounded-lg border border-otl-gray-200 bg-bg-white px-3 py-2.5 text-body-sm shadow-floating"
+          style={{
+            left: tooltip.flipX ? tooltip.x - 12 : tooltip.x + 12,
+            top: tooltip.y - 8,
+            transform: tooltip.flipX ? "translateX(-100%)" : undefined,
+          }}
         >
-          <div className="font-medium text-txt-black-900">{tooltip.seat}</div>
-          <div className="text-txt-black-500">
-            {tooltip.coalition}
-            {tooltip.coalition && tooltip.party ? " · " : ""}
-            {tooltip.party}
+          <div className="font-semibold text-txt-black-900">{tooltip.seat}</div>
+          <div className="text-body-xs text-txt-black-500">{tooltip.state}</div>
+          <div className="mt-1.5 flex items-center gap-2 border-t border-otl-gray-200 pt-1.5">
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: tooltip.colour }}
+            />
+            <span className="font-medium text-txt-black-900">{tooltip.party}</span>
+            {tooltip.coalition && (
+              <span className="text-txt-black-500">{tooltip.coalition}</span>
+            )}
           </div>
         </div>
       )}
