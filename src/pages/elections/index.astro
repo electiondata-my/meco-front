@@ -1,6 +1,7 @@
 ---
 import ElectionsPage from "@src/components/Elections/ElectionsPage.astro";
 import { fetchJSON } from "@src/lib/api";
+import { buildTimeseries } from "@src/lib/elections";
 import type { ElectionParty } from "@src/components/Elections/ElectionOverviewTable";
 
 type ElectionEntry = { state: string; election: string; date: string };
@@ -34,4 +35,5 @@ const electionData = allElections["Malaysia"]?.parlimen?.[DEFAULT_ELECTION] ?? n
   seats={electionData?.by_seat ?? []}
   table={electionData?.by_party ?? []}
   datesRaw={datesRaw}
+  timeseries={buildTimeseries(allElections["Malaysia"]?.parlimen, DEFAULT_ELECTION)}
 />
