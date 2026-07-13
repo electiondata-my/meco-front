@@ -9,6 +9,7 @@ import LiveTurnoutChart from "./LiveTurnoutChart";
 import { getTranslations, t } from "@i18n/index";
 import { CountryAndStates, MALAYSIA, SEMENANJUNG, STATES } from "@src/lib/constants";
 import type { ElectionParty } from "./ElectionOverviewTable";
+import type { Timeseries } from "@src/lib/elections";
 
 type ElectionEntry = { state: string; election: string; date: string };
 
@@ -36,9 +37,10 @@ interface Props {
   seats: OverallSeat[];
   table: ElectionParty[];
   datesRaw: ElectionEntry[];
+  timeseries?: Timeseries;
 }
 
-const { stateCode, electionName, seats, table, datesRaw } = Astro.props;
+const { stateCode, electionName, seats, table, datesRaw, timeseries } = Astro.props;
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 const apiBase = import.meta.env.PUBLIC_API_URL_R2 ?? "";
@@ -711,9 +713,11 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
           <ElectionOverviewIsland
             client:load
             data={table}
-            translations={{ common: i18n.common ?? {} }}
+            translations={{ common: i18n.common ?? {}, elections: i18n.elections ?? {} }}
             pendingLabel={pendingLabel}
             seatsTotalOverride={seats.length}
+            timeseries={timeseries}
+            isMalay={isMalay}
           />
         </div>
       )}

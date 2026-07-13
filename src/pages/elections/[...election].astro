@@ -2,6 +2,7 @@
 import ElectionsPage from "@src/components/Elections/ElectionsPage.astro";
 import { fetchJSON } from "@src/lib/api";
 import { StateKeyByName } from "@src/lib/constants";
+import { buildTimeseries, type Timeseries } from "@src/lib/elections";
 import type { ElectionParty } from "@src/components/Elections/ElectionOverviewTable";
 
 type ElectionEntry = { state: string; election: string; date: string };
@@ -58,6 +59,7 @@ export async function getStaticPaths() {
             electionName: e.election,
             seats: electionData?.by_seat ?? [],
             table: electionData?.by_party ?? [],
+            timeseries: buildTimeseries(allElections[e.state]?.[type], e.election),
             datesRaw: entries,
           },
         },
@@ -65,12 +67,13 @@ export async function getStaticPaths() {
     });
 }
 
-const { stateCode, electionName, seats, table, datesRaw } = Astro.props as {
+const { stateCode, electionName, seats, table, datesRaw, timeseries } = Astro.props as {
   stateCode: string;
   electionName: string;
   seats: OverallSeat[];
   table: ElectionParty[];
   datesRaw: ElectionEntry[];
+  timeseries: Timeseries;
 };
 ---
 
@@ -80,4 +83,5 @@ const { stateCode, electionName, seats, table, datesRaw } = Astro.props as {
   seats={seats}
   table={table}
   datesRaw={datesRaw}
+  timeseries={timeseries}
 />
