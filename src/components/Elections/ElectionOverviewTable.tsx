@@ -416,7 +416,7 @@ export default function ElectionOverviewIsland({
   const pinnedEdition = timeseries?.editions.find((edition) => edition.election === timeseries.current);
   const groupingNote = (
     e("timeseries_note") ||
-    "Coalitions are as fixed as contested in {{election}} ({{year}}) to ensure comparability across elections."
+    "Coalitions are fixed as contested in {{election}} ({{year}}) to ensure comparability across elections."
   )
     .replace("{{election}}", electionName(pinnedEdition?.election ?? "", isMalay))
     .replace("{{year}}", pinnedEdition?.year ?? "");
