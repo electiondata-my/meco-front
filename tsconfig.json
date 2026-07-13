@@ -13,16 +13,15 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "baseUrl": "src",
     "paths": {
-      "@src/*": ["*"],
-      "@layouts/*": ["layouts/*"],
-      "@i18n/*": ["i18n/*"],
-      "@charts/*": ["components/Charts/*"],
-      "@components/*": ["components/ui/*"],
-      "@tools/*": ["components/tools/*"],
-      "@hooks/*": ["hooks/*"],
-      "@lib/*": ["lib/*"]
+      "@src/*": ["./src/*"],
+      "@layouts/*": ["./src/layouts/*"],
+      "@i18n/*": ["./src/i18n/*"],
+      "@charts/*": ["./src/components/Charts/*"],
+      "@components/*": ["./src/components/ui/*"],
+      "@tools/*": ["./src/components/tools/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@lib/*": ["./src/lib/*"]
     }
   },
   "include": ["src", "**/*.ts", "**/*.tsx"],
