@@ -151,6 +151,14 @@ function formatPreviewCell(
   return String(value);
 }
 
+// Integer-like values (e.g. DuckDB BIGINT/HUGEINT) sometimes arrive as wrapper
+// objects rather than a number or bigint. Detect those so they still group with
+// thousands separators instead of falling through to a raw String().
+function groupIntegerLike(value: unknown): string | null {
+  const str = String(value);
+  return /^-?\d+$/.test(str) ? BigInt(str).toLocaleString("en-GB") : null;
+}
+
 function formatResultCell(
   value: unknown,
   fieldType: string,
@@ -173,9 +181,10 @@ function formatResultCell(
       year: "numeric",
     });
   }
+  // Year columns show raw, never comma-separated — regardless of how the value is typed.
+  if (columnName?.toLowerCase().includes("year")) return String(value);
   if (typeof value === "bigint") return value.toLocaleString("en-GB");
   if (typeof value === "number") {
-    if (columnName?.toLowerCase().includes("year")) return String(value);
     if (ft.includes("float") || ft.includes("double") || ft.includes("decimal")) {
       const digits = precision ?? DEFAULT_FLOAT_PRECISION;
       return value.toLocaleString("en-GB", {
@@ -185,7 +194,7 @@ function formatResultCell(
     }
     return value.toLocaleString("en-GB");
   }
-  return String(value);
+  return groupIntegerLike(value) ?? String(value);
 }
 
 function isNumericType(fieldType: string, sample: unknown): boolean {

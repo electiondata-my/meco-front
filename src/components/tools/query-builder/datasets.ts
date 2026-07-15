@@ -7,17 +7,20 @@ export const DATASETS = {
   saluran_ballots_ge15: "https://lake.electiondata.my/results_saluran/ge15_ballots.parquet",
   saluran_ballots_ge14: "https://lake.electiondata.my/results_saluran/ge14_ballots.parquet",
   saluran_ballots_ge13: "https://lake.electiondata.my/results_saluran/ge13_ballots.parquet",
+  saluran_ballots_ge12: "https://lake.electiondata.my/results_saluran/ge12_ballots.parquet",
   saluran_ballots_nsn_se15: "https://lake.electiondata.my/results_saluran/nsn_se15_ballots.parquet",
   saluran_ballots_jhr_se15: "https://lake.electiondata.my/results_saluran/jhr_se15_ballots.parquet",
   saluran_stats_ge15: "https://lake.electiondata.my/results_saluran/ge15_stats.parquet",
   saluran_stats_ge14: "https://lake.electiondata.my/results_saluran/ge14_stats.parquet",
   saluran_stats_ge13: "https://lake.electiondata.my/results_saluran/ge13_stats.parquet",
+  saluran_stats_ge12: "https://lake.electiondata.my/results_saluran/ge12_stats.parquet",
   saluran_stats_nsn_se15: "https://lake.electiondata.my/results_saluran/nsn_se15_stats.parquet",
   saluran_stats_jhr_se15: "https://lake.electiondata.my/results_saluran/jhr_se15_stats.parquet",
   voter_roll_ge15: "https://lake.electiondata.my/voter_rolls/ge15_2022.parquet",
   voter_roll_ge14: "https://lake.electiondata.my/voter_rolls/ge14_2018.parquet",
   voter_roll_ge13: "https://lake.electiondata.my/voter_rolls/ge13_2013.parquet",
   voter_roll_ge12: "https://lake.electiondata.my/voter_rolls/ge12_2008.parquet",
+  voter_roll_nsn_se16: "https://lake.electiondata.my/voter_rolls/nsn_se16_2026.parquet",
   voter_roll_jhr_se16: "https://lake.electiondata.my/voter_rolls/jhr_se16_2026.parquet",
   voter_roll_nsn_se15: "https://lake.electiondata.my/voter_rolls/nsn_se15_2023.parquet",
   voter_roll_jhr_se15: "https://lake.electiondata.my/voter_rolls/jhr_se15_2022.parquet",
@@ -25,27 +28,38 @@ export const DATASETS = {
   voter_demographics_sabah: "https://lake.electiondata.my/seat_info/demographics_sabah.parquet",
 } as const;
 
-const ELECTION_OPTIONS = [
+// Elections with saluran-level data. JHR SE-16 + N9 SE-16 not available yet
+const SALURAN_ELECTION_OPTIONS = [
+  { label: "GE-15",     suffix: "ge15"      },
+  { label: "GE-14",     suffix: "ge14"      },
+  { label: "GE-13",     suffix: "ge13"      },
+  { label: "N9 SE-15",  suffix: "nsn_se15"  },
+  { label: "JHR SE-15", suffix: "jhr_se15"  },
+] as const;
+
+// Elections with a voter roll. Available separately from saluran data (usually first)
+const VOTER_ROLL_ELECTION_OPTIONS = [
   { label: "GE-15",     suffix: "ge15"      },
   { label: "GE-14",     suffix: "ge14"      },
   { label: "GE-13",     suffix: "ge13"      },
   { label: "GE-12",     suffix: "ge12"      },
+  { label: "N9 SE-16",  suffix: "nsn_se16"  },
   { label: "JHR SE-16", suffix: "jhr_se16"  },
   { label: "N9 SE-15",  suffix: "nsn_se15"  },
   { label: "JHR SE-15", suffix: "jhr_se15"  },
 ] as const;
 
-export const SALURAN_BALLOTS_OPTIONS = ELECTION_OPTIONS.map((o) => ({
+export const SALURAN_BALLOTS_OPTIONS = SALURAN_ELECTION_OPTIONS.map((o) => ({
   label: o.label,
   key: `saluran_ballots_${o.suffix}` as DatasetKey,
 }));
 
-export const SALURAN_STATS_OPTIONS = ELECTION_OPTIONS.map((o) => ({
+export const SALURAN_STATS_OPTIONS = SALURAN_ELECTION_OPTIONS.map((o) => ({
   label: o.label,
   key: `saluran_stats_${o.suffix}` as DatasetKey,
 }));
 
-export const VOTER_ROLL_OPTIONS = ELECTION_OPTIONS.map((o) => ({
+export const VOTER_ROLL_OPTIONS = VOTER_ROLL_ELECTION_OPTIONS.map((o) => ({
   label: o.label,
   key: `voter_roll_${o.suffix}` as DatasetKey,
 }));
@@ -71,17 +85,20 @@ export const DATASET_LABELS: Record<DatasetKey, string> = {
   saluran_ballots_ge15: "saluran_ballots_ge15",
   saluran_ballots_ge14: "saluran_ballots_ge14",
   saluran_ballots_ge13: "saluran_ballots_ge13",
+  saluran_ballots_ge12: "saluran_ballots_ge12",
   saluran_ballots_nsn_se15: "saluran_ballots_nsn_se15",
   saluran_ballots_jhr_se15: "saluran_ballots_jhr_se15",
   saluran_stats_ge15: "saluran_stats_ge15",
   saluran_stats_ge14: "saluran_stats_ge14",
   saluran_stats_ge13: "saluran_stats_ge13",
+  saluran_stats_ge12: "saluran_stats_ge12",
   saluran_stats_nsn_se15: "saluran_stats_nsn_se15",
   saluran_stats_jhr_se15: "saluran_stats_jhr_se15",
   voter_roll_ge15: "voter_roll_ge15",
   voter_roll_ge14: "voter_roll_ge14",
   voter_roll_ge13: "voter_roll_ge13",
   voter_roll_ge12: "voter_roll_ge12",
+  voter_roll_nsn_se16: "voter_roll_nsn_se16",
   voter_roll_jhr_se16: "voter_roll_jhr_se16",
   voter_roll_nsn_se15: "voter_roll_nsn_se15",
   voter_roll_jhr_se15: "voter_roll_jhr_se15",
@@ -103,17 +120,20 @@ export const DATASET_DESCRIPTIONS: Record<DatasetKey, string> = {
   saluran_ballots_ge15:     SALURAN_BALLOTS_DESC,
   saluran_ballots_ge14:     SALURAN_BALLOTS_DESC,
   saluran_ballots_ge13:     SALURAN_BALLOTS_DESC,
+  saluran_ballots_ge12:     SALURAN_BALLOTS_DESC,
   saluran_ballots_nsn_se15: SALURAN_BALLOTS_DESC,
   saluran_ballots_jhr_se15: SALURAN_BALLOTS_DESC,
   saluran_stats_ge15:       SALURAN_STATS_DESC,
   saluran_stats_ge14:       SALURAN_STATS_DESC,
   saluran_stats_ge13:       SALURAN_STATS_DESC,
+  saluran_stats_ge12:       SALURAN_STATS_DESC,
   saluran_stats_nsn_se15:   SALURAN_STATS_DESC,
   saluran_stats_jhr_se15:   SALURAN_STATS_DESC,
   voter_roll_ge15:          VOTER_ROLL_DESC,
   voter_roll_ge14:          VOTER_ROLL_DESC,
   voter_roll_ge13:          VOTER_ROLL_DESC,
   voter_roll_ge12:          VOTER_ROLL_DESC,
+  voter_roll_nsn_se16:      VOTER_ROLL_DESC,
   voter_roll_jhr_se16:      VOTER_ROLL_DESC,
   voter_roll_nsn_se15:      VOTER_ROLL_DESC,
   voter_roll_jhr_se15:      VOTER_ROLL_DESC,
@@ -130,6 +150,7 @@ export const LAZY_DATASETS = new Set<DatasetKey>([
   "voter_roll_ge14",
   "voter_roll_ge13",
   "voter_roll_ge12",
+  "voter_roll_nsn_se16",
   "voter_roll_jhr_se16",
   "voter_roll_nsn_se15",
   "voter_roll_jhr_se15",

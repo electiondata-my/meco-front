@@ -4,6 +4,7 @@ import SeatsMapbox from "./SeatsMapbox";
 import SeatElectionTable from "./SeatElectionTable";
 import SeatVoterDemographics from "./SeatVoterDemographics";
 import { getTranslations, t } from "@i18n/index";
+import { StateKeyByName } from "@src/lib/constants";
 
 type MapPlot = {
   zoom: number;
@@ -66,7 +67,10 @@ const seatDisplay = commaIdx >= 0 ? seatName.slice(0, commaIdx) : seatName;
 const stateDisplay = commaIdx >= 0 ? seatName.slice(commaIdx + 2) : "";
 
 const seatTypeParlimen = type === "parlimen";
-const dataAsOfKey = !seatTypeParlimen && slug.endsWith("-johor") ? "data_as_of_se16" : "data_as_of";
+// States whose DUN data is current as of the 16th state election (SE-16, 2026).
+const SE16_STATES = new Set(["jhr", "nsn"]);
+const stateKey = StateKeyByName[stateDisplay];
+const dataAsOfKey = !seatTypeParlimen && SE16_STATES.has(stateKey) ? "data_as_of_se16" : "data_as_of";
 const seatTypeLabel = seatTypeParlimen
   ? isMalay ? "Parlimen" : "Parliament"
   : "DUN";

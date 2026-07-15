@@ -92,6 +92,14 @@ function isYearColumn(columnName: string = ""): boolean {
   return columnName.toLowerCase().includes("year");
 }
 
+// Integer-like values (e.g. DuckDB BIGINT/HUGEINT) sometimes arrive as wrapper
+// objects rather than a number or bigint. Detect those so they still group with
+// thousands separators instead of falling through to a raw String().
+function groupIntegerLike(value: unknown): string | null {
+  const str = String(value);
+  return /^-?\d+$/.test(str) ? BigInt(str).toLocaleString("en-GB") : null;
+}
+
 function getColType(fieldType: string, sample: any): ColType {
   const ft = fieldType.toLowerCase();
   if (
@@ -165,7 +173,7 @@ function formatCell(
       maximumFractionDigits: dp,
     });
   }
-  return String(value);
+  return groupIntegerLike(value) ?? String(value);
 }
 
 function escapeCsvCell(value: string): string {
