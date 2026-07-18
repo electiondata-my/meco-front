@@ -539,8 +539,8 @@ export default function SeatElectionTable({
                                       : `${abs?.toLocaleString() ?? "—"} (${pctText(perc)})`}
                                   </span>
                                 </div>
-                                {(ratio != null || perc != null) && (
-                                  <div className="h-[5px] w-[245px] overflow-x-hidden rounded-full bg-bg-washed">
+                                <div className="h-[5px] w-[245px] overflow-x-hidden rounded-full bg-bg-washed">
+                                  {(ratio != null || perc != null) && (
                                     <div
                                       className="h-full overflow-hidden rounded-full bg-bg-black-900"
                                       style={{
@@ -550,8 +550,8 @@ export default function SeatElectionTable({
                                             : `${Math.min(perc as number, 100)}%`,
                                       }}
                                     />
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>

@@ -623,8 +623,8 @@ export default function CandidateElectionTable({
                                     : `${abs?.toLocaleString() ?? "—"} ${perc != null ? `(${perc.toFixed(1)}%)` : "(—)"}`}
                                 </span>
                               </div>
-                              {(ratio != null || perc != null) && (
-                                <div className="h-[5px] w-[245px] overflow-x-hidden rounded-full bg-bg-washed">
+                              <div className="h-[5px] w-[245px] overflow-x-hidden rounded-full bg-bg-washed">
+                                {(ratio != null || perc != null) && (
                                   <div
                                     className="h-full overflow-hidden rounded-full bg-bg-black-900"
                                     style={{
@@ -634,8 +634,8 @@ export default function CandidateElectionTable({
                                           : `${Math.min(perc as number, 100)}%`,
                                     }}
                                   />
-                                </div>
-                              )}
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
