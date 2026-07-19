@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { PartyFlag } from "@components/PartyFlag";
 
 type CandidateElection = {
   type: "parlimen" | "dun";
@@ -77,36 +78,6 @@ function formatElectionName(name: string, isMalay?: boolean): string {
   if (name.startsWith("SE-")) return name.replace(/^SE-/, "PRN-");
   if (name === "By-Election") return "PRK";
   return name;
-}
-
-function PartyFlag({ uid, party }: { uid?: string; party: string }) {
-  const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    if (imgRef.current?.complete) {
-      imgRef.current.naturalWidth === 0 ? setFailed(true) : setLoaded(true);
-    }
-  }, []);
-
-  return (
-    <div className="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
-      ?
-      {uid && !failed && (
-        <img
-          ref={imgRef}
-          src={`/static/images/parties/${uid}.png`}
-          alt={party}
-          width={32}
-          height={16}
-          className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
-          onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
-        />
-      )}
-    </div>
-  );
 }
 
 const monoCellClass = "font-['IBM_Plex_Mono','Roboto_Mono',monospace]";
@@ -328,7 +299,7 @@ export default function CandidateElectionTable({
               {/* Row 2: Party */}
               <div className="flex items-center gap-1.5 text-body-sm">
                 <span className="shrink-0 text-txt-black-500">{c("party_name") || "Party"}:</span>
-                <PartyFlag uid={e.party_uid} party={e.party} />
+                <PartyFlag uid={e.party_uid} name={e.party} />
                 <span className="text-txt-black-700">
                   {e.coalition && e.coalition !== "ALONE" ? `${e.party} (${e.coalition})` : e.party}
                 </span>
@@ -373,7 +344,7 @@ export default function CandidateElectionTable({
                   <td className="whitespace-nowrap px-4 py-2.5 text-txt-black-700">{e.seat}</td>
                   <td className="whitespace-nowrap px-4 py-2.5">
                     <div className="flex items-center gap-1.5">
-                      <PartyFlag uid={e.party_uid} party={e.party} />
+                      <PartyFlag uid={e.party_uid} name={e.party} />
                       <span>
                         {e.coalition && e.coalition !== "ALONE"
                           ? `${e.party} (${e.coalition})`
@@ -568,7 +539,7 @@ export default function CandidateElectionTable({
                                 </td>
                                 <td className={`px-3 py-3 ${regularBorderClass}`} style={highlightStyle}>
                                   <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
-                                    {b.party_uid && <PartyFlag uid={b.party_uid} party={b.party} />}
+                                    {b.party_uid && <PartyFlag uid={b.party_uid} name={b.party} />}
                                     <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
                                       {b.coalition && b.coalition !== "ALONE"
                                         ? `${b.party} (${b.coalition})`

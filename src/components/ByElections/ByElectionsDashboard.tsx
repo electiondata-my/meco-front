@@ -2,6 +2,7 @@ import { useData } from "@hooks/useData";
 import { useCache } from "@hooks/useCache";
 import BarPerc from "@charts/bar-perc";
 import LeftRightCard from "@components/LeftRightCard";
+import { PartyFlag } from "@components/PartyFlag";
 import {
   Drawer,
   DrawerContent,
@@ -316,7 +317,7 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
                               </div>
 
                               <div className="flex h-8 w-full items-center gap-1.5">
-                                <PartyLogo uid={_seat.party_uid} name={party} />
+                                <PartyFlag uid={_seat.party_uid} name={party} />
                                 <span className="max-w-full truncate font-medium">{`${name} `}</span>
                                 <span>{`(${party})`}</span>
                               </div>
@@ -455,41 +456,6 @@ const StateDropdown = ({
   );
 };
 
-const PartyLogo = ({ uid, name }: { uid: string; name: string }) => {
-  const [error, setError] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    if (imgRef.current?.complete) {
-      imgRef.current.naturalWidth === 0 ? setError(true) : setLoaded(true);
-    }
-  }, []);
-
-  if (error || !uid) {
-    return (
-      <span className="text-txt-black-400 flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs">
-        ?
-      </span>
-    );
-  }
-  return (
-    <span className="text-txt-black-400 relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs">
-      ?
-      <img
-        ref={imgRef}
-        src={`/static/images/parties/${uid}.png`}
-        alt={name}
-        width={32}
-        height={16}
-        className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
-        onLoad={() => setLoaded(true)}
-        onError={() => setError(true)}
-      />
-    </span>
-  );
-};
-
 // ─── Result panel header ──────────────────────────────────────────────────────
 
 const ResultHeader = ({
@@ -571,7 +537,7 @@ const ResultContent = ({
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:gap-2">
-                        <PartyLogo uid={row.party_uid ?? ""} name={row.party} />
+                        <PartyFlag uid={row.party_uid ?? ""} name={row.party} />
                         <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
                           {partyLabel}
                         </span>

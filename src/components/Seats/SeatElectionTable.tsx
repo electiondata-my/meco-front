@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { PartyFlag } from "@components/PartyFlag";
 
 type ElectionRow = {
   election_name: string;
@@ -85,36 +86,6 @@ function formatDate(date: string): string {
     month: "short",
     year: "numeric",
   });
-}
-
-function PartyFlag({ uid, party }: { uid?: string; party: string }) {
-  const [failed, setFailed] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    if (imgRef.current?.complete) {
-      imgRef.current.naturalWidth === 0 ? setFailed(true) : setLoaded(true);
-    }
-  }, []);
-
-  return (
-    <div className="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
-      ?
-      {uid && !failed && (
-        <img
-          ref={imgRef}
-          src={`/static/images/parties/${uid}.png`}
-          alt={party}
-          width={32}
-          height={16}
-          className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
-          onLoad={() => setLoaded(true)}
-          onError={() => setFailed(true)}
-        />
-      )}
-    </div>
-  );
 }
 
 function BarCell({ value, total = 100 }: { value: number | null; total?: number }) {
@@ -225,6 +196,15 @@ export default function SeatElectionTable({
     [apiBase],
   );
 
+  useEffect(() => {
+    if (!modal.open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setModal((prev) => ({ ...prev, open: false }));
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [modal.open]);
+
   const navigateModal = useCallback(
     (dir: -1 | 1) => {
       const next = allElections[modal.currentIndex + dir];
@@ -265,7 +245,7 @@ export default function SeatElectionTable({
                 </button>
               </div>
               <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
-                <PartyFlag uid={row.party_uid} party={row.party} />
+                <PartyFlag uid={row.party_uid} name={row.party} />
                 <span className="flex min-w-0 items-baseline gap-1.5">
                   <span className="min-w-0 truncate font-medium text-txt-black-900" title={row.name}>{row.name}</span>
                   {row.party && (
@@ -341,7 +321,7 @@ export default function SeatElectionTable({
                   </td>
                   <td className="whitespace-nowrap px-2 py-[11px] lg:px-3">
                     <div className="flex min-w-0 items-center gap-2">
-                      <PartyFlag uid={row.party_uid} party={row.party} />
+                      <PartyFlag uid={row.party_uid} name={row.party} />
                       <span>
                         {row.coalition && row.coalition !== "ALONE"
                           ? `${row.party} (${row.coalition})`
@@ -491,7 +471,7 @@ export default function SeatElectionTable({
                                   </td>
                                   <td className="px-3 py-3">
                                     <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:items-center sm:gap-1.5">
-                                      <PartyFlag uid={entry.party_uid} party={entry.party} />
+                                      <PartyFlag uid={entry.party_uid} name={entry.party} />
                                       <span className="whitespace-nowrap text-center text-xs sm:text-left sm:text-body-sm">
                                         {entry.coalition && entry.coalition !== "ALONE"
                                           ? `${entry.party} (${entry.coalition})`

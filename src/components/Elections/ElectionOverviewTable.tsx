@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ElectionTimeseriesTable, electionName, type TimeseriesVariable } from "./ElectionTimeseriesTable";
 import type { Timeseries } from "@src/lib/elections";
+import { PartyFlag } from "@components/PartyFlag";
 
 export type ElectionParty = {
   party: string;
@@ -42,41 +43,6 @@ export function Bar({ value, size = "w-[100px] h-[5px]" }: { value?: number | nu
         style={{ width: `${Math.min(value ?? 0, 100)}%` }}
       />
     </div>
-  );
-}
-
-export function OverviewLogo({ uid, name, folder }: { uid?: string; name: string; folder: "parties" | "coalitions" }) {
-  const [err, setErr] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    if (imgRef.current?.complete) {
-      imgRef.current.naturalWidth === 0 ? setErr(true) : setLoaded(true);
-    }
-  }, []);
-
-  if (!uid || err) {
-    return (
-      <span className="flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
-        ?
-      </span>
-    );
-  }
-  return (
-    <span className="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
-      ?
-      <img
-        ref={imgRef}
-        src={`/static/images/${folder}/${uid}.png`}
-        alt={name}
-        width={32}
-        height={16}
-        className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
-        onLoad={() => setLoaded(true)}
-        onError={() => setErr(true)}
-      />
-    </span>
   );
 }
 
@@ -304,7 +270,7 @@ export function ElectionOverviewTable({
                 >
                   <td className="sticky left-0 z-10 whitespace-nowrap bg-bg-washed py-[11px] pl-2 pr-3 text-left font-semibold group-hover:bg-bg-black-50">
                     <div className="flex items-center gap-1.5">
-                      <OverviewLogo uid={group.coalition_uid} name={group.coalition} folder="coalitions" />
+                      <PartyFlag uid={group.coalition_uid} name={group.coalition} folder="coalitions" />
                       <span>{group.coalition}</span>
                       <svg
                         className="h-4 w-4 text-txt-black-500"
@@ -347,7 +313,7 @@ export function ElectionOverviewTable({
                   className={`sticky left-0 z-10 whitespace-nowrap bg-bg-white py-[11px] pr-3 text-left group-hover:bg-bg-black-50 ${isChild ? "pl-8" : "pl-2"}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <OverviewLogo uid={party.party_uid} name={party.party} folder="parties" />
+                    <PartyFlag uid={party.party_uid} name={party.party} folder="parties" />
                     <span>{party.party}</span>
                   </div>
                 </td>

@@ -73,6 +73,15 @@ const SeatsMapbox: FC<Props> = ({
   } | null>(null);
   const [lineageOpen, setLineageOpen] = useState(false);
 
+  useEffect(() => {
+    if (!lineageOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLineageOpen(false);
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [lineageOpen]);
+
   const [mapPlot, setMapPlot] = useState(initialMapPlot);
   const [seatType, setSeatType] = useState(initialSeatType);
   const [lineage, setLineage] = useState(initialLineage);

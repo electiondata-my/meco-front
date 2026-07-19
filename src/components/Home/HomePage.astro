@@ -428,11 +428,13 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
             ? "border-blue-400 bg-blue-50/60 text-blue-600"
             : "border-red-400 bg-red-50/60 text-red-600";
           const pillText = o.partyType === "coalition" ? "Coalition" : "Party";
-          const fallback = `this.replaceWith(Object.assign(document.createElement('div'),{className:'flex h-[18px] w-[28px] items-center justify-center rounded-sm border border-otl-gray-200 bg-bg-black-50 text-xs text-txt-black-400',textContent:'?'}))`;
           return `<li class="flex cursor-pointer select-none items-center gap-2 px-3 py-2 text-sm text-txt-black-700 hover:bg-bg-black-50" data-value="${esc(o.value)}">
-            <div class="flex h-[18px] w-7 shrink-0 items-center justify-center">
-              <img src="/static/images/${folder}/${esc(o.imgKey)}.png" alt="" class="max-h-[18px] max-w-[28px] border border-otl-gray-200 object-contain" onerror="${fallback}" />
-            </div>
+            <span class="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
+              ?
+              <img src="/static/images/${folder}/${esc(o.imgKey)}.png" alt="" width="32" height="16"
+                   class="absolute inset-0 h-full w-full object-contain opacity-0"
+                   onload="this.style.opacity='1'" onerror="this.remove()" />
+            </span>
             <span class="grow truncate">${esc(o.label)}</span>
             <span class="ml-auto shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${pillCls}">${pillText}</span>
           </li>`;

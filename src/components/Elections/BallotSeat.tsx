@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BarPerc from "@charts/bar-perc";
 import LeftRightCard from "@components/LeftRightCard";
+import { PartyFlag } from "@components/PartyFlag";
 import {
   Drawer,
   DrawerClose,
@@ -428,13 +429,13 @@ export default function BallotSeat({
                             {seat.name ? (
                               <>
                                 {seat.coalition && seat.coalition !== "ALONE" ? (
-                                  <PartyLogo
+                                  <PartyFlag
                                     uid={seat.coalition_uid ?? ""}
                                     name={seat.coalition}
-                                    dir="coalitions"
+                                    folder="coalitions"
                                   />
                                 ) : (
-                                  <PartyLogo
+                                  <PartyFlag
                                     uid={seat.party_uid ?? ""}
                                     name={party}
                                   />
@@ -604,49 +605,6 @@ const InlineDropdown = ({
   );
 };
 
-const PartyLogo = ({
-  uid,
-  name,
-  dir = "parties",
-}: {
-  uid: string;
-  name: string;
-  dir?: "parties" | "coalitions";
-}) => {
-  const [error, setError] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    if (imgRef.current?.complete) {
-      imgRef.current.naturalWidth === 0 ? setError(true) : setLoaded(true);
-    }
-  }, []);
-
-  if (error || !uid) {
-    return (
-      <span className="text-txt-black-400 flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs">
-        ?
-      </span>
-    );
-  }
-  return (
-    <span className="text-txt-black-400 relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs">
-      ?
-      <img
-        ref={imgRef}
-        src={`/static/images/${dir}/${uid}.png`}
-        alt={name}
-        width={32}
-        height={16}
-        className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
-        onLoad={() => setLoaded(true)}
-        onError={() => setError(true)}
-      />
-    </span>
-  );
-};
-
 const ResultHeader = ({
   seat,
   electionLabel,
@@ -752,13 +710,13 @@ const ResultContent = ({
                     <td className="px-3 py-3">
                       <div className="flex flex-col items-center gap-1 whitespace-nowrap sm:flex-row sm:gap-2">
                         {inCoalition ? (
-                          <PartyLogo
+                          <PartyFlag
                             uid={row.coalition_uid ?? ""}
                             name={row.coalition ?? ""}
-                            dir="coalitions"
+                            folder="coalitions"
                           />
                         ) : (
-                          <PartyLogo
+                          <PartyFlag
                             uid={row.party_uid ?? ""}
                             name={row.party}
                           />

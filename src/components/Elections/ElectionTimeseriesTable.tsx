@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Bar, OverviewLogo } from "./ElectionOverviewTable";
+import { Bar } from "./ElectionOverviewTable";
+import { PartyFlag } from "@components/PartyFlag";
 import type { TimeseriesEdition, TimeseriesParty } from "@src/lib/elections";
 
 export type TimeseriesVariable = "seats_won" | "votes" | "seats_contested";
@@ -271,7 +272,7 @@ export function ElectionTimeseriesTable({
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <OverviewLogo uid={row.uid} name={row.name} folder={isCoalition ? "coalitions" : "parties"} />
+                    <PartyFlag uid={row.uid} name={row.name} folder={isCoalition ? "coalitions" : "parties"} />
                     <span>{row.name}</span>
                     {isCoalition && (
                       <svg className="h-4 w-4 text-txt-black-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ElectionOverviewTable, OverviewLogo, Bar, type ElectionParty } from "@src/components/Elections/ElectionOverviewTable";
+import { ElectionOverviewTable, Bar, type ElectionParty } from "@src/components/Elections/ElectionOverviewTable";
+import { PartyFlag } from "@components/PartyFlag";
 
 type PartyElection = {
   party_type: string;
@@ -76,38 +77,12 @@ const monoCellClass = "font-['IBM_Plex_Mono','Roboto_Mono',monospace]";
 const monoNumberClass = `${monoCellClass} tabular-nums`;
 
 function CoalitionCell({ coalition, uid }: { coalition?: string; uid?: string }) {
-  const [err, setErr] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  useEffect(() => {
-    if (imgRef.current?.complete) {
-      imgRef.current.naturalWidth === 0 ? setErr(true) : setLoaded(true);
-    }
-  }, []);
-
   if (!coalition || coalition === "ALONE") {
     return <span className="font-light text-txt-black-400">&nbsp;—</span>;
   }
   return (
     <div className="flex items-center gap-1.5">
-      {uid && !err ? (
-        <div className="relative flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">
-          ?
-          <img
-            ref={imgRef}
-            src={`/static/images/coalitions/${uid}.png`}
-            alt={coalition}
-            width={32}
-            height={16}
-            className={`absolute inset-0 h-full w-full object-contain ${loaded ? "opacity-100" : "opacity-0"}`}
-            onLoad={() => setLoaded(true)}
-            onError={() => setErr(true)}
-          />
-        </div>
-      ) : (
-        <span className="flex h-4 w-8 shrink-0 items-center justify-center outline outline-1 outline-otl-gray-200 text-xs text-txt-black-400">?</span>
-      )}
+      <PartyFlag uid={uid} name={coalition} folder="coalitions" />
       <span>{coalition}</span>
     </div>
   );
@@ -286,7 +261,7 @@ export default function PartyElectionTable({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-heading-2xs font-bold">
           <div className="flex items-center gap-2">
-            <OverviewLogo uid={partyUid} name={partyName} folder={partyFolder} />
+            <PartyFlag uid={partyUid} name={partyName} folder={partyFolder} />
             <span>
               <strong>{partyName}'s history</strong>
               {" in "}
@@ -366,7 +341,7 @@ export default function PartyElectionTable({
                         <>
                           <span className="shrink-0 text-txt-black-500" aria-hidden="true">&bull;</span>
                           <div className="flex items-center gap-1.5">
-                            <OverviewLogo uid={e.known_as_uid} name={e.known_as} folder={partyFolder} />
+                            <PartyFlag uid={e.known_as_uid} name={e.known_as} folder={partyFolder} />
                             <span>{e.known_as}</span>
                           </div>
                         </>
@@ -436,7 +411,7 @@ export default function PartyElectionTable({
                         <td className="whitespace-nowrap px-4 py-[11px]">
                           {e.known_as ? (
                             <div className="flex items-center gap-1.5">
-                              <OverviewLogo uid={e.known_as_uid} name={e.known_as} folder={partyFolder} />
+                              <PartyFlag uid={e.known_as_uid} name={e.known_as} folder={partyFolder} />
                               <span>{e.known_as}</span>
                             </div>
                           ) : (
