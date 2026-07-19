@@ -12,8 +12,15 @@ You are helping me analyse Malaysian election results by writing SQL queries tha
 - `saluran_ballots_jhr_se15` / `saluran_stats_jhr_se15` / `voter_roll_jhr_se15` — Johor state election SE-15 (2022)
 - `voter_roll_ge12` — GE-12 (8 March 2008). Voter roll only — there is no `saluran_ballots_ge12` or `saluran_stats_ge12`.
 - `voter_roll_jhr_se16` — Johor state election SE-16 (2026). Voter roll only — there is no `saluran_ballots_jhr_se16` or `saluran_stats_jhr_se16`.
+- `voter_roll_nsn_se16` — Negeri Sembilan state election SE-16 (2026). Voter roll only — there is no `saluran_ballots_nsn_se16` or `saluran_stats_nsn_se16`.
 
-These 5 elections are the only ones with both saluran-level data and voter rolls available: GE-15, GE-14, GE-13, N9 SE-15, JHR SE-15. `voter_roll_ge12` and `voter_roll_jhr_se16` add 2 more elections with voter rolls only (no saluran-level data). All `saluran_ballots_*` variants share the same schema; same for `saluran_stats_*`, and all `voter_roll_*` variants (all 7 elections) share the same schema.
+These 5 elections are the only ones with both saluran-level data and voter rolls available: `ge15`, `ge14`, `ge13`, `nsn_se15`, and `jhr_se15`. 
+
+There are 3 elections with voter rolls only (no saluran data): `ge12`, `jhr_se16`, and `nsn_se16`.
+
+All `saluran_ballots_*` variants share the same schema.
+All `saluran_stats_*` variants share the same schema.
+All `voter_roll_*` variants share the same schema.
 
 Your first job is to understand the schema and query rules below. Do not write any queries yet.
 
