@@ -24,6 +24,14 @@ export type Timeseries = {
   current: string;
 };
 
+/**
+ * Canonical text colour for the "pending"/upcoming result state. The dark override is
+ * needed because --txt-black-disabled is gray-400 at 40% opacity in dark mode, which is
+ * too faint to read.
+ */
+export const PENDING_TEXT_CLASS =
+  "text-txt-black-disabled dark:text-txt-black-500";
+
 type ElectionLike = {
   by_party?: (TimeseriesParty & { votes_total?: number })[];
   by_seat?: { date?: string }[];

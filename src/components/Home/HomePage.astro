@@ -7,6 +7,24 @@ import { StateKeyByName, STATE_ORDER } from "@src/lib/constants";
 const locale = Astro.currentLocale ?? "en-GB";
 const isMalay = locale.startsWith("ms");
 
+/** Prefixes an internal href with the locale, matching the helper in Layout/index.astro. */
+const lp = (href: string) => (isMalay ? "/ms-MY" + href : href);
+
+/** Top-level sections with a counterpart under src/pages/ms-MY/. Anything else — /openapi,
+ *  /query-builder, /console — is English-only and must not be prefixed. */
+const LOCALISED_SECTIONS = new Set([
+  "about", "byelections", "candidates", "coalitions", "data-catalogue",
+  "elections", "parties", "redelineation", "research", "seats", "site-metrics",
+]);
+
+/** Localises a URL from the remote /latest.json feed, which may be external or point at
+ *  an English-only section. */
+const lpFeed = (url?: string) => {
+  if (!url?.startsWith("/")) return url;
+  const section = url.split(/[/?#]/)[1] ?? "";
+  return LOCALISED_SECTIONS.has(section) ? lp(url) : url;
+};
+
 type SeatOption   = { seat?: string; seat_name?: string; slug: string; type: "parlimen" | "dun" };
 type CandidateOpt = { name: string; slug: string; c: string; w: string; l: string };
 type PartyOpt     = { uid: string; maps_to: string; acronym: string; name_en: string; name_bm: string; type: string };
@@ -132,7 +150,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
         <a href="/openapi" class="flex items-center gap-1.5 rounded-md bg-bg-black-900 px-4 py-2 text-sm font-medium text-txt-white no-underline transition hover:bg-bg-black-700">
           {h("hero.api_docs") || "API Docs"}
         </a>
-        <a href="/data-catalogue" class="flex items-center gap-1.5 rounded-md border border-otl-gray-300 bg-bg-white px-4 py-2 text-sm font-medium text-txt-black-900 no-underline transition hover:border-otl-gray-400 hover:bg-bg-black-50">
+        <a href={lp("/data-catalogue")} class="flex items-center gap-1.5 rounded-md border border-otl-gray-300 bg-bg-white px-4 py-2 text-sm font-medium text-txt-black-900 no-underline transition hover:border-otl-gray-400 hover:bg-bg-black-50">
           {h("hero.data_catalogue") || "Data Catalogue"}
         </a>
       </div>
@@ -245,7 +263,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
         <div class="grid w-full max-w-[1000px] grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-8">
           {latest.map((item, idx) => (
             <a
-              href={item.url}
+              href={lpFeed(item.url)}
               target={item.url?.startsWith("/") ? undefined : "_blank"}
               rel={item.url?.startsWith("/") ? undefined : "noopener noreferrer"}
               class="group flex min-w-0 flex-col overflow-hidden rounded-lg border bg-bg-dialog no-underline hover:border-bg-danger-200 hover:ring-[3px] hover:ring-fr-danger dark:border-otl-gray-200"
@@ -282,7 +300,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
       <h2 class="text-center font-poppins text-2xl font-semibold">{h("explore.title") || "Explore"}</h2>
       <div class="grid w-full max-w-[1000px] divide-y divide-otl-gray-200 lg:grid-cols-3 lg:gap-x-8 lg:gap-y-4 lg:divide-y-0">
         {exploreKeys.map(key => (
-          <a href={exploreHrefs[key]} class="group flex flex-row items-center gap-4 py-3 no-underline lg:flex-col lg:items-center lg:rounded-lg lg:bg-bg-white lg:p-4 lg:text-center">
+          <a href={lp(exploreHrefs[key])} class="group flex flex-row items-center gap-4 py-3 no-underline lg:flex-col lg:items-center lg:rounded-lg lg:bg-bg-white lg:p-4 lg:text-center">
             <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-bg-danger-100 lg:size-[54px]">
               <svg class="size-5 text-txt-danger lg:size-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                 {key === "seats"         && <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />}
@@ -317,7 +335,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
             <h3 class="text-body-lg font-semibold">{h("trust.research.title")}</h3>
             <p class="text-sm leading-5 text-txt-black-500">{h("trust.research.description")}</p>
           </div>
-          <a href="/research" class="flex items-center gap-1 text-sm font-medium text-txt-danger no-underline hover:underline">
+          <a href={lp("/research")} class="flex items-center gap-1 text-sm font-medium text-txt-danger no-underline hover:underline">
             {h("trust.research.link") || "View research"}
             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
           </a>
@@ -330,7 +348,7 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
             <h3 class="text-body-lg font-semibold">{h("trust.neutral.title")}</h3>
             <p class="text-sm leading-5 text-txt-black-500">{h("trust.neutral.description")}</p>
           </div>
-          <a href="/about" class="flex items-center gap-1 text-sm font-medium text-txt-danger no-underline hover:underline">
+          <a href={lp("/about")} class="flex items-center gap-1 text-sm font-medium text-txt-danger no-underline hover:underline">
             {h("trust.neutral.link") || "Learn more"}
             <svg class="size-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
           </a>
@@ -392,15 +410,18 @@ const tbHost  = import.meta.env.PUBLIC_API_URL_TB;
     let selected = "";
     let activeIdx = -1;
 
+    // All four targets have an ms-MY counterpart, so the prefix applies unconditionally.
+    const localePrefix = window.location.pathname.startsWith("/ms-MY") ? "/ms-MY" : "";
+
     function href(val: string) {
       if (type === "party") {
         const opt = allOptions.find(o => o.value === val);
         const section = opt?.partyType === "coalition" ? "coalitions" : "parties";
-        return `/${section}/${val}/mys`;
+        return `${localePrefix}/${section}/${val}/mys`;
       }
-      if (type === "candidate") return `/candidates/${val}`;
-      if (type === "election")  return `/elections/${val}`;
-      return `/seats/${val}`;
+      if (type === "candidate") return `${localePrefix}/candidates/${val}`;
+      if (type === "election")  return `${localePrefix}/elections/${val}`;
+      return `${localePrefix}/seats/${val}`;
     }
 
     list.addEventListener("mousedown", (e: MouseEvent) => {

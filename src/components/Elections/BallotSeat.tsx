@@ -10,6 +10,7 @@ import {
   DrawerTrigger,
 } from "@components/Drawer";
 import { clx, numFormat, toDate } from "@lib/helpers";
+import { PENDING_TEXT_CLASS } from "@lib/elections";
 import { ArrowsPointingOutIcon, ClockIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { matchSorter } from "match-sorter";
@@ -447,8 +448,12 @@ export default function BallotSeat({
                               </>
                             ) : (
                               <>
-                                <ClockIcon className="h-4 w-4 shrink-0 text-txt-black-400" />
-                                <span className="text-txt-black-400">{c("pending") || "Pending"}</span>
+                                <ClockIcon
+                                  className={clx("h-4 w-4 shrink-0", PENDING_TEXT_CLASS)}
+                                />
+                                <span className={PENDING_TEXT_CLASS}>
+                                  {c("pending") || "Pending"}
+                                </span>
                               </>
                             )}
                           </div>
@@ -486,6 +491,8 @@ export default function BallotSeat({
                         seat={selectedSeatObj}
                         electionLabel={electionLabel}
                         locale={locale}
+                        pending={isPendingBallot(result.data)}
+                        c={c}
                       />
                     )}
                     <DrawerClose>
@@ -511,6 +518,8 @@ export default function BallotSeat({
                     seat={selectedSeatObj}
                     electionLabel={electionLabel}
                     locale={locale}
+                    pending={isPendingBallot(result.data)}
+                    c={c}
                   />
                   <ResultContent
                     data={result.data}
@@ -605,14 +614,21 @@ const InlineDropdown = ({
   );
 };
 
+const isPendingBallot = (data?: BallotResult[]) =>
+  !!data && data.length > 1 && data.every((row) => !row.votes);
+
 const ResultHeader = ({
   seat,
   electionLabel,
   locale,
+  pending,
+  c,
 }: {
   seat: OverallSeat;
   electionLabel: string;
   locale: string;
+  pending: boolean;
+  c: (key: string) => string;
 }) => {
   const [area, seatState] = seat.seat.split(",");
   return (
@@ -625,6 +641,22 @@ const ResultHeader = ({
         <span className="text-txt-black-500">
           {toDate(seat.date, "dd MMM yyyy", locale)}
         </span>
+        {pending && (
+          <>
+            <span className="text-txt-black-500" aria-hidden="true">
+              &middot;
+            </span>
+            <span
+              className={clx(
+                "flex items-center gap-1 font-normal",
+                PENDING_TEXT_CLASS,
+              )}
+            >
+              {(c("pending") || "Pending").toUpperCase()}
+              <ClockIcon className="h-4 w-4 shrink-0" />
+            </span>
+          </>
+        )}
       </div>
       <div className="flex flex-wrap items-baseline gap-x-2 text-body-md">
         <span className="font-semibold">
@@ -702,7 +734,7 @@ const ResultContent = ({
                     <td
                       className={clx(
                         "min-w-0 break-words py-3 pr-3 text-left",
-                        index === 0 && "font-medium",
+                        index === 0 && !isPendingBallot(data) && "font-medium",
                       )}
                     >
                       {row.name}

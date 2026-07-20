@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { PartyFlag } from "@components/PartyFlag";
+import { PENDING_TEXT_CLASS } from "@lib/elections";
 
 type ElectionRow = {
   election_name: string;
@@ -401,7 +402,7 @@ export default function SeatElectionTable({
                         {modal.ballot.length > 1 && modal.ballot.every((b) => b.votes === 0) && (
                           <>
                             <span className="text-txt-black-500" aria-hidden="true">&middot;</span>
-                            <span className="flex items-center gap-1 font-normal text-txt-black-disabled">
+                            <span className={`flex items-center gap-1 font-normal ${PENDING_TEXT_CLASS}`}>
                               {(c("pending") || "Pending").toUpperCase()}
                               <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h3.25a.75.75 0 000-1.5H10.75V5z" clipRule="evenodd" />

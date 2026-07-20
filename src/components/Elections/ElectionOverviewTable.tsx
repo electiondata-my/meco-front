@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ElectionTimeseriesTable, electionName, type TimeseriesVariable } from "./ElectionTimeseriesTable";
-import type { Timeseries } from "@src/lib/elections";
+import { PENDING_TEXT_CLASS, type Timeseries } from "@src/lib/elections";
 import { PartyFlag } from "@components/PartyFlag";
 
 export type ElectionParty = {
@@ -245,7 +245,7 @@ export function ElectionOverviewTable({
               <td className="sticky left-0 z-10 whitespace-nowrap bg-bg-white py-[11px] pl-2 pr-3 text-left group-hover:bg-bg-black-50">
                 <div className="flex items-center gap-1.5">
                   <span className="h-4 w-8 shrink-0" aria-hidden="true" />
-                  <span className="italic text-txt-black-500">{pendingLabel}</span>
+                  <span className={`italic ${PENDING_TEXT_CLASS}`}>{pendingLabel}</span>
                 </div>
               </td>
               <OverviewNumbers

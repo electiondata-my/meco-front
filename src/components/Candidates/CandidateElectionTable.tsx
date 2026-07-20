@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { PartyFlag } from "@components/PartyFlag";
+import { PENDING_TEXT_CLASS } from "@lib/elections";
 
 type CandidateElection = {
   type: "parlimen" | "dun";
@@ -110,13 +111,13 @@ function PendingCircle({ className }: { className: string }) {
 
 function resultColor(result: string): string {
   if (result.startsWith("won")) return "text-txt-success";
-  if (result === "pending") return "text-txt-black-disabled dark:text-txt-black-500";
+  if (result === "pending") return PENDING_TEXT_CLASS;
   return "text-txt-danger";
 }
 
 function ResultIcon2({ result }: { result: string }) {
   if (result.startsWith("won")) return <WonCircle className="h-5 w-5 shrink-0 text-txt-success" />;
-  if (result === "pending") return <PendingCircle className="h-5 w-5 shrink-0 text-txt-black-disabled dark:text-txt-black-500" />;
+  if (result === "pending") return <PendingCircle className={`h-5 w-5 shrink-0 ${PENDING_TEXT_CLASS}`} />;
   return <LostCircle className="h-5 w-5 shrink-0 text-txt-danger" />;
 }
 
