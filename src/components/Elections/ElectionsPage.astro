@@ -209,9 +209,10 @@ const titleCaseSectionTitle = sectionTitle.replace(/\p{L}[\p{L}'-]*/gu, (word) =
 // Title format: "GE-15 (Malaysia) | ElectionData.MY"
 const pageTitle = `${electionDisplay} (${stateName}) | ElectionData.MY`;
 
-// Johor SE-16 results are still being announced — surface the undeclared seats as a
-// row in the overview table. The row self-hides once every seat is called.
-const pendingLabel = stateCode === "jhr" && electionName === "SE-16" ? "TBC" : undefined;
+// Surface undeclared seats as a row in the overview table. The row self-hides once every
+// seat is called (ElectionOverviewTable gates on seatsPending > 0), so this is safe on
+// completed elections. Intentionally untranslated — "TBC" has no Malay equivalent.
+const pendingLabel = "TBC";
 
 // Live voter turnout section (Johor SE-16 only).
 // Disabled: SE-16 polling has closed, awaiting results. To re-enable next election:
