@@ -14,6 +14,7 @@ interface Props {
   data: TurnoutData;
   se15Annotation: string;
   ge15Annotation: string;
+  se16Annotation: string;
   forecastPrefix: string;
 }
 
@@ -56,6 +57,7 @@ export default function LiveTurnoutChart({
   data,
   se15Annotation,
   ge15Annotation,
+  se16Annotation,
   forecastPrefix,
 }: Props) {
   const [isMobile, setIsMobile] = useState(false);
@@ -191,7 +193,7 @@ export default function LiveTurnoutChart({
   const tooltipName: Record<string, string> = {
     se15: se15Annotation,
     ge15: ge15Annotation,
-    se16: forecastPrefix,
+    se16: se16Annotation,
     se16_forecast: forecastPrefix,
   };
 

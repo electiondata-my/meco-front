@@ -214,13 +214,13 @@ const pageTitle = `${electionDisplay} (${stateName}) | ElectionData.MY`;
 // completed elections. Intentionally untranslated — "TBC" has no Malay equivalent.
 const pendingLabel = "TBC";
 
-// Live voter turnout section (Johor SE-16 only).
-// Disabled: SE-16 polling has closed, awaiting results. To re-enable next election:
-//   const showLiveTurnout = stateCode === "<state>" && electionName === "<election>";
-const showLiveTurnout = false;
-const liveTurnoutUrl = `${apiBase}/elections/live_turnout_jhr_se16.json`;
-const se15Annotation = isMalay ? "PRN-15 (BN mng)" : "SE-15 (BN win)";
-const ge15Annotation = isMalay ? "PRU-15 (PH mng)" : "GE-15 (PH win)";
+// Live voter turnout section (Negeri Sembilan SE-16 only).
+// To disable once polling closes: set showLiveTurnout = false.
+const showLiveTurnout = stateCode === "nsn" && electionName === "SE-16";
+const liveTurnoutUrl = `${apiBase}/elections/live_turnout_nsn_se16.json`;
+const se15Annotation = isMalay ? "PRN-15" : "SE-15";
+const ge15Annotation = isMalay ? "PRU-15" : "GE-15";
+const se16Annotation = isMalay ? "PRN-16" : "SE-16";
 const forecastPrefix = isMalay ? "PRN-16 (unjuran)" : "SE-16 (forecast)";
 const asOfPrefix = isMalay ? "setakat" : "as of";
 
@@ -245,19 +245,23 @@ const lastIdx = (arr: (number | null)[]) => {
   for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return i;
   return -1;
 };
+// Before polls open the only se16 reading is the trivial 0% at the first hour, so an hourly
+// stamp would be misleading — fall back to the build date until real readings land.
 let asOfLabel = "";
 if (liveTurnout) {
   const idx = lastIdx(liveTurnout.se16);
-  if (idx >= 0) {
-    const time = liveTurnout.time[idx];
-    asOfLabel = `(${asOfPrefix} ${time})`;
+  if (idx > 0) {
+    asOfLabel = `(${asOfPrefix} ${liveTurnout.time[idx]})`;
+  } else if (idx === 0) {
+    const date = new Date().toLocaleDateString(isMalay ? "ms-MY" : "en-GB", { day: "numeric", month: "short" });
+    asOfLabel = `(${asOfPrefix} ${date})`;
   }
 }
 const liveTurnoutSeries = liveTurnout
   ? [
       { label: ge15Annotation, values: liveTurnout.ge15 },
       { label: se15Annotation, values: liveTurnout.se15 },
-      { label: "SE-16", values: liveTurnout.se16 },
+      { label: se16Annotation, values: liveTurnout.se16 },
       { label: forecastPrefix, values: liveTurnout.se16_forecast },
     ]
   : [];
@@ -635,7 +639,7 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
   <div class="mx-auto flex w-full flex-col px-4.5 pb-16 md:px-6">
     <div class="mx-auto flex w-full max-w-screen-xl flex-col">
 
-    <!-- Section 0: Live voter turnout (Johor SE-16 only) -->
+    <!-- Section 0: Live voter turnout (Negeri Sembilan SE-16 only) -->
     {showLiveTurnout && liveTurnout && (
       <section data-scroll-anchor="live-turnout" class="space-y-2 pb-8 pt-4 lg:pb-10 lg:pt-5">
         <h4 class="text-center font-heading text-heading-2xs font-bold">
@@ -655,6 +659,7 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
             data={liveTurnout}
             se15Annotation={se15Annotation}
             ge15Annotation={ge15Annotation}
+            se16Annotation={se16Annotation}
             forecastPrefix={forecastPrefix}
           />
         </div>
