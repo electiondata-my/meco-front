@@ -216,7 +216,7 @@ const pendingLabel = "TBC";
 
 // Live voter turnout section (Negeri Sembilan SE-16 only).
 // To disable once polling closes: set showLiveTurnout = false.
-const showLiveTurnout = stateCode === "nsn" && electionName === "SE-16";
+const showLiveTurnout = false; // was: stateCode === "nsn" && electionName === "SE-16";
 const liveTurnoutUrl = `${apiBase}/elections/live_turnout_nsn_se16.json`;
 const se15Annotation = isMalay ? "PRN-15" : "SE-15";
 const ge15Annotation = isMalay ? "PRU-15" : "GE-15";
