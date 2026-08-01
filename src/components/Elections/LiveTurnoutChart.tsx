@@ -28,6 +28,7 @@ const AXIS_FONT_FAMILY =
 const MOBILE_CHART_HEIGHT = 380;
 const DESKTOP_CHART_HEIGHT = 420;
 const LABEL_OFFSET = 10;
+const MIN_LABEL_GAP = 18;
 
 function lastValueIndex(arr: (number | null)[]): number {
   for (let i = arr.length - 1; i >= 0; i--) {
@@ -142,22 +143,36 @@ export default function LiveTurnoutChart({
     id: "endLabels",
     afterDatasetsDraw(chart: {
       ctx: CanvasRenderingContext2D;
+      chartArea: { top: number; bottom: number };
       data: { datasets: { label?: string; data: (number | null)[] }[] };
       getDatasetMeta: (i: number) => { data: { x: number; y: number }[] };
     }) {
       const { ctx } = chart;
-      ctx.save();
-      ctx.font = `600 13px ${AXIS_FONT_FAMILY}`;
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
+      const labels: { text: string; color: string; x: number; y: number }[] = [];
       chart.data.datasets.forEach((dataset, di) => {
         const spec = dataset.label ? endLabels[dataset.label] : undefined;
         if (!spec) return;
         const idx = lastValueIndex(dataset.data);
         const point = chart.getDatasetMeta(di).data[idx];
         if (!point) return;
-        ctx.fillStyle = spec.color;
-        ctx.fillText(spec.text, point.x + LABEL_OFFSET, point.y);
+        labels.push({ text: spec.text, color: spec.color, x: point.x, y: point.y });
+      });
+      // Push overlapping labels apart to a minimum gap, keeping them inside the chart area.
+      labels.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < labels.length; i++) {
+        labels[i].y = Math.max(labels[i].y, labels[i - 1].y + MIN_LABEL_GAP);
+      }
+      for (let i = labels.length - 1; i >= 0; i--) {
+        const limit = i === labels.length - 1 ? chart.chartArea.bottom : labels[i + 1].y - MIN_LABEL_GAP;
+        labels[i].y = Math.min(labels[i].y, limit);
+      }
+      ctx.save();
+      ctx.font = `600 13px ${AXIS_FONT_FAMILY}`;
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      labels.forEach((label) => {
+        ctx.fillStyle = label.color;
+        ctx.fillText(label.text, label.x + LABEL_OFFSET, label.y);
       });
       ctx.restore();
     },
