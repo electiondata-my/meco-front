@@ -8,6 +8,7 @@ import ElectionsMap from "./ElectionsMap";
 import LiveTurnoutChart from "./LiveTurnoutChart";
 import { getTranslations, t } from "@i18n/index";
 import { CountryAndStates, MALAYSIA, SEMENANJUNG, STATES } from "@src/lib/constants";
+import { hasBallotsNotReturned } from "@src/lib/elections";
 import type { ElectionParty } from "./ElectionOverviewTable";
 import type { Timeseries } from "@src/lib/elections";
 
@@ -27,6 +28,8 @@ type OverallSeat = {
   voter_turnout_perc?: number;
   votes_rejected?: number;
   votes_rejected_perc?: number;
+  ballots_not_returned?: number;
+  ballots_not_returned_perc?: number;
   votes_valid?: number;
   party_lost?: string[];
 };
@@ -156,6 +159,7 @@ const mobileElectionOptionsByState = Object.fromEntries(
 );
 const selectedStateOption = stateLinkOptions.find((o) => o.value === stateCode) ?? stateLinkOptions[0];
 const selectedElectionOption = electionLinkOptions.find((o) => o.value === electionName) ?? electionLinkOptions[0];
+const showBallotsNotReturned = hasBallotsNotReturned(selectedElectionOption?.date);
 const selectElectionLabel = e("select_election") !== "select_election" ? e("select_election") : "Select election";
 const viewsOneLabel = c("views_one") || "view";
 const viewsOtherLabel = c("views_other") || "views";
@@ -184,6 +188,12 @@ const analysisRows = seats.map((s) => {
     voter_turnout_perc: s.voter_turnout_perc,
     votes_rejected: s.votes_rejected,
     votes_rejected_perc: s.votes_rejected_perc,
+    ...(showBallotsNotReturned
+      ? {
+          ballots_not_returned: s.ballots_not_returned,
+          ballots_not_returned_perc: s.ballots_not_returned_perc,
+        }
+      : {}),
   };
 });
 
@@ -283,10 +293,13 @@ const totals = {
   voters_total: sumOf((s) => s.voters_total),
   voter_turnout: sumOf((s) => s.voter_turnout),
   votes_rejected: sumOf((s) => s.votes_rejected),
+  ballots_not_returned: sumOf((s) => s.ballots_not_returned),
 };
 const totalsTurnoutPerc = totals.voters_total ? (totals.voter_turnout / totals.voters_total) * 100 : null;
 const totalsVotesCast = totalsVotesValid + totals.votes_rejected;
 const totalsRejectedPerc = totalsVotesCast ? (totals.votes_rejected / totalsVotesCast) * 100 : null;
+// Unreturned ballots are a share of ballots issued, i.e. turnout — not of votes cast.
+const totalsNotReturnedPerc = totals.voter_turnout ? (totals.ballots_not_returned / totals.voter_turnout) * 100 : null;
 
 const analysisColumnSpecs = [
   {
@@ -343,6 +356,17 @@ const analysisColumnSpecs = [
     label: c("rejected_votes_perc") || "Rejected %",
     widthCh: Math.max((c("rejected_votes_perc") || "Rejected %").length + 3, ...analysisRows.map((row) => numFmt(row.votes_rejected_perc, 1).length)) + 5,
   },
+  ...(showBallotsNotReturned
+    ? [{
+        key: "ballots_not_returned",
+        label: c("ballots_not_returned") || "Unreturned Ballots",
+        widthCh: Math.max((c("ballots_not_returned") || "Unreturned Ballots").length + 3, numFmt(totals.ballots_not_returned).length, ...analysisRows.map((row) => numFmt(row.ballots_not_returned).length)) + 5,
+      }, {
+        key: "ballots_not_returned_perc",
+        label: c("ballots_not_returned_perc") || "Unreturned Ballots (%)",
+        widthCh: Math.max((c("ballots_not_returned_perc") || "Unreturned Ballots (%)").length + 3, ...analysisRows.map((row) => numFmt(row.ballots_not_returned_perc, 1).length)) + 5,
+      }]
+    : []),
 ];
 const analysisTableMinWidth = `${analysisColumnSpecs.reduce((sum, column) => sum + column.widthCh, 0)}ch`;
 const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) => sum + (column.mobileHidden ? 0 : column.widthCh), 0)}ch`;
@@ -808,11 +832,13 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
                 { key: "voter_turnout_perc", label: c("voter_turnout_perc") || "Turnout %" },
                 { key: "majority_perc",       label: c("majority_perc")       || "Majority %" },
                 { key: "votes_rejected_perc", label: c("rejected_votes_perc") || "Rejected %" },
+                ...(showBallotsNotReturned ? [{ key: "ballots_not_returned_perc", label: c("ballots_not_returned_perc") || "Unreturned Ballots (%)" }] : []),
                 { key: "n_candidates",        label: c("n_candidates")        || "Candidates" },
                 { key: "voters_total",        label: c("voters_total")        || "Voters" },
                 { key: "voter_turnout",       label: c("voter_turnout")       || "Turnout" },
                 { key: "majority",            label: c("majority")            || "Majority" },
                 { key: "votes_rejected",      label: c("rejected_votes")      || "Rejected" },
+                ...(showBallotsNotReturned ? [{ key: "ballots_not_returned", label: c("ballots_not_returned") || "Unreturned Ballots" }] : []),
               ].map(({ key, label }) => (
                 <li>
                   <button
@@ -951,6 +977,34 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
                     </span>
                   </button>
                 </th>
+                {showBallotsNotReturned && (
+                  <>
+                    <th class="whitespace-nowrap px-4 py-3 text-right">
+                      <button type="button" data-sort-key="ballots_not_returned" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("ballots_not_returned") || "Unreturned Ballots"}`}>
+                        <span>{c("ballots_not_returned") || "Unreturned Ballots"}</span>
+                        <span data-sort-indicator="ballots_not_returned" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                          <svg viewBox="0 0 16 16" fill="none">
+                            <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                            <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                            <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                          </svg>
+                        </span>
+                      </button>
+                    </th>
+                    <th class="whitespace-nowrap px-4 py-3 text-right">
+                      <button type="button" data-sort-key="ballots_not_returned_perc" class="group/sort inline-flex items-center justify-end gap-1 text-right font-medium text-txt-black-700 hover:text-txt-black-900" aria-label={`Sort by ${c("ballots_not_returned_perc") || "Unreturned Ballots (%)"}`}>
+                        <span>{c("ballots_not_returned_perc") || "Unreturned Ballots (%)"}</span>
+                        <span data-sort-indicator="ballots_not_returned_perc" data-sort-state="none" class="sort-indicator text-txt-black-400 group-hover/sort:text-txt-black-700" aria-hidden="true">
+                          <svg viewBox="0 0 16 16" fill="none">
+                            <path data-sort-arrow="none" d="M8 3.25v9.5M5.25 6.25 8 3.25l2.75 3M5.25 9.75 8 12.75l2.75-3" />
+                            <path data-sort-arrow="asc" d="M8 13V3.75M4.75 7 8 3.75 11.25 7" />
+                            <path data-sort-arrow="desc" d="M8 3v9.25M4.75 9 8 12.25 11.25 9" />
+                          </svg>
+                        </span>
+                      </button>
+                    </th>
+                  </>
+                )}
               </tr>
               <tr class="border-b-2 border-otl-gray-200 font-semibold text-txt-black-900">
                 <td class="analysis-seat-cell sticky left-0 z-10 bg-bg-white py-3 pl-0 pr-3 md:pr-4">
@@ -977,6 +1031,16 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
                 <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
                   {numFmt(totalsRejectedPerc, 1)}
                 </td>
+                {showBallotsNotReturned && (
+                  <>
+                    <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                      {numFmt(totals.ballots_not_returned)}
+                    </td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                      {numFmt(totalsNotReturnedPerc, 1)}
+                    </td>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -1012,6 +1076,16 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
                   <td data-sort-key="votes_rejected_perc" data-sort-value={row.votes_rejected_perc ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
                     {numFmt(row.votes_rejected_perc, 1)}
                   </td>
+                  {showBallotsNotReturned && (
+                    <>
+                      <td data-sort-key="ballots_not_returned" data-sort-value={row.ballots_not_returned ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                        {numFmt(row.ballots_not_returned)}
+                      </td>
+                      <td data-sort-key="ballots_not_returned_perc" data-sort-value={row.ballots_not_returned_perc ?? ""} class="whitespace-nowrap px-4 py-3 text-right font-['IBM_Plex_Mono','Roboto_Mono',monospace] tabular-nums">
+                        {numFmt(row.ballots_not_returned_perc, 1)}
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -1201,6 +1275,17 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
   }
 
   const saved = loadSaved();
+
+  // The saved variable may not be offered for this election — unreturned ballots are
+  // hidden pre-1990. Drop it from the store before the React chart/map read it, or they
+  // would plot a column that does not exist here.
+  if (saved?.varKey && !document.querySelector(`[data-var-key="${saved.varKey}"]`)) {
+    saved.varKey = "voter_turnout_perc";
+    try {
+      const raw = JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? "null");
+      if (raw) sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ ...raw, varKey: "voter_turnout_perc" }));
+    } catch {}
+  }
 
   if (saved?.tab === "chart") activateChart();
   else if (saved?.tab === "map") activateMap();

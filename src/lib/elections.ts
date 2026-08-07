@@ -32,6 +32,13 @@ export type Timeseries = {
 export const PENDING_TEXT_CLASS =
   "text-txt-black-disabled dark:text-txt-black-500";
 
+/**
+ * Unreturned ballots were not recorded before 1990, so the field is absent (or a
+ * meaningless zero) for older results. ISO date strings compare lexicographically.
+ */
+export const hasBallotsNotReturned = (date?: string | null) =>
+  !!date && date >= "1990-01-01";
+
 type ElectionLike = {
   by_party?: (TimeseriesParty & { votes_total?: number })[];
   by_seat?: { date?: string }[];

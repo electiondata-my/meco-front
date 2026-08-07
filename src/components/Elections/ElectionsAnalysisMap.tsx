@@ -15,6 +15,8 @@ type AnalysisRow = {
   voter_turnout_perc?: number;
   votes_rejected?: number;
   votes_rejected_perc?: number;
+  ballots_not_returned?: number;
+  ballots_not_returned_perc?: number;
 };
 
 type VarKey =
@@ -25,7 +27,9 @@ type VarKey =
   | "voter_turnout"
   | "voter_turnout_perc"
   | "votes_rejected"
-  | "votes_rejected_perc";
+  | "votes_rejected_perc"
+  | "ballots_not_returned"
+  | "ballots_not_returned_perc";
 
 interface Props {
   mapUrl: string;
@@ -56,6 +60,8 @@ const VAR_RAMPS: Record<VarKey, string[]> = {
   n_candidates:        ["#fee5d9", "#fcae91", "#fb6a4a", "#de2d26", "#a50f15"],
   voters_total:        ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"],
   voter_turnout:       ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"],
+  ballots_not_returned_perc: ["#feedde", "#fdbe85", "#fd8d3c", "#e6550d", "#a63603"],
+  ballots_not_returned:      ["#feedde", "#fdbe85", "#fd8d3c", "#e6550d", "#a63603"],
 };
 
 const HIDE_LAYER_EXACT = [

@@ -10,7 +10,7 @@ import {
   DrawerTrigger,
 } from "@components/Drawer";
 import { clx, numFormat, toDate } from "@lib/helpers";
-import { PENDING_TEXT_CLASS } from "@lib/elections";
+import { PENDING_TEXT_CLASS, hasBallotsNotReturned } from "@lib/elections";
 import { ArrowsPointingOutIcon, ClockIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { matchSorter } from "match-sorter";
@@ -134,6 +134,15 @@ export default function BallotSeat({
               abs: stats.votes_rejected,
               perc: stats.votes_rejected_perc,
             },
+            ...(hasBallotsNotReturned(date)
+              ? [
+                  {
+                    x: "ballots_not_returned",
+                    abs: stats.ballots_not_returned ?? null,
+                    perc: stats.ballots_not_returned_perc ?? null,
+                  },
+                ]
+              : []),
           ],
         };
         // Only cache declared results. A seat still being counted returns a "pending"

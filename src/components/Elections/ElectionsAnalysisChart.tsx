@@ -14,6 +14,8 @@ type AnalysisRow = {
   voter_turnout_perc?: number;
   votes_rejected?: number;
   votes_rejected_perc?: number;
+  ballots_not_returned?: number;
+  ballots_not_returned_perc?: number;
 };
 
 export type VarKey = keyof Omit<AnalysisRow, "seat" | "state">;
@@ -38,6 +40,7 @@ const INTEGER_VARS = new Set<VarKey>([
   "voter_turnout",
   "majority",
   "votes_rejected",
+  "ballots_not_returned",
 ]);
 
 function yScaleFloor(values: number[]): { min?: number; suggestedMin?: number } {

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { PartyFlag } from "@components/PartyFlag";
-import { PENDING_TEXT_CLASS } from "@lib/elections";
+import { PENDING_TEXT_CLASS, hasBallotsNotReturned } from "@lib/elections";
 
 type CandidateElection = {
   type: "parlimen" | "dun";
@@ -220,6 +220,9 @@ export default function CandidateElectionTable({
             { x: "voters_total", abs: s.voters_total ?? null, perc: null, ratio: s.voters_total_v_avg ?? null },
             { x: "voter_turnout", abs: s.voter_turnout, perc: s.voter_turnout_perc },
             { x: "rejected_votes", abs: s.votes_rejected, perc: s.votes_rejected_perc },
+            ...(hasBallotsNotReturned(e.date)
+              ? [{ x: "ballots_not_returned", abs: s.ballots_not_returned ?? null, perc: s.ballots_not_returned_perc ?? null }]
+              : []),
           ],
         }));
       } catch {

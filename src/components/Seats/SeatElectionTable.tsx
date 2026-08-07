@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { PartyFlag } from "@components/PartyFlag";
-import { PENDING_TEXT_CLASS } from "@lib/elections";
+import { PENDING_TEXT_CLASS, hasBallotsNotReturned } from "@lib/elections";
 
 type ElectionRow = {
   election_name: string;
@@ -182,6 +182,9 @@ export default function SeatElectionTable({
             { x: "voters_total", abs: s0.voters_total ?? null, perc: null, ratio: s0.voters_total_v_avg ?? null },
             { x: "voter_turnout", abs: s0.voter_turnout ?? null, perc: s0.voter_turnout_perc ?? null },
             { x: "rejected_votes", abs: s0.votes_rejected ?? null, perc: s0.votes_rejected_perc ?? null },
+            ...(hasBallotsNotReturned(row.date)
+              ? [{ x: "ballots_not_returned", abs: s0.ballots_not_returned ?? null, perc: s0.ballots_not_returned_perc ?? null }]
+              : []),
           ],
         };
         cache.current.set(key, result);

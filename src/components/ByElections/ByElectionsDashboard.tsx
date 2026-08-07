@@ -14,6 +14,7 @@ import Container from "@components/Container";
 import SectionGrid from "@components/Section/section-grid";
 import { clx, numFormat, toDate } from "@lib/helpers";
 import { CountryAndStates, STATES, MALAYSIA } from "@lib/constants";
+import { hasBallotsNotReturned } from "@lib/elections";
 import { ArrowsPointingOutIcon, ChevronDownIcon, EyeIcon } from "@heroicons/react/20/solid";
 import { CheckCircleIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { matchSorter } from "match-sorter";
@@ -145,6 +146,9 @@ const ByElectionsDashboard: FunctionComponent<ByElectionsDashboardProps> = ({
           { x: "majority", abs: stats.majority, perc: stats.majority_perc },
           { x: "voter_turnout", abs: stats.voter_turnout, perc: stats.voter_turnout_perc },
           { x: "rejected_votes", abs: stats.votes_rejected, perc: stats.votes_rejected_perc },
+          ...(hasBallotsNotReturned(date)
+            ? [{ x: "ballots_not_returned", abs: stats.ballots_not_returned ?? null, perc: stats.ballots_not_returned_perc ?? null }]
+            : []),
         ],
       };
       cache.set(key, results);
