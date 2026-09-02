@@ -39,7 +39,7 @@ interface MapCiteData {
   title: string;
   author: string;
   journal: string;
-  year: string;
+  date: string;
 }
 
 interface MapDownloadInfo {
@@ -230,23 +230,28 @@ function toColorExpr(value: string): string | [string, string] {
 // ── Citation ──────────────────────────────────────────────────────────────────
 
 function buildAPA(c: MapCiteData): string {
-  return `${formatAuthorsAPA(c.author)} (${c.year}). ${c.title}. ${c.journal}.`;
+  const year = c.date.split("-")[0];
+  return `${formatAuthorsAPA(c.author)} (${year}). ${c.title}. ${c.journal}.`;
 }
 
 function buildMLA(c: MapCiteData): string {
-  return `${formatAuthorsMLA(c.author)}. "${c.title}." ${c.journal} (${c.year}).`;
+  const year = c.date.split("-")[0];
+  return `${formatAuthorsMLA(c.author)}. "${c.title}." ${c.journal} (${year}).`;
 }
 
 function buildChicago(c: MapCiteData): string {
-  return `${formatAuthorsMLA(c.author)}. "${c.title}." ${c.journal} (${c.year}).`;
+  const year = c.date.split("-")[0];
+  return `${formatAuthorsMLA(c.author)}. "${c.title}." ${c.journal} (${year}).`;
 }
 
 function buildHarvard(c: MapCiteData): string {
-  return `${formatAuthorsHarvard(c.author)} ${c.year}, ${c.title}. ${c.journal}.`;
+  const year = c.date.split("-")[0];
+  return `${formatAuthorsHarvard(c.author)} ${year}, ${c.title}. ${c.journal}.`;
 }
 
 function buildBibTeX(c: MapCiteData): string {
-  return `@${c.type}{${c.id},\n  author  = {${formatAuthorsBibTeX(c.author)}},\n  title   = {${c.title}},\n  journal = {${c.journal}},\n  year    = {${c.year}}\n}`;
+  const year = c.date.split("-")[0];
+  return `@${c.type}{${c.id},\n  author  = {${formatAuthorsBibTeX(c.author)}},\n  title   = {${c.title}},\n  journal = {${c.journal}},\n  year    = {${year}}\n}`;
 }
 
 function CitationMarkup({
@@ -256,10 +261,11 @@ function CitationMarkup({
   style: "apa" | "mla" | "chicago" | "harvard";
   cite: MapCiteData;
 }) {
+  const year = cite.date.split("-")[0];
   if (style === "apa") {
     return (
       <>
-        {formatAuthorsAPA(cite.author)} ({cite.year}). {cite.title}.{" "}
+        {formatAuthorsAPA(cite.author)} ({year}). {cite.title}.{" "}
         <em>{cite.journal}</em>.
       </>
     );
@@ -268,7 +274,7 @@ function CitationMarkup({
     return (
       <>
         {formatAuthorsMLA(cite.author)}. "{cite.title}." <em>{cite.journal}</em>{" "}
-        ({cite.year}).
+        ({year}).
       </>
     );
   }
@@ -276,13 +282,13 @@ function CitationMarkup({
     return (
       <>
         {formatAuthorsMLA(cite.author)}. "{cite.title}." <em>{cite.journal}</em>{" "}
-        ({cite.year}).
+        ({year}).
       </>
     );
   }
   return (
     <>
-      {formatAuthorsHarvard(cite.author)} {cite.year}, {cite.title}.{" "}
+      {formatAuthorsHarvard(cite.author)} {year}, {cite.title}.{" "}
       <em>{cite.journal}</em>.
     </>
   );
