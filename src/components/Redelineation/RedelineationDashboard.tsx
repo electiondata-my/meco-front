@@ -394,6 +394,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [views, setViews] = useState<number | null>(null);
   const [viewsLoading, setViewsLoading] = useState(true);
+  const [urlReady, setUrlReady] = useState(false);
   const _pendingSeatSlug = useRef<string | null>(null);
   const pendingSeatScroll = useRef(false);
   const redistributionRef = useRef<HTMLHeadingElement>(null);
@@ -420,10 +421,14 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
       _pendingSeatSlug.current = params.seat;
       pendingSeatScroll.current = true;
     }
+    setUrlReady(true);
   }, []);
 
   // Fetch data whenever area, year, or level changes
+  // Gated on urlReady so the first fetch uses the level from the URL, not the
+  // default: fetching under the wrong level consumes the pending seat slug.
   useEffect(() => {
+    if (!urlReady) return;
     setLoading(true);
     fetch(`${apiBaseUrl}/redelineation/${area}_${year}_${level}.json`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -453,7 +458,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
       })
       .catch(() => setData(null))
       .finally(() => setLoading(false));
-  }, [area, year, level, apiBaseUrl]);
+  }, [area, year, level, apiBaseUrl, urlReady]);
 
   const { redelineation_map } = useMap();
 
@@ -1764,12 +1769,13 @@ const GeohistoryTable: FC<GeohistoryTableProps> = ({
   const otherKey = isNew ? "parent" : "child";
   const percKey = isNew ? "perc_from_parent" : "perc_to_child";
 
+  // year is passed pre-swapped: [0] is the selected boundary's year, [1] the other's
   const seatHeader = isNew
     ? `${r("table.seat_new")} (${year[0]})`
-    : `${r("table.seat_old")} (${year[1]})`;
+    : `${r("table.seat_old")} (${year[0]})`;
   const otherHeader = isNew
     ? `${r("table.parent")} (${year[1]})`
-    : `${r("table.child")} (${year[0]})`;
+    : `${r("table.child")} (${year[1]})`;
   const percHeader = isNew
     ? r("table.perc_from_parent")
     : r("table.perc_to_child");
