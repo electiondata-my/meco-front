@@ -119,7 +119,7 @@ function useDarkMode(): boolean {
 function readParams() {
   const p = new URLSearchParams(window.location.search);
   return {
-    level: (p.get("level") ?? "parlimen") as ElectionType,
+    level: (p.get("level") ?? "dun") as ElectionType,
     type: (p.get("type") ?? "new") as ToggleState,
     seat: p.get("seat") ?? null,
   };
@@ -387,7 +387,7 @@ const DashboardInner: FunctionComponent<DashboardProps> = ({
   const c = (key: string) => tFrom(translations.common, key);
   const boundaryAttribution = `${attributionHTML(c("attribution_boundary_data"))}`;
 
-  const [level, setLevel] = useState<ElectionType>("parlimen");
+  const [level, setLevel] = useState<ElectionType>("dun");
   const [toggleState, setToggleState] = useState<ToggleState>("new");
   const [seatValue, setSeatValue] = useState<string>("");
   const [data, setData] = useState<RedelineationData | null>(null);
