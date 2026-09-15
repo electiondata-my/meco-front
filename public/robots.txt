@@ -37,4 +37,4 @@ Disallow: /
 Host: https://electiondata.my
 
 # Sitemaps
-Sitemap: https://electiondata.my/sitemap.xml.gz
+Sitemap: https://electiondata.my/sitemap-index.xml
