@@ -34,12 +34,18 @@ export default defineConfig({
     mdx(),
     // applyBaseStyles: false — globals.css already imports Tailwind directives
     tailwind({ applyBaseStyles: false }),
-    sitemap({
-      i18n: {
-        defaultLocale: 'en-GB',
-        locales: { 'en-GB': 'en-GB', 'ms-MY': 'ms-MY' },
-      },
-    }),
+    // Full builds only: a surgical build's sitemap lists just the scoped pages,
+    // and surgicalMerge would overwrite the full sitemap in dist/ with it.
+    ...(isSurgical
+      ? []
+      : [
+          sitemap({
+            i18n: {
+              defaultLocale: 'en-GB',
+              locales: { 'en-GB': 'en-GB', 'ms-MY': 'ms-MY' },
+            },
+          }),
+        ]),
   ],
   i18n: {
     defaultLocale: 'en-GB',
