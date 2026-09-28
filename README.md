@@ -54,6 +54,9 @@ pnpm dev
 # Build production app
 pnpm build
 
+# Surgical rebuild of the data catalogue only (all datasets; or pass comma-separated ids)
+POST_TO_BUILD_CATALOGUE=all pnpm build
+
 # Deploy to Cloudflare Pages (production)
 pnpm deploy
 
