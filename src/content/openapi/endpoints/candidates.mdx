@@ -29,7 +29,7 @@ This endpoint takes no parameters. The list is only updated after the nomination
 <TabCode
   curl={`curl -X GET "https://api.electiondata.my/v1/candidates/dropdown" \\\n  -H "Authorization: Bearer <your-api-key>"`}
   javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates/dropdown",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
-  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates/dropdown",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface Candidate {\n  id: string;\n  name: string;\n  c: number;\n  w: number;\n  l: number;\n}\n\nconst data: Candidate[] = await response.json();\nconsole.log(data);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/candidates/dropdown",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface Candidate {\n  uid: string;\n  name: string;\n  c: number;\n  w: number;\n  l: number;\n}\n\nconst data: Candidate[] = await response.json();\nconsole.log(data);`}
   python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/candidates/dropdown",\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()\nprint(data)`}
   r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/candidates/dropdown") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)\nprint(data)`}
   go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/candidates/dropdown", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar data any\n\tjson.Unmarshal(body, &data)\n\tfmt.Println(data)\n}`}
@@ -47,7 +47,7 @@ A successful `200 OK` response returns a JSON array of every candidate in the da
 
 ## Step 2: Get single Candidate
 
-Once the user has selected a candidate, pass their `id` to retrieve their election results.
+Once the user has selected a candidate, pass their `uid` to retrieve their election results.
 
 <EndpointCard method="GET" url="https://api.electiondata.my/v1/candidates" params={[
   {
