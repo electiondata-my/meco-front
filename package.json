@@ -7,8 +7,8 @@
     "build": "astro build",
     "start": "astro preview",
     "lint": "eslint .",
-    "deploy": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=main",
-    "deploy-staging": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=staging"
+    "deploy": "wrangler pages deploy --env-file=.env dist/ --project-name=electiondata-my --branch=main",
+    "deploy-staging": "wrangler pages deploy --env-file=.env dist/ --project-name=electiondata-my --branch=staging"
   },
   "lint-staged": {
     "*.{js,ts,tsx,css,md}": "prettier --write"
