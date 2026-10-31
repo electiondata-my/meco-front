@@ -7,8 +7,8 @@
     "build": "astro build",
     "start": "astro preview",
     "lint": "eslint .",
-    "deploy": "wrangler pages deploy --env-file=.env dist/ --project-name=electiondata-my --branch=main",
-    "deploy-staging": "wrangler pages deploy --env-file=.env dist/ --project-name=electiondata-my --branch=staging"
+    "deploy": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=main --env-file=.env",
+    "deploy-staging": "wrangler pages deploy dist/ --project-name=electiondata-my --branch=staging --env-file=.env"
   },
   "lint-staged": {
     "*.{js,ts,tsx,css,md}": "prettier --write"
@@ -85,7 +85,7 @@
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.13",
     "tailwindcss": "3",
-    "wrangler": "4.127.1"
+    "wrangler": "4.153.0"
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1"
 }
