@@ -68,9 +68,12 @@ const stateDisplay = commaIdx >= 0 ? seatName.slice(commaIdx + 2) : "";
 
 const seatTypeParlimen = type === "parlimen";
 // States whose DUN data is current as of the 16th state election (SE-16, 2026).
-const SE16_STATES = new Set(["jhr", "nsn"]);
+const SE16_STATES = new Set(["jhr", "nsn", "mlk"]);
 const stateKey = StateKeyByName[stateDisplay];
-const dataAsOfKey = !seatTypeParlimen && SE16_STATES.has(stateKey) ? "data_as_of_se16" : "data_as_of";
+const votersAsOfKey = !seatTypeParlimen && SE16_STATES.has(stateKey) ? "voters_as_of_se16" : "voters_as_of";
+const totalVoters = seatData.pyramid
+  ? [...seatData.pyramid.male, ...seatData.pyramid.female].reduce((sum, n) => sum + n, 0)
+  : 0;
 const seatTypeLabel = seatTypeParlimen
   ? isMalay ? "Parlimen" : "Parliament"
   : "DUN";
@@ -212,7 +215,7 @@ const boundaryAttribution =
           <span class="text-txt-danger">{seatDisplay}{stateDisplay ? `, ${stateDisplay}` : ""}</span>
         </h2>
         <p class="mt-2 text-center text-body-md text-txt-black-500">
-          {s(dataAsOfKey)}
+          {t(i18n.seats ?? {}, votersAsOfKey, { voters: totalVoters.toLocaleString("en-GB") })}
         </p>
         <div class="mt-6 lg:mt-8">
           <SeatVoterDemographics
