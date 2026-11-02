@@ -5,6 +5,7 @@ import type { ChartOptions, Plugin } from "chart.js";
 import { DateTime } from "luxon";
 import type { MetricKey, SiteMetricsRow } from "./types";
 import {
+  chartRows,
   formatAxis,
   formatDaily,
   formatTooltipValue,
@@ -116,7 +117,7 @@ export default function MetricPanel({
               datasets: [
                 {
                   label: title,
-                  data: rows.map((row) => ({
+                  data: chartRows(rows, metricKey).map((row) => ({
                     x: toUtcIso(`${row["timeseries.date"]} 00:00:00`),
                     y: rowValue(row, metricKey),
                   })),

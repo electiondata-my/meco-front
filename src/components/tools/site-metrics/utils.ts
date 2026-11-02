@@ -11,6 +11,14 @@ export function rowValue(row: SiteMetricsRow, key: MetricKey): number {
   return row[key] ?? 0;
 }
 
+/** Rows to plot: drop today's partial day unless it already exceeds yesterday. */
+export function chartRows(rows: SiteMetricsRow[], key: MetricKey): SiteMetricsRow[] {
+  if (rows.length < 2) return rows;
+  const today = rowValue(rows[rows.length - 1], key);
+  const yesterday = rowValue(rows[rows.length - 2], key);
+  return today > yesterday ? rows : rows.slice(0, -1);
+}
+
 export function latestDaily(rows: SiteMetricsRow[], key: MetricKey): number {
   if (!rows.length) return 0;
   return rowValue(rows[rows.length - 1], key);

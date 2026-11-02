@@ -1,7 +1,7 @@
 import { clx } from "@lib/helpers";
 import Sparkline from "@components/Sparkline";
 import type { MetricKey, SiteMetricsRow } from "./types";
-import { formatDaily, formatTotal, rowValue } from "./utils";
+import { chartRows, formatDaily, formatTotal, rowValue } from "./utils";
 
 export const MOBILE_METRIC_GRID =
   "grid-cols-[minmax(3.25rem,0.7fr)_minmax(2.75rem,0.5fr)_minmax(4.75rem,max-content)_minmax(4.75rem,max-content)] gap-2 px-0 min-[390px]:grid-cols-[minmax(4rem,0.75fr)_minmax(3.25rem,0.55fr)_minmax(5rem,max-content)_minmax(5rem,max-content)]";
@@ -29,7 +29,7 @@ export default function MetricRow({
   loading,
   mounted,
 }: Props) {
-  const values = rows.map((row) => rowValue(row, metricKey));
+  const values = chartRows(rows, metricKey).map((row) => rowValue(row, metricKey));
 
   return (
     <div
