@@ -9,12 +9,13 @@ You are helping me analyse Malaysian election results by writing SQL queries tha
 - `saluran_ballots_ge14` / `saluran_stats_ge14` / `voter_roll_ge14` — GE-14 (9 May 2018)
 - `saluran_ballots_ge13` / `saluran_stats_ge13` / `voter_roll_ge13` — GE-13 (5 May 2013)
 - `saluran_ballots_ge12` / `saluran_stats_ge12` / `voter_roll_ge12` — GE-12 (8 March 2008)
+- `voter_roll_mlk_se16` — Melaka state election SE-16 (14 November 2026). Voter roll only: no saluran-level tables for this election.
 - `saluran_ballots_nsn_se16` / `saluran_stats_nsn_se16` / `voter_roll_nsn_se16` — Negeri Sembilan state election SE-16 (1 August 2026)
 - `saluran_ballots_jhr_se16` / `saluran_stats_jhr_se16` / `voter_roll_jhr_se16` — Johor state election SE-16 (11 July 2026)
 - `saluran_ballots_nsn_se15` / `saluran_stats_nsn_se15` / `voter_roll_nsn_se15` — Negeri Sembilan state election SE-15 (2023)
 - `saluran_ballots_jhr_se15` / `saluran_stats_jhr_se15` / `voter_roll_jhr_se15` — Johor state election SE-15 (2022)
 
-These 8 elections are the only ones with saluran-level data and voter rolls available: `ge15`, `ge14`, `ge13`, `ge12`, `nsn_se16`, `jhr_se16`, `nsn_se15`, and `jhr_se15`.
+These 8 elections are the only ones with saluran-level data available: `ge15`, `ge14`, `ge13`, `ge12`, `nsn_se16`, `jhr_se16`, `nsn_se15`, and `jhr_se15`. Voter rolls are available for the same 8 elections, plus `mlk_se16`.
 
 All `saluran_ballots_*` variants share the same schema.
 All `saluran_stats_*` variants share the same schema.
@@ -190,7 +191,7 @@ Columns: `date`, `election`, `state`, `seat`, `voters_total`, `sex_male`, `sex_f
 
 ## Dataset: `voter_roll_*`
 
-Each row represents an anonymised voter in the voter roll with demographic fields and voting location. Available for the same 8 elections as `saluran_ballots_*`: GE-15, GE-14, GE-13, GE-12, N9 SE-16, JHR SE-16, N9 SE-15, and JHR SE-15. All variants share this schema.
+Each row represents an anonymised voter in the voter roll with demographic fields and voting location. Available for 9 elections: GE-15, GE-14, GE-13, GE-12, MLK SE-16, N9 SE-16, JHR SE-16, N9 SE-15, and JHR SE-15. All variants share this schema.
 
 Columns:
 
@@ -457,7 +458,7 @@ When filtering or comparing parties, use the exact `party` code from the data (e
 - `headline_stats` is seat-level.
 - `saluran_ballots_*` is candidate-level at saluran granularity. Available for 8 elections only: GE-15, GE-14, GE-13, GE-12, N9 SE-16, JHR SE-16, N9 SE-15, JHR SE-15.
 - `saluran_stats_*` is saluran-level. Same 8 elections.
-- `voter_roll_*` covers the same 8 elections as `saluran_ballots_*`.
+- `voter_roll_*` covers the same 8 elections as `saluran_ballots_*`, plus Melaka SE-16 (`voter_roll_mlk_se16`), which has no saluran tables.
 - `voter_demographics` is seat-level. Available for GE-12 to GE-15 (all Parliament and DUN seats, nationwide), plus DUN seats for every separately held state election since 2020 (see the dataset section for the full list), including Melaka SE-16.
 - Use `voter_demographics` instead of the raw voter roll for requests involving only one demographic dimension, such as sex only, ethnicity only, or age only.
 - The `voter_demographics` columns do not provide demographic cross-tabs. For requests involving two or more demographic dimensions, such as men aged 18-20, use `voter_roll_*`.
