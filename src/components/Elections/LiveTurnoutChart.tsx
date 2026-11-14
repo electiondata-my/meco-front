@@ -1,8 +1,9 @@
 import "chart.js/auto";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
 
 type TurnoutData = {
+  latest: { time: string; turnout: number; timestamp: string } | null;
   time: string[];
   se15: (number | null)[];
   ge15: (number | null)[];
@@ -11,7 +12,11 @@ type TurnoutData = {
 };
 
 interface Props {
-  data: TurnoutData;
+  url: string;
+  children: ReactNode; // section title, rendered by the Astro page
+  caption: string;
+  timeLabel: string;
+  asOfPrefix: string;
   se15Annotation: string;
   ge15Annotation: string;
   se16Annotation: string;
@@ -29,6 +34,7 @@ const MOBILE_CHART_HEIGHT = 380;
 const DESKTOP_CHART_HEIGHT = 420;
 const LABEL_OFFSET = 10;
 const MIN_LABEL_GAP = 18;
+const REFRESH_MS = 5 * 60 * 1000;
 
 function lastValueIndex(arr: (number | null)[]): number {
   for (let i = arr.length - 1; i >= 0; i--) {
@@ -41,6 +47,9 @@ function lastValue(arr: (number | null)[]): number {
   const i = lastValueIndex(arr);
   return i >= 0 ? (arr[i] as number) : 0;
 }
+
+// Values arrive rounded to 1dp upstream, so toFixed(1) only pads (7 -> "7.0"), never re-rounds.
+const pct = (v: number) => `${v.toFixed(1)}%`;
 
 function useDarkMode() {
   const [dark, setDark] = useState(false);
@@ -55,7 +64,11 @@ function useDarkMode() {
 }
 
 export default function LiveTurnoutChart({
-  data,
+  url,
+  children,
+  caption,
+  timeLabel,
+  asOfPrefix,
   se15Annotation,
   ge15Annotation,
   se16Annotation,
@@ -65,6 +78,33 @@ export default function LiveTurnoutChart({
   const dark = useDarkMode();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
+  // react-chartjs-2 only reads `plugins` when the chart is created, so the end-label plugin
+  // reads its text through this ref to pick up each 5-minute refresh.
+  const endLabelsRef = useRef<Record<string, { text: string; color: string }>>({});
+  const [data, setData] = useState<TurnoutData | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  // Fetch in the browser and refresh every 5 minutes, matching the worker's write cadence.
+  // The worker purges the edge cache after each write; no-store skips the browser cache.
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(String(res.status));
+        const json: TurnoutData = await res.json();
+        if (!cancelled) setData(json);
+      } catch {
+        if (!cancelled) setFailed(true);
+      }
+    };
+    void load();
+    const id = setInterval(() => void load(), REFRESH_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [url]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -94,6 +134,27 @@ export default function LiveTurnoutChart({
 
   const chartHeight = isMobile ? MOBILE_CHART_HEIGHT : DESKTOP_CHART_HEIGHT;
 
+  // Keep the last good data on a failed refresh; hide the section only if nothing ever loaded.
+  if (!data && failed) return null;
+
+  const latest = data?.latest ?? null;
+  const asOfLabel = latest ? `(${pct(latest.turnout)} ${asOfPrefix} ${latest.time})` : "";
+  const title = (
+    <h4 className="text-center font-heading text-heading-2xs font-bold">
+      {children}
+      {asOfLabel && <span className="font-normal"> {asOfLabel}</span>}
+    </h4>
+  );
+
+  if (!data) {
+    return (
+      <div className="space-y-2">
+        {title}
+        <div style={{ height: chartHeight }} />
+      </div>
+    );
+  }
+
   const se15Color = dark ? SE15_DARK : SE15_LIGHT;
   const se16Color = dark ? SE16_DARK : SE16_LIGHT;
   const tickColor = dark ? "#A1A1AA" : "#52525B";
@@ -103,9 +164,9 @@ export default function LiveTurnoutChart({
   const se15Val = lastValue(data.se15);
   const forecastVal = lastValue(data.se16_forecast);
 
-  const ge15Text = `${ge15Annotation}: ${ge15Val.toFixed(1)}%`;
-  const se15Text = `${se15Annotation}: ${se15Val.toFixed(1)}%`;
-  const forecastText = `${forecastPrefix}: ${forecastVal.toFixed(1)}%`;
+  const ge15Text = `${ge15Annotation}: ${pct(ge15Val)}`;
+  const se15Text = `${se15Annotation}: ${pct(se15Val)}`;
+  const forecastText = `${forecastPrefix}: ${pct(forecastVal)}`;
 
   const lineBase = {
     tension: 0.3,
@@ -133,7 +194,7 @@ export default function LiveTurnoutChart({
   };
 
   // Each series is direct-labelled in the right margin, aligned to its line's endpoint.
-  const endLabels: Record<string, { text: string; color: string }> = {
+  endLabelsRef.current = {
     ge15: { text: ge15Text, color: GE15_COLOR },
     se15: { text: se15Text, color: se15Color },
     se16_forecast: { text: forecastText, color: se16Color },
@@ -150,7 +211,7 @@ export default function LiveTurnoutChart({
       const { ctx } = chart;
       const labels: { text: string; color: string; x: number; y: number }[] = [];
       chart.data.datasets.forEach((dataset, di) => {
-        const spec = dataset.label ? endLabels[dataset.label] : undefined;
+        const spec = dataset.label ? endLabelsRef.current[dataset.label] : undefined;
         if (!spec) return;
         const idx = lastValueIndex(dataset.data);
         const point = chart.getDatasetMeta(di).data[idx];
@@ -235,7 +296,7 @@ export default function LiveTurnoutChart({
         callbacks: {
           label: (ctx: { dataset: { label?: string }; parsed: { y: number | null } }) => {
             const name = ctx.dataset.label ? tooltipName[ctx.dataset.label] ?? ctx.dataset.label : "";
-            return `${name}: ${(ctx.parsed.y ?? 0).toFixed(1)}%`;
+            return `${name}: ${pct(ctx.parsed.y ?? 0)}`;
           },
         },
       },
@@ -272,40 +333,69 @@ export default function LiveTurnoutChart({
 
   // On mobile the end-of-line labels can't fit, so use a compact legend instead.
   const legendItems = [
-    { color: GE15_COLOR, dashed: false, name: ge15Annotation, value: `${ge15Val.toFixed(1)}%` },
-    { color: se16Color, dashed: true, name: forecastPrefix, value: `${forecastVal.toFixed(1)}%` },
-    { color: se15Color, dashed: false, name: se15Annotation, value: `${se15Val.toFixed(1)}%` },
+    { color: GE15_COLOR, dashed: false, name: ge15Annotation, value: pct(ge15Val) },
+    { color: se16Color, dashed: true, name: forecastPrefix, value: pct(forecastVal) },
+    { color: se15Color, dashed: false, name: se15Annotation, value: pct(se15Val) },
+  ];
+
+  const tableSeries = [
+    { label: ge15Annotation, values: data.ge15 },
+    { label: se15Annotation, values: data.se15 },
+    { label: se16Annotation, values: data.se16 },
+    { label: forecastPrefix, values: data.se16_forecast },
   ];
 
   return (
-    <div>
-      {isMobile && (
-        <div className="mt-6 flex justify-center">
-          <div className="grid grid-cols-[auto_auto_auto] items-center gap-x-2 gap-y-1.5 text-body-sm text-txt-black-700">
-            {legendItems.map((item) => (
-              <Fragment key={item.name}>
-                <span
-                  className="inline-block w-5 shrink-0"
-                  style={{ borderTop: `2.5px ${item.dashed ? "dashed" : "solid"} ${item.color}` }}
-                />
-                <span className="text-right">{item.name}:</span>
-                <span>{item.value}</span>
-              </Fragment>
-            ))}
+    <div className="space-y-2">
+      {title}
+      <div className="mx-auto w-full lg:w-3/4">
+        {isMobile && (
+          <div className="mt-6 flex justify-center">
+            <div className="grid grid-cols-[auto_auto_auto] items-center gap-x-2 gap-y-1.5 text-body-sm text-txt-black-700">
+              {legendItems.map((item) => (
+                <Fragment key={item.name}>
+                  <span
+                    className="inline-block w-5 shrink-0"
+                    style={{ borderTop: `2.5px ${item.dashed ? "dashed" : "solid"} ${item.color}` }}
+                  />
+                  <span className="text-right">{item.name}:</span>
+                  <span>{item.value}</span>
+                </Fragment>
+              ))}
+            </div>
           </div>
+        )}
+        <div style={{ height: chartHeight }}>
+          <Line
+            key={`${dark ? "dark" : "light"}-${isMobile ? "m" : "d"}`}
+            ref={chartRef}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data={chartData as any}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            options={chartOptions as any}
+            plugins={(isMobile ? [crosshairPlugin] : [endLabelPlugin, crosshairPlugin]) as any}
+          />
         </div>
-      )}
-      <div style={{ height: chartHeight }}>
-        <Line
-          key={`${dark ? "dark" : "light"}-${isMobile ? "m" : "d"}`}
-          ref={chartRef}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data={chartData as any}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          options={chartOptions as any}
-          plugins={(isMobile ? [crosshairPlugin] : [endLabelPlugin, crosshairPlugin]) as any}
-        />
       </div>
+
+      {/* Machine-readable copy of the chart data (canvas isn't scrapeable) */}
+      <table className="sr-only">
+        <caption>{caption} {asOfLabel}</caption>
+        <thead>
+          <tr>
+            <th>{timeLabel}</th>
+            {tableSeries.map((s) => <th key={s.label}>{s.label}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {data.time.map((time, i) => (
+            <tr key={time}>
+              <th>{time}</th>
+              {tableSeries.map((s) => <td key={s.label}>{s.values[i] == null ? "" : pct(s.values[i] as number)}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
