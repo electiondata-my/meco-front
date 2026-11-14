@@ -172,11 +172,15 @@ export default function LiveTurnoutChart({
 
   const ge15Val = lastValue(data.ge15);
   const se15Val = lastValue(data.se15);
-  const forecastVal = lastValue(data.se16_forecast);
+  // From 18:00 the forecast goes null (polls closed), so label the actual SE-16 line instead.
+  const hasForecast = lastValueIndex(data.se16_forecast) > lastValueIndex(data.se16);
+  const se16EndKey = hasForecast ? "se16_forecast" : "se16";
+  const se16EndName = hasForecast ? forecastPrefix : se16Annotation;
+  const se16EndVal = lastValue(hasForecast ? data.se16_forecast : data.se16);
 
   const ge15Text = `${ge15Annotation}: ${pct(ge15Val)}`;
   const se15Text = `${se15Annotation}: ${pct(se15Val)}`;
-  const forecastText = `${forecastPrefix}: ${pct(forecastVal)}`;
+  const se16EndText = `${se16EndName}: ${pct(se16EndVal)}`;
 
   const lineBase = {
     tension: 0.3,
@@ -207,7 +211,7 @@ export default function LiveTurnoutChart({
   endLabelsRef.current = {
     ge15: { text: ge15Text, color: GE15_COLOR },
     se15: { text: se15Text, color: se15Color },
-    se16_forecast: { text: forecastText, color: se16Color },
+    [se16EndKey]: { text: se16EndText, color: se16Color },
   };
 
   const endLabelPlugin = {
@@ -344,7 +348,7 @@ export default function LiveTurnoutChart({
   // On mobile the end-of-line labels can't fit, so use a compact legend instead.
   const legendItems = [
     { color: GE15_COLOR, dashed: false, name: ge15Annotation, value: pct(ge15Val) },
-    { color: se16Color, dashed: true, name: forecastPrefix, value: pct(forecastVal) },
+    { color: se16Color, dashed: hasForecast, name: se16EndName, value: pct(se16EndVal) },
     { color: se15Color, dashed: false, name: se15Annotation, value: pct(se15Val) },
   ];
 
