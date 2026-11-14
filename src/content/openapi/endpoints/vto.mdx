@@ -8,14 +8,16 @@ keywords: "API, turnout, VTO, live, polling day, election data, Malaysia, Melaka
 
 ## Use Case
 
-Use this endpoint to show turnout as it happens on polling day: a live headline figure, a table of seats that refreshes every few minutes, or a chart of turnout over the course of the day. Every figure is split into early voters (*awal*: police, army and others who voted before polling day) and ordinary voters (*biasa*, who vote on the day itself).
+Use this endpoint to track voter turnout on polling day in (close to) real time. It is ideal for powering a notification service (for the latest headline number), visualising turnout by seat, or charting turnout over the course of the day. Every figure is split into overall, early and ordinary turnout.
 
 There are two endpoints:
 
 - **`/vto/latest`**: the newest snapshot for the state, every Parliament seat and every DUN seat. Poll this for a live view.
 - **`/vto`**: one level (Parliament, DUN or polling district) for one 5-minute slot. Use this to build a time series or to go down to polling district (DM) level.
 
-Data is currently available for the Melaka state election (SE-16, 14 November 2026). Other elections will be added.
+## Data Note
+
+On 14 November 2026, polling day for the 16th Melaka state election, the Election Commission (SPR) published real-time voter turnout via dashboard.spr.gov.my, made possible by the introduction of [digital voter registration](https://www.kosmo.com.my/2026/11/13/spr-teruskan-sistem-ocr-va-papar-bilangan-pengundi-masa-nyata/) at polling centres. We launched this endpoint the same day, and will maintain it for as long as SPR continues to publish the data.
 
 ## Prerequisite: API Key
 
