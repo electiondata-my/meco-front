@@ -634,6 +634,19 @@ const analysisTableMobileMinWidth = `${analysisColumnSpecs.reduce((sum, column) 
           ge15Annotation={ge15Annotation}
           se16Annotation={se16Annotation}
           forecastPrefix={forecastPrefix}
+          hourlyLabel={e("live_turnout.hourly")}
+          byEthnicityLabel={e("live_turnout.by_ethnicity")}
+          ethnicityStrings={{
+            now: e("live_turnout.now"),
+            projected: e("live_turnout.projected"),
+            note: e("live_turnout.ethnicity_note"),
+            groups: {
+              malay: e("live_turnout.ethnic_groups.malay"),
+              chinese: e("live_turnout.ethnic_groups.chinese"),
+              indian: e("live_turnout.ethnic_groups.indian"),
+              other: e("live_turnout.ethnic_groups.other"),
+            },
+          }}
         >
           {(() => {
             const title = e("live_voter_turnout") || "Live Voter Turnout";

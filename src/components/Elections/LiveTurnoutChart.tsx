@@ -1,6 +1,7 @@
 import "chart.js/auto";
 import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
 import { Line } from "react-chartjs-2";
+import EthnicityTurnoutChart, { type EthnicityStrings, type EthnicityTurnout } from "./EthnicityTurnoutChart";
 
 type TurnoutData = {
   latest: { time: string; turnout: number; timestamp: string } | null;
@@ -9,6 +10,7 @@ type TurnoutData = {
   ge15: (number | null)[];
   se16: (number | null)[];
   se16_forecast: (number | null)[];
+  ethnicity?: EthnicityTurnout | null;
 };
 
 interface Props {
@@ -21,6 +23,9 @@ interface Props {
   ge15Annotation: string;
   se16Annotation: string;
   forecastPrefix: string;
+  hourlyLabel: string;
+  byEthnicityLabel: string;
+  ethnicityStrings: EthnicityStrings;
 }
 
 const GE15_COLOR = "#d7292f";
@@ -73,6 +78,9 @@ export default function LiveTurnoutChart({
   ge15Annotation,
   se16Annotation,
   forecastPrefix,
+  hourlyLabel,
+  byEthnicityLabel,
+  ethnicityStrings,
 }: Props) {
   const [isMobile, setIsMobile] = useState(false);
   const dark = useDarkMode();
@@ -83,6 +91,7 @@ export default function LiveTurnoutChart({
   const endLabelsRef = useRef<Record<string, { text: string; color: string }>>({});
   const [data, setData] = useState<TurnoutData | null>(null);
   const [failed, setFailed] = useState(false);
+  const [view, setView] = useState<"hourly" | "ethnicity">("hourly");
 
   // Fetch in the browser and refresh every 5 minutes, matching the worker's write cadence.
   // A unique query per request bypasses the edge cache, which can serve stale copies
@@ -149,7 +158,7 @@ export default function LiveTurnoutChart({
 
   if (!data) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-6">
         {title}
         <div style={{ height: chartHeight }} />
       </div>
@@ -339,6 +348,26 @@ export default function LiveTurnoutChart({
     { color: se15Color, dashed: false, name: se15Annotation, value: pct(se15Val) },
   ];
 
+  // The ethnicity estimate can be missing from a run; hide the toggle and fall back to hourly.
+  const ethnicity = data.ethnicity ?? null;
+  const showEthnicity = view === "ethnicity" && ethnicity != null;
+  const toggleBtn = (active: boolean) =>
+    `flex h-full items-center justify-center rounded-md px-3 text-body-sm font-medium transition-all ${
+      active ? "border border-otl-gray-200 bg-bg-dialog-active text-txt-black-900 shadow-button" : "text-txt-black-500"
+    }`;
+  const toggle = ethnicity && (
+    <div className="flex justify-center">
+      <div className="inline-grid h-[34px] grid-cols-2 rounded-lg bg-bg-washed p-0.5">
+        <button type="button" aria-pressed={!showEthnicity} onClick={() => setView("hourly")} className={toggleBtn(!showEthnicity)}>
+          {hourlyLabel}
+        </button>
+        <button type="button" aria-pressed={showEthnicity} onClick={() => setView("ethnicity")} className={toggleBtn(showEthnicity)}>
+          {byEthnicityLabel}
+        </button>
+      </div>
+    </div>
+  );
+
   const tableSeries = [
     { label: ge15Annotation, values: data.ge15 },
     { label: se15Annotation, values: data.se15 },
@@ -347,36 +376,50 @@ export default function LiveTurnoutChart({
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-6">
       {title}
+      {toggle}
       <div className="mx-auto w-full lg:w-3/4">
-        {isMobile && (
-          <div className="mt-6 flex justify-center">
-            <div className="grid grid-cols-[auto_auto_auto] items-center gap-x-2 gap-y-1.5 text-body-sm text-txt-black-700">
-              {legendItems.map((item) => (
-                <Fragment key={item.name}>
-                  <span
-                    className="inline-block w-5 shrink-0"
-                    style={{ borderTop: `2.5px ${item.dashed ? "dashed" : "solid"} ${item.color}` }}
-                  />
-                  <span className="text-right">{item.name}:</span>
-                  <span>{item.value}</span>
-                </Fragment>
-              ))}
-            </div>
-          </div>
-        )}
-        <div style={{ height: chartHeight }}>
-          <Line
-            key={`${dark ? "dark" : "light"}-${isMobile ? "m" : "d"}`}
-            ref={chartRef}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data={chartData as any}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            options={chartOptions as any}
-            plugins={(isMobile ? [crosshairPlugin] : [endLabelPlugin, crosshairPlugin]) as any}
+        {showEthnicity && ethnicity ? (
+          <EthnicityTurnoutChart
+            ethnicity={ethnicity}
+            time={latest?.time ?? null}
+            strings={ethnicityStrings}
+            dark={dark}
+            isMobile={isMobile}
+            height={chartHeight}
           />
-        </div>
+        ) : (
+          <>
+            {isMobile && (
+              <div className="flex justify-center">
+                <div className="grid grid-cols-[auto_auto_auto] items-center gap-x-2 gap-y-1.5 text-body-sm text-txt-black-700">
+                  {legendItems.map((item) => (
+                    <Fragment key={item.name}>
+                      <span
+                        className="inline-block w-5 shrink-0"
+                        style={{ borderTop: `2.5px ${item.dashed ? "dashed" : "solid"} ${item.color}` }}
+                      />
+                      <span className="text-right">{item.name}:</span>
+                      <span>{item.value}</span>
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div style={{ height: chartHeight }}>
+              <Line
+                key={`${dark ? "dark" : "light"}-${isMobile ? "m" : "d"}`}
+                ref={chartRef}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data={chartData as any}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                options={chartOptions as any}
+                plugins={(isMobile ? [crosshairPlugin] : [endLabelPlugin, crosshairPlugin]) as any}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Machine-readable copy of the chart data (canvas isn't scrapeable) */}
