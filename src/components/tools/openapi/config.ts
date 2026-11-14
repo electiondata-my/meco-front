@@ -34,6 +34,7 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Parties", href: "/openapi/endpoints/parties" },
       { label: "Elections", href: "/openapi/endpoints/elections" },
       { label: "By-Elections", href: "/openapi/endpoints/byelections" },
+      { label: "Live Turnout", href: "/openapi/endpoints/vto" },
     ],
   },
 ];

@@ -1,0 +1,138 @@
+---
+title: "Live Turnout - API Docs | ElectionData.MY"
+pageTitle: "Live Turnout"
+breadcrumb: "Endpoints"
+description: "Track voter turnout (VTO) on polling day in 5-minute snapshots, at state, Parliament, DUN and polling district level."
+keywords: "API, turnout, VTO, live, polling day, election data, Malaysia, Melaka"
+---
+
+## Use Case
+
+Use this endpoint to show turnout as it happens on polling day: a live headline figure, a table of seats that refreshes every few minutes, or a chart of turnout over the course of the day. Every figure is split into early voters (*awal*: police, army and others who voted before polling day) and ordinary voters (*biasa*, who vote on the day itself).
+
+There are two endpoints:
+
+- **`/vto/latest`**: the newest snapshot for the state, every Parliament seat and every DUN seat. Poll this for a live view.
+- **`/vto`**: one level (Parliament, DUN or polling district) for one 5-minute slot. Use this to build a time series or to go down to polling district (DM) level.
+
+Data is currently available for the Melaka state election (SE-16, 14 November 2026). Other elections will be added.
+
+## Prerequisite: API Key
+
+All requests to this API require a Bearer token. Requests without a token (or with an invalid one) will return a `401 Unauthorized` error. Paste yours below—every code snippet and the live tester at the bottom of this page will be pre-filled and ready to run.
+
+<TokenInput />
+
+## Step 1: Get latest snapshot
+
+<EndpointCard method="GET" url="https://api.electiondata.my/v1/vto/latest" params={[
+  {
+    name: "election",
+    type: "string",
+    required: true,
+    description: "Election identifier in the form <state>-<ge|se><NN>, using the 3-letter state code, e.g. 'mlk-se16'. Only 'mlk-se16' is available for now."
+  }
+]} />
+
+Responses are cached for 30 seconds (other endpoints cache for 300 seconds), and a new snapshot arrives every 5 minutes, so polling once a minute is plenty.
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/v1/vto/latest?election=mlk-se16" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const response = await fetch(\n  "https://api.electiondata.my/v1/vto/latest?election=mlk-se16",\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
+  typescript={`const response = await fetch(\n  "https://api.electiondata.my/v1/vto/latest?election=mlk-se16",\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface TurnoutUnit {\n  overall_abs: number;\n  overall_vto: number | null;\n  overall_electorate: number;\n  awal_abs: number;\n  awal_vto: number | null;\n  awal_electorate: number | null;\n  biasa_abs: number;\n  biasa_vto: number | null;\n  biasa_electorate: number | null;\n}\n\ninterface LatestSnapshot {\n  timestamp: string;\n  slot: string;\n  state: TurnoutUnit;\n  parlimen: Record<string, TurnoutUnit>;\n  dun: Record<string, TurnoutUnit>;\n}\n\nconst data: LatestSnapshot = await response.json();\nconsole.log(data);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/vto/latest",\n    params={"election": "mlk-se16"},\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()\nprint(data)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/vto/latest") |>\n  req_url_query(election = "mlk-se16") |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)\nprint(data)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/vto/latest?election=mlk-se16", nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar data any\n\tjson.Unmarshal(body, &data)\n\tfmt.Println(data)\n}`}
+/>
+
+A successful `200 OK` response returns a JSON object with these keys:
+
+<FieldTable fields={[
+  { name: "timestamp", type: "string", description: "Time of the snapshot in the Election Commission (SPR) feed, in Malaysia time (MYT), e.g. '2026-11-14 08:25:52'." },
+  { name: "slot", type: "string", description: "The 5-minute slot this snapshot belongs to, as HHMM in MYT (the timestamp rounded down), e.g. '0825'. Pass it as time to /vto to fetch other levels for the same moment." },
+  { name: "state", type: "object", description: "A turnout unit (see below) for the whole state." },
+  { name: "parlimen", type: "object", description: "One turnout unit per Parliament seat, keyed by seat name, e.g. 'P.134 Masjid Tanah'." },
+  { name: "dun", type: "object", description: "One turnout unit per DUN seat, keyed by seat name, e.g. 'N.01 Kuala Linggi'." },
+]} />
+
+Polling district (DM) figures are not included here, to keep the response small. Use Step 2 for those.
+
+---
+
+**Turnout unit**: every state, seat and polling district has the same fields. The *abs* fields are votes cast, the *vto* fields are turnout percentages, and the *electorate* fields are the denominators those percentages are based on.
+
+<FieldTable fields={[
+  { name: "overall_abs", type: "integer", description: "Total votes cast: early, ordinary and postal." },
+  { name: "overall_vto", type: "float", description: "Overall turnout as a percentage to 2 decimal places (null if the electorate is 0)." },
+  { name: "overall_electorate", type: "integer", description: "All registered voters, from the final voter roll. Includes postal voters, so it is slightly larger than awal_electorate + biasa_electorate." },
+  { name: "awal_abs", type: "integer", description: "Early votes cast (awal = police, army and others who voted before polling day)." },
+  { name: "awal_vto", type: "float", description: "Early-voter turnout as a percentage (null if there are no early voters)." },
+  { name: "awal_electorate", type: "integer", description: "Registered early voters. 0 for DUNs (and their pseudo-districts) with no early voters; null for regular polling districts." },
+  { name: "biasa_abs", type: "integer", description: "Ordinary votes cast on polling day (biasa = ordinary)." },
+  { name: "biasa_vto", type: "float", description: "Ordinary-voter turnout as a percentage (null if there are no ordinary voters)." },
+  { name: "biasa_electorate", type: "integer", description: "Registered ordinary voters (null for the early-voting pseudo-districts)." },
+]} />
+
+Example unit for N.25 Rim at 08:25:
+
+```json
+{
+  "overall_abs": 712,
+  "overall_vto": 4.01,
+  "overall_electorate": 17742,
+  "awal_abs": 0,
+  "awal_vto": null,
+  "awal_electorate": 0,
+  "biasa_abs": 712,
+  "biasa_vto": 4.06,
+  "biasa_electorate": 17557
+}
+```
+
+## Step 2: Get a time slot
+
+<EndpointCard method="GET" url="https://api.electiondata.my/v1/vto" params={[
+  {
+    name: "election",
+    type: "string",
+    required: true,
+    description: "Election identifier, e.g. 'mlk-se16'. Same format as in Step 1."
+  },
+  {
+    name: "level",
+    type: "string",
+    required: true,
+    description: "One of 'parlimen', 'dun' or 'dm' (polling district)."
+  },
+  {
+    name: "time",
+    type: "string",
+    required: true,
+    description: "The 5-minute slot as HHMM in Malaysia time, from '0800' until '2355' (23:55 MYT on polling day), e.g. '0805' or '1430'."
+  }
+]} />
+
+Slot `0800` is the pre-polling baseline: it contains early votes only, with every ordinary vote still at 0. Live slots start at `0805`. A slot that hasn't happened yet returns `404 Not Found`. A missing parameter, a `level` that isn't one of the three options, or a `time` that isn't HHMM in 5-minute steps returns `400 Bad Request`.
+
+<TabCode
+  curl={`curl -X GET "https://api.electiondata.my/v1/vto?election=mlk-se16&level=dun&time=0805" \\\n  -H "Authorization: Bearer <your-api-key>"`}
+  javascript={`const params = new URLSearchParams({\n  election: "mlk-se16",\n  level: "dun",\n  time: "0805",\n});\n\nconst response = await fetch(\n  \`https://api.electiondata.my/v1/vto?\${params}\`,\n  {\n    headers: {\n      "Authorization": "Bearer <your-api-key>"\n    }\n  }\n);\n\nconst data = await response.json();\nconsole.log(data);`}
+  typescript={`const params = new URLSearchParams({\n  election: "mlk-se16",\n  level: "dun",\n  time: "0805",\n});\n\nconst response = await fetch(\n  \`https://api.electiondata.my/v1/vto?\${params}\`,\n  {\n    headers: {\n      Authorization: "Bearer <your-api-key>",\n    },\n  }\n);\n\ninterface TurnoutUnit {\n  overall_abs: number;\n  overall_vto: number | null;\n  overall_electorate: number;\n  awal_abs: number;\n  awal_vto: number | null;\n  awal_electorate: number | null;\n  biasa_abs: number;\n  biasa_vto: number | null;\n  biasa_electorate: number | null;\n}\n\nconst data: Record<string, TurnoutUnit> = await response.json();\nconsole.log(data);`}
+  python={`import requests\n\nresponse = requests.get(\n    "https://api.electiondata.my/v1/vto",\n    params={\n        "election": "mlk-se16",\n        "level": "dun",\n        "time": "0805",\n    },\n    headers={"Authorization": "Bearer <your-api-key>"}\n)\n\ndata = response.json()\nprint(data)`}
+  r={`library(httr2)\n\nresp <- request("https://api.electiondata.my/v1/vto") |>\n  req_url_query(\n    election = "mlk-se16",\n    level = "dun",\n    time = "0805"\n  ) |>\n  req_headers(Authorization = "Bearer <your-api-key>") |>\n  req_perform()\n\ndata <- resp_body_json(resp)\nprint(data)`}
+  go={`package main\n\nimport (\n\t"encoding/json"\n\t"fmt"\n\t"io"\n\t"net/http"\n\t"net/url"\n)\n\nfunc main() {\n\tparams := url.Values{}\n\tparams.Set("election", "mlk-se16")\n\tparams.Set("level", "dun")\n\tparams.Set("time", "0805")\n\n\treq, _ := http.NewRequest("GET",\n\t\t"https://api.electiondata.my/v1/vto?"+params.Encode(), nil)\n\treq.Header.Set("Authorization", "Bearer <your-api-key>")\n\n\tresp, _ := http.DefaultClient.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tvar data any\n\tjson.Unmarshal(body, &data)\n\tfmt.Println(data)\n}`}
+/>
+
+A successful `200 OK` response returns a JSON object with one turnout unit (same fields as in Step 1) per unit at the requested level, keyed by name:
+
+<FieldTable fields={[
+  { name: "parlimen", type: "string", description: "Parliament seat name, e.g. 'P.136 Tangga Batu'. Melaka has 6." },
+  { name: "dun", type: "string", description: "DUN seat name, e.g. 'N.11 Sungai Udang'. Melaka has 28." },
+  { name: "dm", type: "string", description: "Polling district as Parliament/DUN/DM number plus name, e.g. '136/11/01 Bukit Terendak'. Melaka returns 235 entries: 211 polling districts plus 24 '/00 Undi Awal' early-voting pseudo-districts." },
+]} />
+
+## Try It Out
+
+Use the **Latest** tab for the newest snapshot, or switch to **By Slot** to pick a level and time.
+
+<VtoApiTester />
