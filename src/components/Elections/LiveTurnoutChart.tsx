@@ -85,12 +85,13 @@ export default function LiveTurnoutChart({
   const [failed, setFailed] = useState(false);
 
   // Fetch in the browser and refresh every 5 minutes, matching the worker's write cadence.
-  // The worker purges the edge cache after each write; no-store skips the browser cache.
+  // A unique query per request bypasses the edge cache, which can serve stale copies
+  // (seen at the KUL PoP despite the worker's purge); no-store skips the browser cache.
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
-        const res = await fetch(url, { cache: "no-store" });
+        const res = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error(String(res.status));
         const json: TurnoutData = await res.json();
         if (!cancelled) setData(json);
