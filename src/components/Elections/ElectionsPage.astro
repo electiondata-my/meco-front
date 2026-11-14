@@ -224,9 +224,10 @@ const pageTitle = `${electionDisplay} (${stateName}) | ElectionData.MY`;
 // completed elections. Intentionally untranslated — "TBC" has no Malay equivalent.
 const pendingLabel = "TBC";
 
-// Live voter turnout section (Melaka SE-16 only).
-// To disable once polling closes: set showLiveTurnout = false.
-const showLiveTurnout = stateCode === "mlk" && electionName === "SE-16";
+// Live voter turnout section (Melaka SE-16 only). Hides itself on the first build after a
+// seat is declared, using the same seats_won signal as the overview table's TBC row.
+const seatsDeclared = table.reduce((n, p) => n + p.seats_won, 0);
+const showLiveTurnout = stateCode === "mlk" && electionName === "SE-16" && seatsDeclared === 0;
 const liveTurnoutUrl = `${apiBase}/elections/live_turnout_mlk_se16.json`;
 const se15Annotation = isMalay ? "PRN-15" : "SE-15";
 const ge15Annotation = isMalay ? "PRU-15" : "GE-15";
