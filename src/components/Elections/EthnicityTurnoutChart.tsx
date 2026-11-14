@@ -1,9 +1,10 @@
 import "chart.js/auto";
 import { Bar } from "react-chartjs-2";
 
-export type EthnicGroup = "malay" | "chinese" | "indian" | "other";
+export type EthnicGroup = "malay" | "chinese" | "indian";
+// The feed also includes "other", which isn't charted but counts toward the electorate.
 export type EthnicityTurnout = Record<
-  EthnicGroup,
+  EthnicGroup | "other",
   { registered: number; current: number; projected: number | null }
 >;
 
@@ -11,6 +12,7 @@ export interface EthnicityStrings {
   now: string;
   projected: string;
   note: string;
+  shareOfVoters: string;
   groups: Record<EthnicGroup, string>;
 }
 
@@ -23,7 +25,7 @@ interface Props {
   height: number;
 }
 
-const GROUPS: EthnicGroup[] = ["malay", "chinese", "indian", "other"];
+const GROUPS: EthnicGroup[] = ["malay", "chinese", "indian"];
 const AXIS_FONT_FAMILY =
   "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
@@ -34,13 +36,20 @@ export default function EthnicityTurnoutChart({ ethnicity, time, strings, dark, 
   const rgb = dark ? "255, 255, 255" : "0, 0, 0";
   const tickColor = dark ? "#A1A1AA" : "#52525B";
   const gridColor = dark ? "rgba(161, 161, 170, 0.10)" : "rgba(113, 113, 122, 0.08)";
-  // "Other" is the least certain estimate, so it's drawn lighter and asterisked.
-  const solid = GROUPS.map((g) => `rgba(${rgb}, ${g === "other" ? 0.4 : 1})`);
-  const outline = GROUPS.map((g) => `rgba(${rgb}, ${g === "other" ? 0.4 : 0.85})`);
-  const fill = GROUPS.map((g) => `rgba(${rgb}, ${g === "other" ? 0.04 : 0.08})`);
+  // "Indian" is the least certain estimate, so it's drawn lighter and asterisked.
+  const solid = GROUPS.map((g) => `rgba(${rgb}, ${g === "indian" ? 0.4 : 1})`);
+  const outline = GROUPS.map((g) => `rgba(${rgb}, ${g === "indian" ? 0.4 : 0.85})`);
+  const fill = GROUPS.map((g) => `rgba(${rgb}, ${g === "indian" ? 0.04 : 0.08})`);
 
   // projected is null from 18:00 onward, when the projection no longer applies.
   const hasProjection = GROUPS.every((g) => ethnicity[g].projected != null);
+
+  // Two-line x-axis label: group name, then its share of the whole electorate.
+  const electorate = Object.values(ethnicity).reduce((sum, e) => sum + e.registered, 0);
+  const labels = GROUPS.map((g) => [
+    g === "indian" ? `${strings.groups[g]}*` : strings.groups[g],
+    `(${strings.shareOfVoters.replace("{{share}}", `${((ethnicity[g].registered / electorate) * 100).toFixed(1)}%`)})`,
+  ]);
 
   const datasets = [
     {
@@ -91,6 +100,18 @@ export default function EthnicityTurnoutChart({ ethnicity, time, strings, dark, 
     },
   };
 
+  // Chart.js has no legend-to-chart gap option, so pad the legend's fitted height.
+  const legendGapPlugin = {
+    id: "legendGap",
+    beforeInit(chart: { legend: { fit: () => void; height: number } }) {
+      const fit = chart.legend.fit;
+      chart.legend.fit = function () {
+        fit.call(this);
+        this.height += 12;
+      };
+    },
+  };
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -134,14 +155,14 @@ export default function EthnicityTurnoutChart({ ethnicity, time, strings, dark, 
         <Bar
           key={`${dark ? "dark" : "light"}-${isMobile ? "m" : "d"}`}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data={{ labels: GROUPS.map((g) => (g === "other" ? `${strings.groups[g]}*` : strings.groups[g])), datasets } as any}
+          data={{ labels, datasets } as any}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           options={chartOptions as any}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          plugins={[valueLabelPlugin] as any}
+          plugins={[valueLabelPlugin, legendGapPlugin] as any}
         />
       </div>
-      <p className="mt-3 text-center text-body-xs text-txt-black-500">{strings.note}</p>
+      <p className="mx-auto mt-3 max-w-xl text-center text-body-xs text-txt-black-500">{strings.note}</p>
     </div>
   );
 }
