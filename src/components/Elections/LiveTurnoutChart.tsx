@@ -91,7 +91,7 @@ export default function LiveTurnoutChart({
   const endLabelsRef = useRef<Record<string, { text: string; color: string }>>({});
   const [data, setData] = useState<TurnoutData | null>(null);
   const [failed, setFailed] = useState(false);
-  const [view, setView] = useState<"hourly" | "ethnicity">("hourly");
+  const [view, setView] = useState<"hourly" | "ethnicity">("ethnicity");
 
   // Fetch in the browser and refresh every 5 minutes, matching the worker's write cadence.
   // A unique query per request bypasses the edge cache, which can serve stale copies
