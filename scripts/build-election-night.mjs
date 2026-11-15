@@ -2,19 +2,41 @@
 // meco-etl/api_election_night.py. Derives the pages touched by the election
 // from the internal API, then runs a scoped `pnpm build`.
 //
-// Usage (on the DO box, after the ETL has run):
-//   node scripts/build-election-night.mjs          # derive scope + build
-//   node scripts/build-election-night.mjs --dry-run # print scope, skip build
+// Usage (on the DO box, after the ETL has run; meco-election-night's night.tick passes
+// the election from its election file, the same arguments as api_election_night.py):
+//   node scripts/build-election-night.mjs --date 2026-11-14 --election SE-16 \
+//     --state Melaka --state-code mlk            # derive scope + build
+//   ... --dry-run                                # print scope, skip build
 //
 // Deploy afterwards with `pnpm deploy` (from the same warm dist/).
 
 import { spawnSync } from "node:child_process";
+import { parseArgs } from "node:util";
 
-// ----- election under way (keep in sync with meco-etl/api_election_night.py) -----
-const DATE = "2026-08-01";
-const ELECTION = "SE-16";
-const STATE = "Negeri Sembilan";
-const STATE_CODE = "nsn";
+// ----- election under way: required arguments, never baked in -----
+// A stale hard-coded election would silently rebuild the wrong pages.
+const { values: args } = parseArgs({
+  options: {
+    date: { type: "string" },
+    election: { type: "string" },
+    state: { type: "string" },
+    "state-code": { type: "string" },
+    "dry-run": { type: "boolean", default: false },
+  },
+});
+for (const k of ["date", "election", "state", "state-code"]) {
+  if (!args[k]) {
+    console.error(
+      `missing --${k}\nusage: node scripts/build-election-night.mjs --date 2026-11-14 ` +
+        "--election SE-16 --state Melaka --state-code mlk [--dry-run]",
+    );
+    process.exit(2);
+  }
+}
+const DATE = args.date;
+const ELECTION = args.election;
+const STATE = args.state;
+const STATE_CODE = args["state-code"].toLowerCase();
 
 // catalogue datasets whose underlying data changes with this election
 const HEADLINE_IDS = [
@@ -92,7 +114,7 @@ for (const [k, v] of Object.entries(env)) {
   if (!v) throw new Error(`${k} resolved empty — an empty scope would trigger a full build`);
 }
 
-if (process.argv.includes("--dry-run")) {
+if (args["dry-run"]) {
   console.log("\n--dry-run: skipping build. Scope env vars:\n");
   for (const [k, v] of Object.entries(env)) console.log(`${k}="${v}"`);
   process.exit(0);
